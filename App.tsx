@@ -29,9 +29,9 @@ const DEMO_USER_ID = 'demo-user-id';
 
 const PageLoader = ({ message = "Cargando Fresco...", showReload = false }: { message?: string, showReload?: boolean }) => (
   <div className="h-full w-full flex flex-col items-center justify-center p-10 min-h-screen bg-[#FDFDFD]">
-    <div className="w-20 h-20 border-4 border-teal-100 border-t-teal-600 rounded-full animate-spin mb-6" />
-    <Logo className="mb-4 animate-pulse" />
-    <p className="text-teal-800 font-black uppercase tracking-widest text-xs">{message}</p>
+    <div className="w-12 h-12 border-4 border-teal-100 border-t-teal-600 rounded-full animate-spin mb-4" />
+    <Logo className="mb-4 animate-pulse scale-75" />
+    <p className="text-teal-800 font-black uppercase tracking-widest text-[10px]">{message}</p>
     <div className="mt-4 flex items-center gap-2 text-gray-400 text-[10px] font-bold uppercase tracking-widest">
         <CloudCog className="w-4 h-4" /> Sincronizando con la nube
     </div>
@@ -680,9 +680,10 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} onEnterDemo={handleDemoLogin} /> : 
          view === 'onboarding' ? <Onboarding onComplete={handleOnboardingComplete} /> :
          <>
-          <aside className="hidden md:flex flex-col w-80 bg-teal-800 text-white p-12 fixed h-full z-50">
-            <Logo variant="inverted" className="mb-16" />
-            <nav className="flex-1 space-y-4">
+          {/* SIDEBAR: Reducido ancho y padding */}
+          <aside className="hidden md:flex flex-col w-64 bg-teal-800 text-white p-6 fixed h-full z-50">
+            <Logo variant="inverted" className="mb-10 scale-90 origin-left" />
+            <nav className="flex-1 space-y-2">
                 {[
                   {id:'dashboard', icon:Home, label:'Impacto'}, 
                   {id:'planner', icon:Calendar, label:'Calendario'}, 
@@ -691,15 +692,15 @@ const App: React.FC = () => {
                   {id:'shopping', icon:ShoppingBag, label:'Lista'}, 
                   {id:'profile', icon:User, label:'Perfil'}
                 ].map(item => (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center space-x-5 px-8 py-5 rounded-[2rem] transition-all ${activeTab === item.id ? 'bg-white text-teal-800 font-black' : 'opacity-40 hover:opacity-100'}`}>
-                    <item.icon className="w-6 h-6" /> <span className="text-lg">{item.label}</span>
+                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center space-x-4 px-4 py-3 rounded-2xl transition-all ${activeTab === item.id ? 'bg-white text-teal-800 font-black' : 'opacity-60 hover:opacity-100 hover:bg-white/10'}`}>
+                    <item.icon className="w-5 h-5" /> <span className="text-sm">{item.label}</span>
                   </button>
                 ))}
             </nav>
           </aside>
 
-          {/* FIX: Container limitado para desktop y padding extra para mobile */}
-          <main className="flex-1 md:ml-80 safe-pt min-h-screen max-w-7xl mx-auto w-full pb-32 md:pb-0">
+          {/* MAIN: Ajustado margen y max-width */}
+          <main className="flex-1 md:ml-64 safe-pt min-h-screen max-w-6xl mx-auto w-full pb-32 md:pb-0">
             <Suspense fallback={<PageLoader message="Cargando módulo..." />}>
               {activeTab === 'dashboard' && user && <Dashboard 
                   user={user} 
@@ -774,9 +775,9 @@ const App: React.FC = () => {
             {activeTab === 'planner' && mealPlan.length > 0 && !activeBatchSession && (
                 <button 
                   onClick={handleStartBatch}
-                  className="fixed bottom-24 right-6 md:right-10 bg-orange-500 text-white p-6 rounded-[2.5rem] shadow-2xl flex items-center gap-4 animate-bounce-subtle z-50 hover:bg-orange-600 transition-all font-black text-xs uppercase tracking-widest"
+                  className="fixed bottom-24 right-6 md:right-10 bg-orange-500 text-white p-4 px-6 rounded-full shadow-2xl flex items-center gap-3 animate-bounce-subtle z-50 hover:bg-orange-600 transition-all font-black text-xs uppercase tracking-widest"
                 >
-                    <Sparkles className="w-6 h-6" /> Batch Cooking
+                    <Sparkles className="w-5 h-5" /> Batch Cooking
                 </button>
             )}
           </main>
@@ -790,7 +791,7 @@ const App: React.FC = () => {
               />
           )}
           
-           <nav className="md:hidden fixed bottom-6 left-6 right-6 z-[800] bg-teal-800/95 backdrop-blur-3xl p-2 rounded-[3rem] shadow-2xl flex gap-1 safe-pb">
+           <nav className="md:hidden fixed bottom-6 left-4 right-4 z-[800] bg-teal-800/95 backdrop-blur-3xl p-1.5 rounded-3xl shadow-2xl flex gap-1 safe-pb">
               {[
                 {id:'dashboard', icon:Home}, 
                 {id:'planner', icon:Calendar}, 
@@ -799,7 +800,7 @@ const App: React.FC = () => {
                 {id:'shopping', icon:ShoppingBag}, 
                 {id:'profile', icon:User}
               ].map(item => (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-4 rounded-[2rem] transition-all ${activeTab === item.id ? 'bg-white text-teal-800' : 'text-teal-100 opacity-40'}`}>
+                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-all ${activeTab === item.id ? 'bg-white text-teal-800' : 'text-teal-100 opacity-40'}`}>
                       <item.icon className="w-5 h-5" />
                   </button>
               ))}

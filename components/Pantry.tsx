@@ -21,11 +21,11 @@ interface PantryProps {
 const CATEGORIES_OPTIONS = [
     { id: 'vegetables', label: 'Verdulería', emoji: '🥦' },
     { id: 'fruits', label: 'Frutería', emoji: '🍎' },
-    { id: 'dairy', label: 'Lácteos/Huevos', emoji: '🧀' },
+    { id: 'dairy', label: 'Lácteos', emoji: '🧀' },
     { id: 'meat', label: 'Carnicería', emoji: '🥩' },
     { id: 'fish', label: 'Pescadería', emoji: '🐟' },
-    { id: 'grains', label: 'Cereales/Pan', emoji: '🥖' },
-    { id: 'pantry', label: 'Despensa Gral.', emoji: '🥫' },
+    { id: 'grains', label: 'Cereales', emoji: '🥖' },
+    { id: 'pantry', label: 'Despensa', emoji: '🥫' },
     { id: 'spices', label: 'Especias', emoji: '🧂' },
     { id: 'other', label: 'Otros', emoji: '🛍️' },
 ];
@@ -215,87 +215,87 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   };
 
   return (
-    <div className="p-4 md:p-10 safe-pt animate-fade-in relative pb-32">
-      <div className="flex flex-col gap-6 mb-8">
+    <div className="p-4 md:p-6 safe-pt animate-fade-in relative pb-32">
+      <div className="flex flex-col gap-4 mb-6">
         <div className="flex justify-between items-center">
             <div>
-            <h1 className="text-4xl font-black text-teal-900 leading-none mb-1">Stock Actual</h1>
+            <h1 className="text-3xl font-black text-teal-900 leading-none mb-1">Stock Actual</h1>
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Gestión de activos alimentarios</p>
             </div>
             <div className="flex gap-2">
                 <button 
                     onClick={() => { if(isOnline) setShowScanner(true); }}
                     disabled={!isOnline}
-                    className={`text-white px-5 py-4 rounded-2xl flex items-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-xl transition-all ${isOnline ? 'bg-orange-500 hover:bg-orange-600 active:scale-95' : 'bg-gray-400 opacity-50 cursor-not-allowed'}`}
+                    className={`text-white px-4 py-2.5 rounded-xl flex items-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-md transition-all ${isOnline ? 'bg-orange-500 hover:bg-orange-600 active:scale-95' : 'bg-gray-400 opacity-50 cursor-not-allowed'}`}
                 >
                     {isOnline ? <><Camera className="w-4 h-4" /> Escáner</> : <><WifiOff className="w-4 h-4" /> Offline</>}
                 </button>
                 <button 
                     onClick={() => setShowAddModal(true)} 
-                    className="w-14 h-14 bg-teal-900 text-white rounded-2xl flex items-center justify-center shadow-xl hover:bg-teal-800 active:scale-90 transition-all"
+                    className="w-10 h-10 bg-teal-900 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-teal-800 active:scale-90 transition-all"
                 >
-                    <Plus className="w-6 h-6" />
+                    <Plus className="w-5 h-5" />
                 </button>
             </div>
         </div>
 
         {items.length > 0 && (
             <div className="relative group">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5 group-focus-within:text-teal-500 transition-colors" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4 group-focus-within:text-teal-500 transition-colors" />
                 <input 
                     type="text" 
                     placeholder="Buscar en despensa..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-16 pr-6 py-4 bg-white border border-gray-100 rounded-[2rem] font-bold text-gray-700 shadow-sm focus:outline-none focus:border-teal-500 focus:shadow-lg transition-all"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-100 rounded-full font-bold text-gray-700 text-sm shadow-sm focus:outline-none focus:border-teal-500 focus:shadow-md transition-all"
                 />
             </div>
         )}
       </div>
 
       {items.length > 0 && (
-          <div className="flex gap-3 overflow-x-auto no-scrollbar mb-8 pb-2">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6 pb-1">
               <button 
                 onClick={() => setActiveFilter(activeFilter === 'expired' ? 'all' : 'expired')}
-                className={`flex items-center gap-3 px-6 py-4 rounded-[2rem] border transition-all ${
-                    activeFilter === 'expired' ? 'bg-red-500 text-white border-red-500 shadow-xl' : 'bg-white border-gray-100 text-gray-500 hover:border-red-200'
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+                    activeFilter === 'expired' ? 'bg-red-500 text-white border-red-500 shadow-md' : 'bg-white border-gray-100 text-gray-500 hover:border-red-200'
                 }`}
               >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activeFilter === 'expired' ? 'bg-white/20' : 'bg-red-50'}`}>
-                      <AlertOctagon className={`w-4 h-4 ${activeFilter === 'expired' ? 'text-white' : 'text-red-500'}`} />
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${activeFilter === 'expired' ? 'bg-white/20' : 'bg-red-50'}`}>
+                      <AlertOctagon className={`w-3 h-3 ${activeFilter === 'expired' ? 'text-white' : 'text-red-500'}`} />
                   </div>
                   <div className="text-left">
-                      <div className="text-xl font-black leading-none">{pantryStats.expired}</div>
+                      <div className="text-sm font-black leading-none">{pantryStats.expired}</div>
                       <div className="text-[8px] font-bold uppercase tracking-widest opacity-70">Caducados</div>
                   </div>
               </button>
 
               <button 
                 onClick={() => setActiveFilter(activeFilter === 'critical' ? 'all' : 'critical')}
-                className={`flex items-center gap-3 px-6 py-4 rounded-[2rem] border transition-all ${
-                    activeFilter === 'critical' ? 'bg-orange-500 text-white border-orange-500 shadow-xl' : 'bg-white border-gray-100 text-gray-500 hover:border-orange-200'
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+                    activeFilter === 'critical' ? 'bg-orange-500 text-white border-orange-500 shadow-md' : 'bg-white border-gray-100 text-gray-500 hover:border-orange-200'
                 }`}
               >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activeFilter === 'critical' ? 'bg-white/20' : 'bg-orange-50'}`}>
-                      <AlertTriangle className={`w-4 h-4 ${activeFilter === 'critical' ? 'text-white' : 'text-orange-500'}`} />
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${activeFilter === 'critical' ? 'bg-white/20' : 'bg-orange-50'}`}>
+                      <AlertTriangle className={`w-3 h-3 ${activeFilter === 'critical' ? 'text-white' : 'text-orange-500'}`} />
                   </div>
                   <div className="text-left">
-                      <div className="text-xl font-black leading-none">{pantryStats.critical}</div>
+                      <div className="text-sm font-black leading-none">{pantryStats.critical}</div>
                       <div className="text-[8px] font-bold uppercase tracking-widest opacity-70">Críticos</div>
                   </div>
               </button>
 
               <button 
                 onClick={() => setActiveFilter(activeFilter === 'fresh' ? 'all' : 'fresh')}
-                className={`flex items-center gap-3 px-6 py-4 rounded-[2rem] border transition-all ${
-                    activeFilter === 'fresh' ? 'bg-teal-600 text-white border-teal-600 shadow-xl' : 'bg-white border-gray-100 text-gray-500 hover:border-teal-200'
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+                    activeFilter === 'fresh' ? 'bg-teal-600 text-white border-teal-600 shadow-md' : 'bg-white border-gray-100 text-gray-500 hover:border-teal-200'
                 }`}
               >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activeFilter === 'fresh' ? 'bg-white/20' : 'bg-teal-50'}`}>
-                      <CheckCircle2 className={`w-4 h-4 ${activeFilter === 'fresh' ? 'text-white' : 'text-teal-600'}`} />
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${activeFilter === 'fresh' ? 'bg-white/20' : 'bg-teal-50'}`}>
+                      <CheckCircle2 className={`w-3 h-3 ${activeFilter === 'fresh' ? 'text-white' : 'text-teal-600'}`} />
                   </div>
                   <div className="text-left">
-                      <div className="text-xl font-black leading-none">{pantryStats.fresh}</div>
+                      <div className="text-sm font-black leading-none">{pantryStats.fresh}</div>
                       <div className="text-[8px] font-bold uppercase tracking-widest opacity-70">Frescos</div>
                   </div>
               </button>
@@ -304,17 +304,17 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
 
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-[50vh] text-center px-12">
-          <div className="w-32 h-32 bg-gray-50 rounded-[3rem] flex items-center justify-center mb-8">
-            <Package className="w-16 h-16 text-gray-200" />
+          <div className="w-24 h-24 bg-gray-50 rounded-3xl flex items-center justify-center mb-6">
+            <Package className="w-12 h-12 text-gray-200" />
           </div>
-          <h2 className="text-3xl font-black text-gray-900 mb-3">Tu nevera está vacía</h2>
-          <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed">
+          <h2 className="text-2xl font-black text-gray-900 mb-2">Tu nevera está vacía</h2>
+          <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed text-sm">
             Escanea tu ticket de compra para que Fresco empiece a gestionar tus ahorros automáticamente.
           </p>
           <button 
             onClick={() => { if(isOnline) setShowScanner(true); }}
             disabled={!isOnline}
-            className={`mt-8 px-10 py-5 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all ${isOnline ? 'bg-teal-900' : 'bg-gray-400 cursor-not-allowed'}`}
+            className={`mt-6 px-8 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all ${isOnline ? 'bg-teal-900' : 'bg-gray-400 cursor-not-allowed'}`}
           >
             {isOnline ? 'Escanear mi primer ticket' : 'Modo Offline: Usar Botón +'}
           </button>
@@ -322,12 +322,12 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       ) : (
         <div className="space-y-4">
           {categoriesPresent.sort().map(cat => (
-            <div key={cat} className="animate-fade-in bg-white border border-gray-100 rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div key={cat} className="animate-fade-in bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
               <button 
                 onClick={() => toggleCategory(cat)}
-                className="w-full flex items-center justify-between p-6 bg-white hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition-colors"
               >
-                  <h3 className="uppercase text-[11px] font-black text-teal-900 tracking-[0.3em] flex items-center gap-3">
+                  <h3 className="uppercase text-[10px] font-black text-teal-900 tracking-[0.2em] flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${expandedCategories[cat] ? 'bg-orange-500' : 'bg-gray-300'}`} /> 
                       {CATEGORIES_OPTIONS.find(c => c.id === cat)?.label || cat}
                   </h3>
@@ -335,7 +335,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
               </button>
 
               {expandedCategories[cat] && (
-                  <div className="p-6 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 border-t border-gray-50">
+                  <div className="p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 border-t border-gray-50">
                     {filteredItems.filter(i => i.category === cat).map((item: PantryItem) => {
                       const status = getExpiryStatus(item);
                       const step = getSmartStep(item.unit || '');
@@ -344,21 +344,21 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                       return (
                         <div 
                             key={item.id} 
-                            ref={(el) => { if (el && itemRefs.current) itemRefs.current[String(item.id)] = el; }}
-                            className={`bg-gray-50 p-6 rounded-[2rem] border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
+                            ref={(el) => { if (el && itemRefs.current) itemRefs.current[item.id] = el; }}
+                            className={`bg-gray-50 p-4 rounded-2xl border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
                                 isHighlighted 
-                                ? 'ring-4 ring-orange-400 scale-105 shadow-2xl z-10 bg-orange-50 border-orange-200' 
-                                : 'border-gray-100 hover:border-teal-400 hover:shadow-xl hover:bg-white'
+                                ? 'ring-2 ring-orange-400 scale-[1.02] shadow-xl z-10 bg-orange-50 border-orange-200' 
+                                : 'border-gray-100 hover:border-teal-400 hover:shadow-md hover:bg-white'
                             }`}
                         >
-                          <div className="flex justify-between items-start mb-6">
+                          <div className="flex justify-between items-start mb-4">
                             <div className="flex gap-1 items-center w-full overflow-hidden">
                                 {status && status.type !== 'fresh' ? (
-                                    <div className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase flex items-center gap-1 shadow-sm flex-shrink-0 ${status.color}`}>
+                                    <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase flex items-center gap-1 shadow-sm flex-shrink-0 ${status.color}`}>
                                         <AlertTriangle className="w-3 h-3" /> {status.label}
                                     </div>
                                 ) : (
-                                    <div className="px-3 py-1.5 rounded-full text-[8px] font-black uppercase flex items-center gap-1 bg-white text-gray-300 border border-gray-100 flex-shrink-0">
+                                    <div className="px-2 py-1 rounded-lg text-[8px] font-black uppercase flex items-center gap-1 bg-white text-gray-300 border border-gray-100 flex-shrink-0">
                                         Fresco
                                     </div>
                                 )}
@@ -367,38 +367,38 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                     {onCook && (
                                         <button 
                                             onClick={() => onCook?.(String(item.name || ''))}
-                                            className="p-2 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all"
+                                            className="p-1.5 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
                                             title="Cocinar con esto"
                                         >
-                                            <Zap className="w-4 h-4" />
+                                            <Zap className="w-3 h-3" />
                                         </button>
                                     )}
                                     <button 
                                         onClick={() => setItemToEdit(item)} 
-                                        className="p-2 text-gray-300 hover:text-teal-600 transition-colors"
+                                        className="p-1.5 text-gray-300 hover:text-teal-600 transition-colors"
                                     >
-                                        <Pencil className="w-4 h-4" />
+                                        <Pencil className="w-3 h-3" />
                                     </button>
                                     <button 
                                         onClick={() => initDelete(item)} 
-                                        className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                                        className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
                                     >
-                                        <Trash2 className="w-4 h-4" />
+                                        <Trash2 className="w-3 h-3" />
                                     </button>
                                 </div>
                             </div>
                           </div>
                           
                           <div>
-                            <div className="font-black text-gray-900 capitalize text-lg mb-4 truncate pr-2">
+                            <div className="font-black text-gray-900 capitalize text-base mb-3 truncate pr-2">
                                 {renderHighlightedText(`${item.name || ''}`, `${searchTerm || ''}`)}
                             </div>
-                            <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-gray-100 group-hover:border-teal-100 transition-colors shadow-sm">
+                            <div className="flex items-center justify-between bg-white p-1 rounded-xl border border-gray-100 group-hover:border-teal-100 transition-colors shadow-sm">
                                 <button 
                                     onClick={() => onUpdateQuantity(item.id, -step)}
-                                    className="w-10 h-10 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-xl transition-all active:scale-75 flex-shrink-0"
+                                    className="w-8 h-8 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
                                 >
-                                    <Minus className="w-5 h-5" />
+                                    <Minus className="w-4 h-4" />
                                 </button>
                                 
                                 <button
@@ -406,22 +406,22 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                         setQuickAdjustItem(item);
                                         setQuickValue(item.quantity);
                                     }}
-                                    className="flex-1 text-center min-w-0 px-2"
+                                    className="flex-1 text-center min-w-0 px-1"
                                 >
-                                    <span className="text-xs font-black text-teal-900 tabular-nums border-b-2 border-dashed border-teal-200 hover:border-orange-400 hover:text-orange-500 transition-colors block truncate">
-                                        {Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(2)} <span className="opacity-40 text-[10px]">{item.unit}</span>
+                                    <span className="text-xs font-black text-teal-900 tabular-nums border-b border-dashed border-teal-200 hover:border-orange-400 hover:text-orange-500 transition-colors block truncate">
+                                        {Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(2)} <span className="opacity-40 text-[9px]">{item.unit}</span>
                                     </span>
                                 </button>
 
                                 <button 
                                     onClick={() => onUpdateQuantity(item.id, step)}
-                                    className="w-10 h-10 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-xl transition-all active:scale-75 flex-shrink-0"
+                                    className="w-8 h-8 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
                                 >
-                                    <PlusIcon className="w-5 h-5" />
+                                    <PlusIcon className="w-4 h-4" />
                                 </button>
                             </div>
-                            <div className="mt-5 flex items-center gap-2 text-[9px] text-gray-300 font-black uppercase tracking-widest">
-                                <Clock className="w-3.5 h-3.5" />
+                            <div className="mt-3 flex items-center gap-1.5 text-[8px] text-gray-300 font-black uppercase tracking-widest">
+                                <Clock className="w-3 h-3" />
                                 {format(new Date(item.added_at), 'd MMM')}
                             </div>
                           </div>
@@ -436,43 +436,40 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
         </div>
       )}
 
-      {/* ... Modals ... */}
+      {/* ... Modals (Keeping logic same, reducing padding/radius) ... */}
       
       {wasteItem && (
           <div className="fixed inset-0 z-[1200] bg-teal-900/60 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in" onClick={() => setWasteItem(null)}>
-              <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
-                  <div className="text-center mb-8">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Trash2 className="w-8 h-8 text-gray-400" />
+              <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+                  <div className="text-center mb-6">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Trash2 className="w-6 h-6 text-gray-400" />
                       </div>
-                      <h3 className="text-2xl font-black text-gray-900 mb-2">¿Ya no está?</h3>
-                      <p className="text-gray-500 font-medium text-sm leading-relaxed">
-                          Ayúdanos a calcular tu ahorro real. ¿Por qué eliminas <span className="text-teal-900 font-black">"{wasteItem.name}"</span>?
+                      <h3 className="text-xl font-black text-gray-900 mb-1">¿Ya no está?</h3>
+                      <p className="text-gray-500 font-medium text-xs leading-relaxed">
+                          Ayúdanos a calcular tu ahorro real.
                       </p>
                   </div>
 
-                  <div className="space-y-3">
-                      <button onClick={() => confirmDelete('consumed')} className="w-full p-4 rounded-2xl bg-green-50 border border-green-100 hover:bg-green-100 flex items-center gap-4 transition-all group">
-                          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-green-600 shadow-sm group-hover:scale-110 transition-transform"><Utensils className="w-5 h-5" /></div>
+                  <div className="space-y-2">
+                      <button onClick={() => confirmDelete('consumed')} className="w-full p-3 rounded-xl bg-green-50 border border-green-100 hover:bg-green-100 flex items-center gap-3 transition-all group">
+                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-green-600 shadow-sm"><Utensils className="w-4 h-4" /></div>
                           <div className="text-left">
-                              <div className="font-black text-teal-900 text-sm">Me lo comí</div>
-                              <div className="text-[10px] font-bold text-green-600 uppercase tracking-widest">¡Que aproveche!</div>
+                              <div className="font-black text-teal-900 text-xs">Me lo comí</div>
                           </div>
                       </button>
 
-                      <button onClick={() => confirmDelete('wasted')} className="w-full p-4 rounded-2xl bg-red-50 border border-red-100 hover:bg-red-100 flex items-center gap-4 transition-all group">
-                          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-red-500 shadow-sm group-hover:scale-110 transition-transform"><Skull className="w-5 h-5" /></div>
+                      <button onClick={() => confirmDelete('wasted')} className="w-full p-3 rounded-xl bg-red-50 border border-red-100 hover:bg-red-100 flex items-center gap-3 transition-all group">
+                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-red-500 shadow-sm"><Skull className="w-4 h-4" /></div>
                           <div className="text-left">
-                              <div className="font-black text-teal-900 text-sm">Se echó a perder</div>
-                              <div className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Descontar Ahorro</div>
+                              <div className="font-black text-teal-900 text-xs">Se echó a perder</div>
                           </div>
                       </button>
 
-                      <button onClick={() => confirmDelete('mistake')} className="w-full p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:bg-gray-100 flex items-center gap-4 transition-all group">
-                          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-gray-400 shadow-sm group-hover:scale-110 transition-transform"><RotateCcw className="w-5 h-5" /></div>
+                      <button onClick={() => confirmDelete('mistake')} className="w-full p-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 flex items-center gap-3 transition-all group">
+                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-gray-400 shadow-sm"><RotateCcw className="w-4 h-4" /></div>
                           <div className="text-left">
-                              <div className="font-black text-teal-900 text-sm">Error / Corrección</div>
-                              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sin impacto</div>
+                              <div className="font-black text-teal-900 text-xs">Error / Corrección</div>
                           </div>
                       </button>
                   </div>
@@ -482,27 +479,27 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
 
       {quickAdjustItem && (
           <div className="fixed inset-0 z-[1100] bg-teal-900/40 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in" onClick={() => setQuickAdjustItem(null)}>
-              <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
-                  <div className="text-center mb-8">
-                      <h3 className="text-2xl font-black text-gray-900 capitalize mb-1 truncate">{quickAdjustItem.name}</h3>
-                      <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Ajuste Rápido de Stock</p>
+              <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+                  <div className="text-center mb-6">
+                      <h3 className="text-xl font-black text-gray-900 capitalize mb-1 truncate">{quickAdjustItem.name}</h3>
+                      <p className="text-gray-400 font-bold uppercase text-[9px] tracking-widest">Ajuste Rápido</p>
                   </div>
                   
-                  <div className="flex items-center justify-center gap-4 mb-8">
-                      <button onClick={() => setQuickValue(Math.max(0, quickValue - getSmartStep(quickAdjustItem.unit)))} className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-xl font-bold hover:bg-gray-200"><Minus /></button>
-                      <div className="text-4xl font-black text-teal-900 w-32 text-center flex flex-col items-center justify-center">
+                  <div className="flex items-center justify-center gap-4 mb-6">
+                      <button onClick={() => setQuickValue(Math.max(0, quickValue - getSmartStep(quickAdjustItem.unit)))} className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg font-bold hover:bg-gray-200"><Minus className="w-4 h-4" /></button>
+                      <div className="text-3xl font-black text-teal-900 w-24 text-center flex flex-col items-center justify-center">
                           {quickValue.toFixed(quickAdjustItem.unit === 'g' || quickAdjustItem.unit === 'ml' ? 0 : 2)}
-                          <span className="text-lg text-gray-400 ml-1 block">{quickAdjustItem.unit}</span>
+                          <span className="text-sm text-gray-400 ml-1 block">{quickAdjustItem.unit}</span>
                       </div>
-                      <button onClick={() => setQuickValue(quickValue + getSmartStep(quickAdjustItem.unit))} className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-xl font-bold hover:bg-gray-200"><PlusIcon /></button>
+                      <button onClick={() => setQuickValue(quickValue + getSmartStep(quickAdjustItem.unit))} className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg font-bold hover:bg-gray-200"><PlusIcon className="w-4 h-4" /></button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-8">
-                      <button onClick={() => setQuickValue(quickAdjustItem.quantity * 0.5)} className="py-3 bg-orange-50 text-orange-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-orange-100 transition-colors">Gasté la mitad</button>
-                      <button onClick={() => setQuickValue(0)} className="py-3 bg-red-50 text-red-500 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-100 transition-colors">Se acabó (0)</button>
+                  <div className="grid grid-cols-2 gap-2 mb-6">
+                      <button onClick={() => setQuickValue(quickAdjustItem.quantity * 0.5)} className="py-2 bg-orange-50 text-orange-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-orange-100 transition-colors">Mitad</button>
+                      <button onClick={() => setQuickValue(0)} className="py-2 bg-red-50 text-red-500 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-100 transition-colors">Se acabó (0)</button>
                   </div>
 
-                  <button onClick={handleQuickAdjustConfirm} className="w-full py-5 bg-teal-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-xl active:scale-95 transition-all">
+                  <button onClick={handleQuickAdjustConfirm} className="w-full py-4 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">
                       Confirmar
                   </button>
               </div>
@@ -511,14 +508,14 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
 
       {showAddModal && (
         <div className="fixed inset-0 z-[1000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
-          <div className="bg-white w-full max-w-md rounded-[3.5rem] p-10 shadow-2xl animate-slide-up overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center mb-10">
-              <h3 className="text-3xl font-black text-teal-900">Añadir Stock</h3>
-              <button onClick={() => setShowAddModal(false)} className="p-3 bg-gray-50 rounded-2xl text-gray-400"><X className="w-6 h-6" /></button>
+          <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl animate-slide-up overflow-y-auto max-h-[90vh]">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-2xl font-black text-teal-900">Añadir Stock</h3>
+              <button onClick={() => setShowAddModal(false)} className="p-2 bg-gray-50 rounded-xl text-gray-400"><X className="w-5 h-5" /></button>
             </div>
-            <form onSubmit={handleManualAdd} className="space-y-8">
+            <form onSubmit={handleManualAdd} className="space-y-6">
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Nombre</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Nombre</label>
                 <div className="relative">
                     <input 
                       type="text" 
@@ -532,16 +529,16 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                               quantityInputRef.current?.focus();
                           }
                       }}
-                      className="w-full p-5 pl-12 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-lg transition-all"
+                      className="w-full p-4 pl-10 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base transition-all"
                     />
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                        <Wand2 className={`w-5 h-5 ${newItem.name ? 'text-orange-400 animate-pulse' : 'text-gray-300'}`} />
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                        <Wand2 className={`w-4 h-4 ${newItem.name ? 'text-orange-400 animate-pulse' : 'text-gray-300'}`} />
                     </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Categoría</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Categoría</label>
                 <div className="grid grid-cols-3 gap-2">
                     {CATEGORIES_OPTIONS.map(cat => (
                         <button
@@ -551,22 +548,22 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                 setNewItem({...newItem, category: cat.id});
                                 setManualOverride(p => ({...p, category: true}));
                             }}
-                            className={`p-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all ${
+                            className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
                                 newItem.category === cat.id 
                                     ? 'bg-orange-50 border-orange-500 text-orange-700' 
                                     : 'bg-white border-gray-100 text-gray-400 hover:border-teal-200'
                             }`}
                         >
-                            <span className="text-xl">{cat.emoji}</span>
-                            <span className="text-[9px] font-black uppercase tracking-tighter">{cat.label}</span>
+                            <span className="text-lg">{cat.emoji}</span>
+                            <span className="text-[8px] font-black uppercase tracking-tighter">{cat.label}</span>
                         </button>
                     ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Cantidad</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Cantidad</label>
                   <input 
                     type="number" 
                     step="0.1"
@@ -577,18 +574,18 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') handleManualAdd(e);
                     }}
-                    className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-lg transition-all"
+                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Unidad</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Unidad</label>
                   <select 
                     value={newItem.unit}
                     onChange={e => {
                         setNewItem({...newItem, unit: e.target.value});
                         setManualOverride(p => ({...p, unit: true}));
                     }}
-                    className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-lg appearance-none transition-all"
+                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base appearance-none transition-all"
                   >
                     <option value="unidades">Uds</option>
                     <option value="g">Gramos</option>
@@ -598,8 +595,8 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                   </select>
                 </div>
               </div>
-              <button type="submit" className="w-full py-6 bg-teal-900 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl flex items-center justify-center gap-4 hover:bg-teal-800 transition-all active:scale-95">
-                <Save className="w-5 h-5" /> Registrar Producto
+              <button type="submit" className="w-full py-5 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95">
+                <Save className="w-4 h-4" /> Registrar Producto
               </button>
             </form>
           </div>
@@ -608,51 +605,51 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
 
       {itemToEdit && (
         <div className="fixed inset-0 z-[1000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
-          <div className="bg-white w-full max-w-md rounded-[3.5rem] p-10 shadow-2xl animate-slide-up overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center mb-10">
-              <h3 className="text-3xl font-black text-teal-900">Editar Stock</h3>
-              <button onClick={() => setItemToEdit(null)} className="p-3 bg-gray-50 rounded-2xl text-gray-400"><X className="w-6 h-6" /></button>
+          <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl animate-slide-up overflow-y-auto max-h-[90vh]">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-2xl font-black text-teal-900">Editar Stock</h3>
+              <button onClick={() => setItemToEdit(null)} className="p-2 bg-gray-50 rounded-xl text-gray-400"><X className="w-5 h-5" /></button>
             </div>
-            <form onSubmit={handleEditSubmit} className="space-y-8">
+            <form onSubmit={handleEditSubmit} className="space-y-6">
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Nombre</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Nombre</label>
                 <input 
                   type="text" 
                   required
                   value={itemToEdit.name}
                   onChange={e => setItemToEdit({...itemToEdit!, name: e.target.value})}
-                  className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-lg transition-all"
+                  className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Fecha de Caducidad</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Fecha de Caducidad</label>
                 <input 
                   type="date" 
                   value={itemToEdit.expires_at ? itemToEdit.expires_at.split('T')[0] : ''}
                   onChange={e => setItemToEdit({...itemToEdit!, expires_at: new Date(e.target.value).toISOString()})}
-                  className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-lg transition-all"
+                  className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Cantidad</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Cantidad</label>
                   <input 
                     type="number" 
                     step="0.1"
                     required
                     value={itemToEdit.quantity}
                     onChange={e => setItemToEdit({...itemToEdit!, quantity: parseFloat(e.target.value)})}
-                    className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-lg transition-all"
+                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Unidad</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Unidad</label>
                   <select 
                     value={itemToEdit.unit}
                     onChange={e => setItemToEdit({...itemToEdit!, unit: e.target.value})}
-                    className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-lg appearance-none transition-all"
+                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base appearance-none transition-all"
                   >
                     <option value="unidades">Uds</option>
                     <option value="g">Gramos</option>
@@ -662,8 +659,8 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                   </select>
                 </div>
               </div>
-              <button type="submit" className="w-full py-6 bg-teal-900 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl flex items-center justify-center gap-4 hover:bg-teal-800 transition-all active:scale-95">
-                <Save className="w-5 h-5" /> Guardar Cambios
+              <button type="submit" className="w-full py-5 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95">
+                <Save className="w-4 h-4" /> Guardar Cambios
               </button>
             </form>
           </div>
