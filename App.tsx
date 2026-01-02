@@ -9,6 +9,7 @@ import * as db from './services/dbService';
 import { subtractIngredient, addIngredient, cleanName, roundSafe } from './services/unitService';
 import { AuthPage } from './components/AuthPage';
 import { addToSyncQueue, initSyncListener } from './services/syncService';
+import { MOCK_USER, FALLBACK_RECIPES } from './constants';
 
 const Dashboard = React.lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
 const Planner = React.lazy(() => import('./components/Planner').then(module => ({ default: module.Planner })));
@@ -23,6 +24,8 @@ import { Home, Calendar, ShoppingBag, BookOpen, Package, User, Sparkles, AlertOc
 import { format, addDays, subDays } from 'date-fns';
 
 type ViewState = 'auth' | 'onboarding' | 'app';
+
+const DEMO_USER_ID = 'demo-user-id';
 
 const PageLoader = ({ message = "Cargando Fresco...", showReload = false }: { message?: string, showReload?: boolean }) => (
   <div className="h-full w-full flex flex-col items-center justify-center p-10 min-h-screen bg-[#FDFDFD]">
@@ -105,8 +108,11 @@ const App: React.FC = () => {
   
   const normalizeName = (name: string) => cleanName(name);
 
+  // FIX: Bypass DB calls in Demo Mode
   const safeDbCall = async (action: () => Promise<void>, fallbackType: any, fallbackPayload: any) => {
       if (!userId) return;
+      if (userId === DEMO_USER_ID) return; // Demo mode bypass
+
       if (!navigator.onLine) {
           addToSyncQueue(userId, fallbackType, fallbackPayload);
           return;
@@ -117,6 +123,31 @@ const App: React.FC = () => {
           console.warn("DB call failed, queueing offline action", e);
           addToSyncQueue(userId, fallbackType, fallbackPayload);
       }
+  };
+
+  const handleDemoLogin = () => {
+      setIsLoaded(false);
+      // Simular login
+      setTimeout(() => {
+          const demoProfile: UserProfile = { ...MOCK_USER, name: "Invitado Demo" };
+          setUser(demoProfile);
+          setUserId(DEMO_USER_ID);
+          
+          // Cargar datos dummy
+          setPantry([
+              { id: '1', name: 'Pasta', quantity: 500, unit: 'g', category: 'grains', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 180).toISOString() },
+              { id: '2', name: 'Tomate Frito', quantity: 2, unit: 'uds', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 90).toISOString() },
+              { id: '3', name: 'Huevos', quantity: 6, unit: 'uds', category: 'dairy', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 14).toISOString() },
+              { id: '4', name: 'Aceite', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
+          ]);
+          setRecipes(FALLBACK_RECIPES);
+          setMealPlan([]);
+          setShoppingList([]);
+          
+          setView('app');
+          setIsLoaded(true);
+          setToast({ msg: "Modo Demo Activado: Los datos son locales.", type: 'info' });
+      }, 800);
   };
 
   const smartPantryMerge = async (incomingItems: PantryItem[]) => {
@@ -519,6 +550,13 @@ const App: React.FC = () => {
   const handleOnboardingComplete = async (profile: UserProfile) => {
       if (!userId) return;
       setUser(profile);
+      
+      // FIX: Demo mode bypass for onboarding save
+      if (userId === DEMO_USER_ID) {
+          setView('app');
+          return;
+      }
+
       await supabase.from('profiles').update({
           dietary_preferences: profile.dietary_preferences,
           favorite_cuisines: profile.favorite_cuisines,
@@ -618,7 +656,7 @@ const App: React.FC = () => {
             </div>
         )}
 
-        {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
+        {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} onEnterDemo={handleDemoLogin} /> : 
          view === 'onboarding' ? <Onboarding onComplete={handleOnboardingComplete} /> :
          <>
           <aside className="hidden md:flex flex-col w-80 bg-teal-800 text-white p-12 fixed h-full z-50">
@@ -697,7 +735,13 @@ const App: React.FC = () => {
               
               {activeTab === 'profile' && user && <Profile user={user} 
                   onUpdate={(u) => { setUser(u); if(userId) supabase.from('profiles').update({ household_size: u.household_size, dietary_preferences: u.dietary_preferences }).eq('id', userId); }} 
-                  onLogout={() => supabase.auth.signOut()} 
+                  onLogout={() => {
+                      if(userId === DEMO_USER_ID) {
+                          setUserId(null); setUser(null); setView('auth');
+                      } else {
+                          supabase.auth.signOut();
+                      }
+                  }} 
                   onReset={() => {
                       if(userId) {
                           alert("Para borrar la cuenta completamente contacta con soporte.");

@@ -206,7 +206,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   const renderHighlightedText = (text: string, highlight: string) => {
       if (!highlight) return text;
       // Ensure text is string and highlight is escaped if needed, though simple includes check above handles filtering
-      const strText = String(text || '');
+      const strText = text || '';
       const parts = strText.split(new RegExp(`(${highlight})`, 'gi'));
       return parts.map((part, i) => 
           part.toLowerCase() === highlight.toLowerCase() 
@@ -337,7 +337,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
 
               {expandedCategories[cat] && (
                   <div className="p-6 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 border-t border-gray-50">
-                    {filteredItems.filter(i => i.category === cat).map(item => {
+                    {filteredItems.filter(i => i.category === cat).map((item: PantryItem) => {
                       const status = getExpiryStatus(item);
                       const step = getSmartStep(item.unit || '');
                       const isHighlighted = highlightId === item.id;
@@ -345,7 +345,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                       return (
                         <div 
                             key={item.id} 
-                            ref={(el) => { if (el && itemRefs.current) itemRefs.current[item.id] = el; }}
+                            ref={(el) => { if (el && itemRefs.current) itemRefs.current[String(item.id)] = el; }}
                             className={`bg-gray-50 p-6 rounded-[2rem] border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
                                 isHighlighted 
                                 ? 'ring-4 ring-orange-400 scale-105 shadow-2xl z-10 bg-orange-50 border-orange-200' 
@@ -393,7 +393,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                           
                           <div>
                             <div className="font-black text-gray-900 capitalize text-lg mb-4 truncate">
-                                {renderHighlightedText(String(item.name || ''), String(searchTerm || ''))}
+                                {renderHighlightedText(item.name || '', searchTerm || '')}
                             </div>
                             <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-gray-100 group-hover:border-teal-100 transition-colors shadow-sm">
                                 <button 

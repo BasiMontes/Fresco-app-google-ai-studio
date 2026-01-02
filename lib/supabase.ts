@@ -18,21 +18,19 @@ const getEnvVar = (key: string) => {
   return '';
 };
 
-// Claves de respaldo extraídas de tu configuración para garantizar que funcione ya
-const FALLBACK_URL = 'https://wslyoakqysiiwpmecfsy.supabase.co';
-const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzbHlvYWtxeXNpaXdwbWVjZnN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAzODk0MjIsImV4cCI6MjA1NTk2NTQyMn0.HTHfBiobaJ8K70Be0G3G3kYUAW5tE_QLMsbxZ_m4xDg';
+// Intentamos leer del .env
+const supabaseUrl = getEnvVar('VITE_SUPABASE_URL') || getEnvVar('NEXT_PUBLIC_SUPABASE_URL');
+const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY') || getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
-// Intentamos leer del .env, si falla usamos los valores directos
-const supabaseUrl = getEnvVar('VITE_SUPABASE_URL') || getEnvVar('NEXT_PUBLIC_SUPABASE_URL') || FALLBACK_URL;
-const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY') || getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY') || FALLBACK_KEY;
-
-export const isConfigured = supabaseUrl && supabaseAnonKey && supabaseUrl !== 'PON_AQUI_TU_URL_DE_SUPABASE';
+// Validación estricta: Solo está configurado si hay URL y Key reales (no placeholders)
+export const isConfigured = !!supabaseUrl && !!supabaseAnonKey && supabaseUrl !== 'PON_AQUI_TU_URL_DE_SUPABASE';
 
 if (!isConfigured) {
-    console.warn('⚠️ FRESCO: Faltan las claves de Supabase. Revisa el archivo .env');
+    console.warn('⚠️ FRESCO: Faltan las claves de Supabase. Asegúrate de configurar VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en tu archivo .env');
 }
 
 // Cliente Singleton
+// Usamos placeholders si no hay config para evitar crashes al importar, pero isConfigured impedirá el uso de la app
 export const supabase = createClient(
     supabaseUrl || 'https://placeholder.supabase.co',
     supabaseAnonKey || 'placeholder'
