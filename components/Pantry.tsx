@@ -393,7 +393,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                           
                           <div>
                             <div className="font-black text-gray-900 capitalize text-lg mb-4 truncate">
-                                {renderHighlightedText(item.name || '', searchTerm || '')}
+                                {renderHighlightedText(String(item.name || ''), String(searchTerm || ''))}
                             </div>
                             <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-gray-100 group-hover:border-teal-100 transition-colors shadow-sm">
                                 <button 

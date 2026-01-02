@@ -1,7 +1,7 @@
 
 import { supabase } from '../lib/supabase';
 import { PantryItem, Recipe, MealSlot, UserProfile, ShoppingItem } from '../types';
-import { FALLBACK_RECIPES } from '../constants';
+import { STATIC_RECIPES } from '../constants';
 
 // --- PANTRY ---
 export const fetchPantry = async (userId: string): Promise<PantryItem[]> => {
@@ -159,12 +159,13 @@ export const deleteMealSlotDB = async (userId: string, date: string, type: strin
     if (error) console.error('Error deleting slot:', error);
 };
 
-// --- SEEDER ---
+// --- SEEDER MEJORADO ---
 export const seedDatabaseIfEmpty = async (userId: string) => {
     const recipes = await fetchRecipes(userId);
     if (recipes.length === 0) {
-        console.log('🌱 Seeding database for new user...');
-        for (const recipe of FALLBACK_RECIPES) {
+        console.log('🌱 Seeding database for new user with Static Library...');
+        // Usar STATIC_RECIPES importado de constants
+        for (const recipe of STATIC_RECIPES) {
             await saveRecipeDB(userId, { ...recipe, id: `seed-${Date.now()}-${Math.random()}` });
         }
         const starterPantry: PantryItem[] = [

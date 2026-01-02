@@ -11,10 +11,18 @@ interface State {
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
+  // Explicitly declare props to satisfy TypeScript if React.Component inheritance inference fails
+  readonly props: Readonly<Props>;
+
   public state: State = {
     hasError: false,
     error: null
   };
+
+  constructor(props: Props) {
+    super(props);
+    this.props = props;
+  }
 
   public static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };

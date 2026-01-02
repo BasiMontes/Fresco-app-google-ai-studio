@@ -4,7 +4,7 @@ import { UserProfile, Recipe, MealSlot, PantryItem, MealCategory, ShoppingItem, 
 import { Onboarding } from './components/Onboarding';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { supabase, isConfigured } from './lib/supabase';
-import { generateRecipesAI, generateBatchCookingAI } from './services/geminiService';
+import { generateBatchCookingAI } from './services/geminiService';
 import * as db from './services/dbService';
 import { subtractIngredient, addIngredient, cleanName, roundSafe } from './services/unitService';
 import { AuthPage } from './components/AuthPage';
@@ -20,7 +20,7 @@ const Profile = React.lazy(() => import('./components/Profile').then(module => (
 const BatchCooking = React.lazy(() => import('./components/BatchCooking').then(module => ({ default: module.BatchCooking })));
 
 import { Logo } from './components/Logo';
-import { Home, Calendar, ShoppingBag, BookOpen, Package, User, Sparkles, AlertOctagon, FileText, CloudCog, WifiOff, ArrowRight, RefreshCw } from 'lucide-react';
+import { Home, Calendar, ShoppingBag, BookOpen, Package, User, Sparkles, AlertOctagon, FileText, CloudCog, WifiOff, ArrowRight, RefreshCw, X } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
 
 type ViewState = 'auth' | 'onboarding' | 'app';
@@ -84,6 +84,14 @@ const App: React.FC = () => {
           return () => clearTimeout(timer);
       }
   }, [isLoaded]);
+
+  // TOAST TIMEOUT (5s)
+  useEffect(() => {
+      if (toast) {
+          const timer = setTimeout(() => setToast(null), 5000);
+          return () => clearTimeout(timer);
+      }
+  }, [toast]);
 
   if (!isConfigured) {
       return (
@@ -564,7 +572,9 @@ const App: React.FC = () => {
           onboarding_completed: true
       }).eq('id', userId);
 
+      // Usar seed estático para evitar llamadas a IA iniciales
       await db.seedDatabaseIfEmpty(userId);
+      
       const starterRecipes = await db.fetchRecipes(userId);
       setRecipes(starterRecipes);
       const starterPantry = await db.fetchPantry(userId);
@@ -652,7 +662,7 @@ const App: React.FC = () => {
                         {toast.action.label} <ArrowRight className="w-3 h-3" />
                     </button>
                 )}
-                <button onClick={() => setToast(null)} className="ml-2 hover:opacity-50"><AlertOctagon className="w-4 h-4 rotate-45" /></button>
+                <button onClick={() => setToast(null)} className="ml-2 hover:opacity-50"><X className="w-4 h-4" /></button>
             </div>
         )}
 
@@ -677,7 +687,8 @@ const App: React.FC = () => {
             </nav>
           </aside>
 
-          <main className="flex-1 md:ml-80 safe-pt min-h-screen">
+          {/* FIX: Container limitado para desktop */}
+          <main className="flex-1 md:ml-80 safe-pt min-h-screen max-w-7xl mx-auto w-full">
             <Suspense fallback={<PageLoader message="Cargando módulo..." />}>
               {activeTab === 'dashboard' && user && <Dashboard 
                   user={user} 

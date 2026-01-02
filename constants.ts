@@ -80,7 +80,6 @@ export const SUPERMARKETS = [
   { id: 'aldi', name: 'Aldi', multiplier: 0.98, color: 'bg-blue-800' }
 ];
 
-// Fix: Add missing time_saved_mins to satisfies UserProfile interface
 export const MOCK_USER: UserProfile = {
   name: "Alex Demo",
   dietary_preferences: ["none"],
@@ -94,23 +93,168 @@ export const MOCK_USER: UserProfile = {
   history_savings: [{ date: '2024-05-01', amount: 124.80 }]
 };
 
-export const FALLBACK_RECIPES: Recipe[] = [
+// REPOSITORIO ESTÁTICO DE RECETAS (Para evitar llamadas a IA iniciales)
+export const STATIC_RECIPES: Recipe[] = [
   {
-    id: "1",
+    id: "static-1",
     title: "Tostada de Aguacate y Huevo",
-    description: "Desayuno energético con grasas saludables.",
+    description: "Desayuno energético con grasas saludables y proteína.",
     meal_category: "breakfast",
     cuisine_type: "healthy",
     difficulty: "easy",
     prep_time: 10,
     servings: 1,
+    calories: 350,
+    dietary_tags: ["vegetarian", "keto"],
+    ingredients: [
+      { name: "pan integral", quantity: 1, unit: "rebanada", category: "grains" },
+      { name: "aguacate", quantity: 0.5, unit: "unidad", category: "fruits" },
+      { name: "huevo", quantity: 1, unit: "unidad", category: "dairy" },
+      { name: "sal", quantity: 1, unit: "pizca", category: "spices" }
+    ],
+    instructions: ["Tostar el pan.", "Chafar el aguacate con un tenedor sobre el pan.", "Cocinar el huevo a la plancha o poché.", "Colocar el huevo sobre el aguacate y salpimentar."],
+    image_url: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-2",
+    title: "Ensalada Mediterránea de Quinoa",
+    description: "Fresca, nutritiva y perfecta para preparar con antelación.",
+    meal_category: "lunch",
+    cuisine_type: "mediterranean",
+    difficulty: "easy",
+    prep_time: 20,
+    servings: 2,
+    calories: 420,
+    dietary_tags: ["vegetarian", "vegan", "gluten_free"],
+    ingredients: [
+      { name: "quinoa", quantity: 150, unit: "g", category: "grains" },
+      { name: "pepino", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "tomate cherry", quantity: 10, unit: "unidades", category: "vegetables" },
+      { name: "aceitunas negras", quantity: 50, unit: "g", category: "pantry" },
+      { name: "aceite de oliva", quantity: 2, unit: "cucharada", category: "pantry" }
+    ],
+    instructions: ["Lavar y cocer la quinoa según instrucciones.", "Cortar pepino y tomates en cubos.", "Mezclar todo en un bol.", "Aliñar con aceite y sal."],
+    image_url: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-3",
+    title: "Pollo al Limón Express",
+    description: "Cena ligera y rápida llena de sabor cítrico.",
+    meal_category: "dinner",
+    cuisine_type: "healthy",
+    difficulty: "medium",
+    prep_time: 25,
+    servings: 2,
+    calories: 380,
+    dietary_tags: ["keto", "gluten_free", "lactose_free"],
+    ingredients: [
+      { name: "pechuga de pollo", quantity: 300, unit: "g", category: "meat" },
+      { name: "limon", quantity: 1, unit: "unidad", category: "fruits" },
+      { name: "ajo", quantity: 2, unit: "diente", category: "vegetables" },
+      { name: "perejil", quantity: 1, unit: "puñado", category: "spices" }
+    ],
+    instructions: ["Cortar el pollo en tiras.", "Dorar en sartén con ajo picado.", "Añadir zumo de limón y reducir.", "Espolvorear perejil fresco."],
+    image_url: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-4",
+    title: "Pasta con Salsa de Tomate y Albahaca",
+    description: "Un clásico italiano infalible y económico.",
+    meal_category: "lunch",
+    cuisine_type: "italian",
+    difficulty: "easy",
+    prep_time: 15,
+    servings: 2,
+    calories: 450,
     dietary_tags: ["vegetarian"],
     ingredients: [
-      { name: "pan", quantity: 1, unit: "rebanada", category: "grains" },
-      { name: "aguacate", quantity: 0.5, unit: "unidad", category: "fruits" },
-      { name: "huevos", quantity: 1, unit: "unidad", category: "dairy" }
+      { name: "pasta", quantity: 200, unit: "g", category: "grains" },
+      { name: "tomate frito", quantity: 200, unit: "ml", category: "pantry" },
+      { name: "queso parmesano", quantity: 30, unit: "g", category: "dairy" },
+      { name: "albahaca", quantity: 5, unit: "hojas", category: "spices" }
     ],
-    instructions: ["Tostar el pan.", "Chafar aguacate.", "Añadir huevo."],
-    image_url: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&q=80"
+    instructions: ["Hervir la pasta al dente.", "Calentar el tomate en una sartén.", "Mezclar pasta con salsa.", "Servir con queso y albahaca."],
+    image_url: "https://images.unsplash.com/photo-1626844131082-256783844137?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-5",
+    title: "Tortilla Francesa con Espinacas",
+    description: "Cena rápida, proteica y ligera.",
+    meal_category: "dinner",
+    cuisine_type: "spanish",
+    difficulty: "easy",
+    prep_time: 10,
+    servings: 1,
+    calories: 220,
+    dietary_tags: ["vegetarian", "keto", "gluten_free"],
+    ingredients: [
+      { name: "huevos", quantity: 2, unit: "unidades", category: "dairy" },
+      { name: "espinacas", quantity: 50, unit: "g", category: "vegetables" },
+      { name: "aceite", quantity: 1, unit: "cucharadita", category: "pantry" }
+    ],
+    instructions: ["Batir los huevos.", "Saltear espinacas un minuto.", "Añadir huevos y cuajar al gusto."],
+    image_url: "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-6",
+    title: "Tacos de Ternera Rápidos",
+    description: "Fiesta mexicana en casa en 20 minutos.",
+    meal_category: "dinner",
+    cuisine_type: "mexican",
+    difficulty: "medium",
+    prep_time: 20,
+    servings: 2,
+    calories: 550,
+    dietary_tags: ["none"],
+    ingredients: [
+      { name: "carne picada", quantity: 250, unit: "g", category: "meat" },
+      { name: "tortillas", quantity: 4, unit: "unidades", category: "grains" },
+      { name: "cebolla", quantity: 0.5, unit: "unidad", category: "vegetables" },
+      { name: "pimiento", quantity: 0.5, unit: "unidad", category: "vegetables" },
+      { name: "comino", quantity: 1, unit: "cucharadita", category: "spices" }
+    ],
+    instructions: ["Sofreír cebolla y pimiento.", "Añadir carne y especias hasta dorar.", "Calentar tortillas y rellenar."],
+    image_url: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-7",
+    title: "Yogur con Fruta y Nueces",
+    description: "Merienda o desayuno probiótico.",
+    meal_category: "breakfast",
+    cuisine_type: "healthy",
+    difficulty: "easy",
+    prep_time: 5,
+    servings: 1,
+    calories: 280,
+    dietary_tags: ["vegetarian", "gluten_free"],
+    ingredients: [
+      { name: "yogur natural", quantity: 1, unit: "unidad", category: "dairy" },
+      { name: "manzana", quantity: 0.5, unit: "unidad", category: "fruits" },
+      { name: "nueces", quantity: 20, unit: "g", category: "pantry" }
+    ],
+    instructions: ["Poner yogur en un bol.", "Añadir fruta troceada y nueces."],
+    image_url: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-8",
+    title: "Salmón al Horno con Verduras",
+    description: "Plato principal elegante y sin esfuerzo.",
+    meal_category: "dinner",
+    cuisine_type: "healthy",
+    difficulty: "medium",
+    prep_time: 30,
+    servings: 2,
+    calories: 480,
+    dietary_tags: ["keto", "paleo", "gluten_free"],
+    ingredients: [
+      { name: "salmon", quantity: 300, unit: "g", category: "fish" },
+      { name: "calabacin", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "zanahoria", quantity: 2, unit: "unidades", category: "vegetables" },
+      { name: "limon", quantity: 0.5, unit: "unidad", category: "fruits" }
+    ],
+    instructions: ["Precalentar horno a 180ºC.", "Colocar salmón y verduras cortadas en bandeja.", "Hornear 20-25 min."],
+    image_url: "https://images.unsplash.com/photo-1467003909585-2f8a7270028d?auto=format&fit=crop&q=80"
   }
 ];
+
+export const FALLBACK_RECIPES = STATIC_RECIPES;
