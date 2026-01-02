@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { UserProfile, Recipe, PantryItem, MealSlot } from '../types';
 import { ChefHat, Sparkles, ArrowRight, PiggyBank, Package, RefreshCw, TrendingUp, AlertTriangle, Zap, Clock, Smile, WifiOff, Sunrise, Sun, Moon, Timer, Apple, Minus, CloudCog, FlaskConical } from 'lucide-react';
 import { generateRecipesAI } from '../services/geminiService';
-import { SPANISH_PRICES } from '../constants';
+import { SPANISH_PRICES, FEATURES } from '../constants';
 import { differenceInDays, getHours, format } from 'date-fns';
 import { MorningBriefing } from './MorningBriefing';
 
@@ -23,6 +23,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
   const [showBriefing, setShowBriefing] = useState(false);
 
   useEffect(() => {
+      // QA: Feature Flag check
+      if (!FEATURES.MORNING_BRIEFING) return;
+
       const hour = getHours(new Date());
       const todayStr = format(new Date(), 'yyyy-MM-dd');
       const lastBriefingDate = localStorage.getItem('fresco_briefing_seen_date');

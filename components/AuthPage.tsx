@@ -24,10 +24,12 @@ const translateAuthError = (errorMsg: string): string => {
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isRecovery, setIsRecovery] = useState(false); // Nuevo estado para Reset Password
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
   
   // Estado para flujo de verificación
@@ -40,23 +42,29 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    // Validación Legal
-    if (!isLogin && !acceptedTerms) {
-        setError('Debes aceptar los Términos y la Política de Privacidad para registrarte.');
-        return;
-    }
-
+    setSuccessMsg('');
     setLoading(true);
 
     try {
-        if (isLogin) {
+        if (isRecovery) {
+            // QA: Reset Password Implementation
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin,
+            });
+            if (error) throw error;
+            setSuccessMsg('Hemos enviado un enlace de recuperación a tu correo.');
+        } else if (isLogin) {
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
             if (error) throw error;
         } else {
+            // Validación Legal antes de registro
+            if (!acceptedTerms) {
+                throw new Error('Debes aceptar los Términos y la Política de Privacidad.');
+            }
+
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
@@ -147,36 +155,46 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             <div className="flex justify-center mb-10">
                 <Logo className="w-56" align="center" />
             </div>
-            <div className="mb-10">
-                <h2 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
-                    {isLogin ? 'Bienvenido' : 'Crear Cuenta'}
-                </h2>
-                <p className="text-lg text-gray-500">
-                    {isLogin ? 'Accede a tu despensa en la nube.' : 'Empieza a ahorrar hoy mismo.'}
-                </p>
-            </div>
+            
+            {isRecovery ? (
+                <div className="mb-10">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">Recuperar Contraseña</h2>
+                    <p className="text-gray-500">Introduce tu email y te enviaremos instrucciones.</p>
+                </div>
+            ) : (
+                <div className="mb-10">
+                    <h2 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
+                        {isLogin ? 'Bienvenido' : 'Crear Cuenta'}
+                    </h2>
+                    <p className="text-lg text-gray-500">
+                        {isLogin ? 'Accede a tu despensa en la nube.' : 'Empieza a ahorrar hoy mismo.'}
+                    </p>
+                </div>
+            )}
 
-            <div className="flex p-1.5 bg-gray-100 rounded-2xl mb-8 border border-gray-200">
-                <button
-                    onClick={() => { setIsLogin(true); setError(''); }}
-                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
-                        isLogin ? 'bg-white text-teal-900 shadow-sm ring-1 ring-black/5' : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                >
-                    Iniciar Sesión
-                </button>
-                <button
-                    onClick={() => { setIsLogin(false); setError(''); }}
-                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
-                        !isLogin ? 'bg-white text-teal-900 shadow-sm ring-1 ring-black/5' : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                >
-                    Registrarse
-                </button>
-            </div>
+            {!isRecovery && (
+                <div className="flex p-1.5 bg-gray-100 rounded-2xl mb-8 border border-gray-200">
+                    <button
+                        onClick={() => { setIsLogin(true); setError(''); }}
+                        className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
+                            isLogin ? 'bg-white text-teal-900 shadow-sm ring-1 ring-black/5' : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        Iniciar Sesión
+                    </button>
+                    <button
+                        onClick={() => { setIsLogin(false); setError(''); }}
+                        className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
+                            !isLogin ? 'bg-white text-teal-900 shadow-sm ring-1 ring-black/5' : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        Registrarse
+                    </button>
+                </div>
+            )}
 
             <form onSubmit={handleAuth} className="space-y-6">
-                {!isLogin && (
+                {!isLogin && !isRecovery && (
                     <div className="space-y-2 animate-slide-up">
                         <label className="text-sm font-semibold text-gray-700 ml-1">Nombre Completo</label>
                         <div className="relative group">
@@ -206,22 +224,24 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700 ml-1">Contraseña</label>
-                    <div className="relative group">
-                        <Lock className="absolute left-4 top-4 w-5 h-5 text-gray-400 group-focus-within:text-teal-600 transition-colors" />
-                        <input
-                            type="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
-                        />
+                {!isRecovery && (
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700 ml-1">Contraseña</label>
+                        <div className="relative group">
+                            <Lock className="absolute left-4 top-4 w-5 h-5 text-gray-400 group-focus-within:text-teal-600 transition-colors" />
+                            <input
+                                type="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full pl-12 pr-4 py-4 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Checkbox de Términos (Solo Registro) */}
-                {!isLogin && (
+                {!isLogin && !isRecovery && (
                     <div className="flex items-start gap-3 pt-2 animate-slide-up">
                         <div className="relative flex items-center">
                             <input
@@ -246,6 +266,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                     </div>
                 )}
 
+                {successMsg && (
+                    <div className="flex items-center gap-3 text-green-700 font-medium text-sm bg-green-50 border border-green-100 p-4 rounded-xl animate-fade-in">
+                        <Check className="w-5 h-5 flex-shrink-0" />
+                        {successMsg}
+                    </div>
+                )}
+
                 <button
                     type="submit"
                     disabled={loading}
@@ -254,18 +281,22 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                     {loading ? (
                         <Loader2 className="w-6 h-6 animate-spin" />
                     ) : (
-                        <>{isLogin ? 'Entrar a mi cuenta' : 'Crear cuenta gratis'}<ArrowRight className="w-5 h-5" /></>
+                        <>{isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar a mi cuenta' : 'Crear cuenta gratis')}<ArrowRight className="w-5 h-5" /></>
                     )}
                 </button>
             </form>
 
-            {isLogin && (
-                <div className="mt-8 text-center">
+            <div className="mt-8 text-center">
+                {isRecovery ? (
+                    <button onClick={() => { setIsRecovery(false); setIsLogin(true); setError(''); setSuccessMsg(''); }} className="text-sm font-bold text-gray-500 hover:text-teal-700">
+                        Volver a Iniciar Sesión
+                    </button>
+                ) : isLogin && (
                     <p className="text-sm text-gray-500">
-                        ¿Olvidaste tu contraseña? <span className="font-bold text-teal-700 cursor-pointer hover:underline">Recuperar</span>
+                        ¿Olvidaste tu contraseña? <span onClick={() => setIsRecovery(true)} className="font-bold text-teal-700 cursor-pointer hover:underline">Recuperar</span>
                     </p>
-                </div>
-            )}
+                )}
+            </div>
         </div>
       </div>
     </div>

@@ -622,7 +622,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                   type="text" 
                   required
                   value={itemToEdit.name}
-                  onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})}
+                  onChange={e => setItemToEdit({...itemToEdit!, name: e.target.value})}
                   className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-lg transition-all"
                 />
               </div>
@@ -632,7 +632,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                 <input 
                   type="date" 
                   value={itemToEdit.expires_at ? itemToEdit.expires_at.split('T')[0] : ''}
-                  onChange={e => setItemToEdit({...itemToEdit, expires_at: new Date(e.target.value).toISOString()})}
+                  onChange={e => setItemToEdit({...itemToEdit!, expires_at: new Date(e.target.value).toISOString()})}
                   className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-lg transition-all"
                 />
               </div>
@@ -645,7 +645,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                     step="0.1"
                     required
                     value={itemToEdit.quantity}
-                    onChange={e => setItemToEdit({...itemToEdit, quantity: parseFloat(e.target.value)})}
+                    onChange={e => setItemToEdit({...itemToEdit!, quantity: parseFloat(e.target.value)})}
                     className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-lg transition-all"
                   />
                 </div>
@@ -653,7 +653,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                   <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Unidad</label>
                   <select 
                     value={itemToEdit.unit}
-                    onChange={e => setItemToEdit({...itemToEdit, unit: e.target.value})}
+                    onChange={e => setItemToEdit({...itemToEdit!, unit: e.target.value})}
                     className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-lg appearance-none transition-all"
                   >
                     <option value="unidades">Uds</option>

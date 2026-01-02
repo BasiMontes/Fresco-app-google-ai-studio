@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Recipe, Ingredient, PantryItem } from '../types';
 import { X, ArrowRight, ArrowLeft, CheckCircle2, ChefHat, Flame, Clock, Timer, Play, Pause, Mic, Volume2, VolumeX, List, Minus, Plus, ChevronLeft, ChevronRight, XCircle, BellRing, Edit3, RefreshCw } from 'lucide-react';
 import { VoiceAssistant } from './VoiceAssistant';
+import { FEATURES } from '../constants';
 
 interface CookModeProps {
   recipe: Recipe;
@@ -23,7 +24,7 @@ interface ActiveTimerState {
 export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onFinish }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [wakeLockActive, setWakeLockActive] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(FEATURES.VOICE_ASSISTANT); // QA Flag
   const [listening, setListening] = useState(false);
   const [showIngredients, setShowIngredients] = useState(false);
   const [showReview, setShowReview] = useState(false);
@@ -136,9 +137,10 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
       return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); };
   }, [activeTimer]);
 
-  // ... (Step Logic and Wake Lock unchanged) ...
-  // Wake Lock
+  // Wake Lock (Feature Gated)
   useEffect(() => {
+    if (!FEATURES.WAKE_LOCK) return;
+    
     let wakeLock: any = null;
     const requestWakeLock = async () => {
       try {
@@ -222,8 +224,9 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
       touchStartRef.current = null; touchEndRef.current = null;
   };
 
+  // Voice Assistant (Feature Gated)
   useEffect(() => {
-      if (!voiceEnabled) return;
+      if (!voiceEnabled || !FEATURES.VOICE_ASSISTANT) return;
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognition) return;
       const recognition = new SpeechRecognition();
@@ -356,7 +359,7 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
     >
-        <VoiceAssistant textToRead={recipe.instructions[currentStep]} active={voiceEnabled} />
+        {FEATURES.VOICE_ASSISTANT && <VoiceAssistant textToRead={recipe.instructions[currentStep]} active={voiceEnabled} />}
 
         {activeTimer && (
             <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-black/80 backdrop-blur-md rounded-full px-6 py-2 flex items-center gap-4 shadow-2xl border border-white/10 transition-all duration-500 animate-slide-up`}>
@@ -408,9 +411,11 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
                     <List className="w-6 h-6" />
                     <span className="absolute top-2 right-2 w-2 h-2 bg-orange-500 rounded-full" />
                 </button>
-                <button onClick={() => setVoiceEnabled(!voiceEnabled)} className={`p-4 rounded-2xl transition-all active:scale-90 ${voiceEnabled ? 'bg-orange-500 text-white shadow-lg' : 'bg-white/10 text-gray-400'}`}>
-                    {voiceEnabled ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
-                </button>
+                {FEATURES.VOICE_ASSISTANT && (
+                    <button onClick={() => setVoiceEnabled(!voiceEnabled)} className={`p-4 rounded-2xl transition-all active:scale-90 ${voiceEnabled ? 'bg-orange-500 text-white shadow-lg' : 'bg-white/10 text-gray-400'}`}>
+                        {voiceEnabled ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
+                    </button>
+                )}
                 <button onClick={() => { if(confirm("¿Salir?")) { clearSession(); onClose(); } }} className="p-4 bg-white/10 rounded-2xl hover:bg-white/20 transition-all active:scale-90"><X className="w-6 h-6" /></button>
             </div>
         </header>

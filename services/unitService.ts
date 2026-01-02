@@ -12,6 +12,11 @@ export const cleanName = (name: string): string => {
         .trim();
 };
 
+// QA FIX: Evitar problemas de precisión float (0.1 + 0.2 !== 0.3)
+export const roundSafe = (num: number): number => {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+};
+
 export const normalizeUnit = (quantity: number, unit: string): { value: number, type: 'mass' | 'volume' | 'count' } => {
     const u = unit.toLowerCase().trim()
         .replace(/\.$/, '') // Quitar puntos finales (gr.)
@@ -50,16 +55,16 @@ export const normalizeUnit = (quantity: number, unit: string): { value: number, 
 
 export const convertBack = (value: number, type: 'mass' | 'volume' | 'count'): { quantity: number, unit: string } => {
     if (type === 'mass') {
-        if (value >= 1000) return { quantity: parseFloat((value / 1000).toFixed(2)), unit: 'kg' };
-        return { quantity: parseFloat(value.toFixed(0)), unit: 'g' };
+        if (value >= 1000) return { quantity: roundSafe(value / 1000), unit: 'kg' };
+        return { quantity: roundSafe(value), unit: 'g' };
     }
     if (type === 'volume') {
-        if (value >= 1000) return { quantity: parseFloat((value / 1000).toFixed(2)), unit: 'l' };
+        if (value >= 1000) return { quantity: roundSafe(value / 1000), unit: 'l' };
         // Si es pequeño, a veces ml es mejor, pero el usuario puede preferir tazas si viene de ahí.
         // Por estandarización de la app, devolvemos ml o l para inventario.
-        return { quantity: parseFloat(value.toFixed(0)), unit: 'ml' };
+        return { quantity: roundSafe(value), unit: 'ml' };
     }
-    return { quantity: parseFloat(value.toFixed(1)), unit: 'uds' };
+    return { quantity: roundSafe(value), unit: 'uds' };
 };
 
 // Devuelve la cantidad restante tras restar 'used' de 'source'
@@ -97,7 +102,7 @@ export const addIngredient = (currentQty: number, currentUnit: string, addedQty:
         totalValue += added.value;
     } else {
         // Incompatible. Retornamos suma numérica bruta manteniendo unidad original (fallback básico)
-        return { quantity: currentQty + addedQty, unit: currentUnit };
+        return { quantity: roundSafe(currentQty + addedQty), unit: currentUnit };
     }
 
     return convertBack(totalValue, current.type);

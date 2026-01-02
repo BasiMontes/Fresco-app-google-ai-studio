@@ -6,7 +6,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { supabase, isConfigured } from './lib/supabase';
 import { generateRecipesAI, generateBatchCookingAI } from './services/geminiService';
 import * as db from './services/dbService';
-import { subtractIngredient, addIngredient, cleanName } from './services/unitService';
+import { subtractIngredient, addIngredient, cleanName, roundSafe } from './services/unitService';
 import { AuthPage } from './components/AuthPage';
 import { addToSyncQueue, initSyncListener } from './services/syncService';
 
@@ -193,14 +193,25 @@ const App: React.FC = () => {
   };
 
   const handleUpdatePantryQuantity = (id: string, delta: number) => {
-      setPantry(prev => prev.map(i => {
-          if (i.id === id) {
-              const updated = { ...i, quantity: Math.max(0, i.quantity + delta) };
+      setPantry(prev => {
+          const updatedPantry = [...prev];
+          const index = updatedPantry.findIndex(i => i.id === id);
+          if (index === -1) return prev;
+
+          const item = updatedPantry[index];
+          const newQuantity = roundSafe(item.quantity + delta);
+
+          if (newQuantity <= 0) {
+              // QA: Auto-delete if stock goes to 0 or negative
+              safeDbCall(() => db.deletePantryItemDB(id), 'DELETE_PANTRY', { id });
+              updatedPantry.splice(index, 1);
+          } else {
+              const updated = { ...item, quantity: newQuantity };
+              updatedPantry[index] = updated;
               safeDbCall(() => db.updatePantryItemDB(userId!, updated), 'UPDATE_PANTRY', updated);
-              return updated;
           }
-          return i;
-      }));
+          return updatedPantry;
+      });
   };
 
   const handleUpdatePantryItem = (item: PantryItem) => {
@@ -339,6 +350,7 @@ const App: React.FC = () => {
 
               if (result) {
                   const newItem = { ...item, quantity: result.quantity, unit: result.unit };
+                  // QA: Tolerancia de 0.05 para flotantes
                   if (newItem.quantity <= 0.05) {
                       updatedPantry.splice(pantryIndex, 1);
                       safeDbCall(() => db.deletePantryItemDB(item.id), 'DELETE_PANTRY', { id: item.id });

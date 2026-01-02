@@ -1,6 +1,14 @@
 
 import { Recipe, UserProfile } from "./types";
 
+// QA: Feature Flags para control de producción
+export const FEATURES = {
+    MORNING_BRIEFING: true, // Beta: Resumen matutino
+    VOICE_ASSISTANT: false, // Desactivado por defecto (Alto consumo batería/bugs en iOS)
+    WAKE_LOCK: false, // Desactivado (API experimental)
+    SHOPPING_COMPARISON: true
+};
+
 // Base de datos de precios blindada
 export const SPANISH_PRICES: Record<string, number> = {
   "tomate": 2.20, "cebolla": 1.20, "ajo": 5.50, "pollo": 7.50, "leche": 1.15,
