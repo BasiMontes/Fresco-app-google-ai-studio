@@ -368,7 +368,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                 {/* FIX 2: Botón de Cocinar Ahora (Rayo) */}
                                 {onCook && (
                                     <button 
-                                        onClick={() => onCook(String(item.name || ''))}
+                                        onClick={() => onCook?.(item.name || '')}
                                         className="p-2 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all mr-1"
                                         title="Cocinar con esto"
                                     >

@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { supabase } from '../lib/supabase';
 import { Logo } from './Logo';
-import { ArrowRight, Mail, Lock, User, AlertCircle, Loader2, Check, Send, ChevronLeft, Database } from 'lucide-react';
+import { ArrowRight, Mail, Lock, User, AlertCircle, Loader2, Check, Send, ChevronLeft, Database, ShieldCheck, XCircle } from 'lucide-react';
 import { LegalModal } from './LegalModal';
 
 interface AuthPageProps {
@@ -58,6 +58,22 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showLegalModal, setShowLegalModal] = useState<'privacy' | 'terms' | null>(null);
 
+  // Debug Estado
+  const [configStatus, setConfigStatus] = useState({ url: false, key: false });
+
+  useEffect(() => {
+      // Chequeo simple de longitud para ver si las env vars llegaron
+      // @ts-ignore
+      const url = import.meta.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+      // @ts-ignore
+      const key = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      setConfigStatus({
+          url: !!url && url.length > 10 && !url.includes('PON_AQUI'),
+          key: !!key && key.length > 20
+      });
+  }, []);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -67,7 +83,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
     try {
         if (isRecovery) {
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin,
+                redirectTo: window.location.origin, // Forzar URL actual
             });
             if (error) throw error;
             setSuccessMsg('Hemos enviado un enlace de recuperación a tu correo.');
@@ -87,7 +103,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
                     data: {
                         full_name: name,
                         onboarding_completed: false
-                    }
+                    },
+                    emailRedirectTo: window.location.origin // CRITICAL: Redirigir a la URL actual (deploy), no localhost
                 }
             });
             if (error) throw error;
@@ -217,9 +234,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
             
             {/* Debug Info para confirmar conexión */}
             <div className="mt-8 pt-4 border-t border-gray-100 text-center">
-                <p className="text-[10px] text-gray-300 font-mono flex items-center justify-center gap-1">
-                    <Database className="w-3 h-3" /> Conectado a Supabase
-                </p>
+                <div className="flex items-center justify-center gap-4 text-[10px] font-mono text-gray-400">
+                    <div className="flex items-center gap-1">
+                        {configStatus.url ? <Check className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500" />}
+                        URL {configStatus.url ? 'OK' : 'MISS'}
+                    </div>
+                    <div className="flex items-center gap-1">
+                        {configStatus.key ? <Check className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500" />}
+                        KEY {configStatus.key ? 'OK' : 'MISS'}
+                    </div>
+                </div>
             </div>
         </div>
       </div>
