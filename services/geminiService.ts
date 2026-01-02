@@ -1,6 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession } from "../types";
+import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory } from "../types";
+import { FALLBACK_RECIPES } from "../constants";
 
 // HELPER: Lectura segura de entorno compatible con Vite y Node
 const getEnv = (key: string) => {
@@ -21,13 +22,20 @@ const getEnv = (key: string) => {
 const API_KEY = getEnv('VITE_API_KEY') || getEnv('API_KEY');
 
 // Instancia segura de la IA
-// Si no hay clave, no explotamos la app entera, solo fallarán las llamadas IA
 const ai = new GoogleGenAI({ apiKey: API_KEY || 'MISSING_KEY' });
 
 const notifyError = (message: string) => {
     if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('fresco-toast', { 
             detail: { type: 'error', message } 
+        }));
+    }
+};
+
+const notifyInfo = (message: string) => {
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('fresco-toast', { 
+            detail: { type: 'info', message } 
         }));
     }
 };
@@ -80,37 +88,78 @@ const validateRecipe = (r: any): any => {
     };
 };
 
+// Generador Local Determinista (Algoritmo Fallback)
+const generateLocalPlanStrategy = (
+    user: UserProfile, 
+    targetDates: string[], 
+    targetTypes: string[], 
+    availableRecipes: Recipe[]
+): MealSlot[] => {
+    const plan: MealSlot[] = [];
+    
+    // Mezclar recetas para aleatoriedad
+    const shuffledRecipes = [...availableRecipes, ...FALLBACK_RECIPES].sort(() => 0.5 - Math.random());
+
+    targetDates.forEach(date => {
+        targetTypes.forEach(type => {
+            // Buscar receta compatible con el tipo (lunch/dinner)
+            const recipe = shuffledRecipes.find(r => 
+                r.meal_category === type || 
+                (type === 'lunch' && r.meal_category === 'dinner') || 
+                (type === 'dinner' && r.meal_category === 'lunch')
+            );
+
+            if (recipe) {
+                plan.push({
+                    date,
+                    type: type as MealCategory,
+                    recipeId: recipe.id,
+                    servings: user.household_size,
+                    isCooked: false
+                });
+                // Mover la receta usada al final para variar si hay pocas
+                const idx = shuffledRecipes.indexOf(recipe);
+                if (idx > -1) {
+                    shuffledRecipes.push(shuffledRecipes.splice(idx, 1)[0]);
+                }
+            }
+        });
+    });
+
+    return plan;
+};
+
 export const generateWeeklyPlanAI = async (
   user: UserProfile,
   pantry: PantryItem[],
   existingPlan: MealSlot[] = [],
   targetDates?: string[], 
-  targetTypes?: string[]
+  targetTypes?: string[],
+  availableRecipes: Recipe[] = [] // Nuevo parámetro para fallback
 ): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-  if (!API_KEY) { notifyError("Falta Configuración: API Key"); return { plan: [], newRecipes: [] }; }
+  
+  // Definir targets por defecto si faltan
+  const safeDates = targetDates && targetDates.length > 0 ? targetDates : []; // Debería venir relleno del frontend
+  const safeTypes = targetTypes && targetTypes.length > 0 ? targetTypes : ['lunch', 'dinner'];
+
+  // Si no hay API KEY o falla la red, vamos directo al local
+  if (!API_KEY) { 
+      console.warn("API Key missing, using local planner.");
+      const localPlan = generateLocalPlanStrategy(user, safeDates, safeTypes, availableRecipes);
+      notifyInfo("Plan generado con tus recetas (Modo Local).");
+      return { plan: localPlan, newRecipes: [] }; 
+  }
   
   try {
     const pantryList = pantry.map(p => `${p.name} (${p.quantity} ${p.unit})`).join(", ");
     
-    let dateInstruction = "";
-    if (targetDates && targetDates.length > 0) {
-        dateInstruction = `Genera un plan SOLO para los siguientes días: ${targetDates.join(", ")}.`;
-    } else {
-        dateInstruction = "Genera un plan para la próxima semana.";
-    }
-
-    let typeInstruction = "";
-    if (targetTypes && targetTypes.length > 0) {
-        typeInstruction = `Para cada día, planifica SOLO las comidas de tipo: ${targetTypes.join(", ")}.`;
-    }
-
     const prompt = `Actúa como Chef de Fresco. 
     Stock Disponible: ${pantryList}. 
     Perfil Usuario: ${user.dietary_preferences.join(", ")}, Gustos: ${user.favorite_cuisines.join(", ")}.
     
     Instrucciones:
-    1. ${dateInstruction}
-    2. ${typeInstruction}
+    1. Genera un plan SOLO para los días: ${safeDates.join(", ")}.
+    2. Para cada día, planifica SOLO las comidas de tipo: ${safeTypes.join(", ")}.
     3. Prioriza usar el stock disponible antes de caducar.
     4. Devuelve JSON con 'recipes' (nuevas recetas necesarias) y 'plan' (asignación de slots).`;
 
@@ -163,9 +212,12 @@ export const generateWeeklyPlanAI = async (
 
     return { plan: newSlots, newRecipes };
   } catch (error) {
-    console.error(error);
-    notifyError("Error generando el plan.");
-    return { plan: existingPlan, newRecipes: [] }; 
+    console.error("AI Plan Gen failed, falling back to local strategy", error);
+    // FALLBACK SILENCIOSO: Si la IA falla, usamos el algoritmo local
+    const localPlan = generateLocalPlanStrategy(user, safeDates, safeTypes, availableRecipes);
+    
+    notifyInfo("Plan generado con recetas guardadas (IA ocupada).");
+    return { plan: localPlan, newRecipes: [] }; 
   }
 };
 

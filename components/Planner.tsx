@@ -60,7 +60,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   };
 
   const executeAIPlan = async () => {
-    if(!isOnline) return;
+    // Permitimos ejecutar offline ahora gracias al fallback local
     if(wizardDays.length === 0 || wizardTypes.length === 0) {
         alert("Selecciona al menos un día y un tipo de comida.");
         return;
@@ -69,14 +69,16 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
     setIsGenerating(true);
     setShowPlanWizard(false); // Cerramos el modal pero mostramos loader en el botón principal o overlay
     try {
-        const result = await generateWeeklyPlanAI(user, pantry, plan, wizardDays, wizardTypes);
+        // Pasamos 'recipes' (recetas existentes) para que el fallback local pueda usarlas
+        const result = await generateWeeklyPlanAI(user, pantry, plan, wizardDays, wizardTypes, recipes);
         if (result.plan && result.plan.length > 0) {
             // Combinar plan existente con nuevo
             const newPlan = [...plan.filter(p => !result.plan.some(np => np.date === p.date && np.type === p.type)), ...result.plan];
             onAIPlanGenerated(newPlan, result.newRecipes);
         }
     } catch (e) {
-        alert("IA ocupada o error de conexión.");
+        // El servicio ya gestiona errores y fallback, esto es solo por seguridad extrema
+        console.error(e);
     } finally {
         setIsGenerating(false);
     }
@@ -204,11 +206,11 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 {/* FIX 1: Abrir Wizard en lugar de Magic directo */}
                 <button 
                     onClick={openPlanWizard} 
-                    disabled={isGenerating || !isOnline}
+                    disabled={isGenerating} // Permitimos offline
                     className="flex-[2] md:flex-none bg-teal-900 text-white px-8 py-5 rounded-[2rem] flex items-center justify-center gap-3 font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 disabled:opacity-50 transition-all hover:bg-teal-800 disabled:bg-gray-400"
                 >
                     {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : isOnline ? <Wand2 className="w-5 h-5" /> : <WifiOff className="w-5 h-5" />}
-                    {isOnline ? 'Planificar Semana' : 'Offline'}
+                    {isOnline ? 'Planificar Semana' : 'Planificar Local'}
                 </button>
                </>
            )}
@@ -226,7 +228,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <Wand2 className="w-8 h-8 text-orange-500" />
                       </div>
                       <h3 className="text-3xl font-black text-teal-900 mb-2">Diseña tu Semana</h3>
-                      <p className="text-gray-500 font-medium">Selecciona qué días quieres que la IA cocine por ti.</p>
+                      <p className="text-gray-500 font-medium">Selecciona qué días quieres que la IA (o tus recetas guardadas) cocinen por ti.</p>
                   </div>
 
                   <div className="space-y-6 mb-10">
@@ -279,7 +281,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     disabled={wizardDays.length === 0 || wizardTypes.length === 0}
                     className="w-full py-6 bg-teal-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-teal-800 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
                   >
-                      <Sparkles className="w-5 h-5 text-orange-400" /> Generar Menú Inteligente
+                      <Sparkles className="w-5 h-5 text-orange-400" /> {isOnline ? 'Generar Menú Inteligente' : 'Rellenar con mis Recetas'}
                   </button>
               </div>
           </div>
@@ -303,7 +305,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
               <div className="flex flex-col md:flex-row gap-6 w-full max-w-xl px-6">
                   <button 
                     onClick={openPlanWizard}
-                    disabled={isGenerating || !isOnline}
+                    disabled={isGenerating}
                     className="flex-[2] py-6 bg-teal-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-teal-800 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
                   >
                       <Wand2 className="w-5 h-5 text-orange-400" /> Crear Plan Automático

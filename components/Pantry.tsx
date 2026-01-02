@@ -345,7 +345,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                       return (
                         <div 
                             key={item.id} 
-                            ref={(el) => { if (el && itemRefs.current) itemRefs.current[String(item.id)] = el; }}
+                            ref={(el) => { if (el && itemRefs.current) itemRefs.current[item.id] = el; }}
                             className={`bg-gray-50 p-6 rounded-[2rem] border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
                                 isHighlighted 
                                 ? 'ring-4 ring-orange-400 scale-105 shadow-2xl z-10 bg-orange-50 border-orange-200' 
@@ -681,4 +681,4 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       )}
     </div>
   );
-};
+}
