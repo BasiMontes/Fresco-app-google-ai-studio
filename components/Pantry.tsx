@@ -206,7 +206,9 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
 
   const renderHighlightedText = (text: string, highlight: string) => {
       if (!highlight) return text;
-      const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+      // Ensure text is string and highlight is escaped if needed, though simple includes check above handles filtering
+      const strText = String(text || '');
+      const parts = strText.split(new RegExp(`(${highlight})`, 'gi'));
       return parts.map((part, i) => 
           part.toLowerCase() === highlight.toLowerCase() 
               ? <span key={i} className="bg-orange-200 text-orange-900 px-0.5 rounded">{part}</span> 

@@ -38,6 +38,7 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
   
   const audioCtxRef = useRef<AudioContext | null>(null);
   const timerIntervalRef = useRef<number | null>(null);
+  const wakeLockRef = useRef<any>(null); // QA FIX BB-08
 
   // SWIPE LOGIC VARS
   const touchStartRef = useRef<number | null>(null);
@@ -137,24 +138,37 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
       return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); };
   }, [activeTimer]);
 
-  // Wake Lock (Feature Gated)
+  // QA FIX BB-08: Robust Wake Lock Cleanup
   useEffect(() => {
     if (!FEATURES.WAKE_LOCK) return;
     
-    let wakeLock: any = null;
     const requestWakeLock = async () => {
       try {
         if ('wakeLock' in navigator) {
           // @ts-ignore
-          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLockRef.current = await navigator.wakeLock.request('screen');
           setWakeLockActive(true);
         }
-      } catch (err) {}
+      } catch (err) {
+          console.debug("Wake Lock failed", err);
+      }
     };
+    
     requestWakeLock();
-    const handleVisibilityChange = () => { if (document.visibilityState === 'visible') requestWakeLock(); };
+    
+    const handleVisibilityChange = () => { 
+        if (document.visibilityState === 'visible' && !wakeLockRef.current) requestWakeLock(); 
+    };
+    
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => { if (wakeLock) wakeLock.release(); document.removeEventListener('visibilitychange', handleVisibilityChange); };
+    
+    return () => { 
+        if (wakeLockRef.current) {
+            wakeLockRef.current.release().catch((e: any) => console.debug(e));
+            wakeLockRef.current = null;
+        }
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const stepTime = React.useMemo(() => {

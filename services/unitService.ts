@@ -12,7 +12,7 @@ export const cleanName = (name: string): string => {
         .trim();
 };
 
-// QA FIX: Evitar problemas de precisión float (0.1 + 0.2 !== 0.3)
+// QA FIX BB-02: Evitar problemas de precisión float (0.1 + 0.2 !== 0.3)
 export const roundSafe = (num: number): number => {
     return Math.round((num + Number.EPSILON) * 100) / 100;
 };

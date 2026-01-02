@@ -199,10 +199,11 @@ const App: React.FC = () => {
           if (index === -1) return prev;
 
           const item = updatedPantry[index];
+          // QA Fix: BB-02 Round Safe
           const newQuantity = roundSafe(item.quantity + delta);
 
+          // QA Fix: BB-01 Stock Negativo
           if (newQuantity <= 0) {
-              // QA: Auto-delete if stock goes to 0 or negative
               safeDbCall(() => db.deletePantryItemDB(id), 'DELETE_PANTRY', { id });
               updatedPantry.splice(index, 1);
           } else {
@@ -350,7 +351,7 @@ const App: React.FC = () => {
 
               if (result) {
                   const newItem = { ...item, quantity: result.quantity, unit: result.unit };
-                  // QA: Tolerancia de 0.05 para flotantes
+                  // QA Fix: BB-01 Tolerancia de 0.05 para flotantes y eliminación automática
                   if (newItem.quantity <= 0.05) {
                       updatedPantry.splice(pantryIndex, 1);
                       safeDbCall(() => db.deletePantryItemDB(item.id), 'DELETE_PANTRY', { id: item.id });

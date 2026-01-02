@@ -62,7 +62,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ textToRead, acti
       }
   }, [textToRead, active, speak]);
 
-  // Limpieza al desmontar
+  // QA FIX BB-07: Limpieza estricta al desmontar
   useEffect(() => {
       return () => {
           window.speechSynthesis.cancel();

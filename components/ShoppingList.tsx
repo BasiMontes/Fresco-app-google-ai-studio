@@ -2,7 +2,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { MealSlot, Recipe, ShoppingItem, PantryItem, UserProfile } from '../types';
 import { SPANISH_PRICES, SUPERMARKETS, EXPIRY_DAYS_BY_CATEGORY, PREDICTIVE_CATEGORY_RULES } from '../constants';
-import { Share2, ShoppingCart, TrendingDown, ShoppingBag, Check, TrendingUp, AlertCircle, Store, Zap, Trophy, ChevronRight, X, Info, Plus, ArrowDown, Sparkles, Minus, ListChecks, CheckSquare, ExternalLink, RefreshCw, Pen, DollarSign, EyeOff, Eye, PartyPopper } from 'lucide-react';
+import { Share2, ShoppingCart, TrendingDown, ShoppingBag, Check, TrendingUp, AlertCircle, Store, Zap, Trophy, ChevronRight, X, Info, Plus, ArrowDown, Sparkles, Minus, ListChecks, CheckSquare, ExternalLink, RefreshCw, Pen, DollarSign, EyeOff, Eye, PartyPopper, Loader2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { normalizeUnit, convertBack, subtractIngredient, cleanName } from '../services/unitService';
 
@@ -73,6 +73,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
   const [reviewItemsList, setReviewItemsList] = useState<TraceableShoppingItem[]>([]);
   const [expandedInfoId, setExpandedInfoId] = useState<string | null>(null);
+  
+  // QA FIX BB-03: Double Submit Protection
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const hasServingsMismatch = useMemo(() => {
       return plan.some(slot => slot.servings !== user.household_size);
@@ -329,6 +332,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   };
 
   const confirmFinishShopping = () => {
+      if (isProcessing) return; // Fix BB-03
+      setIsProcessing(true);
+
       const itemsToAddToPantry = reviewItemsList.map(item => {
           const days = EXPIRY_DAYS_BY_CATEGORY[item.category] || 14;
           return {
@@ -358,6 +364,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       
       setShowReceipt(false);
       setShowCelebration(true);
+      setIsProcessing(false);
       confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 } });
   };
 
@@ -663,8 +670,12 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                           ))}
                       </div>
 
-                      <button onClick={confirmFinishShopping} className="w-full py-5 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95 flex-shrink-0">
-                          Guardar {reviewItemsList.length} items <ChevronRight className="w-4 h-4" />
+                      <button 
+                        onClick={confirmFinishShopping} 
+                        disabled={isProcessing}
+                        className="w-full py-5 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95 flex-shrink-0 disabled:opacity-50"
+                      >
+                          {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Guardar {reviewItemsList.length} items <ChevronRight className="w-4 h-4" /></>}
                       </button>
                       <button onClick={() => setShowReceipt(false)} className="mt-4 text-xs font-bold text-gray-400 hover:text-gray-600">Cancelar y volver</button>
                   </div>
