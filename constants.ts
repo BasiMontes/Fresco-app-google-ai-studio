@@ -93,133 +93,32 @@ export const MOCK_USER: UserProfile = {
   history_savings: [{ date: '2024-05-01', amount: 124.80 }]
 };
 
-// REPOSITORIO ESTÁTICO DE RECETAS (Para evitar llamadas a IA iniciales)
+// REPOSITORIO ESTÁTICO DE RECETAS (Actualizado para cubrir todos los casos de onboarding)
 export const STATIC_RECIPES: Recipe[] = [
+  // --- DESAYUNOS ---
   {
     id: "static-1",
     title: "Tostada de Aguacate y Huevo",
-    description: "Desayuno energético con grasas saludables y proteína.",
+    description: "Clásico desayuno energético.",
     meal_category: "breakfast",
     cuisine_type: "healthy",
     difficulty: "easy",
     prep_time: 10,
     servings: 1,
     calories: 350,
-    dietary_tags: ["vegetarian", "keto"],
+    dietary_tags: ["vegetarian"],
     ingredients: [
       { name: "pan integral", quantity: 1, unit: "rebanada", category: "grains" },
       { name: "aguacate", quantity: 0.5, unit: "unidad", category: "fruits" },
-      { name: "huevo", quantity: 1, unit: "unidad", category: "dairy" },
-      { name: "sal", quantity: 1, unit: "pizca", category: "spices" }
+      { name: "huevo", quantity: 1, unit: "unidad", category: "dairy" }
     ],
-    instructions: ["Tostar el pan.", "Chafar el aguacate con un tenedor sobre el pan.", "Cocinar el huevo a la plancha o poché.", "Colocar el huevo sobre el aguacate y salpimentar."],
+    instructions: ["Tostar pan", "Chafar aguacate", "Poner huevo encima"],
     image_url: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&q=80"
   },
   {
     id: "static-2",
-    title: "Ensalada Mediterránea de Quinoa",
-    description: "Fresca, nutritiva y perfecta para preparar con antelación.",
-    meal_category: "lunch",
-    cuisine_type: "mediterranean",
-    difficulty: "easy",
-    prep_time: 20,
-    servings: 2,
-    calories: 420,
-    dietary_tags: ["vegetarian", "vegan", "gluten_free"],
-    ingredients: [
-      { name: "quinoa", quantity: 150, unit: "g", category: "grains" },
-      { name: "pepino", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "tomate cherry", quantity: 10, unit: "unidades", category: "vegetables" },
-      { name: "aceitunas negras", quantity: 50, unit: "g", category: "pantry" },
-      { name: "aceite de oliva", quantity: 2, unit: "cucharada", category: "pantry" }
-    ],
-    instructions: ["Lavar y cocer la quinoa según instrucciones.", "Cortar pepino y tomates en cubos.", "Mezclar todo en un bol.", "Aliñar con aceite y sal."],
-    image_url: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-3",
-    title: "Pollo al Limón Express",
-    description: "Cena ligera y rápida llena de sabor cítrico.",
-    meal_category: "dinner",
-    cuisine_type: "healthy",
-    difficulty: "medium",
-    prep_time: 25,
-    servings: 2,
-    calories: 380,
-    dietary_tags: ["keto", "gluten_free", "lactose_free"],
-    ingredients: [
-      { name: "pechuga de pollo", quantity: 300, unit: "g", category: "meat" },
-      { name: "limon", quantity: 1, unit: "unidad", category: "fruits" },
-      { name: "ajo", quantity: 2, unit: "diente", category: "vegetables" },
-      { name: "perejil", quantity: 1, unit: "puñado", category: "spices" }
-    ],
-    instructions: ["Cortar el pollo en tiras.", "Dorar en sartén con ajo picado.", "Añadir zumo de limón y reducir.", "Espolvorear perejil fresco."],
-    image_url: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-4",
-    title: "Pasta con Salsa de Tomate y Albahaca",
-    description: "Un clásico italiano infalible y económico.",
-    meal_category: "lunch",
-    cuisine_type: "italian",
-    difficulty: "easy",
-    prep_time: 15,
-    servings: 2,
-    calories: 450,
-    dietary_tags: ["vegetarian"],
-    ingredients: [
-      { name: "pasta", quantity: 200, unit: "g", category: "grains" },
-      { name: "tomate frito", quantity: 200, unit: "ml", category: "pantry" },
-      { name: "queso parmesano", quantity: 30, unit: "g", category: "dairy" },
-      { name: "albahaca", quantity: 5, unit: "hojas", category: "spices" }
-    ],
-    instructions: ["Hervir la pasta al dente.", "Calentar el tomate en una sartén.", "Mezclar pasta con salsa.", "Servir con queso y albahaca."],
-    image_url: "https://images.unsplash.com/photo-1626844131082-256783844137?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-5",
-    title: "Tortilla Francesa con Espinacas",
-    description: "Cena rápida, proteica y ligera.",
-    meal_category: "dinner",
-    cuisine_type: "spanish",
-    difficulty: "easy",
-    prep_time: 10,
-    servings: 1,
-    calories: 220,
-    dietary_tags: ["vegetarian", "keto", "gluten_free"],
-    ingredients: [
-      { name: "huevos", quantity: 2, unit: "unidades", category: "dairy" },
-      { name: "espinacas", quantity: 50, unit: "g", category: "vegetables" },
-      { name: "aceite", quantity: 1, unit: "cucharadita", category: "pantry" }
-    ],
-    instructions: ["Batir los huevos.", "Saltear espinacas un minuto.", "Añadir huevos y cuajar al gusto."],
-    image_url: "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-6",
-    title: "Tacos de Ternera Rápidos",
-    description: "Fiesta mexicana en casa en 20 minutos.",
-    meal_category: "dinner",
-    cuisine_type: "mexican",
-    difficulty: "medium",
-    prep_time: 20,
-    servings: 2,
-    calories: 550,
-    dietary_tags: ["none"],
-    ingredients: [
-      { name: "carne picada", quantity: 250, unit: "g", category: "meat" },
-      { name: "tortillas", quantity: 4, unit: "unidades", category: "grains" },
-      { name: "cebolla", quantity: 0.5, unit: "unidad", category: "vegetables" },
-      { name: "pimiento", quantity: 0.5, unit: "unidad", category: "vegetables" },
-      { name: "comino", quantity: 1, unit: "cucharadita", category: "spices" }
-    ],
-    instructions: ["Sofreír cebolla y pimiento.", "Añadir carne y especias hasta dorar.", "Calentar tortillas y rellenar."],
-    image_url: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-7",
     title: "Yogur con Fruta y Nueces",
-    description: "Merienda o desayuno probiótico.",
+    description: "Rápido y probiótico.",
     meal_category: "breakfast",
     cuisine_type: "healthy",
     difficulty: "easy",
@@ -232,28 +131,281 @@ export const STATIC_RECIPES: Recipe[] = [
       { name: "manzana", quantity: 0.5, unit: "unidad", category: "fruits" },
       { name: "nueces", quantity: 20, unit: "g", category: "pantry" }
     ],
-    instructions: ["Poner yogur en un bol.", "Añadir fruta troceada y nueces."],
+    instructions: ["Mezclar todo en un bol"],
     image_url: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80"
   },
   {
-    id: "static-8",
-    title: "Salmón al Horno con Verduras",
-    description: "Plato principal elegante y sin esfuerzo.",
-    meal_category: "dinner",
+    id: "static-b3",
+    title: "Tortitas de Avena y Plátano",
+    description: "Sin azúcar añadido y muy esponjosas.",
+    meal_category: "breakfast",
     cuisine_type: "healthy",
+    difficulty: "easy",
+    prep_time: 15,
+    servings: 2,
+    calories: 320,
+    dietary_tags: ["vegetarian"],
+    ingredients: [
+      { name: "avena", quantity: 100, unit: "g", category: "grains" },
+      { name: "platano", quantity: 1, unit: "unidad", category: "fruits" },
+      { name: "leche", quantity: 100, unit: "ml", category: "dairy" },
+      { name: "huevo", quantity: 1, unit: "unidad", category: "dairy" }
+    ],
+    instructions: ["Triturar todo", "Hacer a la plancha vuelta y vuelta"],
+    image_url: "https://images.unsplash.com/photo-1506084868230-bb9d95c24759?auto=format&fit=crop&q=80"
+  },
+
+  // --- MEDITERRÁNEA / ESPAÑOLA ---
+  {
+    id: "static-3",
+    title: "Ensalada Mediterránea de Quinoa",
+    description: "Fresca y completa.",
+    meal_category: "lunch",
+    cuisine_type: "mediterranean",
+    difficulty: "easy",
+    prep_time: 20,
+    servings: 2,
+    calories: 420,
+    dietary_tags: ["vegetarian", "vegan", "gluten_free"],
+    ingredients: [
+      { name: "quinoa", quantity: 150, unit: "g", category: "grains" },
+      { name: "pepino", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "tomate", quantity: 2, unit: "unidad", category: "vegetables" },
+      { name: "aceitunas", quantity: 50, unit: "g", category: "pantry" }
+    ],
+    instructions: ["Cocer quinoa", "Picar verduras", "Mezclar y aliñar"],
+    image_url: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-4",
+    title: "Tortilla de Patatas Express",
+    description: "La versión rápida para el día a día.",
+    meal_category: "dinner",
+    cuisine_type: "spanish",
+    difficulty: "medium",
+    prep_time: 25,
+    servings: 2,
+    calories: 350,
+    dietary_tags: ["vegetarian", "gluten_free"],
+    ingredients: [
+      { name: "huevos", quantity: 4, unit: "unidades", category: "dairy" },
+      { name: "patata", quantity: 2, unit: "unidades", category: "vegetables" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "aceite", quantity: 2, unit: "cucharada", category: "pantry" }
+    ],
+    instructions: ["Pochar patata y cebolla", "Batir huevos", "Cuajar en sartén"],
+    image_url: "https://images.unsplash.com/photo-1604909052743-94e838986d24?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-5",
+    title: "Gazpacho Andaluz",
+    description: "Bomba de vitaminas fría.",
+    meal_category: "lunch",
+    cuisine_type: "spanish",
+    difficulty: "easy",
+    prep_time: 15,
+    servings: 2,
+    calories: 180,
+    dietary_tags: ["vegan", "vegetarian", "gluten_free"],
+    ingredients: [
+      { name: "tomate", quantity: 5, unit: "unidades", category: "vegetables" },
+      { name: "pimiento", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "pepino", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "ajo", quantity: 1, unit: "diente", category: "vegetables" },
+      { name: "aceite", quantity: 50, unit: "ml", category: "pantry" }
+    ],
+    instructions: ["Triturar todo muy bien", "Enfriar en nevera"],
+    image_url: "https://images.unsplash.com/photo-1557844352-761f2565b576?auto=format&fit=crop&q=80"
+  },
+
+  // --- ITALIANA ---
+  {
+    id: "static-6",
+    title: "Pasta Caprese",
+    description: "Simpleza italiana en su máxima expresión.",
+    meal_category: "lunch",
+    cuisine_type: "italian",
+    difficulty: "easy",
+    prep_time: 15,
+    servings: 2,
+    calories: 450,
+    dietary_tags: ["vegetarian"],
+    ingredients: [
+      { name: "pasta", quantity: 200, unit: "g", category: "grains" },
+      { name: "tomate", quantity: 2, unit: "unidades", category: "vegetables" },
+      { name: "mozzarella", quantity: 125, unit: "g", category: "dairy" },
+      { name: "albahaca", quantity: 1, unit: "puñado", category: "vegetables" }
+    ],
+    instructions: ["Cocer pasta", "Mezclar con tomate y mozzarella en cubos", "Añadir albahaca fresca"],
+    image_url: "https://images.unsplash.com/photo-1529312266912-b33cf6227e2f?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-7",
+    title: "Risotto de Champiñones",
+    description: "Cremoso y reconfortante.",
+    meal_category: "dinner",
+    cuisine_type: "italian",
     difficulty: "medium",
     prep_time: 30,
     servings: 2,
+    calories: 500,
+    dietary_tags: ["vegetarian", "gluten_free"],
+    ingredients: [
+      { name: "arroz", quantity: 200, unit: "g", category: "grains" },
+      { name: "champiñones", quantity: 200, unit: "g", category: "vegetables" },
+      { name: "caldo", quantity: 500, unit: "ml", category: "pantry" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" }
+    ],
+    instructions: ["Sofreír cebolla y setas", "Añadir arroz y nacarar", "Añadir caldo poco a poco removiendo"],
+    image_url: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&q=80"
+  },
+
+  // --- ASIÁTICA ---
+  {
+    id: "static-8",
+    title: "Stir Fry de Pollo y Verduras",
+    description: "Salteado rápido al wok.",
+    meal_category: "dinner",
+    cuisine_type: "asian",
+    difficulty: "easy",
+    prep_time: 15,
+    servings: 2,
+    calories: 380,
+    dietary_tags: ["lactose_free"],
+    ingredients: [
+      { name: "pollo", quantity: 300, unit: "g", category: "meat" },
+      { name: "pimiento", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "zanahoria", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "soja", quantity: 2, unit: "cucharada", category: "pantry" }
+    ],
+    instructions: ["Cortar todo en tiras", "Saltear pollo a fuego fuerte", "Añadir verduras y soja"],
+    image_url: "https://images.unsplash.com/photo-1603133872878-684f10842619?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-9",
+    title: "Curry de Garbanzos (Chana Masala)",
+    description: "Sabores de la India, vegano y barato.",
+    meal_category: "lunch",
+    cuisine_type: "asian",
+    difficulty: "medium",
+    prep_time: 25,
+    servings: 2,
+    calories: 400,
+    dietary_tags: ["vegan", "vegetarian", "gluten_free"],
+    ingredients: [
+      { name: "garbanzos", quantity: 400, unit: "g", category: "pantry" },
+      { name: "tomate frito", quantity: 200, unit: "ml", category: "pantry" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "curry", quantity: 1, unit: "cucharada", category: "spices" }
+    ],
+    instructions: ["Sofreír cebolla", "Añadir tomate y especias", "Incorporar garbanzos y cocinar 10 min"],
+    image_url: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80"
+  },
+
+  // --- MEXICANA ---
+  {
+    id: "static-10",
+    title: "Tacos de Pollo",
+    description: "Fiesta mexicana saludable.",
+    meal_category: "dinner",
+    cuisine_type: "mexican",
+    difficulty: "easy",
+    prep_time: 20,
+    servings: 2,
+    calories: 450,
+    dietary_tags: [],
+    ingredients: [
+      { name: "tortillas", quantity: 4, unit: "unidades", category: "grains" },
+      { name: "pollo", quantity: 250, unit: "g", category: "meat" },
+      { name: "pimiento", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" }
+    ],
+    instructions: ["Saltear pollo y verduras con especias", "Calentar tortillas", "Montar tacos"],
+    image_url: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-11",
+    title: "Huevos Rancheros Simplificados",
+    description: "Desayuno o cena contundente.",
+    meal_category: "lunch",
+    cuisine_type: "mexican",
+    difficulty: "medium",
+    prep_time: 15,
+    servings: 1,
+    calories: 400,
+    dietary_tags: ["vegetarian"],
+    ingredients: [
+      { name: "huevos", quantity: 2, unit: "unidades", category: "dairy" },
+      { name: "tortillas", quantity: 2, unit: "unidades", category: "grains" },
+      { name: "tomate frito", quantity: 100, unit: "ml", category: "pantry" },
+      { name: "frijoles", quantity: 100, unit: "g", category: "pantry" }
+    ],
+    instructions: ["Freír huevos", "Calentar tortillas y frijoles", "Montar con salsa por encima"],
+    image_url: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?auto=format&fit=crop&q=80"
+  },
+
+  // --- KETO / BAJO CARBOHIDRATO ---
+  {
+    id: "static-12",
+    title: "Salmón al Horno con Espárragos",
+    description: "Cena elegante y ligera.",
+    meal_category: "dinner",
+    cuisine_type: "healthy",
+    difficulty: "medium",
+    prep_time: 25,
+    servings: 2,
     calories: 480,
-    dietary_tags: ["keto", "paleo", "gluten_free"],
+    dietary_tags: ["keto", "gluten_free", "paleo"],
     ingredients: [
       { name: "salmon", quantity: 300, unit: "g", category: "fish" },
-      { name: "calabacin", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "zanahoria", quantity: 2, unit: "unidades", category: "vegetables" },
-      { name: "limon", quantity: 0.5, unit: "unidad", category: "fruits" }
+      { name: "esparragos", quantity: 1, unit: "manojo", category: "vegetables" },
+      { name: "limon", quantity: 1, unit: "unidad", category: "fruits" },
+      { name: "aceite", quantity: 1, unit: "cucharada", category: "pantry" }
     ],
-    instructions: ["Precalentar horno a 180ºC.", "Colocar salmón y verduras cortadas en bandeja.", "Hornear 20-25 min."],
+    instructions: ["Poner todo en bandeja de horno", "Hornear a 200ºC durante 15-20 min"],
     image_url: "https://images.unsplash.com/photo-1467003909585-2f8a7270028d?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-13",
+    title: "Calabacín Carbonara (Zoodles)",
+    description: "La pasta sin culpa.",
+    meal_category: "dinner",
+    cuisine_type: "italian",
+    difficulty: "medium",
+    prep_time: 20,
+    servings: 2,
+    calories: 350,
+    dietary_tags: ["keto", "gluten_free"],
+    ingredients: [
+      { name: "calabacin", quantity: 2, unit: "unidades", category: "vegetables" },
+      { name: "bacon", quantity: 100, unit: "g", category: "meat" },
+      { name: "huevos", quantity: 2, unit: "unidades", category: "dairy" },
+      { name: "queso", quantity: 50, unit: "g", category: "dairy" }
+    ],
+    instructions: ["Hacer tiras de calabacín", "Dorar bacon", "Mezclar huevo y queso fuera del fuego", "Unir todo"],
+    image_url: "https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?auto=format&fit=crop&q=80"
+  },
+
+  // --- VEGANO ---
+  {
+    id: "static-14",
+    title: "Lentejas con Verduras",
+    description: "El guiso de toda la vida, 100% vegetal.",
+    meal_category: "lunch",
+    cuisine_type: "spanish",
+    difficulty: "easy",
+    prep_time: 40,
+    servings: 4,
+    calories: 350,
+    dietary_tags: ["vegan", "vegetarian", "gluten_free"],
+    ingredients: [
+      { name: "lentejas", quantity: 300, unit: "g", category: "pantry" },
+      { name: "zanahoria", quantity: 2, unit: "unidades", category: "vegetables" },
+      { name: "patata", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" }
+    ],
+    instructions: ["Poner todo en crudo en olla", "Cubrir de agua", "Cocer hasta que estén tiernas (30-40 min)"],
+    image_url: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&q=80"
   }
 ];
 

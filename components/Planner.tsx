@@ -450,73 +450,87 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         </div>
       )}
 
+      {/* MODAL ELEGIR RECETA (REDISEÑADO) */}
       {showPicker && (
-        <div className="fixed inset-0 z-[1000] bg-teal-900/95 backdrop-blur-3xl animate-fade-in flex flex-col pt-safe">
-            <div className="p-10 flex justify-between items-center bg-transparent text-white">
-                <div>
-                    <h3 className="text-4xl font-black leading-none mb-2">Elegir Receta</h3>
-                    <p className="text-teal-300 font-bold uppercase text-[10px] tracking-widest">
-                        {showPicker.type === 'breakfast' ? 'Desayuno' : showPicker.type === 'lunch' ? 'Comida' : 'Cena'} • {showPicker.date}
-                    </p>
-                </div>
-                <button onClick={() => setShowPicker(null)} className="p-4 bg-white/10 rounded-[1.5rem] hover:bg-white/20 transition-all"><X className="w-8 h-8" /></button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 pb-48 no-scrollbar">
+        <div className="fixed inset-0 z-[1000] bg-teal-900/95 backdrop-blur-3xl animate-fade-in flex flex-col items-center justify-center p-4">
+            {/* Contenedor centralizado para desktop, full para mobile */}
+            <div className="bg-teal-900 w-full max-w-4xl h-[90vh] rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden flex flex-col relative">
                 
-                {/* Opciones Rápidas */}
-                <div className="grid grid-cols-2 gap-4 mb-8">
+                {/* Header Modal */}
+                <div className="p-8 flex justify-between items-center bg-teal-900/50 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
+                    <div>
+                        <h3 className="text-3xl font-black text-white leading-none mb-2">Elegir Receta</h3>
+                        <p className="text-teal-300 font-bold uppercase text-[10px] tracking-widest">
+                            {showPicker.type === 'breakfast' ? 'Desayuno' : showPicker.type === 'lunch' ? 'Comida' : 'Cena'} • {showPicker.date}
+                        </p>
+                    </div>
                     <button 
-                        onClick={() => { onUpdateSlot(showPicker.date, showPicker.type, SLOT_LEFTOVERS); setShowPicker(null); }}
-                        className="bg-white/10 border border-white/10 hover:bg-white/20 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-3 transition-all group"
+                        onClick={() => setShowPicker(null)} 
+                        className="p-3 bg-white/10 rounded-2xl hover:bg-white/20 transition-all text-white"
                     >
-                        <Repeat className="w-8 h-8 text-teal-300 group-hover:scale-110 transition-transform" />
-                        <span className="text-xs font-black uppercase tracking-widest text-white">Sobras / Tupper</span>
-                    </button>
-                    <button 
-                        onClick={() => { onUpdateSlot(showPicker.date, showPicker.type, SLOT_EAT_OUT); setShowPicker(null); }}
-                        className="bg-white/10 border border-white/10 hover:bg-white/20 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-3 transition-all group"
-                    >
-                        <Utensils className="w-8 h-8 text-orange-400 group-hover:scale-110 transition-transform" />
-                        <span className="text-xs font-black uppercase tracking-widest text-white">Comer Fuera</span>
+                        <X className="w-6 h-6" />
                     </button>
                 </div>
-
-                {/* Sección Disponible */}
-                {sortedRecipesForPicker.available.length > 0 && (
-                    <div>
-                        <div className="flex items-center gap-3 mb-6 px-2">
-                            <div className="w-2 h-6 bg-green-500 rounded-full" />
-                            <h4 className="text-white font-black uppercase text-xs tracking-widest">¡Listo para cocinar! (Tienes ingredientes)</h4>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {sortedRecipesForPicker.available.map(recipe => (
-                                <RecipePickerCard key={recipe.id} recipe={recipe} available={true} onClick={() => { onUpdateSlot(showPicker.date, showPicker.type, recipe.id); setShowPicker(null); }} />
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Sección Compras */}
-                {sortedRecipesForPicker.shopping.length > 0 && (
-                    <div>
-                        <div className="flex items-center gap-3 mb-6 px-2">
-                            <div className="w-2 h-6 bg-orange-500 rounded-full" />
-                            <h4 className="text-white font-black uppercase text-xs tracking-widest">Requiere ir al Súper</h4>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {sortedRecipesForPicker.shopping.map(recipe => (
-                                <RecipePickerCard key={recipe.id} recipe={recipe} available={false} onClick={() => { onUpdateSlot(showPicker.date, showPicker.type, recipe.id); setShowPicker(null); }} />
-                            ))}
-                        </div>
-                    </div>
-                )}
                 
-                {sortedRecipesForPicker.available.length === 0 && sortedRecipesForPicker.shopping.length === 0 && (
-                    <div className="text-center text-white/50 py-20">
-                        No hay recetas para esta categoría. ¡Usa la IA!
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto p-8 space-y-8 pb-20 no-scrollbar">
+                    
+                    {/* Opciones Rápidas */}
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                        <button 
+                            onClick={() => { onUpdateSlot(showPicker.date, showPicker.type, SLOT_LEFTOVERS); setShowPicker(null); }}
+                            className="bg-white/5 border border-white/10 hover:bg-white/10 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-3 transition-all group"
+                        >
+                            <Repeat className="w-8 h-8 text-teal-300 group-hover:scale-110 transition-transform" />
+                            <span className="text-xs font-black uppercase tracking-widest text-white">Sobras / Tupper</span>
+                        </button>
+                        <button 
+                            onClick={() => { onUpdateSlot(showPicker.date, showPicker.type, SLOT_EAT_OUT); setShowPicker(null); }}
+                            className="bg-white/5 border border-white/10 hover:bg-white/10 p-6 rounded-[2rem] flex flex-col items-center justify-center gap-3 transition-all group"
+                        >
+                            <Utensils className="w-8 h-8 text-orange-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-xs font-black uppercase tracking-widest text-white">Comer Fuera</span>
+                        </button>
                     </div>
-                )}
+
+                    {/* Sección Disponible */}
+                    {sortedRecipesForPicker.available.length > 0 && (
+                        <div>
+                            <div className="flex items-center gap-3 mb-6 px-2">
+                                <div className="w-2 h-6 bg-green-500 rounded-full" />
+                                <h4 className="text-white font-black uppercase text-xs tracking-widest">¡Listo para cocinar! (Tienes ingredientes)</h4>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {sortedRecipesForPicker.available.map(recipe => (
+                                    <RecipePickerCard key={recipe.id} recipe={recipe} available={true} onClick={() => { onUpdateSlot(showPicker.date, showPicker.type, recipe.id); setShowPicker(null); }} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Sección Compras */}
+                    {sortedRecipesForPicker.shopping.length > 0 && (
+                        <div>
+                            <div className="flex items-center gap-3 mb-6 px-2">
+                                <div className="w-2 h-6 bg-orange-500 rounded-full" />
+                                <h4 className="text-white font-black uppercase text-xs tracking-widest">Requiere ir al Súper</h4>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {sortedRecipesForPicker.shopping.map(recipe => (
+                                    <RecipePickerCard key={recipe.id} recipe={recipe} available={false} onClick={() => { onUpdateSlot(showPicker.date, showPicker.type, recipe.id); setShowPicker(null); }} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {sortedRecipesForPicker.available.length === 0 && sortedRecipesForPicker.shopping.length === 0 && (
+                        <div className="text-center text-white/50 py-20 flex flex-col items-center gap-4">
+                            <ChefHat className="w-12 h-12 opacity-50" />
+                            <p>No tienes recetas para esta categoría.</p>
+                            <p className="text-xs">Usa el botón "Generar" en la sección de Recetas.</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
       )}
@@ -537,23 +551,23 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 };
 
 const RecipePickerCard: React.FC<{ recipe: Recipe, available: boolean, onClick: () => void }> = ({ recipe, available, onClick }) => (
-    <button onClick={onClick} className={`w-full flex items-center gap-6 p-4 rounded-[2.5rem] group transition-all text-left shadow-xl border-2 ${available ? 'bg-white hover:bg-green-50 border-transparent' : 'bg-white/10 hover:bg-white/20 border-white/5 text-white'}`}>
-        <img src={recipe.image_url} className={`w-24 h-24 rounded-[1.5rem] object-cover shadow-lg border-4 ${available ? 'border-green-100' : 'border-white/10'}`} />
+    <button onClick={onClick} className={`w-full flex items-center gap-6 p-4 rounded-[2rem] group transition-all text-left shadow-lg border hover:scale-[1.01] ${available ? 'bg-white hover:bg-green-50 border-transparent' : 'bg-white/5 hover:bg-white/10 border-white/5 text-white'}`}>
+        <img src={recipe.image_url} className={`w-20 h-20 rounded-[1.2rem] object-cover shadow-md border-2 ${available ? 'border-green-100' : 'border-white/10'}`} />
         <div className="flex-1 min-w-0">
-            <div className={`font-black text-xl mb-2 truncate ${available ? 'text-gray-900' : 'text-white'}`}>{recipe.title}</div>
-            <div className="flex gap-3">
-                <span className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase ${available ? 'bg-green-100 text-green-700' : 'bg-white/20 text-white'}`}>
+            <div className={`font-black text-lg mb-1 truncate ${available ? 'text-gray-900' : 'text-white'}`}>{recipe.title}</div>
+            <div className="flex gap-2">
+                <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider ${available ? 'bg-green-100 text-green-700' : 'bg-white/10 text-white/70'}`}>
                     {recipe.prep_time} min
                 </span>
                 {recipe.calories && (
-                    <span className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase ${available ? 'bg-gray-100 text-gray-500' : 'bg-white/20 text-white'}`}>
+                    <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider ${available ? 'bg-gray-100 text-gray-500' : 'bg-white/10 text-white/70'}`}>
                         {recipe.calories} kcal
                     </span>
                 )}
             </div>
         </div>
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${available ? 'bg-green-500 text-white shadow-lg' : 'bg-white/10 text-white/50'}`}>
-            {available ? <Check className="w-6 h-6" /> : <ShoppingCart className="w-5 h-5" />}
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${available ? 'bg-green-500 text-white shadow-lg' : 'bg-white/10 text-white/50'}`}>
+            {available ? <Check className="w-5 h-5" /> : <ShoppingCart className="w-4 h-4" />}
         </div>
     </button>
 );

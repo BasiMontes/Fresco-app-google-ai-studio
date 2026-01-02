@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PantryItem } from '../types';
 import { Package, Plus, Trash2, Calendar, X, Save, AlertTriangle, Clock, Minus, Camera, Sparkles, Pencil, CheckCircle2, AlertOctagon, WifiOff, Search, ChevronDown, ChevronUp, Wand2, RotateCcw, Utensils, ArrowRight, Skull, Zap } from 'lucide-react';
@@ -393,7 +394,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                           
                           <div>
                             <div className="font-black text-gray-900 capitalize text-lg mb-4 truncate">
-                                {renderHighlightedText(String(item.name || ''), String(searchTerm || ''))}
+                                {renderHighlightedText((item.name as string) || '', (searchTerm as string) || '')}
                             </div>
                             <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-gray-100 group-hover:border-teal-100 transition-colors shadow-sm">
                                 <button 
