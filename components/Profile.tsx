@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { UserProfile, DietPreference, CuisineType } from '../types';
 import { Logo } from './Logo';
@@ -60,8 +61,14 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
       }
   };
 
+  // QA FIX BB-09: Backup Versioning
   const exportData = () => {
     const data = {
+        metadata: {
+            version: 1,
+            date: new Date().toISOString(),
+            app: 'Fresco'
+        },
         profile: user,
         pantry: JSON.parse(localStorage.getItem('fresco_pantry') || '[]'),
         plan: JSON.parse(localStorage.getItem('fresco_plan') || '[]'),
@@ -81,16 +88,24 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
-          const data = JSON.parse(event.target?.result as string);
+          const raw = JSON.parse(event.target?.result as string);
+          
+          // Soporte Retrocompatible (v0 sin metadata)
+          const data = raw.metadata ? raw : { profile: raw.profile, pantry: raw.pantry, plan: raw.plan, recipes: raw.recipes };
+
           if (data.profile) {
-            localStorage.setItem('fresco_user', JSON.stringify(data.profile));
-            localStorage.setItem('fresco_pantry', JSON.stringify(data.pantry || []));
-            localStorage.setItem('fresco_plan', JSON.stringify(data.plan || []));
-            localStorage.setItem('fresco_recipes', JSON.stringify(data.recipes || []));
-            window.location.reload();
+            if (confirm("Esto sobrescribirá tus datos actuales. ¿Continuar?")) {
+                localStorage.setItem('fresco_user', JSON.stringify(data.profile));
+                localStorage.setItem('fresco_pantry', JSON.stringify(data.pantry || []));
+                localStorage.setItem('fresco_plan', JSON.stringify(data.plan || []));
+                localStorage.setItem('fresco_recipes', JSON.stringify(data.recipes || []));
+                window.location.reload();
+            }
+          } else {
+              throw new Error("Formato inválido");
           }
         } catch (err) {
-          alert("Error al importar: El archivo no es válido.");
+          alert("Error al importar: El archivo no es válido o es incompatible.");
         }
       };
       reader.readAsText(file);

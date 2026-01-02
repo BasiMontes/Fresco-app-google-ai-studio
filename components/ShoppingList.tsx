@@ -116,8 +116,10 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       });
   };
   
+  // QA FIX BB-11: Price Clamping
   const handlePriceUpdate = (itemName: string, newPrice: number) => {
-      setCustomPrices(prev => ({ ...prev, [itemName]: newPrice }));
+      const safePrice = Math.max(0.01, newPrice); // Min 1 cent
+      setCustomPrices(prev => ({ ...prev, [itemName]: safePrice }));
       setEditingPriceId(null);
   };
 

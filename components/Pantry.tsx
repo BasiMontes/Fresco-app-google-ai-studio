@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PantryItem } from '../types';
 import { Package, Plus, Trash2, Calendar, X, Save, AlertTriangle, Clock, Minus, Camera, Sparkles, Pencil, CheckCircle2, AlertOctagon, WifiOff, Search, ChevronDown, ChevronUp, Wand2, RotateCcw, Utensils, ArrowRight, Skull, Zap } from 'lucide-react';
@@ -162,7 +161,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   };
 
   const getSmartStep = (unit: string) => {
-      const u = unit.toLowerCase().trim();
+      const u = (unit || '').toLowerCase().trim();
       if (u === 'g' || u === 'ml') return 50; 
       if (u === 'kg' || u === 'l') return 0.25;
       if (u === 'unidades' || u === 'uds' || u === 'ud') return 1;
@@ -183,7 +182,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       return { expired, critical, fresh };
   }, [items]);
 
-  const filteredItems = useMemo(() => {
+  const filteredItems = useMemo<PantryItem[]>(() => {
       let result = items;
       if (activeFilter !== 'all') {
           result = result.filter(item => {
@@ -340,13 +339,13 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                   <div className="p-6 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 border-t border-gray-50">
                     {filteredItems.filter(i => i.category === cat).map(item => {
                       const status = getExpiryStatus(item);
-                      const step = getSmartStep(item.unit);
+                      const step = getSmartStep(item.unit || '');
                       const isHighlighted = highlightId === item.id;
 
                       return (
                         <div 
                             key={item.id} 
-                            ref={(el) => { if (el) itemRefs.current[item.id] = el; }}
+                            ref={(el) => { if (el && itemRefs.current) itemRefs.current[item.id] = el; }}
                             className={`bg-gray-50 p-6 rounded-[2rem] border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
                                 isHighlighted 
                                 ? 'ring-4 ring-orange-400 scale-105 shadow-2xl z-10 bg-orange-50 border-orange-200' 
@@ -369,7 +368,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                 {/* FIX 2: Botón de Cocinar Ahora (Rayo) */}
                                 {onCook && (
                                     <button 
-                                        onClick={() => onCook(item.name)} 
+                                        onClick={() => onCook(String(item.name || ''))}
                                         className="p-2 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all mr-1"
                                         title="Cocinar con esto"
                                     >

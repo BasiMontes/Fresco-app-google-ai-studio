@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession } from "../types";
 
@@ -68,6 +69,17 @@ const RECIPE_SCHEMA = {
   }
 };
 
+// QA Fix BB-05: Validador de Recetas para evitar crashes en UI
+const validateRecipe = (r: any): any => {
+    return {
+        ...r,
+        ingredients: Array.isArray(r.ingredients) ? r.ingredients : [],
+        instructions: Array.isArray(r.instructions) ? r.instructions : ["Mezclar ingredientes y cocinar."], // Fallback seguro
+        prep_time: typeof r.prep_time === 'number' ? r.prep_time : 15,
+        dietary_tags: Array.isArray(r.dietary_tags) ? r.dietary_tags : []
+    };
+};
+
 export const generateWeeklyPlanAI = async (
   user: UserProfile,
   pantry: PantryItem[],
@@ -131,15 +143,18 @@ export const generateWeeklyPlanAI = async (
     const safeText = response.text ? response.text : '';
     const data = JSON.parse(cleanJson(safeText));
     
-    const newRecipes: Recipe[] = data.recipes.map((r: any, i: number) => ({
-      ...r,
-      id: `ai-rec-${Date.now()}-${i}`,
-      servings: user.household_size,
-      dietary_tags: user.dietary_preferences,
-      image_url: `https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&sig=${i}`
-    }));
+    const newRecipes: Recipe[] = (data.recipes || []).map((raw: any, i: number) => {
+      const r = validateRecipe(raw);
+      return {
+        ...r,
+        id: `ai-rec-${Date.now()}-${i}`,
+        servings: user.household_size,
+        dietary_tags: user.dietary_preferences,
+        image_url: `https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&sig=${i}`
+      };
+    });
 
-    const newSlots: MealSlot[] = data.plan.map((p: any) => ({
+    const newSlots: MealSlot[] = (data.plan || []).map((p: any) => ({
       date: p.date,
       type: p.type,
       recipeId: newRecipes.find(r => r.title === p.recipe_title)?.id,
@@ -191,7 +206,11 @@ export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSe
     });
 
     const safeText = response.text ? response.text : '';
-    return JSON.parse(cleanJson(safeText));
+    const data = JSON.parse(cleanJson(safeText));
+    return {
+        total_duration: data.total_duration || 0,
+        steps: Array.isArray(data.steps) ? data.steps : []
+    };
   } catch (error) {
     notifyError("La IA de cocina paralela no está disponible.");
     return { total_duration: 0, steps: [] };
@@ -216,13 +235,18 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
         const safeText = response.text ? response.text : '';
         const data = JSON.parse(cleanJson(safeText));
         
-        return data.map((r: any, i: number) => ({
-            ...r,
-            id: `gen-rec-${Date.now()}-${i}`,
-            servings: user.household_size,
-            dietary_tags: user.dietary_preferences,
-            image_url: `https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&sig=${Math.random()}`
-        }));
+        if (!Array.isArray(data)) return [];
+
+        return data.map((raw: any, i: number) => {
+            const r = validateRecipe(raw);
+            return {
+                ...r,
+                id: `gen-rec-${Date.now()}-${i}`,
+                servings: user.household_size,
+                dietary_tags: user.dietary_preferences,
+                image_url: `https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&sig=${Math.random()}`
+            };
+        });
     } catch (e) {
         notifyError("Error conectando con la cocina IA.");
         return [];
@@ -259,7 +283,8 @@ export const extractItemsFromTicket = async (base64Image: string): Promise<any[]
     });
     
     const safeText = response.text ? response.text : '';
-    return JSON.parse(cleanJson(safeText));
+    const items = JSON.parse(cleanJson(safeText));
+    return Array.isArray(items) ? items : [];
   } catch (error) {
     notifyError("Error leyendo el ticket.");
     return [];
