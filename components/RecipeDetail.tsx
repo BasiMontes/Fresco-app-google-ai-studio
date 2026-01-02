@@ -165,8 +165,8 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
 
   return (
     <div className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm animate-fade-in flex justify-center items-end md:items-center">
-        {/* Contenedor Modal: Full en mobile, Centrado en Desktop */}
-        <div className="bg-[#FDFDFD] w-full h-[95vh] md:h-[90vh] md:max-w-4xl md:rounded-[3rem] rounded-t-[3rem] overflow-hidden flex flex-col relative shadow-2xl animate-slide-up">
+        {/* Contenedor Modal: Full Height en mobile (h-full) para evitar cortes */}
+        <div className="bg-[#FDFDFD] w-full h-full md:h-[90vh] md:max-w-4xl md:rounded-[3rem] overflow-hidden flex flex-col relative shadow-2xl animate-slide-up">
             
             {/* Header con Imagen */}
             <div className="relative h-[35vh] flex-shrink-0">

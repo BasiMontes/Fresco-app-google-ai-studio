@@ -87,30 +87,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       )}
 
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-6">
-          <div className="w-12 h-12 rounded-full bg-teal-900 flex items-center justify-center text-white font-black">{user.name[0]}</div>
-          <div>
+        <div className="flex items-center gap-4 md:gap-6 w-full">
+          <div className="w-12 h-12 rounded-full bg-teal-900 flex items-center justify-center text-white font-black flex-shrink-0">{user.name[0]}</div>
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 text-teal-600 font-bold text-[10px] uppercase tracking-widest mb-1">
                 <timeGreeting.icon className="w-3 h-3" /> {timeGreeting.text}
             </div>
             <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-black text-teal-900 leading-none">{user.name.split(' ')[0]}</h1>
-                <span className="bg-orange-500 text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest flex items-center gap-1 shadow-sm animate-pulse-slow cursor-help" title="Versión de prueba">
+                <h1 className="text-3xl md:text-4xl font-black text-teal-900 leading-none truncate max-w-[200px] md:max-w-none">{user.name.split(' ')[0]}</h1>
+                <span className="bg-orange-500 text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest flex items-center gap-1 shadow-sm animate-pulse-slow cursor-help flex-shrink-0" title="Versión de prueba">
                     <FlaskConical className="w-3 h-3" /> Beta
                 </span>
             </div>
           </div>
-        </div>
-        
-        {isOnline ? (
-            <div className="flex items-center gap-2 bg-teal-50 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-teal-600 border border-teal-100 shadow-sm">
+          {isOnline ? (
+            <div className="hidden md:flex items-center gap-2 bg-teal-50 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-teal-600 border border-teal-100 shadow-sm">
                 <CloudCog className="w-4 h-4" /> Nube Activa
             </div>
-        ) : (
+          ) : (
             <div className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-400 border border-gray-200">
                 <WifiOff className="w-4 h-4" /> Offline
             </div>
-        )}
+          )}
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -164,8 +163,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
 
       <section className="bg-teal-900 rounded-[4rem] p-12 text-white relative overflow-hidden shadow-2xl">
         <div className="relative z-10 flex flex-col md:flex-row gap-12 items-center">
-            <div className="flex-1">
-              <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-4 mb-6">
                   <div className="bg-orange-500 p-3 rounded-2xl shadow-xl">
                       <Sparkles className="w-6 h-6 text-white" />
                   </div>
@@ -173,8 +172,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
               </div>
               <p className="text-teal-100/60 text-lg mb-10 font-medium">¿Hoy cocinas para toda la semana? Usa Batch Cooking para optimizar tu tiempo.</p>
               
-              <div className="flex gap-4">
-                  <button onClick={() => onNavigate('planner')} className="px-8 py-5 bg-orange-500 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-orange-600 active:scale-95 transition-all">
+              <div className="flex flex-col md:flex-row gap-4">
+                  <button onClick={() => onNavigate('planner')} className="px-8 py-5 bg-orange-500 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-orange-600 active:scale-95 transition-all">
                     Planificar Semana <ArrowRight className="w-4 h-4" />
                   </button>
                   <button onClick={() => onNavigate('shopping')} className="px-8 py-5 bg-white/10 border border-white/20 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all">

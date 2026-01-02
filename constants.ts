@@ -338,6 +338,26 @@ export const STATIC_RECIPES: Recipe[] = [
     instructions: ["Sofreír cebolla y carne", "Añadir tomate y reducir", "Mezclar con la pasta cocida"],
     image_url: "https://images.unsplash.com/photo-1622973536968-3ead9e780960?auto=format&fit=crop&q=80"
   },
+  {
+    id: "static-new-9",
+    title: "Ensalada César con Pollo",
+    description: "Crujiente, cremosa y deliciosa.",
+    meal_category: "dinner",
+    cuisine_type: "italian",
+    difficulty: "easy",
+    prep_time: 15,
+    servings: 2,
+    calories: 380,
+    dietary_tags: [],
+    ingredients: [
+      { name: "lechuga", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "pollo", quantity: 200, unit: "g", category: "meat" },
+      { name: "pan", quantity: 1, unit: "rebanada", category: "grains" },
+      { name: "queso", quantity: 30, unit: "g", category: "dairy" }
+    ],
+    instructions: ["Hacer pollo a la plancha", "Tostar pan en cubos", "Mezclar todo con lechuga"],
+    image_url: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&q=80"
+  },
 
   // --- ASIÁTICA ---
   {
@@ -419,6 +439,26 @@ export const STATIC_RECIPES: Recipe[] = [
     ],
     instructions: ["Montar base de arroz", "Colocar ingredientes encima troceados", "Aliñar al gusto"],
     image_url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-new-10",
+    title: "Pollo al Limón Chino",
+    description: "Crujiente con salsa pegajosa.",
+    meal_category: "lunch",
+    cuisine_type: "asian",
+    difficulty: "medium",
+    prep_time: 30,
+    servings: 2,
+    calories: 420,
+    dietary_tags: [],
+    ingredients: [
+      { name: "pollo", quantity: 300, unit: "g", category: "meat" },
+      { name: "limon", quantity: 2, unit: "unidades", category: "fruits" },
+      { name: "azucar", quantity: 2, unit: "cucharada", category: "pantry" },
+      { name: "harina", quantity: 50, unit: "g", category: "pantry" }
+    ],
+    instructions: ["Rebozar y freír pollo", "Hacer salsa con zumo de limón y azúcar", "Mezclar"],
+    image_url: "https://images.unsplash.com/photo-1562967960-f55499ad7704?auto=format&fit=crop&q=80"
   },
 
   // --- MEXICANA ---
@@ -627,6 +667,47 @@ export const STATIC_RECIPES: Recipe[] = [
     ],
     instructions: ["Formar hamburguesas y hacer a la plancha", "Montar en pan con verduras"],
     image_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80"
+  },
+  
+  // --- EXTRAS Y POSTRES ---
+  {
+    id: "static-new-11",
+    title: "Brochetas de Fruta",
+    description: "Postre o merienda ligera y divertida.",
+    meal_category: "breakfast",
+    cuisine_type: "healthy",
+    difficulty: "easy",
+    prep_time: 10,
+    servings: 2,
+    calories: 120,
+    dietary_tags: ["vegan", "vegetarian", "gluten_free"],
+    ingredients: [
+      { name: "platano", quantity: 1, unit: "unidad", category: "fruits" },
+      { name: "manzana", quantity: 1, unit: "unidad", category: "fruits" },
+      { name: "yogur", quantity: 1, unit: "unidad", category: "dairy" }
+    ],
+    instructions: ["Cortar fruta en dados", "Ensartar en palillos", "Servir con yogur para mojar"],
+    image_url: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-new-12",
+    title: "Brownie de Aguacate",
+    description: "Versión saludable y cremosa.",
+    meal_category: "breakfast",
+    cuisine_type: "healthy",
+    difficulty: "medium",
+    prep_time: 35,
+    servings: 6,
+    calories: 200,
+    dietary_tags: ["gluten_free", "vegetarian"],
+    ingredients: [
+      { name: "aguacate", quantity: 1, unit: "unidad", category: "fruits" },
+      { name: "huevo", quantity: 2, unit: "unidades", category: "dairy" },
+      { name: "azucar", quantity: 100, unit: "g", category: "pantry" },
+      { name: "harina", quantity: 50, unit: "g", category: "pantry" } // Cacao en polvo simulado
+    ],
+    instructions: ["Triturar aguacate", "Mezclar con resto de ingredientes", "Hornear 25 min a 180ºC"],
+    image_url: "https://images.unsplash.com/photo-1606313564200-e75d5e30476d?auto=format&fit=crop&q=80"
   }
 ];
 

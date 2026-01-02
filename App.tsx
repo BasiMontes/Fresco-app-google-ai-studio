@@ -698,8 +698,8 @@ const App: React.FC = () => {
             </nav>
           </aside>
 
-          {/* FIX: Container limitado para desktop */}
-          <main className="flex-1 md:ml-80 safe-pt min-h-screen max-w-7xl mx-auto w-full">
+          {/* FIX: Container limitado para desktop y padding extra para mobile */}
+          <main className="flex-1 md:ml-80 safe-pt min-h-screen max-w-7xl mx-auto w-full pb-32 md:pb-0">
             <Suspense fallback={<PageLoader message="Cargando módulo..." />}>
               {activeTab === 'dashboard' && user && <Dashboard 
                   user={user} 

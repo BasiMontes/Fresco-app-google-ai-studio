@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PantryItem } from '../types';
 import { Package, Plus, Trash2, Calendar, X, Save, AlertTriangle, Clock, Minus, Plus as PlusIcon, Camera, Sparkles, Pencil, CheckCircle2, AlertOctagon, WifiOff, Search, ChevronDown, ChevronUp, Wand2, RotateCcw, Utensils, ArrowRight, Skull, Zap } from 'lucide-react';
@@ -15,7 +14,7 @@ interface PantryProps {
   onAddMany: (items: PantryItem[]) => void;
   onEdit: (item: PantryItem) => void;
   onWaste?: (item: PantryItem, value: number) => void;
-  onCook?: (itemName: string) => void; // FIX 2: Nuevo prop para acción rápida
+  onCook?: (itemName: string) => void; 
   isOnline?: boolean;
 }
 
@@ -206,7 +205,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
 
   const renderHighlightedText = (text: string, highlight: string) => {
       if (!highlight) return text;
-      // Ensure text is string and highlight is escaped if needed, though simple includes check above handles filtering
       const strText = text || '';
       const parts = strText.split(new RegExp(`(${highlight})`, 'gi'));
       return parts.map((part, i) => 
@@ -217,7 +215,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   };
 
   return (
-    <div className="p-4 md:p-10 safe-pt animate-fade-in relative">
+    <div className="p-4 md:p-10 safe-pt animate-fade-in relative pb-32">
       <div className="flex flex-col gap-6 mb-8">
         <div className="flex justify-between items-center">
             <div>
@@ -346,7 +344,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                       return (
                         <div 
                             key={item.id} 
-                            ref={(el) => { if (el && itemRefs.current) itemRefs.current[item.id] = el; }}
+                            ref={(el) => { if (el && itemRefs.current) itemRefs.current[String(item.id)] = el; }}
                             className={`bg-gray-50 p-6 rounded-[2rem] border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
                                 isHighlighted 
                                 ? 'ring-4 ring-orange-400 scale-105 shadow-2xl z-10 bg-orange-50 border-orange-200' 
@@ -354,52 +352,51 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                             }`}
                         >
                           <div className="flex justify-between items-start mb-6">
-                            <div className="flex gap-1 items-center w-full">
+                            <div className="flex gap-1 items-center w-full overflow-hidden">
                                 {status && status.type !== 'fresh' ? (
-                                    <div className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase flex items-center gap-1 shadow-sm ${status.color}`}>
+                                    <div className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase flex items-center gap-1 shadow-sm flex-shrink-0 ${status.color}`}>
                                         <AlertTriangle className="w-3 h-3" /> {status.label}
                                     </div>
                                 ) : (
-                                    <div className="px-3 py-1.5 rounded-full text-[8px] font-black uppercase flex items-center gap-1 bg-white text-gray-300 border border-gray-100">
+                                    <div className="px-3 py-1.5 rounded-full text-[8px] font-black uppercase flex items-center gap-1 bg-white text-gray-300 border border-gray-100 flex-shrink-0">
                                         Fresco
                                     </div>
                                 )}
                                 <div className="flex-1" />
-                                
-                                {/* FIX 2: Botón de Cocinar Ahora (Rayo) */}
-                                {onCook && (
+                                <div className="flex gap-1">
+                                    {onCook && (
+                                        <button 
+                                            onClick={() => onCook?.(String(item.name || ''))}
+                                            className="p-2 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all"
+                                            title="Cocinar con esto"
+                                        >
+                                            <Zap className="w-4 h-4" />
+                                        </button>
+                                    )}
                                     <button 
-                                        onClick={() => onCook?.(item.name || '')}
-                                        className="p-2 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all mr-1"
-                                        title="Cocinar con esto"
+                                        onClick={() => setItemToEdit(item)} 
+                                        className="p-2 text-gray-300 hover:text-teal-600 transition-colors"
                                     >
-                                        <Zap className="w-4 h-4" />
+                                        <Pencil className="w-4 h-4" />
                                     </button>
-                                )}
-
-                                <button 
-                                    onClick={() => setItemToEdit(item)} 
-                                    className="p-2 text-gray-300 hover:text-teal-600 transition-colors"
-                                >
-                                    <Pencil className="w-4 h-4" />
-                                </button>
-                                <button 
-                                    onClick={() => initDelete(item)} 
-                                    className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                    <button 
+                                        onClick={() => initDelete(item)} 
+                                        className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                           </div>
                           
                           <div>
-                            <div className="font-black text-gray-900 capitalize text-lg mb-4 truncate">
-                                {renderHighlightedText(String(item.name || ''), String(searchTerm || ''))}
+                            <div className="font-black text-gray-900 capitalize text-lg mb-4 truncate pr-2">
+                                {renderHighlightedText(`${item.name || ''}`, `${searchTerm || ''}`)}
                             </div>
                             <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-gray-100 group-hover:border-teal-100 transition-colors shadow-sm">
                                 <button 
                                     onClick={() => onUpdateQuantity(item.id, -step)}
-                                    className="w-10 h-10 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-xl transition-all active:scale-75"
+                                    className="w-10 h-10 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-xl transition-all active:scale-75 flex-shrink-0"
                                 >
                                     <Minus className="w-5 h-5" />
                                 </button>
@@ -409,16 +406,16 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                         setQuickAdjustItem(item);
                                         setQuickValue(item.quantity);
                                     }}
-                                    className="flex-1 text-center"
+                                    className="flex-1 text-center min-w-0 px-2"
                                 >
-                                    <span className="text-xs font-black text-teal-900 tabular-nums border-b-2 border-dashed border-teal-200 hover:border-orange-400 hover:text-orange-500 transition-colors">
-                                        {Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(2)} <span className="opacity-40">{item.unit}</span>
+                                    <span className="text-xs font-black text-teal-900 tabular-nums border-b-2 border-dashed border-teal-200 hover:border-orange-400 hover:text-orange-500 transition-colors block truncate">
+                                        {Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(2)} <span className="opacity-40 text-[10px]">{item.unit}</span>
                                     </span>
                                 </button>
 
                                 <button 
                                     onClick={() => onUpdateQuantity(item.id, step)}
-                                    className="w-10 h-10 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-xl transition-all active:scale-75"
+                                    className="w-10 h-10 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-xl transition-all active:scale-75 flex-shrink-0"
                                 >
                                     <PlusIcon className="w-5 h-5" />
                                 </button>
@@ -439,6 +436,8 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
         </div>
       )}
 
+      {/* ... Modals ... */}
+      
       {wasteItem && (
           <div className="fixed inset-0 z-[1200] bg-teal-900/60 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in" onClick={() => setWasteItem(null)}>
               <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
@@ -485,15 +484,15 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
           <div className="fixed inset-0 z-[1100] bg-teal-900/40 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in" onClick={() => setQuickAdjustItem(null)}>
               <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
                   <div className="text-center mb-8">
-                      <h3 className="text-2xl font-black text-gray-900 capitalize mb-1">{quickAdjustItem.name}</h3>
+                      <h3 className="text-2xl font-black text-gray-900 capitalize mb-1 truncate">{quickAdjustItem.name}</h3>
                       <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Ajuste Rápido de Stock</p>
                   </div>
                   
                   <div className="flex items-center justify-center gap-4 mb-8">
                       <button onClick={() => setQuickValue(Math.max(0, quickValue - getSmartStep(quickAdjustItem.unit)))} className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-xl font-bold hover:bg-gray-200"><Minus /></button>
-                      <div className="text-4xl font-black text-teal-900 w-32 text-center">
+                      <div className="text-4xl font-black text-teal-900 w-32 text-center flex flex-col items-center justify-center">
                           {quickValue.toFixed(quickAdjustItem.unit === 'g' || quickAdjustItem.unit === 'ml' ? 0 : 2)}
-                          <span className="text-lg text-gray-400 ml-1">{quickAdjustItem.unit}</span>
+                          <span className="text-lg text-gray-400 ml-1 block">{quickAdjustItem.unit}</span>
                       </div>
                       <button onClick={() => setQuickValue(quickValue + getSmartStep(quickAdjustItem.unit))} className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-xl font-bold hover:bg-gray-200"><PlusIcon /></button>
                   </div>
@@ -539,9 +538,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                         <Wand2 className={`w-5 h-5 ${newItem.name ? 'text-orange-400 animate-pulse' : 'text-gray-300'}`} />
                     </div>
                 </div>
-                {newItem.name && (
-                    <div className="text-[9px] font-bold text-orange-400 uppercase tracking-widest mt-2 ml-2">Autodetectando categoría...</div>
-                )}
               </div>
 
               <div>
