@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { UserProfile, DietPreference, CuisineType } from '../types';
 import { Logo } from './Logo';
-import { User, Users, ChefHat, Settings, LogOut, Download, Trash2, ShieldCheck, Heart, ChevronRight, Upload, Globe, Trophy, PiggyBank, Sparkles, Smartphone, Share as ShareIcon, Bug, Mail, Send } from 'lucide-react';
+import { User, Users, ChefHat, Settings, LogOut, Download, Trash2, ShieldCheck, Heart, ChevronRight, Upload, Globe, Trophy, PiggyBank, Sparkles, Smartphone, Share as ShareIcon, Bug, Mail, Send, RefreshCw } from 'lucide-react';
 
 interface ProfileProps {
   user: UserProfile;
@@ -304,41 +304,12 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
             </div>
         </section>
 
-        {/* Cocinas Favoritas */}
-        <section className="bg-white p-10 rounded-[3.5rem] shadow-sm border border-gray-100 space-y-6 md:col-span-2" aria-labelledby="cuisines-title">
-            <h3 id="cuisines-title" className="text-[11px] font-black uppercase tracking-[0.4em] text-teal-700 flex items-center gap-2">
-                <Globe className="w-4 h-4" /> Paladar Preferido
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-                {CUISINES.map(cuisine => (
-                    <button
-                        key={cuisine.id}
-                        onClick={() => {
-                            const current = user.favorite_cuisines;
-                            const updated = current.includes(cuisine.id) 
-                                ? current.filter(c => c !== cuisine.id) 
-                                : [...current, cuisine.id];
-                            onUpdate({ ...user, favorite_cuisines: updated as any });
-                        }}
-                        className={`p-6 rounded-[2.5rem] flex flex-col items-center gap-3 transition-all border-2 ${
-                            user.favorite_cuisines.includes(cuisine.id)
-                            ? 'bg-orange-500 text-white border-orange-500 shadow-xl scale-105'
-                            : 'bg-white text-gray-400 border-gray-50 hover:border-orange-200'
-                        }`}
-                    >
-                        <span className="text-3xl">{cuisine.emoji}</span>
-                        <span className="text-[9px] font-black uppercase tracking-tighter">{cuisine.label}</span>
-                    </button>
-                ))}
-            </div>
-        </section>
-
         {/* Centro de Seguridad */}
         <section className="bg-teal-900 p-12 rounded-[4rem] shadow-2xl space-y-8 md:col-span-2 text-white relative overflow-hidden">
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-10">
                 <div className="flex-1 space-y-4 text-center md:text-left">
                     <h3 className="text-3xl font-black tracking-tight">Tus datos son tuyos.</h3>
-                    <p className="text-teal-300 font-medium text-lg opacity-60">Exporta tu despensa y recetas para tener un backup siempre contigo.</p>
+                    <p className="text-teal-300 font-medium text-lg opacity-60">Gestiona tu información o soluciona problemas con la base de datos.</p>
                 </div>
                 <div className="flex flex-wrap gap-4 justify-center">
                     <button 
@@ -347,13 +318,6 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
                     >
                         <Download className="w-5 h-5" /> Backup JSON
                     </button>
-                    <button 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="px-8 py-5 bg-teal-800 text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center gap-3 border border-white/10"
-                    >
-                        <Upload className="w-5 h-5" /> Restaurar
-                    </button>
-                    <input type="file" ref={fileInputRef} onChange={importData} className="hidden" accept=".json" />
                 </div>
             </div>
             

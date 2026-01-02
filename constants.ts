@@ -93,7 +93,7 @@ export const MOCK_USER: UserProfile = {
   history_savings: [{ date: '2024-05-01', amount: 124.80 }]
 };
 
-// REPOSITORIO ESTÁTICO DE RECETAS (Actualizado para cubrir todos los casos de onboarding)
+// REPOSITORIO ESTÁTICO DE RECETAS (AMPLIADO A 30+ RECETAS)
 export const STATIC_RECIPES: Recipe[] = [
   // --- DESAYUNOS ---
   {
@@ -153,6 +153,25 @@ export const STATIC_RECIPES: Recipe[] = [
     ],
     instructions: ["Triturar todo", "Hacer a la plancha vuelta y vuelta"],
     image_url: "https://images.unsplash.com/photo-1506084868230-bb9d95c24759?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-b4",
+    title: "Gachas de Avena (Porridge)",
+    description: "Desayuno caliente y reconfortante.",
+    meal_category: "breakfast",
+    cuisine_type: "healthy",
+    difficulty: "easy",
+    prep_time: 10,
+    servings: 1,
+    calories: 300,
+    dietary_tags: ["vegetarian", "vegan"],
+    ingredients: [
+      { name: "avena", quantity: 50, unit: "g", category: "grains" },
+      { name: "leche", quantity: 200, unit: "ml", category: "dairy" },
+      { name: "canela", quantity: 1, unit: "pizca", category: "spices" }
+    ],
+    instructions: ["Cocer avena con leche a fuego lento", "Añadir canela al final"],
+    image_url: "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&q=80"
   },
 
   // --- MEDITERRÁNEA / ESPAÑOLA ---
@@ -217,6 +236,46 @@ export const STATIC_RECIPES: Recipe[] = [
     instructions: ["Triturar todo muy bien", "Enfriar en nevera"],
     image_url: "https://images.unsplash.com/photo-1557844352-761f2565b576?auto=format&fit=crop&q=80"
   },
+  {
+    id: "static-new-1",
+    title: "Albóndigas en Salsa",
+    description: "Receta de la abuela, versión fácil.",
+    meal_category: "lunch",
+    cuisine_type: "spanish",
+    difficulty: "medium",
+    prep_time: 40,
+    servings: 4,
+    calories: 450,
+    dietary_tags: [],
+    ingredients: [
+      { name: "carne picada", quantity: 500, unit: "g", category: "meat" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "tomate frito", quantity: 200, unit: "ml", category: "pantry" },
+      { name: "harina", quantity: 50, unit: "g", category: "pantry" }
+    ],
+    instructions: ["Formar bolas, enharinar y freír", "Hacer sofrito con cebolla y tomate", "Cocer albóndigas en la salsa 15 min"],
+    image_url: "https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-new-2",
+    title: "Merluza a la Romana",
+    description: "Pescado jugoso y crujiente.",
+    meal_category: "dinner",
+    cuisine_type: "spanish",
+    difficulty: "easy",
+    prep_time: 20,
+    servings: 2,
+    calories: 320,
+    dietary_tags: ["healthy"],
+    ingredients: [
+      { name: "merluza", quantity: 300, unit: "g", category: "fish" },
+      { name: "harina", quantity: 50, unit: "g", category: "pantry" },
+      { name: "huevo", quantity: 1, unit: "unidad", category: "dairy" },
+      { name: "aceite", quantity: 100, unit: "ml", category: "pantry" }
+    ],
+    instructions: ["Pasar pescado por harina y huevo", "Freír en aceite caliente"],
+    image_url: "https://images.unsplash.com/photo-1551061956-613d07802874?auto=format&fit=crop&q=80"
+  },
 
   // --- ITALIANA ---
   {
@@ -258,6 +317,26 @@ export const STATIC_RECIPES: Recipe[] = [
     ],
     instructions: ["Sofreír cebolla y setas", "Añadir arroz y nacarar", "Añadir caldo poco a poco removiendo"],
     image_url: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-new-3",
+    title: "Espaguetis a la Boloñesa",
+    description: "Un clásico que nunca falla.",
+    meal_category: "lunch",
+    cuisine_type: "italian",
+    difficulty: "medium",
+    prep_time: 30,
+    servings: 4,
+    calories: 550,
+    dietary_tags: [],
+    ingredients: [
+      { name: "pasta", quantity: 400, unit: "g", category: "grains" },
+      { name: "carne picada", quantity: 300, unit: "g", category: "meat" },
+      { name: "tomate frito", quantity: 300, unit: "ml", category: "pantry" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" }
+    ],
+    instructions: ["Sofreír cebolla y carne", "Añadir tomate y reducir", "Mezclar con la pasta cocida"],
+    image_url: "https://images.unsplash.com/photo-1622973536968-3ead9e780960?auto=format&fit=crop&q=80"
   },
 
   // --- ASIÁTICA ---
@@ -301,6 +380,46 @@ export const STATIC_RECIPES: Recipe[] = [
     instructions: ["Sofreír cebolla", "Añadir tomate y especias", "Incorporar garbanzos y cocinar 10 min"],
     image_url: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80"
   },
+  {
+    id: "static-new-4",
+    title: "Arroz Tres Delicias Casero",
+    description: "Mejor que el del restaurante.",
+    meal_category: "dinner",
+    cuisine_type: "asian",
+    difficulty: "easy",
+    prep_time: 20,
+    servings: 2,
+    calories: 350,
+    dietary_tags: [],
+    ingredients: [
+      { name: "arroz", quantity: 200, unit: "g", category: "grains" },
+      { name: "guisantes", quantity: 50, unit: "g", category: "vegetables" },
+      { name: "jamon", quantity: 50, unit: "g", category: "meat" },
+      { name: "huevo", quantity: 1, unit: "unidad", category: "dairy" }
+    ],
+    instructions: ["Cocer arroz", "Hacer tortilla francesa y trocear", "Saltear todo junto"],
+    image_url: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-new-5",
+    title: "Poké Bowl de Salmón",
+    description: "Fresco, saludable y rápido.",
+    meal_category: "lunch",
+    cuisine_type: "asian",
+    difficulty: "easy",
+    prep_time: 15,
+    servings: 1,
+    calories: 450,
+    dietary_tags: ["healthy"],
+    ingredients: [
+      { name: "arroz", quantity: 100, unit: "g", category: "grains" },
+      { name: "salmon", quantity: 100, unit: "g", category: "fish" },
+      { name: "aguacate", quantity: 0.5, unit: "unidad", category: "fruits" },
+      { name: "pepino", quantity: 0.5, unit: "unidad", category: "vegetables" }
+    ],
+    instructions: ["Montar base de arroz", "Colocar ingredientes encima troceados", "Aliñar al gusto"],
+    image_url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80"
+  },
 
   // --- MEXICANA ---
   {
@@ -342,6 +461,26 @@ export const STATIC_RECIPES: Recipe[] = [
     ],
     instructions: ["Freír huevos", "Calentar tortillas y frijoles", "Montar con salsa por encima"],
     image_url: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-new-6",
+    title: "Burritos de Ternera",
+    description: "Comida completa en un rollo.",
+    meal_category: "dinner",
+    cuisine_type: "mexican",
+    difficulty: "medium",
+    prep_time: 25,
+    servings: 2,
+    calories: 600,
+    dietary_tags: [],
+    ingredients: [
+      { name: "tortillas", quantity: 2, unit: "unidades", category: "grains" },
+      { name: "ternera", quantity: 200, unit: "g", category: "meat" },
+      { name: "arroz", quantity: 100, unit: "g", category: "grains" },
+      { name: "queso", quantity: 50, unit: "g", category: "dairy" }
+    ],
+    instructions: ["Cocinar carne picada", "Mezclar con arroz cocido", "Rellenar tortilla, añadir queso y enrollar"],
+    image_url: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&q=80"
   },
 
   // --- KETO / BAJO CARBOHIDRATO ---
@@ -406,6 +545,88 @@ export const STATIC_RECIPES: Recipe[] = [
     ],
     instructions: ["Poner todo en crudo en olla", "Cubrir de agua", "Cocer hasta que estén tiernas (30-40 min)"],
     image_url: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-new-7",
+    title: "Crema de Calabaza",
+    description: "Suave, ligera y nutritiva.",
+    meal_category: "dinner",
+    cuisine_type: "healthy",
+    difficulty: "easy",
+    prep_time: 30,
+    servings: 4,
+    calories: 150,
+    dietary_tags: ["vegan", "vegetarian", "gluten_free", "healthy"],
+    ingredients: [
+      { name: "calabaza", quantity: 500, unit: "g", category: "vegetables" },
+      { name: "zanahoria", quantity: 2, unit: "unidades", category: "vegetables" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "patata", quantity: 1, unit: "unidad", category: "vegetables" }
+    ],
+    instructions: ["Cocer verduras troceadas 20 min", "Triturar hasta que quede fino", "Añadir un chorrito de aceite"],
+    image_url: "https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-new-8",
+    title: "Berenjenas Rellenas",
+    description: "Plato principal vegetal y saciante.",
+    meal_category: "lunch",
+    cuisine_type: "mediterranean",
+    difficulty: "medium",
+    prep_time: 40,
+    servings: 2,
+    calories: 250,
+    dietary_tags: ["vegetarian", "gluten_free"],
+    ingredients: [
+      { name: "berenjena", quantity: 2, unit: "unidades", category: "vegetables" },
+      { name: "tomate frito", quantity: 100, unit: "ml", category: "pantry" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "queso", quantity: 50, unit: "g", category: "dairy" }
+    ],
+    instructions: ["Asar berenjenas partidas", "Vaciar y sofreír carne con cebolla y tomate", "Rellenar, queso y gratinar"],
+    image_url: "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?auto=format&fit=crop&q=80"
+  },
+
+  // --- FAST FOOD SALUDABLE ---
+  {
+    id: "static-15",
+    title: "Pizza Casera Integral",
+    description: "Date un capricho el fin de semana.",
+    meal_category: "dinner",
+    cuisine_type: "fast",
+    difficulty: "medium",
+    prep_time: 25,
+    servings: 2,
+    calories: 600,
+    dietary_tags: ["vegetarian"],
+    ingredients: [
+      { name: "pan", quantity: 2, unit: "unidades", category: "grains" }, // Base de pan o tortilla
+      { name: "tomate frito", quantity: 100, unit: "ml", category: "pantry" },
+      { name: "mozzarella", quantity: 100, unit: "g", category: "dairy" },
+      { name: "oregano", quantity: 1, unit: "cucharada", category: "spices" }
+    ],
+    instructions: ["Usar pan o tortilla como base", "Añadir tomate y queso", "Hornear hasta dorar"],
+    image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-16",
+    title: "Hamburguesa de Pollo Casera",
+    description: "Jugosa y sin ingredientes extraños.",
+    meal_category: "dinner",
+    cuisine_type: "fast",
+    difficulty: "medium",
+    prep_time: 20,
+    servings: 2,
+    calories: 450,
+    dietary_tags: [],
+    ingredients: [
+      { name: "carne picada", quantity: 250, unit: "g", category: "meat" }, // Pollo picado
+      { name: "pan", quantity: 2, unit: "unidades", category: "grains" },
+      { name: "lechuga", quantity: 2, unit: "hojas", category: "vegetables" },
+      { name: "tomate", quantity: 1, unit: "unidad", category: "vegetables" }
+    ],
+    instructions: ["Formar hamburguesas y hacer a la plancha", "Montar en pan con verduras"],
+    image_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80"
   }
 ];
 

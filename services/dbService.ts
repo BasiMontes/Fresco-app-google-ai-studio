@@ -117,6 +117,11 @@ export const saveRecipeDB = async (userId: string, recipe: Recipe) => {
     if (error) console.error('Error saving recipe:', error);
 };
 
+export const deleteRecipeDB = async (userId: string) => {
+    const { error } = await supabase.from('recipes').delete().eq('user_id', userId);
+    if (error) console.error('Error deleting recipes:', error);
+};
+
 // --- MEAL PLAN ---
 export const fetchMealPlan = async (userId: string): Promise<MealSlot[]> => {
     const { data, error } = await supabase
@@ -159,15 +164,28 @@ export const deleteMealSlotDB = async (userId: string, date: string, type: strin
     if (error) console.error('Error deleting slot:', error);
 };
 
-// --- SEEDER MEJORADO ---
+// --- SEEDER AUTOMÁTICO DE CONTENIDO ---
 export const seedDatabaseIfEmpty = async (userId: string) => {
-    const recipes = await fetchRecipes(userId);
-    if (recipes.length === 0) {
-        console.log('🌱 Seeding database for new user with Static Library...');
-        // Usar STATIC_RECIPES importado de constants
-        for (const recipe of STATIC_RECIPES) {
-            await saveRecipeDB(userId, { ...recipe, id: `seed-${Date.now()}-${Math.random()}` });
+    const currentRecipes = await fetchRecipes(userId);
+    const existingTitles = new Set(currentRecipes.map(r => r.title));
+
+    console.log(`📦 Checking recipe sync for user ${userId}...`);
+    let addedCount = 0;
+
+    for (const recipe of STATIC_RECIPES) {
+        if (!existingTitles.has(recipe.title)) {
+            const newId = `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            await saveRecipeDB(userId, { ...recipe, id: newId });
+            addedCount++;
         }
+    }
+    
+    if (addedCount > 0) {
+        console.log(`✅ ${addedCount} new base recipes injected.`);
+    }
+
+    const pantry = await fetchPantry(userId);
+    if (pantry.length === 0) {
         const starterPantry: PantryItem[] = [
             { id: `start-1`, name: 'Aceite de Oliva', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
             { id: `start-2`, name: 'Sal', quantity: 1, unit: 'kg', category: 'spices', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 700).toISOString() },
@@ -178,7 +196,14 @@ export const seedDatabaseIfEmpty = async (userId: string) => {
         for (const item of starterPantry) {
             await addPantryItemDB(userId, item);
         }
-        return true; 
     }
-    return false;
+    
+    return addedCount > 0;
+};
+
+export const forceRepopulateRecipes = async (userId: string) => {
+    // Delete existing recipes
+    await deleteRecipeDB(userId);
+    // Seed again (this will re-add static recipes since the DB is now empty of recipes)
+    await seedDatabaseIfEmpty(userId);
 };

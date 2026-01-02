@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PantryItem } from '../types';
-import { Package, Plus, Trash2, Calendar, X, Save, AlertTriangle, Clock, Minus, Camera, Sparkles, Pencil, CheckCircle2, AlertOctagon, WifiOff, Search, ChevronDown, ChevronUp, Wand2, RotateCcw, Utensils, ArrowRight, Skull, Zap } from 'lucide-react';
+import { Package, Plus, Trash2, Calendar, X, Save, AlertTriangle, Clock, Minus, Plus as PlusIcon, Camera, Sparkles, Pencil, CheckCircle2, AlertOctagon, WifiOff, Search, ChevronDown, ChevronUp, Wand2, RotateCcw, Utensils, ArrowRight, Skull, Zap } from 'lucide-react';
 import { format, differenceInDays, isPast } from 'date-fns';
 import { TicketScanner } from './TicketScanner';
 import { PREDICTIVE_CATEGORY_RULES, SPANISH_PRICES } from '../constants';
@@ -394,7 +394,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                           
                           <div>
                             <div className="font-black text-gray-900 capitalize text-lg mb-4 truncate">
-                                {renderHighlightedText((item.name as string) || '', (searchTerm as string) || '')}
+                                {renderHighlightedText(String(item.name || ''), String(searchTerm || ''))}
                             </div>
                             <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-gray-100 group-hover:border-teal-100 transition-colors shadow-sm">
                                 <button 
@@ -420,7 +420,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                     onClick={() => onUpdateQuantity(item.id, step)}
                                     className="w-10 h-10 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-xl transition-all active:scale-75"
                                 >
-                                    <Plus className="w-5 h-5" />
+                                    <PlusIcon className="w-5 h-5" />
                                 </button>
                             </div>
                             <div className="mt-5 flex items-center gap-2 text-[9px] text-gray-300 font-black uppercase tracking-widest">
@@ -495,7 +495,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                           {quickValue.toFixed(quickAdjustItem.unit === 'g' || quickAdjustItem.unit === 'ml' ? 0 : 2)}
                           <span className="text-lg text-gray-400 ml-1">{quickAdjustItem.unit}</span>
                       </div>
-                      <button onClick={() => setQuickValue(quickValue + getSmartStep(quickAdjustItem.unit))} className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-xl font-bold hover:bg-gray-200"><Plus /></button>
+                      <button onClick={() => setQuickValue(quickValue + getSmartStep(quickAdjustItem.unit))} className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-xl font-bold hover:bg-gray-200"><PlusIcon /></button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 mb-8">

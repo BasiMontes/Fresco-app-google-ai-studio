@@ -470,6 +470,16 @@ const App: React.FC = () => {
     const handleCustomToast = (e: any) => setToast({ msg: e.detail.message, type: e.detail.type || 'info', action: e.detail.action });
     window.addEventListener('fresco-toast', handleCustomToast);
 
+    // FIX: Escuchar evento de repoblación forzada desde Profile
+    const handleForceRepopulate = async () => {
+        if (userId) {
+            await db.forceRepopulateRecipes(userId);
+            const newRecipes = await db.fetchRecipes(userId);
+            setRecipes(newRecipes);
+        }
+    };
+    window.addEventListener('fresco-force-repopulate', handleForceRepopulate);
+
     const handleOnline = () => { setIsOnline(true); setToast({ msg: 'Conexión recuperada', type: 'success' }); };
     const handleOffline = () => { setIsOnline(false); setToast({ msg: 'Modo Offline: Los cambios se guardarán luego.', type: 'info' }); };
     window.addEventListener('online', handleOnline);
@@ -551,9 +561,10 @@ const App: React.FC = () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('fresco-toast', handleCustomToast);
+      window.removeEventListener('fresco-force-repopulate', handleForceRepopulate);
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [userId]); // Dependency on userId to handle force repopulate correctly
 
   const handleOnboardingComplete = async (profile: UserProfile) => {
       if (!userId) return;

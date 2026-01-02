@@ -1,5 +1,5 @@
 
-export type DietPreference = "vegetarian" | "vegan" | "gluten_free" | "lactose_free" | "keto" | "paleo" | "none";
+export type DietPreference = "vegetarian" | "vegan" | "gluten_free" | "lactose_free" | "keto" | "paleo" | "none" | "healthy";
 export type CuisineType = "mediterranean" | "mexican" | "italian" | "asian" | "indian" | "spanish" | "healthy" | "fast";
 export type MealCategory = "breakfast" | "lunch" | "dinner";
 export type Difficulty = "easy" | "medium" | "hard";
