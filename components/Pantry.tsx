@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PantryItem } from '../types';
 import { Package, Plus, Trash2, Calendar, X, Save, AlertTriangle, Clock, Minus, Plus as PlusIcon, Camera, Sparkles, Pencil, CheckCircle2, AlertOctagon, WifiOff, Search, ChevronDown, ChevronUp, Wand2, RotateCcw, Utensils, ArrowRight, Skull, Zap } from 'lucide-react';
@@ -366,7 +367,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                 <div className="flex gap-1">
                                     {onCook && (
                                         <button 
-                                            onClick={() => onCook?.(String(item.name || ''))}
+                                            onClick={() => onCook?.(item.name || '')}
                                             className="p-1.5 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
                                             title="Cocinar con esto"
                                         >
