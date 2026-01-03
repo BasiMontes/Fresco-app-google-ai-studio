@@ -9,7 +9,7 @@ import * as db from './services/dbService';
 import { subtractIngredient, addIngredient, cleanName, roundSafe } from './services/unitService';
 import { AuthPage } from './components/AuthPage';
 import { addToSyncQueue, initSyncListener } from './services/syncService';
-import { MOCK_USER, FALLBACK_RECIPES } from './constants';
+import { MOCK_USER, FALLBACK_RECIPES, STATIC_RECIPES } from './constants';
 
 const Dashboard = React.lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
 const Planner = React.lazy(() => import('./components/Planner').then(module => ({ default: module.Planner })));
@@ -278,9 +278,11 @@ const App: React.FC = () => {
   const handleAddRecipes = (newRecipes: Recipe[]) => {
       setRecipes(prev => [...prev, ...newRecipes]);
       if (userId) {
-          newRecipes.forEach(r => {
-              safeDbCall(() => db.saveRecipeDB(userId, r), 'SAVE_RECIPE', r);
-          });
+          // Usar bulk insert si hay muchas, o single si pocas.
+          // Para consistencia con addRecipes, usamos saveRecipeDB o creamos un helper bulk si fuera necesario.
+          // Como esto viene del generador IA, suelen ser pocas (3-5), el loop con promises es aceptable aquí,
+          // pero para ser robustos:
+          db.saveRecipesBulkDB(userId, newRecipes).catch(e => console.error("Error saving generated recipes", e));
       }
   };
 
@@ -504,21 +506,47 @@ const App: React.FC = () => {
             setUserId(uid);
 
             if (appUser.onboarding_completed) {
-                if (navigator.onLine) {
-                    await db.seedDatabaseIfEmpty(uid);
-                }
-
-                const [pantryData, recipesData, planData, shoppingData] = await Promise.all([
+                // OPTIMIZACIÓN: Carga paralela de todo
+                const [fetchedPantry, fetchedRecipes, fetchedPlan, fetchedShopping] = await Promise.all([
                     db.fetchPantry(uid),
                     db.fetchRecipes(uid),
                     db.fetchMealPlan(uid),
-                    db.fetchShoppingList(uid) 
+                    db.fetchShoppingList(uid)
                 ]);
+
+                let finalPantry = fetchedPantry;
+                let finalRecipes = fetchedRecipes;
+
+                // Si no hay recetas, inyectar estáticas localmente Y lanzar guardado en background
+                if (fetchedRecipes.length === 0 && navigator.onLine) {
+                    const seedRecipes = STATIC_RECIPES.map(r => ({
+                        ...r,
+                        id: `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                        user_id: uid
+                    }));
+                    finalRecipes = seedRecipes; // Optimistic UI update
+                    // Background sync
+                    db.saveRecipesBulkDB(uid, seedRecipes).catch(e => console.error("Error background seeding recipes", e));
+                }
+
+                // Si no hay despensa, inyectar básicos localmente Y guardar en background
+                if (fetchedPantry.length === 0 && navigator.onLine) {
+                    const seedPantry = [
+                        { id: `start-1`, name: 'Aceite de Oliva', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
+                        { id: `start-2`, name: 'Sal', quantity: 1, unit: 'kg', category: 'spices', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 700).toISOString() },
+                        { id: `start-3`, name: 'Arroz', quantity: 1, unit: 'kg', category: 'grains', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 180).toISOString() },
+                        { id: `start-4`, name: 'Huevos', quantity: 6, unit: 'unidades', category: 'dairy', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 14).toISOString() },
+                        { id: `start-5`, name: 'Leche', quantity: 2, unit: 'l', category: 'dairy', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 30).toISOString() },
+                    ].map(p => ({...p, user_id: uid}));
+                    
+                    finalPantry = seedPantry; // Optimistic UI
+                    db.addPantryItemsBulkDB(uid, seedPantry).catch(e => console.error("Error background seeding pantry", e));
+                }
                 
-                setPantry(pantryData);
-                setRecipes(recipesData);
-                setMealPlan(planData);
-                setShoppingList(shoppingData);
+                setPantry(finalPantry);
+                setRecipes(finalRecipes);
+                setMealPlan(fetchedPlan);
+                setShoppingList(fetchedShopping);
                 
                 setView('app');
             } else {
@@ -584,12 +612,22 @@ const App: React.FC = () => {
       }).eq('id', userId);
 
       // Usar seed estático para evitar llamadas a IA iniciales
-      await db.seedDatabaseIfEmpty(userId);
-      
-      const starterRecipes = await db.fetchRecipes(userId);
-      setRecipes(starterRecipes);
-      const starterPantry = await db.fetchPantry(userId);
-      setPantry(starterPantry);
+      // NOTA: Aquí podemos llamar a initData de nuevo o hacerlo manual, 
+      // pero para UX rápida, mejor inyectar y listo.
+      const seedRecipes = STATIC_RECIPES.map(r => ({
+          ...r,
+          id: `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          user_id: userId
+      }));
+      setRecipes(seedRecipes);
+      db.saveRecipesBulkDB(userId, seedRecipes);
+
+      const seedPantry = [
+          { id: `start-1`, name: 'Aceite de Oliva', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
+          { id: `start-2`, name: 'Sal', quantity: 1, unit: 'kg', category: 'spices', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 700).toISOString() },
+      ].map(p => ({...p, user_id: userId}));
+      setPantry(seedPantry);
+      db.addPantryItemsBulkDB(userId, seedPantry);
 
       setView('app');
   };

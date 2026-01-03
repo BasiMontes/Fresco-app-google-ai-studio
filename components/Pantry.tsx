@@ -209,7 +209,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       const strText = text || '';
       const parts = strText.split(new RegExp(`(${highlight})`, 'gi'));
       return parts.map((part, i) => 
-          part.toLowerCase() === highlight.toLowerCase() 
+          String(part).toLowerCase() === String(highlight).toLowerCase() 
               ? <span key={i} className="bg-orange-200 text-orange-900 px-0.5 rounded">{part}</span> 
               : part
       );

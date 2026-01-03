@@ -31,6 +31,23 @@ export const addPantryItemDB = async (userId: string, item: PantryItem) => {
     if (error) console.error('Error adding pantry item:', error);
 };
 
+// OPTIMIZACIÓN: Inserción masiva para evitar N peticiones
+export const addPantryItemsBulkDB = async (userId: string, items: PantryItem[]) => {
+    const records = items.map(item => ({
+        id: item.id,
+        user_id: userId,
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        category: item.category,
+        added_at: item.added_at,
+        expires_at: item.expires_at
+    }));
+    
+    const { error } = await supabase.from('pantry_items').upsert(records);
+    if (error) console.error('Error bulk adding pantry items:', error);
+};
+
 export const deletePantryItemDB = async (id: string) => {
     const { error } = await supabase.from('pantry_items').delete().eq('id', id);
     if (error) console.error('Error deleting pantry item:', error);
@@ -40,7 +57,7 @@ export const updatePantryItemDB = async (userId: string, item: PantryItem) => {
     return addPantryItemDB(userId, item);
 };
 
-// --- SHOPPING LIST (NUEVO) ---
+// --- SHOPPING LIST ---
 export const fetchShoppingList = async (userId: string): Promise<ShoppingItem[]> => {
     const { data, error } = await supabase
         .from('shopping_list')
@@ -110,11 +127,34 @@ export const saveRecipeDB = async (userId: string, recipe: Recipe) => {
         servings: recipe.servings,
         calories: recipe.calories,
         image_url: recipe.image_url,
-        ingredients: recipe.ingredients,
+        ingredients: recipe.ingredients, // Supabase client handles JSON conversion if column type is jsonb
         instructions: recipe.instructions,
         dietary_tags: recipe.dietary_tags
     });
     if (error) console.error('Error saving recipe:', error);
+};
+
+// OPTIMIZACIÓN: Inserción masiva de recetas
+export const saveRecipesBulkDB = async (userId: string, recipes: Recipe[]) => {
+    const records = recipes.map(recipe => ({
+        id: recipe.id,
+        user_id: userId,
+        title: recipe.title,
+        description: recipe.description,
+        meal_category: recipe.meal_category,
+        cuisine_type: recipe.cuisine_type,
+        difficulty: recipe.difficulty,
+        prep_time: recipe.prep_time,
+        servings: recipe.servings,
+        calories: recipe.calories,
+        image_url: recipe.image_url,
+        ingredients: recipe.ingredients,
+        instructions: recipe.instructions,
+        dietary_tags: recipe.dietary_tags
+    }));
+
+    const { error } = await supabase.from('recipes').upsert(records);
+    if (error) console.error('Error bulk saving recipes:', error);
 };
 
 export const deleteRecipeDB = async (userId: string) => {
@@ -164,46 +204,14 @@ export const deleteMealSlotDB = async (userId: string, date: string, type: strin
     if (error) console.error('Error deleting slot:', error);
 };
 
-// --- SEEDER AUTOMÁTICO DE CONTENIDO ---
-export const seedDatabaseIfEmpty = async (userId: string) => {
-    const currentRecipes = await fetchRecipes(userId);
-    const existingTitles = new Set(currentRecipes.map(r => r.title));
-
-    console.log(`📦 Checking recipe sync for user ${userId}...`);
-    let addedCount = 0;
-
-    for (const recipe of STATIC_RECIPES) {
-        if (!existingTitles.has(recipe.title)) {
-            const newId = `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            await saveRecipeDB(userId, { ...recipe, id: newId });
-            addedCount++;
-        }
-    }
-    
-    if (addedCount > 0) {
-        console.log(`✅ ${addedCount} new base recipes injected.`);
-    }
-
-    const pantry = await fetchPantry(userId);
-    if (pantry.length === 0) {
-        const starterPantry: PantryItem[] = [
-            { id: `start-1`, name: 'Aceite de Oliva', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
-            { id: `start-2`, name: 'Sal', quantity: 1, unit: 'kg', category: 'spices', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 700).toISOString() },
-            { id: `start-3`, name: 'Arroz', quantity: 1, unit: 'kg', category: 'grains', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 180).toISOString() },
-            { id: `start-4`, name: 'Huevos', quantity: 6, unit: 'unidades', category: 'dairy', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 14).toISOString() },
-            { id: `start-5`, name: 'Leche', quantity: 2, unit: 'l', category: 'dairy', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 30).toISOString() },
-        ];
-        for (const item of starterPantry) {
-            await addPantryItemDB(userId, item);
-        }
-    }
-    
-    return addedCount > 0;
-};
-
+// --- UTILS ---
 export const forceRepopulateRecipes = async (userId: string) => {
-    // Delete existing recipes
+    // Delete existing
     await deleteRecipeDB(userId);
-    // Seed again (this will re-add static recipes since the DB is now empty of recipes)
-    await seedDatabaseIfEmpty(userId);
+    // Re-seed estático usando bulk insert para velocidad
+    const newRecipes = STATIC_RECIPES.map(r => ({
+        ...r,
+        id: `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    }));
+    await saveRecipesBulkDB(userId, newRecipes);
 };
