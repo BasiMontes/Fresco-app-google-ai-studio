@@ -31,7 +31,7 @@ export const addPantryItemDB = async (userId: string, item: PantryItem) => {
     if (error) console.error('Error adding pantry item:', error);
 };
 
-// OPTIMIZACIÓN: Inserción masiva para evitar N peticiones
+// OPTIMIZACIÓN: Inserción masiva
 export const addPantryItemsBulkDB = async (userId: string, items: PantryItem[]) => {
     const records = items.map(item => ({
         id: item.id,
@@ -127,7 +127,7 @@ export const saveRecipeDB = async (userId: string, recipe: Recipe) => {
         servings: recipe.servings,
         calories: recipe.calories,
         image_url: recipe.image_url,
-        ingredients: recipe.ingredients, // Supabase client handles JSON conversion if column type is jsonb
+        ingredients: recipe.ingredients,
         instructions: recipe.instructions,
         dietary_tags: recipe.dietary_tags
     });
