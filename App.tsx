@@ -17,7 +17,7 @@ const Recipes = React.lazy(() => import('./components/Recipes').then(module => (
 const ShoppingList = React.lazy(() => import('./components/ShoppingList').then(module => ({ default: module.ShoppingList })));
 const Pantry = React.lazy(() => import('./components/Pantry').then(module => ({ default: module.Pantry })));
 const Profile = React.lazy(() => import('./components/Profile').then(module => ({ default: module.Profile })));
-const BatchCooking = React.lazy(() => import('./components/BatchCooking').then(module => ({ default: module.BatchCooking })));
+// const BatchCooking = React.lazy(() => import('./components/BatchCooking').then(module => ({ default: module.BatchCooking })));
 
 import { Logo } from './components/Logo';
 import { Home, Calendar, ShoppingBag, BookOpen, Package, User, Sparkles, AlertOctagon, FileText, CloudCog, WifiOff, ArrowRight, RefreshCw, X } from 'lucide-react';
@@ -767,6 +767,7 @@ const App: React.FC = () => {
                 </Suspense>
             </div>
 
+            {/* BATCH COOKING DISABLED 
             {activeTab === 'planner' && mealPlan.length > 0 && !activeBatchSession && (
                 <button 
                   onClick={handleStartBatch}
@@ -775,8 +776,10 @@ const App: React.FC = () => {
                     <Sparkles className="w-5 h-5" /> Batch Cooking
                 </button>
             )}
+            */}
           </main>
 
+          {/* 
           {activeBatchSession && (
               <BatchCooking 
                   session={activeBatchSession} 
@@ -785,6 +788,7 @@ const App: React.FC = () => {
                   onFinish={finishBatch} 
               />
           )}
+          */}
           
            {/* Mobile Nav */}
            <nav className="md:hidden fixed bottom-6 left-4 right-4 z-[800] bg-teal-800/95 backdrop-blur-3xl p-1.5 rounded-3xl shadow-2xl flex gap-1 safe-pb">
