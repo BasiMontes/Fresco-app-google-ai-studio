@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, Suspense } from 'react';
 import { UserProfile, Recipe, MealSlot, PantryItem, MealCategory, ShoppingItem, BatchSession } from './types';
 import { Onboarding } from './components/Onboarding';
@@ -667,9 +668,9 @@ const App: React.FC = () => {
                   <button 
                     key={item.id} 
                     onClick={() => setActiveTab(item.id)} 
-                    className={`w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all group ${activeTab === item.id ? 'bg-white text-teal-900 font-bold shadow-lg' : 'text-teal-100 hover:bg-white/10'}`}
+                    className={`w-full flex items-center gap-4 px-5 py-3 rounded-xl transition-all group ${activeTab === item.id ? 'bg-white text-teal-900 font-bold shadow-lg' : 'text-teal-100 hover:bg-white/10'}`}
                   >
-                    <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-teal-900' : 'text-teal-400 group-hover:text-white'}`} /> 
+                    <item.icon className={`w-4 h-4 ${activeTab === item.id ? 'text-teal-900' : 'text-teal-400 group-hover:text-white'}`} /> 
                     <span className="text-sm font-medium tracking-wide">{item.label}</span>
                   </button>
                 ))}
@@ -689,7 +690,7 @@ const App: React.FC = () => {
 
           {/* MAIN CONTENT AREA */}
           <main className="flex-1 md:ml-64 min-h-screen bg-[#FDFDFD] w-full pb-32 md:pb-0">
-            <div className="max-w-7xl mx-auto p-4 md:p-12 h-full">
+            <div className="max-w-7xl mx-auto p-4 md:p-8 h-full">
                 <Suspense fallback={<PageLoader message="Cargando módulo..." />}>
                 {activeTab === 'dashboard' && user && <Dashboard 
                     user={user} 

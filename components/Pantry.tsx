@@ -323,19 +323,19 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       ) : (
         <div className="space-y-4">
           {categoriesPresent.sort().map(cat => (
-            <div key={cat} className="animate-fade-in bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div key={String(cat)} className="animate-fade-in bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
               <button 
-                onClick={() => toggleCategory(cat)}
+                onClick={() => toggleCategory(String(cat))}
                 className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition-colors"
               >
                   <h3 className="uppercase text-[10px] font-black text-teal-900 tracking-[0.2em] flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${expandedCategories[cat] ? 'bg-orange-500' : 'bg-gray-300'}`} /> 
-                      {CATEGORIES_OPTIONS.find(c => c.id === cat)?.label || cat}
+                      <div className={`w-2 h-2 rounded-full ${expandedCategories[String(cat)] ? 'bg-orange-500' : 'bg-gray-300'}`} /> 
+                      {CATEGORIES_OPTIONS.find(c => c.id === String(cat))?.label || String(cat)}
                   </h3>
-                  {expandedCategories[cat] ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  {expandedCategories[String(cat)] ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
               </button>
 
-              {expandedCategories[cat] && (
+              {expandedCategories[String(cat)] && (
                   <div className="p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-10 gap-2 border-t border-gray-50">
                     {filteredItems.filter(i => i.category === cat).map((item: PantryItem) => {
                       const status = getExpiryStatus(item);
