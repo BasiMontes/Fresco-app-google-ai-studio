@@ -50,35 +50,22 @@ const CATEGORY_LABELS: Record<string, { label: string, emoji: string, color: str
 };
 
 export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantry, user, dbItems, onAddShoppingItem, onUpdateShoppingItem, onRemoveShoppingItem, onFinishShopping, onOpenRecipe, onSyncServings }) => {
-  // PERSISTENCIA UI (No Crítica)
   const [adjustments, setAdjustments] = useState<Record<string, number>>(() => {
       try { return JSON.parse(localStorage.getItem('fresco_shopping_adjustments') || '{}'); } catch { return {}; }
   });
-  
   const [customPrices, setCustomPrices] = useState<Record<string, number>>(() => {
       try { return JSON.parse(localStorage.getItem('fresco_custom_prices') || '{}'); } catch { return {}; }
   });
   
-  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
-  
   const [showCelebration, setShowCelebration] = useState(false);
   const [lastSessionStats, setLastSessionStats] = useState({ count: 0, savings: 0 });
-
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [hidePurchased, setHidePurchased] = useState(false);
-  
   const [newExtra, setNewExtra] = useState('');
-
   const [reviewItemsList, setReviewItemsList] = useState<TraceableShoppingItem[]>([]);
-  const [expandedInfoId, setExpandedInfoId] = useState<string | null>(null);
-  
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const hasServingsMismatch = useMemo(() => {
-      return plan.some(slot => slot.servings !== user.household_size);
-  }, [plan, user.household_size]);
 
   useEffect(() => { localStorage.setItem('fresco_shopping_adjustments', JSON.stringify(adjustments)); }, [adjustments]);
   useEffect(() => { localStorage.setItem('fresco_custom_prices', JSON.stringify(customPrices)); }, [customPrices]);
@@ -86,11 +73,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   const addExtraItem = (e: React.FormEvent | React.MouseEvent, instantlyPurchased = false) => {
       e.preventDefault();
       if (!newExtra.trim()) return;
-      
       const lowerName = newExtra.toLowerCase();
       const matchKey = Object.keys(PREDICTIVE_CATEGORY_RULES).find(key => lowerName.includes(key));
       const rule = matchKey ? PREDICTIVE_CATEGORY_RULES[matchKey] : { category: 'other', unit: 'unidad' };
-
       const newItem: ShoppingItem = {
           id: `extra-${Date.now()}`,
           name: newExtra.trim(),
@@ -100,9 +85,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           estimated_price: 2.0, 
           is_purchased: instantlyPurchased
       };
-      
       onAddShoppingItem([newItem]);
-      
       if (instantlyPurchased && navigator.vibrate) navigator.vibrate(50);
       setNewExtra('');
   };
@@ -113,12 +96,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           if (currentQty + currentAdj + delta <= 0) return prev;
           return { ...prev, [itemId]: currentAdj + delta };
       });
-  };
-  
-  const handlePriceUpdate = (itemName: string, newPrice: number) => {
-      const safePrice = Math.max(0.01, newPrice); // Min 1 cent
-      setCustomPrices(prev => ({ ...prev, [itemName]: safePrice }));
-      setEditingPriceId(null);
   };
 
   const checkAllCategory = (items: TraceableShoppingItem[]) => {
@@ -143,68 +120,37 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   };
 
   const shoppingData = useMemo(() => {
-    // ... (Keep existing logic unchanged) ...
     const itemsMap: Record<string, TraceableShoppingItem> = {};
     const normalizeName = (str: string) => cleanName(str);
 
     plan.forEach(slot => {
       const recipe = recipes.find(r => r.id === slot.recipeId);
       if (!recipe) return;
-
       recipe.ingredients.forEach(ing => {
         const key = normalizeName(ing.name);
         const qtyNeeded = (ing.quantity / (recipe.servings || 1)) * (slot.servings || 1);
         let normalized = normalizeUnit(qtyNeeded, ing.unit);
-
         if (normalized.type === 'count' && UNIT_EQUIVALENCES[key]) {
-            normalized = {
-                value: qtyNeeded * UNIT_EQUIVALENCES[key].weight,
-                type: 'mass'
-            };
+            normalized = { value: qtyNeeded * UNIT_EQUIVALENCES[key].weight, type: 'mass' };
         }
-
         if (itemsMap[key]) {
-            if (itemsMap[key].internalType === normalized.type) {
-                itemsMap[key].internalValue = (itemsMap[key].internalValue || 0) + normalized.value;
-            }
-            if(!itemsMap[key].sourceRecipes.includes(recipe.title)) {
-                itemsMap[key].sourceRecipes.push(recipe.title);
-            }
+            if (itemsMap[key].internalType === normalized.type) itemsMap[key].internalValue = (itemsMap[key].internalValue || 0) + normalized.value;
+            if(!itemsMap[key].sourceRecipes.includes(recipe.title)) itemsMap[key].sourceRecipes.push(recipe.title);
         } else {
-            itemsMap[key] = { 
-                id: `calc-${key}`, 
-                name: ing.name, 
-                quantity: 0,
-                unit: '',
-                category: ing.category || 'pantry', 
-                estimated_price: 0, 
-                is_purchased: false,
-                sourceRecipes: [recipe.title],
-                internalValue: normalized.value,
-                internalType: normalized.type
-            };
+            itemsMap[key] = { id: `calc-${key}`, name: ing.name, quantity: 0, unit: '', category: ing.category || 'pantry', estimated_price: 0, is_purchased: false, sourceRecipes: [recipe.title], internalValue: normalized.value, internalType: normalized.type };
         }
       });
     });
 
     const activeStore = SUPERMARKETS.find(s => s.id === selectedStoreId) || null;
-
     let finalItemsList: TraceableShoppingItem[] = Object.values(itemsMap).map(item => {
       const normalizedName = normalizeName(item.name);
-      
-      const inPantry = pantry.find(p => {
-          const pNorm = normalizeName(p.name);
-          return pNorm === normalizedName || pNorm.includes(normalizedName) || normalizedName.includes(pNorm);
-      });
-      
+      const inPantry = pantry.find(p => { const pNorm = normalizeName(p.name); return pNorm === normalizedName || pNorm.includes(normalizedName) || normalizedName.includes(pNorm); });
       let remainingValue = item.internalValue || 0;
-
       if (inPantry && remainingValue > 0) {
         let pantryVal = normalizeUnit(inPantry.quantity, inPantry.unit);
-        
-        if (pantryVal.type === item.internalType) {
-            remainingValue = Math.max(0, remainingValue - pantryVal.value);
-        } else if (pantryVal.type === 'mass' && item.internalType === 'count' && UNIT_EQUIVALENCES[normalizedName]) {
+        if (pantryVal.type === item.internalType) remainingValue = Math.max(0, remainingValue - pantryVal.value);
+        else if (pantryVal.type === 'mass' && item.internalType === 'count' && UNIT_EQUIVALENCES[normalizedName]) {
              const pantryCount = pantryVal.value / UNIT_EQUIVALENCES[normalizedName].weight;
              remainingValue = Math.max(0, remainingValue - pantryCount);
         } else if (pantryVal.type === 'count' && item.internalType === 'mass' && UNIT_EQUIVALENCES[normalizedName]) {
@@ -212,36 +158,19 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
              remainingValue = Math.max(0, remainingValue - pantryMass);
         }
       }
-
       const display = convertBack(remainingValue, item.internalType || 'count');
       const adjustment = adjustments[item.id] || 0;
       const finalQty = Math.max(0, display.quantity + adjustment);
-
       const basePrice = customPrices[item.name] || SPANISH_PRICES[item.id] || SPANISH_PRICES[normalizedName] || SPANISH_PRICES['default'];
       const priceMultiplier = (display.unit === 'g' || display.unit === 'ml') ? 0.001 : 1;
-      
       const itemCost = finalQty * priceMultiplier * basePrice;
-
-      return { 
-        ...item, 
-        quantity: finalQty, 
-        unit: display.unit,
-        estimated_price: activeStore ? itemCost * activeStore.multiplier : itemCost,
-        store: activeStore?.name || 'Cualquiera'
-      };
+      return { ...item, quantity: finalQty, unit: display.unit, estimated_price: activeStore ? itemCost * activeStore.multiplier : itemCost, store: activeStore?.name || 'Cualquiera' };
     }).filter(item => item.quantity > 0.01);
 
-    const dbExtrasFormatted: TraceableShoppingItem[] = dbItems.map(dbItem => ({
-        ...dbItem,
-        sourceRecipes: ['Manual / Extra'],
-        internalValue: 0,
-        internalType: 'count'
-    }));
-
+    const dbExtrasFormatted: TraceableShoppingItem[] = dbItems.map(dbItem => ({ ...dbItem, sourceRecipes: ['Manual / Extra'], internalValue: 0, internalType: 'count' }));
     dbExtrasFormatted.forEach(extra => {
         const extraKey = normalizeName(extra.name);
         const existingIdx = finalItemsList.findIndex(i => normalizeName(i.name) === extraKey);
-        
         if (existingIdx >= 0) {
             const existing = finalItemsList[existingIdx];
             finalItemsList[existingIdx] = extra;
@@ -258,7 +187,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
     });
 
     const totalEstimated = finalItemsList.reduce((acc, curr) => acc + curr.estimated_price, 0);
-
     const storeComparisons = SUPERMARKETS.map(shop => {
         const total = finalItemsList.reduce((acc, item) => {
             const base = item.estimated_price / (activeStore ? activeStore.multiplier : 1);
@@ -285,19 +213,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       return groups;
   }, [shoppingData.itemsList, hidePurchased]);
 
-  const handleNativeShare = async () => {
-    const text = shoppingData.itemsList
-        .map(i => `- ${i.quantity.toFixed(1)} ${i.unit} ${i.name} ${i.is_purchased ? '[✓]' : '[ ]'}`)
-        .join('\n');
-    
-    if (navigator.share) {
-        try { await navigator.share({ title: 'Lista de Compra Fresco', text: `Mi lista:\n\n${text}` }); } 
-        catch (err) { console.log('User aborted share'); }
-    } else {
-        alert("Lista copiada al portapapeles");
-    }
-  };
-
   const progress = useMemo(() => {
     if (shoppingData.itemsList.length === 0) return 0;
     const purchasedCount = shoppingData.itemsList.filter(item => item.is_purchased).length;
@@ -310,23 +225,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       setShowReceipt(true);
   };
 
-  const updateReviewItem = (id: string, field: 'quantity' | 'unit', value: any) => {
-      setReviewItemsList(prev => prev.map(item => {
-          if (item.id === id) {
-              return { ...item, [field]: value };
-          }
-          return item;
-      }));
-  };
-
-  const removeReviewItem = (id: string) => {
-      setReviewItemsList(prev => prev.filter(item => item.id !== id));
-  };
-
   const confirmFinishShopping = () => {
       if (isProcessing) return; 
       setIsProcessing(true);
-
       const itemsToAddToPantry = reviewItemsList.map(item => {
           const days = EXPIRY_DAYS_BY_CATEGORY[item.category] || 14;
           return {
@@ -339,20 +240,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
               expires_at: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
           };
       });
-      
       onFinishShopping(itemsToAddToPantry);
-      
-      setLastSessionStats({
-          count: reviewItemsList.length,
-          savings: shoppingData.maxSavings > 0 ? shoppingData.maxSavings : 0
-      });
-
-      reviewItemsList.forEach(i => {
-          if (!i.id.includes('calc')) {
-              onRemoveShoppingItem(i.id);
-          }
-      });
-      
+      setLastSessionStats({ count: reviewItemsList.length, savings: shoppingData.maxSavings > 0 ? shoppingData.maxSavings : 0 });
+      reviewItemsList.forEach(i => { if (!i.id.includes('calc')) onRemoveShoppingItem(i.id); });
       setShowReceipt(false);
       setShowCelebration(true);
       setIsProcessing(false);
@@ -361,22 +251,30 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
   const toggleItemCheck = (item: TraceableShoppingItem) => {
       if (navigator.vibrate) navigator.vibrate(15);
-      
       if (item.id.startsWith('calc')) {
-          const newItem: ShoppingItem = {
-              id: `real-${Date.now()}-${Math.random()}`,
-              name: item.name,
-              quantity: item.quantity,
-              unit: item.unit,
-              category: item.category,
-              estimated_price: item.estimated_price,
-              is_purchased: true 
-          };
+          const newItem: ShoppingItem = { id: `real-${Date.now()}-${Math.random()}`, name: item.name, quantity: item.quantity, unit: item.unit, category: item.category, estimated_price: item.estimated_price, is_purchased: true };
           onAddShoppingItem([newItem]);
       } else {
           onUpdateShoppingItem({ ...item, is_purchased: !item.is_purchased });
       }
   };
+
+  if (showCelebration) {
+      return (
+          <div className="fixed inset-0 z-[5000] bg-teal-900 flex flex-col items-center justify-center p-6 animate-fade-in text-white text-center">
+              <PartyPopper className="w-24 h-24 mb-6 text-yellow-400 animate-bounce" />
+              <h2 className="text-4xl font-black mb-4">¡Compra Finalizada!</h2>
+              <p className="text-xl opacity-80 mb-8">Has añadido {lastSessionStats.count} productos a tu despensa.</p>
+              {lastSessionStats.savings > 0 && (
+                  <div className="bg-white/10 p-6 rounded-3xl mb-8">
+                      <p className="text-sm font-black uppercase tracking-widest text-teal-300">Ahorro potencial</p>
+                      <p className="text-4xl font-black">{lastSessionStats.savings.toFixed(2)}€</p>
+                  </div>
+              )}
+              <button onClick={() => setShowCelebration(false)} className="px-8 py-4 bg-white text-teal-900 rounded-2xl font-black uppercase tracking-widest">Volver</button>
+          </div>
+      );
+  }
 
   return (
     <div className="p-4 md:p-2 max-w-5xl mx-auto pb-48 safe-pt animate-fade-in">
@@ -389,7 +287,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                     <span className="text-lg md:text-sm font-black">{shoppingData.totalEstimated.toFixed(2)}€</span>
                 </div>
             </div>
-            
             <div className="bg-white/10 rounded-full h-3 w-full mb-3 p-0.5">
                 <div className="bg-orange-500 h-full rounded-full transition-all duration-700" style={{ width: `${progress}%` }} />
             </div>
@@ -402,41 +299,21 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         </div>
       </div>
 
-      {/* Input de Extras */}
       <div className="mb-10 flex gap-3 max-w-2xl mx-auto">
           <form onSubmit={addExtraItem} className="relative group flex-1">
-            <input 
-                type="text" 
-                value={newExtra}
-                onChange={(e) => setNewExtra(e.target.value)}
-                placeholder="Añadir..."
-                className="w-full p-4 pl-6 pr-12 bg-white border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-teal-500 font-bold text-gray-700 placeholder-gray-300 shadow-sm transition-all focus:shadow-md text-sm"
-            />
-            <button 
-                type="submit"
-                disabled={!newExtra}
-                className="absolute right-2 top-2 bottom-2 w-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center hover:bg-teal-100 transition-all disabled:opacity-30"
-            >
+            <input type="text" value={newExtra} onChange={(e) => setNewExtra(e.target.value)} placeholder="Añadir..." className="w-full p-4 pl-6 pr-12 bg-white border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-teal-500 font-bold text-gray-700 placeholder-gray-300 shadow-sm transition-all focus:shadow-md text-sm" />
+            <button type="submit" disabled={!newExtra} className="absolute right-2 top-2 bottom-2 w-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center hover:bg-teal-100 transition-all disabled:opacity-30">
                 <Plus className="w-5 h-5" />
             </button>
           </form>
-          
-          <button 
-            onClick={() => setHidePurchased(!hidePurchased)}
-            className={`px-4 rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all border-2 ${
-                hidePurchased ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
-            }`}
-          >
+          <button onClick={() => setHidePurchased(!hidePurchased)} className={`px-4 rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all border-2 ${hidePurchased ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}>
               {hidePurchased ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
       </div>
 
-      {/* Renderizado de Lista Minimalista */}
       {shoppingData.itemsList.length === 0 ? (
           <div className="bg-white p-12 rounded-[2.5rem] border border-gray-100 text-center space-y-4 max-w-md mx-auto">
-              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto text-gray-300">
-                  <ShoppingBag size={32} />
-              </div>
+              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto text-gray-300"><ShoppingBag size={32} /></div>
               <h3 className="text-xl font-black text-teal-900">Tu lista está vacía</h3>
           </div>
       ) : (
@@ -444,7 +321,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
             {Object.keys(groupedItems).sort().map(catKey => {
                 const info = CATEGORY_LABELS[catKey] || CATEGORY_LABELS['other'];
                 const allChecked = groupedItems[catKey].every(i => i.is_purchased);
-                
                 return (
                     <div key={catKey} className="space-y-4">
                         <div className="flex items-center justify-between border-b border-gray-100 pb-2 mx-2">
@@ -452,58 +328,27 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                 <span className="text-lg">{info.emoji}</span>
                                 <span className="text-xs font-black uppercase tracking-widest">{info.label}</span>
                             </div>
-                            <button 
-                                onClick={() => checkAllCategory(groupedItems[catKey])}
-                                className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1 px-3 py-1 rounded-lg transition-all ${
-                                    allChecked ? 'bg-teal-50 text-teal-600' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
-                                }`}
-                            >
-                                <CheckSquare className="w-3 h-3" />
-                                {allChecked ? 'Desmarcar' : 'Todo'}
+                            <button onClick={() => checkAllCategory(groupedItems[catKey])} className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1 px-3 py-1 rounded-lg transition-all ${allChecked ? 'bg-teal-50 text-teal-600' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}>
+                                <CheckSquare className="w-3 h-3" /> {allChecked ? 'Desmarcar' : 'Todo'}
                             </button>
                         </div>
-                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
                         {groupedItems[catKey].map(item => (
-                            <div 
-                                key={item.id} 
-                                className={`group flex items-center justify-between py-2 px-3 rounded-xl transition-all cursor-pointer select-none ${
-                                    item.is_purchased ? 'opacity-40' : 'hover:bg-white hover:shadow-sm'
-                                }`}
-                                onClick={() => toggleItemCheck(item)}
-                            >
+                            <div key={item.id} className={`group flex items-center justify-between py-2 px-3 rounded-xl transition-all cursor-pointer select-none ${item.is_purchased ? 'opacity-40' : 'hover:bg-white hover:shadow-sm'}`} onClick={() => toggleItemCheck(item)}>
                                 <div className="flex items-center gap-4 flex-1 overflow-hidden">
-                                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                                        item.is_purchased ? 'bg-teal-600 border-teal-600' : 'border-gray-200 bg-white group-hover:border-teal-400'
-                                    }`}>
+                                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${item.is_purchased ? 'bg-teal-600 border-teal-600' : 'border-gray-200 bg-white group-hover:border-teal-400'}`}>
                                         {item.is_purchased && <Check className="w-4 h-4 text-white stroke-[3px]" />}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className={`font-bold text-sm text-gray-900 capitalize truncate ${item.is_purchased ? 'line-through' : ''}`}>
-                                            {item.name}
-                                        </div>
+                                        <div className={`font-bold text-sm text-gray-900 capitalize truncate ${item.is_purchased ? 'line-through' : ''}`}>{item.name}</div>
                                     </div>
                                 </div>
-                                
                                 <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
-                                    <span className="text-xs font-black text-gray-500 tabular-nums">
-                                        {item.quantity.toFixed(item.unit === 'g' || item.unit === 'ml' ? 0 : 1)} <span className="text-[9px] uppercase">{item.unit}</span>
-                                    </span>
-                                    
+                                    <span className="text-xs font-black text-gray-500 tabular-nums">{item.quantity.toFixed(item.unit === 'g' || item.unit === 'ml' ? 0 : 1)} <span className="text-[9px] uppercase">{item.unit}</span></span>
                                     {!item.is_purchased && (
                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button 
-                                                onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1, item.quantity)}
-                                                className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md"
-                                            >
-                                                <Minus className="w-3 h-3" />
-                                            </button>
-                                            <button 
-                                                onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? 0.25 : 1, item.quantity)}
-                                                className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-teal-600 hover:bg-teal-50 rounded-md"
-                                            >
-                                                <Plus className="w-3 h-3" />
-                                            </button>
+                                            <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1, item.quantity)} className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md"><Minus className="w-3 h-3" /></button>
+                                            <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? 0.25 : 1, item.quantity)} className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-teal-600 hover:bg-teal-50 rounded-md"><Plus className="w-3 h-3" /></button>
                                         </div>
                                     )}
                                 </div>
@@ -516,21 +361,42 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         </div>
       )}
       
-       {/* Botones Flotantes */}
-       <div className="fixed bottom-24 left-6 right-6 flex justify-center z-50 animate-slide-up pointer-events-none">
-          <button 
-            onClick={handleFinishClick}
-            disabled={shoppingData.itemsList.length === 0}
-            className="pointer-events-auto bg-teal-900 text-white px-12 py-4 rounded-full font-black shadow-2xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95 border-4 border-white disabled:opacity-0 disabled:translate-y-10 text-sm uppercase tracking-widest"
-          >
-              <ShoppingBag className="w-5 h-5" /> Terminar Compra
-          </button>
+       <div className="fixed bottom-24 left-0 right-0 flex justify-center z-50 animate-slide-up pointer-events-none">
+          <div className="bg-white/90 backdrop-blur-md p-2 rounded-full shadow-2xl pointer-events-auto">
+              <button 
+                onClick={handleFinishClick}
+                disabled={shoppingData.itemsList.length === 0}
+                className="bg-teal-900 text-white px-10 py-4 rounded-full font-black flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95 border-2 border-transparent disabled:opacity-50 text-sm uppercase tracking-widest"
+              >
+                  <ShoppingBag className="w-5 h-5" /> Terminar Compra
+              </button>
+          </div>
       </div>
       
-      {/* Modals remain mostly same but ensure they fit desktop */}
       {showReceipt && (
-          <div className="fixed inset-0 z-[5000] bg-teal-900 flex flex-col items-center justify-center p-6 animate-fade-in text-white">
-              {/* Receipt logic same */}
+          <div className="fixed inset-0 z-[5000] bg-teal-900/95 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-fade-in text-white">
+              <div className="w-full max-w-md bg-white rounded-[2rem] p-8 text-gray-900 shadow-2xl relative">
+                  <button onClick={() => setShowReceipt(false)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200"><X className="w-5 h-5" /></button>
+                  <h3 className="text-2xl font-black mb-1">Confirmar Compra</h3>
+                  <p className="text-gray-500 text-xs mb-6">Revisa los productos que vas a guardar en la despensa.</p>
+                  
+                  <div className="max-h-[50vh] overflow-y-auto space-y-2 mb-6 pr-2">
+                      {reviewItemsList.map(item => (
+                          <div key={item.id} className="flex justify-between items-center border-b border-gray-100 pb-2">
+                              <span className="font-bold text-sm capitalize">{item.name}</span>
+                              <span className="font-mono text-xs text-gray-500">{item.quantity} {item.unit}</span>
+                          </div>
+                      ))}
+                  </div>
+                  
+                  <button 
+                    onClick={confirmFinishShopping}
+                    disabled={isProcessing}
+                    className="w-full py-4 bg-teal-900 text-white rounded-xl font-black uppercase tracking-widest hover:bg-teal-800 transition-all flex justify-center items-center gap-2"
+                  >
+                      {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmar y Guardar'}
+                  </button>
+              </div>
           </div>
       )}
     </div>

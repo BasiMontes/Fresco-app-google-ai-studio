@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Recipe, UserProfile, PantryItem, ShoppingItem, MealCategory } from '../types';
-import { Search, Sparkles, Clock, Users, Flame, PackageCheck, Zap, X, Heart, Eye, ImageOff, Wand2, Leaf, WifiOff, CheckCircle2, ChevronDown, CalendarPlus, BookX, FilterX, ChefHat, Play } from 'lucide-react';
+import { Search, Sparkles, Clock, Users, Flame, PackageCheck, Zap, X, Heart, Eye, ImageOff, Wand2, Leaf, WifiOff, CheckCircle2, ChevronDown, CalendarPlus, BookX, FilterX, ChefHat, Play, PlusCircle } from 'lucide-react';
 import { generateRecipesAI } from '../services/geminiService';
 import { RecipeDetail } from './RecipeDetail';
 import { SmartImage } from './SmartImage';
@@ -20,9 +20,9 @@ interface RecipesProps {
 }
 
 const RecipeSkeleton = () => (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex flex-col h-auto">
+    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex flex-col h-full min-h-[280px]">
         <div className="aspect-[3/2] w-full skeleton-bg relative" />
-        <div className="p-3 flex-1 flex flex-col gap-2">
+        <div className="p-4 flex-1 flex flex-col gap-2">
             <div className="w-16 h-3 rounded-md skeleton-bg" />
             <div className="w-full h-4 rounded-md skeleton-bg" />
             <div className="w-2/3 h-4 rounded-md skeleton-bg" />
@@ -36,7 +36,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
   const [searchTerm, setSearchTerm] = useState(() => sessionStorage.getItem('recipes_search') || '');
   const [activeCategory, setActiveCategory] = useState<string>(() => sessionStorage.getItem('recipes_category') || 'all');
   const [showOnlyCookable, setShowOnlyCookable] = useState(() => sessionStorage.getItem('recipes_cookable') === 'true');
-  const [visibleCount, setVisibleCount] = useState(() => parseInt(sessionStorage.getItem('recipes_count') || '15')); // Default higher
+  const [visibleCount, setVisibleCount] = useState(() => parseInt(sessionStorage.getItem('recipes_count') || '15')); 
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
@@ -100,13 +100,24 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
           <h1 className="text-3xl md:text-xl font-black text-teal-900 tracking-tight leading-none mb-1">Biblioteca</h1>
           <p className="text-gray-400 font-bold uppercase text-[10px] md:text-[9px] tracking-widest">Inspiración basada en tu stock</p>
         </div>
-        <button
-          onClick={handleGenerate}
-          disabled={loadingAI || !isOnline}
-          className="w-full md:w-auto flex items-center justify-center gap-2 bg-teal-900 text-white px-6 py-3 md:py-2 md:px-4 rounded-xl shadow-lg hover:bg-teal-800 transition-all disabled:opacity-50 font-black text-xs md:text-[9px] uppercase tracking-widest active:scale-95 group disabled:bg-gray-400"
-        >
-          {isOnline ? <><Sparkles className={`w-4 h-4 md:w-3 md:h-3 text-orange-400 ${loadingAI ? 'animate-spin' : ''}`} /> Nueva Idea</> : <><WifiOff className="w-4 h-4" /> Offline</>}
-        </button>
+        
+        <div className="flex gap-2">
+            {/* Botón Manual (Mock) para aclarar al usuario */}
+            <button
+                onClick={() => alert("Función 'Crear Manualmente' próximamente.")}
+                className="flex items-center justify-center gap-2 bg-white text-teal-900 border border-teal-100 px-4 py-2 rounded-xl font-black text-xs md:text-[9px] uppercase tracking-widest hover:bg-teal-50 transition-all"
+            >
+                <PlusCircle className="w-4 h-4" /> <span className="hidden md:inline">Crear Propia</span>
+            </button>
+
+            <button
+            onClick={handleGenerate}
+            disabled={loadingAI || !isOnline}
+            className="w-full md:w-auto flex items-center justify-center gap-2 bg-teal-900 text-white px-6 py-3 md:py-2 md:px-4 rounded-xl shadow-lg hover:bg-teal-800 transition-all disabled:opacity-50 font-black text-xs md:text-[9px] uppercase tracking-widest active:scale-95 group disabled:bg-gray-400"
+            >
+            {isOnline ? <><Sparkles className={`w-4 h-4 md:w-3 md:h-3 text-orange-400 ${loadingAI ? 'animate-spin' : ''}`} /> Generar con IA</> : <><WifiOff className="w-4 h-4" /> Offline</>}
+            </button>
+        </div>
       </header>
 
       {/* Controles Compactos */}
@@ -153,10 +164,10 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
         </div>
       )}
 
-      {/* Grid Elegante y Denso (Max 4 cols for bigger cards) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-3">
+      {/* Grid Uniforme (Fixed Height Cards) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-4 auto-rows-fr">
           
-          {loadingAI && <><RecipeSkeleton /><RecipeSkeleton /><RecipeSkeleton /></>}
+          {loadingAI && <><RecipeSkeleton /><RecipeSkeleton /><RecipeSkeleton /><RecipeSkeleton /></>}
 
           {!loadingAI && filteredRecipes.slice(0, visibleCount).map((recipe) => {
             const stock = checkPantryStock(recipe);
@@ -167,7 +178,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
                 <div 
                     key={recipe.id} 
                     onClick={() => { setInitialMode('view'); setSelectedRecipe(recipe); }}
-                    className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative"
+                    className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative h-full min-h-[280px]"
                 >
                     {/* Badge Flotante de Compatibilidad */}
                     {isHighMatch && (
@@ -176,13 +187,12 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
                         </div>
                     )}
 
-                    <div className="relative aspect-[3/2] overflow-hidden bg-gray-100">
+                    <div className="relative aspect-[3/2] overflow-hidden bg-gray-100 flex-shrink-0">
                         <SmartImage 
                             src={recipe.image_url} 
                             alt={recipe.title} 
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
-                        {/* Gradiente sutil para texto sobre imagen si fuera necesario, pero aquí usamos tarjeta limpia */}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                         
                         <div className="absolute bottom-2 left-2 flex gap-1">
@@ -192,14 +202,15 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
                         </div>
                     </div>
                     
+                    {/* Content Container: Flex col with flex-1 to push footer down */}
                     <div className="p-3 flex-1 flex flex-col">
-                        <h3 className="text-sm md:text-xs font-bold text-gray-900 leading-tight mb-1 line-clamp-2 group-hover:text-teal-700 transition-colors">
+                        <h3 className="text-sm md:text-xs font-bold text-gray-900 leading-tight mb-2 line-clamp-2 group-hover:text-teal-700 transition-colors">
                             {recipe.title}
                         </h3>
                         
-                        <div className="flex items-center gap-2 mt-auto pt-2">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
-                                {recipe.difficulty}
+                        <div className="mt-auto flex items-center gap-2 pt-2 border-t border-gray-50">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 truncate max-w-[80px]">
+                                {recipe.cuisine_type}
                             </span>
                             <div className="flex-1" />
                             <button 
@@ -208,9 +219,9 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
                                     setInitialMode('plan');
                                     setSelectedRecipe(recipe);
                                 }}
-                                className="w-7 h-7 bg-teal-50 text-teal-700 rounded-lg flex items-center justify-center hover:bg-teal-900 hover:text-white transition-all active:scale-90"
+                                className="w-8 h-8 md:w-7 md:h-7 bg-teal-50 text-teal-700 rounded-lg flex items-center justify-center hover:bg-teal-900 hover:text-white transition-all active:scale-90 flex-shrink-0"
                             >
-                                <CalendarPlus className="w-3.5 h-3.5" />
+                                <CalendarPlus className="w-4 h-4 md:w-3.5 md:h-3.5" />
                             </button>
                         </div>
                     </div>
@@ -219,7 +230,6 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
           })}
       </div>
       
-      {/* Botón Ver Más */}
       {visibleCount < filteredRecipes.length && (
           <div className="flex justify-center pb-10 pt-4">
               <button 
