@@ -392,7 +392,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   };
 
   return (
-    <div className="p-4 md:p-10 max-w-5xl mx-auto pb-48 safe-pt animate-fade-in">
+    <div className="space-y-8 pb-32 animate-fade-in">
       {/* Header Panel ... (Sin cambios) ... */}
       <div className="bg-teal-900 rounded-[3.5rem] md:rounded-[2rem] p-12 md:p-6 text-white shadow-2xl mb-12 md:mb-6 relative overflow-hidden">
         <div className="relative z-10">

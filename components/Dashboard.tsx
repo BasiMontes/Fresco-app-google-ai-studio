@@ -71,7 +71,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
   }, []);
 
   return (
-    <div className="p-4 md:p-5 space-y-6 pb-32 max-w-6xl mx-auto animate-fade-in relative">
+    <div className="space-y-6 pb-32 animate-fade-in relative">
       
       {showBriefing && (
           <MorningBriefing 
@@ -88,13 +88,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
 
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4 w-full">
-          <div className="w-10 h-10 md:w-8 md:h-8 rounded-full bg-teal-900 flex items-center justify-center text-white font-black flex-shrink-0 text-sm">{user.name[0]}</div>
+          <div className="w-10 h-10 md:w-10 md:h-10 rounded-full bg-teal-900 flex items-center justify-center text-white font-black flex-shrink-0 text-sm">{user.name[0]}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 text-teal-600 font-bold text-[10px] uppercase tracking-widest mb-0.5">
                 <timeGreeting.icon className="w-3 h-3" /> {timeGreeting.text}
             </div>
             <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-xl font-black text-teal-900 leading-none truncate max-w-[200px] md:max-w-none">{user.name.split(' ')[0]}</h1>
+                <h1 className="text-2xl md:text-2xl font-black text-teal-900 leading-none truncate max-w-[200px] md:max-w-none">{user.name.split(' ')[0]}</h1>
                 <span className="bg-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest flex items-center gap-1 shadow-sm animate-pulse-slow cursor-help flex-shrink-0" title="Versión de prueba">
                     <FlaskConical className="w-3 h-3" /> Beta
                 </span>
@@ -115,19 +115,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="bg-white p-6 md:p-4 rounded-3xl md:rounded-2xl border border-gray-100 shadow-sm border-b-4 border-b-teal-600">
               <PiggyBank className="w-6 h-6 md:w-5 md:h-5 text-teal-600 mb-2 md:mb-1" />
-              <div className="text-3xl md:text-xl font-black text-gray-900">{user.total_savings.toFixed(1)}€</div>
+              <div className="text-3xl md:text-2xl font-black text-gray-900">{user.total_savings.toFixed(1)}€</div>
               <div className="text-[10px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">Ahorro Acumulado</div>
           </div>
 
           <div className="bg-white p-6 md:p-4 rounded-3xl md:rounded-2xl border border-gray-100 shadow-sm border-b-4 border-b-orange-500">
               <Timer className="w-6 h-6 md:w-5 md:h-5 text-orange-500 mb-2 md:mb-1" />
-              <div className="text-3xl md:text-xl font-black text-gray-900">{user.time_saved_mins || 0}m</div>
+              <div className="text-3xl md:text-2xl font-black text-gray-900">{user.time_saved_mins || 0}m</div>
               <div className="text-[10px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">Tiempo Recuperado</div>
           </div>
 
           <div className="bg-white p-6 md:p-4 rounded-3xl md:rounded-2xl border border-gray-100 shadow-sm border-b-4 border-b-purple-600">
               <ChefHat className="w-6 h-6 md:w-5 md:h-5 text-purple-600 mb-2 md:mb-1" />
-              <div className="text-3xl md:text-xl font-black text-gray-900">{user.meals_cooked}</div>
+              <div className="text-3xl md:text-2xl font-black text-gray-900">{user.meals_cooked}</div>
               <div className="text-[10px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">Platos Saludables</div>
           </div>
       </div>

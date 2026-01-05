@@ -756,7 +756,7 @@ const App: React.FC = () => {
           </aside>
 
           {/* MAIN: Adjusted max-width (6xl) and left margin (ml-48) for density */}
-          <main className="flex-1 md:ml-48 safe-pt min-h-screen max-w-6xl mx-auto w-full pb-32 md:pb-0">
+          <main className="flex-1 md:ml-48 safe-pt min-h-screen max-w-6xl mx-auto w-full pb-32 md:pb-0 md:p-6">
             <Suspense fallback={<PageLoader message="Cargando módulo..." />}>
               {activeTab === 'dashboard' && user && <Dashboard 
                   user={user} 

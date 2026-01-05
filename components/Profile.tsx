@@ -143,19 +143,19 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
   };
 
   return (
-    <div className="p-4 md:p-10 space-y-10 animate-fade-in pb-48" role="main">
-      <div className="bg-white p-12 md:p-8 rounded-[4rem] md:rounded-[3rem] shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-10">
+    <div className="space-y-10 animate-fade-in pb-48" role="main">
+      <div className="bg-white p-12 md:p-4 rounded-[4rem] md:rounded-[2rem] shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-10 md:gap-6">
         <div className="relative">
-            <div className="w-32 h-32 md:w-32 md:h-32 rounded-[2rem] shadow-2xl border-4 border-gray-50 overflow-hidden">
+            <div className="w-32 h-32 md:w-20 md:h-20 rounded-[2rem] shadow-2xl border-4 border-gray-50 overflow-hidden">
                 <InitialsAvatar name={user.name} />
             </div>
-            <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center text-white shadow-xl border-4 border-white">
-                <Trophy className="w-6 h-6" />
+            <div className="absolute -bottom-2 -right-2 w-12 h-12 md:w-8 md:h-8 bg-orange-500 rounded-2xl flex items-center justify-center text-white shadow-xl border-4 border-white">
+                <Trophy className="w-6 h-6 md:w-4 md:h-4" />
             </div>
         </div>
         <div className="text-center md:text-left flex-1">
-            <h1 className="text-5xl md:text-4xl font-black text-teal-900 tracking-tight leading-none mb-2">{user.name}</h1>
-            <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.3em] mb-6">{user.email || 'Planificador Fresco'}</p>
+            <h1 className="text-5xl md:text-2xl font-black text-teal-900 tracking-tight leading-none mb-2">{user.name}</h1>
+            <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.3em] mb-6 md:mb-3">{user.email || 'Planificador Fresco'}</p>
             <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                 <div className="bg-teal-50 text-teal-700 px-4 py-2 rounded-2xl text-[10px] font-black uppercase flex items-center gap-2">
                     <PiggyBank className="w-4 h-4" /> {user.total_savings.toFixed(2)}€ Ahorrados
@@ -190,7 +190,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
         )}
 
         {/* Zona Beta Tester (NUEVO) */}
-        <section className="bg-white p-10 md:p-8 rounded-[3.5rem] shadow-sm border border-gray-100 space-y-8 md:col-span-2" aria-labelledby="beta-title">
+        <section className="bg-white p-10 md:p-6 rounded-[3.5rem] md:rounded-[2rem] shadow-sm border border-gray-100 space-y-8 md:col-span-2" aria-labelledby="beta-title">
             <h3 id="beta-title" className="text-[11px] font-black uppercase tracking-[0.4em] text-teal-700 flex items-center gap-2">
                 <Bug className="w-4 h-4" /> Zona Beta Tester
             </h3>
@@ -199,12 +199,12 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
                     onClick={handleShareApp}
                     className="p-6 md:p-4 bg-teal-50 rounded-[2.5rem] flex items-center gap-4 hover:bg-teal-100 transition-colors group text-left"
                 >
-                    <div className="w-14 h-14 md:w-12 md:h-12 bg-white rounded-2xl flex items-center justify-center text-teal-600 shadow-sm group-hover:scale-110 transition-transform">
-                        <ShareIcon className="w-6 h-6" />
+                    <div className="w-14 h-14 md:w-10 md:h-10 bg-white rounded-2xl flex items-center justify-center text-teal-600 shadow-sm group-hover:scale-110 transition-transform">
+                        <ShareIcon className="w-6 h-6 md:w-4 md:h-4" />
                     </div>
                     <div>
-                        <h4 className="font-black text-teal-900">Invitar Amigos</h4>
-                        <p className="text-xs text-teal-600/70 font-medium">Comparte el enlace de prueba</p>
+                        <h4 className="font-black text-teal-900 text-sm">Invitar Amigos</h4>
+                        <p className="text-[10px] text-teal-600/70 font-medium">Comparte el enlace de prueba</p>
                     </div>
                 </button>
 
@@ -212,54 +212,54 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
                     onClick={handleFeedback}
                     className="p-6 md:p-4 bg-orange-50 rounded-[2.5rem] flex items-center gap-4 hover:bg-orange-100 transition-colors group text-left"
                 >
-                    <div className="w-14 h-14 md:w-12 md:h-12 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-sm group-hover:scale-110 transition-transform">
-                        <Mail className="w-6 h-6" />
+                    <div className="w-14 h-14 md:w-10 md:h-10 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-sm group-hover:scale-110 transition-transform">
+                        <Mail className="w-6 h-6 md:w-4 md:h-4" />
                     </div>
                     <div>
-                        <h4 className="font-black text-orange-900">Reportar Bug</h4>
-                        <p className="text-xs text-orange-600/70 font-medium">Ayúdanos a mejorar</p>
+                        <h4 className="font-black text-orange-900 text-sm">Reportar Bug</h4>
+                        <p className="text-[10px] text-orange-600/70 font-medium">Ayúdanos a mejorar</p>
                     </div>
                 </button>
             </div>
         </section>
 
         {/* Ajustes Básicos */}
-        <section className="bg-white p-10 md:p-8 rounded-[3.5rem] shadow-sm border border-gray-100 space-y-8" aria-labelledby="settings-title">
+        <section className="bg-white p-10 md:p-6 rounded-[3.5rem] md:rounded-[2rem] shadow-sm border border-gray-100 space-y-8" aria-labelledby="settings-title">
             <h3 id="settings-title" className="text-[11px] font-black uppercase tracking-[0.4em] text-orange-600 flex items-center gap-2">
                 <Settings className="w-4 h-4" /> Perfil de Cocina
             </h3>
             
             <div className="space-y-6">
-                <div className="flex items-center justify-between p-6 bg-gray-50 rounded-[2.5rem]">
+                <div className="flex items-center justify-between p-6 md:p-4 bg-gray-50 rounded-[2.5rem]">
                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-teal-600 shadow-sm">
-                            <Users className="w-7 h-7" />
+                        <div className="w-14 h-14 md:w-10 md:h-10 bg-white rounded-2xl flex items-center justify-center text-teal-600 shadow-sm">
+                            <Users className="w-7 h-7 md:w-5 md:h-5" />
                         </div>
                         <div>
-                            <p className="font-black text-gray-900 text-lg">Comensales</p>
+                            <p className="font-black text-gray-900 text-lg md:text-sm">Comensales</p>
                             <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Raciones IA</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
                         <button 
                             onClick={() => onUpdate({ ...user, household_size: Math.max(1, user.household_size - 1) })}
-                            className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center font-black shadow-sm active:scale-90 transition-all hover:bg-teal-600 hover:text-white"
+                            className="w-12 h-12 md:w-8 md:h-8 bg-white rounded-2xl flex items-center justify-center font-black shadow-sm active:scale-90 transition-all hover:bg-teal-600 hover:text-white"
                         >-</button>
-                        <span className="font-black text-2xl text-teal-900 w-8 text-center">{user.household_size}</span>
+                        <span className="font-black text-2xl md:text-lg text-teal-900 w-8 text-center">{user.household_size}</span>
                         <button 
                             onClick={() => onUpdate({ ...user, household_size: user.household_size + 1 })}
-                            className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center font-black shadow-sm active:scale-90 transition-all hover:bg-teal-600 hover:text-white"
+                            className="w-12 h-12 md:w-8 md:h-8 bg-white rounded-2xl flex items-center justify-center font-black shadow-sm active:scale-90 transition-all hover:bg-teal-600 hover:text-white"
                         >+</button>
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between p-6 bg-gray-50 rounded-[2.5rem]">
+                <div className="flex items-center justify-between p-6 md:p-4 bg-gray-50 rounded-[2.5rem]">
                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-orange-600 shadow-sm">
-                            <ChefHat className="w-7 h-7" />
+                        <div className="w-14 h-14 md:w-10 md:h-10 bg-white rounded-2xl flex items-center justify-center text-orange-600 shadow-sm">
+                            <ChefHat className="w-7 h-7 md:w-5 md:h-5" />
                         </div>
                         <div>
-                            <p className="font-black text-gray-900 text-lg">Experiencia</p>
+                            <p className="font-black text-gray-900 text-lg md:text-sm">Experiencia</p>
                             <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Dificultad IA</p>
                         </div>
                     </div>
@@ -277,7 +277,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
         </section>
 
         {/* Dieta */}
-        <section className="bg-white p-10 md:p-8 rounded-[3.5rem] shadow-sm border border-gray-100 space-y-6" aria-labelledby="diet-title">
+        <section className="bg-white p-10 md:p-6 rounded-[3.5rem] md:rounded-[2rem] shadow-sm border border-gray-100 space-y-6" aria-labelledby="diet-title">
             <h3 id="diet-title" className="text-[11px] font-black uppercase tracking-[0.4em] text-teal-700 flex items-center gap-2">
                 <Heart className="w-4 h-4" /> Restricciones
             </h3>
@@ -305,11 +305,11 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
         </section>
 
         {/* Centro de Seguridad */}
-        <section className="bg-teal-900 p-12 md:p-8 rounded-[4rem] md:rounded-[3rem] shadow-2xl space-y-8 md:col-span-2 text-white relative overflow-hidden">
+        <section className="bg-teal-900 p-12 md:p-6 rounded-[4rem] md:rounded-[2rem] shadow-2xl space-y-8 md:col-span-2 text-white relative overflow-hidden">
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-10">
                 <div className="flex-1 space-y-4 text-center md:text-left">
-                    <h3 className="text-3xl font-black tracking-tight">Tus datos son tuyos.</h3>
-                    <p className="text-teal-300 font-medium text-lg opacity-60">Gestiona tu información o soluciona problemas con la base de datos.</p>
+                    <h3 className="text-3xl md:text-xl font-black tracking-tight">Tus datos son tuyos.</h3>
+                    <p className="text-teal-300 font-medium text-lg md:text-sm opacity-60">Gestiona tu información o soluciona problemas con la base de datos.</p>
                 </div>
                 <div className="flex flex-wrap gap-4 justify-center">
                     <button 
@@ -328,7 +328,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
                 >
                     <div className="flex items-center gap-4">
                         <LogOut className="w-7 h-7 text-orange-400" />
-                        <span className="font-black text-xl">Cerrar Sesión</span>
+                        <span className="font-black text-xl md:text-sm">Cerrar Sesión</span>
                     </div>
                     <ChevronRight className="w-6 h-6 text-white/20 group-hover:translate-x-1 transition-transform" />
                 </button>
@@ -339,7 +339,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
                 >
                     <div className="flex items-center gap-4">
                         <Trash2 className="w-7 h-7 text-red-400" />
-                        <span className="font-black text-xl text-red-200">Borrar Cuenta</span>
+                        <span className="font-black text-xl md:text-sm text-red-200">Borrar Cuenta</span>
                     </div>
                     <ChevronRight className="w-6 h-6 text-red-500/20 group-hover:translate-x-1 transition-transform" />
                 </button>

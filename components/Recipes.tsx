@@ -164,7 +164,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-8 animate-fade-in pb-48">
+    <div className="space-y-8 animate-fade-in pb-48">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-teal-900 tracking-tight leading-none mb-1">Biblioteca</h1>

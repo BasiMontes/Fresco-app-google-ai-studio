@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PantryItem } from '../types';
 import { Package, Plus, Trash2, Calendar, X, Save, AlertTriangle, Clock, Minus, Plus as PlusIcon, Camera, Sparkles, Pencil, CheckCircle2, AlertOctagon, WifiOff, Search, ChevronDown, ChevronUp, Wand2, RotateCcw, Utensils, ArrowRight, Skull, Zap } from 'lucide-react';
@@ -216,7 +215,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   };
 
   return (
-    <div className="p-4 md:p-6 safe-pt animate-fade-in relative pb-32">
+    <div className="space-y-6 animate-fade-in relative pb-32">
       <div className="flex flex-col gap-4 mb-6">
         <div className="flex justify-between items-center">
             <div>
@@ -336,18 +335,18 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
               </button>
 
               {expandedCategories[cat] && (
-                  <div className="p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 border-t border-gray-50">
+                  <div className="p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 border-t border-gray-50">
                     {filteredItems.filter(i => i.category === cat).map((item: PantryItem) => {
                       const status = getExpiryStatus(item);
                       // FIX: Force string type to avoid unknown/any type issues
-                      const step = getSmartStep(String(item.unit || ''));
+                      const step = getSmartStep(`${item.unit || ''}`);
                       const isHighlighted = highlightId === item.id;
 
                       return (
                         <div 
                             key={item.id} 
                             ref={(el) => { if (el && itemRefs.current) itemRefs.current[String(item.id)] = el; }}
-                            className={`bg-gray-50 p-4 md:p-3 rounded-2xl border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
+                            className={`bg-gray-50 p-4 md:p-2.5 rounded-2xl border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
                                 isHighlighted 
                                 ? 'ring-2 ring-orange-400 scale-[1.02] shadow-xl z-10 bg-orange-50 border-orange-200' 
                                 : 'border-gray-100 hover:border-teal-400 hover:shadow-md hover:bg-white'
@@ -392,15 +391,15 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                           </div>
                           
                           <div>
-                            <div className="font-black text-gray-900 capitalize text-base md:text-sm mb-3 truncate pr-2">
+                            <div className="font-black text-gray-900 capitalize text-base md:text-xs mb-3 truncate pr-2">
                                 {renderHighlightedText(String(item.name || ''), String(searchTerm || ''))}
                             </div>
                             <div className="flex items-center justify-between bg-white p-1 rounded-xl border border-gray-100 group-hover:border-teal-100 transition-colors shadow-sm">
                                 <button 
                                     onClick={() => onUpdateQuantity(String(item.id), -step)}
-                                    className="w-8 h-8 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
+                                    className="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
                                 >
-                                    <Minus className="w-4 h-4" />
+                                    <Minus className="w-4 h-4 md:w-3 md:h-3" />
                                 </button>
                                 
                                 <button
@@ -417,9 +416,9 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
 
                                 <button 
                                     onClick={() => onUpdateQuantity(String(item.id), step)}
-                                    className="w-8 h-8 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
+                                    className="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
                                 >
-                                    <PlusIcon className="w-4 h-4" />
+                                    <PlusIcon className="w-4 h-4 md:w-3 md:h-3" />
                                 </button>
                             </div>
                             <div className="mt-3 flex items-center gap-1.5 text-[8px] text-gray-300 font-black uppercase tracking-widest">

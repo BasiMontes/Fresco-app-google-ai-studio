@@ -177,7 +177,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   }, [recipes, showPicker, pantry]);
 
   return (
-    <div className="p-4 md:p-6 safe-pt animate-fade-in pb-48">
+    <div className="animate-fade-in pb-48">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6 md:mb-8 px-4">
         <div>
           <h1 className="text-5xl md:text-2xl font-black text-teal-900 tracking-tight leading-none mb-2">Mi Menú</h1>
@@ -325,8 +325,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           const dateStr = format(day, 'yyyy-MM-dd');
           
           return (
-          <div key={day.toString()} className="snap-center min-w-[320px] md:min-w-[200px] flex flex-col gap-6 md:gap-3">
-            <div className={`p-8 md:p-4 rounded-[3rem] md:rounded-2xl text-center transition-all border-2 ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-2xl md:shadow-md scale-105' : 'bg-white text-gray-900 shadow-sm border-gray-100'}`}>
+          <div key={day.toString()} className="snap-center min-w-[320px] md:min-w-[180px] flex flex-col gap-6 md:gap-3">
+            <div className={`p-8 md:p-3 rounded-[3rem] md:rounded-2xl text-center transition-all border-2 ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-2xl md:shadow-md scale-105' : 'bg-white text-gray-900 shadow-sm border-gray-100'}`}>
               <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50 mb-1">{format(day, 'EEEE', { locale: es })}</div>
               <div className="text-3xl md:text-xl font-black tracking-tighter">{format(day, 'd MMMM', { locale: es })}</div>
             </div>
@@ -366,7 +366,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     <div 
                         key={type} 
                         onClick={() => handleSlotClick(dateStr, type, slot?.recipeId, isZombie)}
-                        className={`relative p-8 md:p-3 rounded-[3.5rem] md:rounded-3xl border-2 h-64 md:h-36 flex flex-col justify-between transition-all active:scale-[0.98] cursor-pointer group shadow-sm overflow-hidden ${
+                        className={`relative p-8 md:p-2 rounded-[3.5rem] md:rounded-2xl border-2 h-64 md:h-36 flex flex-col justify-between transition-all active:scale-[0.98] cursor-pointer group shadow-sm overflow-hidden ${
                             isMovingSource ? 'bg-orange-50 border-orange-500 scale-95 opacity-50 ring-4 ring-orange-200' :
                             isMovingTarget ? 'bg-orange-50 border-dashed border-orange-300 hover:bg-orange-100 hover:scale-105' :
                             isZombie ? 'bg-red-50 border-red-200' :
@@ -383,11 +383,11 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                         )}
 
                         <div className="flex justify-between items-center text-[10px] font-black uppercase text-gray-400 tracking-widest relative z-0">
-                            <span>{type === 'breakfast' ? '🍳 Desayuno' : type === 'lunch' ? '🥘 Almuerzo' : '🌙 Cena'}</span>
+                            <span>{type === 'breakfast' ? '🍳' : type === 'lunch' ? '🥘' : '🌙'}</span>
                             {/* FIX 2: Icono de Alerta de Stock */}
                             {!isCooked && missingIngredientsAlert && (
                                 <div className="flex items-center gap-1 text-red-500 bg-red-50 px-2 py-1 rounded-full animate-pulse">
-                                    <AlertTriangle className="w-3 h-3" /> <span className="text-[8px]">Faltan Ingr.</span>
+                                    <AlertTriangle className="w-3 h-3" />
                                 </div>
                             )}
                         </div>
@@ -395,24 +395,24 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                         {isSpecial ? (
                             <div className="flex-1 flex flex-col justify-center items-center gap-3 opacity-60">
                                 {specialType === 'leftovers' ? <Repeat className="w-10 h-10 md:w-6 md:h-6 text-teal-600" /> : <Utensils className="w-10 h-10 md:w-6 md:h-6 text-orange-500" />}
-                                <span className="font-black text-sm md:text-xs uppercase tracking-widest text-gray-600">
-                                    {specialType === 'leftovers' ? 'Sobras / Tupper' : 'Comer Fuera'}
+                                <span className="font-black text-sm md:text-[10px] uppercase tracking-widest text-gray-600 text-center leading-tight">
+                                    {specialType === 'leftovers' ? 'Sobras' : 'Fuera'}
                                 </span>
                             </div>
                         ) : isZombie ? (
                             <div className="flex-1 flex flex-col justify-center items-center gap-2 text-red-400 animate-pulse">
                                 <AlertOctagon className="w-8 h-8" />
-                                <span className="font-black text-xs uppercase tracking-widest">Receta Eliminada</span>
+                                <span className="font-black text-xs uppercase tracking-widest">Error</span>
                             </div>
                         ) : recipe ? (
-                            <div className="flex-1 flex flex-col justify-center gap-4 md:gap-2 relative z-0">
-                                <div className={`font-black text-gray-900 text-xl md:text-sm line-clamp-2 leading-tight transition-colors ${!isCooked && 'group-hover:text-teal-700'}`}>{recipe.title}</div>
-                                <div className="flex items-center justify-between">
-                                    <img src={recipe.image_url} className="w-16 h-16 md:w-10 md:h-10 rounded-[1.5rem] md:rounded-xl object-cover shadow-lg border-2 border-white" />
+                            <div className="flex-1 flex flex-col justify-center gap-4 md:gap-1.5 relative z-0">
+                                <div className={`font-black text-gray-900 text-xl md:text-xs line-clamp-2 leading-tight transition-colors ${!isCooked && 'group-hover:text-teal-700'}`}>{recipe.title}</div>
+                                <div className="flex items-center justify-between mt-auto">
+                                    <img src={recipe.image_url} className="w-16 h-16 md:w-8 md:h-8 rounded-[1.5rem] md:rounded-lg object-cover shadow-lg border-2 border-white" />
                                     {!isCooked && (
-                                        <div className="flex gap-2">
-                                            <button onClick={(e) => handleStartMove(e, dateStr, type, recipe.id)} className="p-3 md:p-1.5 bg-gray-100 text-gray-500 rounded-2xl md:rounded-lg hover:bg-orange-500 hover:text-white transition-all"><Move className="w-4 h-4 md:w-3 md:h-3" /></button>
-                                            <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-3 md:p-1.5 bg-red-50 text-red-400 rounded-2xl md:rounded-lg hover:bg-red-500 hover:text-white transition-all"><Trash2 className="w-4 h-4 md:w-3 md:h-3" /></button>
+                                        <div className="flex gap-1 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={(e) => handleStartMove(e, dateStr, type, recipe.id)} className="p-3 md:p-1 bg-gray-100 text-gray-500 rounded-2xl md:rounded-md hover:bg-orange-500 hover:text-white transition-all"><Move className="w-4 h-4 md:w-3 md:h-3" /></button>
+                                            <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-3 md:p-1 bg-red-50 text-red-400 rounded-2xl md:rounded-md hover:bg-red-500 hover:text-white transition-all"><Trash2 className="w-4 h-4 md:w-3 md:h-3" /></button>
                                         </div>
                                     )}
                                 </div>
@@ -422,9 +422,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                 {isMovingTarget ? (
                                     <Move className="w-12 h-12 stroke-[3px] animate-bounce text-orange-400" />
                                 ) : (
-                                    <Plus className="w-12 h-12 md:w-8 md:h-8 stroke-[3px] group-hover:scale-110 group-hover:text-teal-600/40 transition-all" />
+                                    <Plus className="w-12 h-12 md:w-6 md:h-6 stroke-[3px] group-hover:scale-110 group-hover:text-teal-600/40 transition-all" />
                                 )}
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em]">{isMovingTarget ? 'Mover Aquí' : 'Planificar'}</span>
                             </div>
                         )}
                     </div>
