@@ -102,7 +102,6 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
         </div>
         
         <div className="flex gap-2">
-            {/* Botón Manual (Mock) para aclarar al usuario */}
             <button
                 onClick={() => alert("Función 'Crear Manualmente' próximamente.")}
                 className="flex items-center justify-center gap-2 bg-white text-teal-900 border border-teal-100 px-4 py-2 rounded-xl font-black text-xs md:text-[9px] uppercase tracking-widest hover:bg-teal-50 transition-all"
@@ -164,7 +163,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
         </div>
       )}
 
-      {/* Grid Uniforme (Fixed Height Cards) */}
+      {/* Grid Uniforme */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-4 auto-rows-fr">
           
           {loadingAI && <><RecipeSkeleton /><RecipeSkeleton /><RecipeSkeleton /><RecipeSkeleton /></>}

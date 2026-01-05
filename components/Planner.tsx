@@ -109,6 +109,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           const r = getRecipe(existingRecipeId);
           if (r) setSelectedRecipe(r);
       } else {
+          // OPEN PICKER
           setShowPicker({ date, type });
       }
   };
@@ -319,7 +320,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
       {showPicker && (
           <div className="fixed inset-0 z-[5000] bg-teal-900/95 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in" onClick={() => setShowPicker(null)}>
               <div className="bg-white w-full max-w-lg rounded-[3rem] md:rounded-2xl p-8 md:p-4 shadow-2xl h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                  <h3 className="text-2xl font-black text-teal-900 mb-6">Elige una receta</h3>
+                  <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-2xl font-black text-teal-900">Elige una receta</h3>
+                      <button onClick={() => setShowPicker(null)} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-5 h-5 text-gray-400"/></button>
+                  </div>
                   <div className="flex-1 overflow-y-auto space-y-4">
                       {recipes.map(r => (
                           <div key={r.id} onClick={() => { onUpdateSlot(showPicker.date, showPicker.type, r.id); setShowPicker(null); }} className="flex gap-4 p-3 rounded-2xl hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-200">
