@@ -22,10 +22,10 @@ interface RecipesProps {
 
 const RecipeSkeleton = () => (
     <div className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm flex flex-col h-auto">
-        <div className="h-48 md:h-40 w-full skeleton-bg relative">
+        <div className="h-48 md:h-32 w-full skeleton-bg relative">
             <div className="absolute top-4 left-4 w-16 h-6 rounded-xl bg-white/50" />
         </div>
-        <div className="p-6 md:p-4 flex-1 flex flex-col gap-3">
+        <div className="p-6 md:p-3 flex-1 flex flex-col gap-3">
             <div className="w-20 h-4 rounded-lg skeleton-bg" />
             <div className="w-full h-6 rounded-lg skeleton-bg" />
             <div className="w-2/3 h-6 rounded-lg skeleton-bg" />
@@ -234,7 +234,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
       )}
 
       {/* Grid de Contenido Compacto */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-4">
           
           {loadingAI && (
               <>
@@ -311,7 +311,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
                     onClick={() => { setInitialMode('view'); setSelectedRecipe(recipe); }}
                     className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col group cursor-pointer"
                 >
-                <div className="relative h-48 md:h-40 overflow-hidden bg-gray-100 flex items-center justify-center">
+                <div className="relative h-48 md:h-32 overflow-hidden bg-gray-100 flex items-center justify-center">
                     <SmartImage 
                         src={recipe.image_url} 
                         alt={recipe.title} 
@@ -346,8 +346,8 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
                     </div>
                 </div>
                 
-                <div className="p-6 md:p-4 flex-1 flex flex-col">
-                    <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="p-6 md:p-3 flex-1 flex flex-col">
+                    <div className="flex items-center justify-between gap-2 mb-3 md:mb-2">
                         <span className="text-[8px] font-black uppercase tracking-widest text-teal-600 bg-teal-50 px-2 py-1 rounded-lg border border-teal-100">{recipe.cuisine_type}</span>
                         {recipe.calories && (
                             <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1">
@@ -356,8 +356,8 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
                         )}
                     </div>
                     
-                    <h3 className="text-xl md:text-lg font-black text-gray-900 mb-2 line-clamp-2 leading-tight tracking-tight group-hover:text-teal-700 transition-colors">{recipe.title}</h3>
-                    <p className="text-gray-400 text-xs line-clamp-2 mb-6 font-medium leading-relaxed">{recipe.description}</p>
+                    <h3 className="text-xl md:text-sm font-black text-gray-900 mb-2 line-clamp-2 leading-tight tracking-tight group-hover:text-teal-700 transition-colors">{recipe.title}</h3>
+                    <p className="text-gray-400 text-xs line-clamp-2 mb-6 md:mb-3 font-medium leading-relaxed">{recipe.description}</p>
                     
                     <button 
                         onClick={(e) => { 
@@ -365,7 +365,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
                             setInitialMode('plan');
                             setSelectedRecipe(recipe);
                         }}
-                        className="w-full py-3 bg-gray-50 text-teal-900 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-teal-900 hover:text-white transition-all active:scale-95 mt-auto border border-gray-100 flex items-center justify-center gap-2"
+                        className="w-full py-3 md:py-2 bg-gray-50 text-teal-900 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-teal-900 hover:text-white transition-all active:scale-95 mt-auto border border-gray-100 flex items-center justify-center gap-2"
                     >
                         <CalendarPlus className="w-4 h-4" /> Planificar
                     </button>

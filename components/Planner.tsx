@@ -177,10 +177,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   }, [recipes, showPicker, pantry]);
 
   return (
-    <div className="p-4 md:p-10 safe-pt animate-fade-in pb-48">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 px-4">
+    <div className="p-4 md:p-6 safe-pt animate-fade-in pb-48">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6 md:mb-8 px-4">
         <div>
-          <h1 className="text-5xl md:text-4xl font-black text-teal-900 tracking-tight leading-none mb-2">Mi Menú</h1>
+          <h1 className="text-5xl md:text-2xl font-black text-teal-900 tracking-tight leading-none mb-2">Mi Menú</h1>
           <div className="flex items-center gap-4 mt-2">
               <button onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-100 transition-all"><ChevronLeft className="w-5 h-5 text-gray-500" /></button>
               <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest min-w-[140px] text-center">
@@ -199,17 +199,17 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                <>
                 <button 
                     onClick={() => setShowSocial(true)}
-                    className="flex-1 md:flex-none bg-white text-teal-900 px-6 py-5 rounded-[2rem] flex items-center justify-center gap-3 font-black text-xs uppercase tracking-widest border border-gray-100 shadow-sm active:scale-95 transition-all hover:bg-teal-50"
+                    className="flex-1 md:flex-none bg-white text-teal-900 px-6 py-5 md:py-2.5 md:px-4 rounded-[2rem] md:rounded-xl flex items-center justify-center gap-3 md:gap-2 font-black text-xs uppercase tracking-widest border border-gray-100 shadow-sm active:scale-95 transition-all hover:bg-teal-50"
                 >
-                    <Users2 className="w-5 h-5" /> Social
+                    <Users2 className="w-5 h-5 md:w-4 md:h-4" /> Social
                 </button>
                 {/* FIX 1: Abrir Wizard en lugar de Magic directo */}
                 <button 
                     onClick={openPlanWizard} 
                     disabled={isGenerating} // Permitimos offline
-                    className="flex-[2] md:flex-none bg-teal-900 text-white px-8 py-5 rounded-[2rem] flex items-center justify-center gap-3 font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 disabled:opacity-50 transition-all hover:bg-teal-800 disabled:bg-gray-400"
+                    className="flex-[2] md:flex-none bg-teal-900 text-white px-8 py-5 md:py-2.5 md:px-5 rounded-[2rem] md:rounded-xl flex items-center justify-center gap-3 md:gap-2 font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 disabled:opacity-50 transition-all hover:bg-teal-800 disabled:bg-gray-400"
                 >
-                    {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : isOnline ? <Wand2 className="w-5 h-5" /> : <WifiOff className="w-5 h-5" />}
+                    {isGenerating ? <Loader2 className="w-5 h-5 md:w-4 md:h-4 animate-spin" /> : isOnline ? <Wand2 className="w-5 h-5 md:w-4 md:h-4" /> : <WifiOff className="w-5 h-5" />}
                     {isOnline ? 'Planificar Semana' : 'Planificar Local'}
                 </button>
                </>
@@ -319,16 +319,16 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
               </div>
           </div>
       ) : (
-      <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-8 pb-12 -mx-4 px-8 scroll-smooth">
+      <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-8 md:gap-4 pb-12 -mx-4 px-8 md:px-0 scroll-smooth">
         {days.map((day) => {
           const isToday = isSameDay(day, new Date());
           const dateStr = format(day, 'yyyy-MM-dd');
           
           return (
-          <div key={day.toString()} className="snap-center min-w-[320px] md:min-w-[260px] flex flex-col gap-6">
-            <div className={`p-8 md:p-6 rounded-[3rem] text-center transition-all border-2 ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-2xl scale-105' : 'bg-white text-gray-900 shadow-sm border-gray-100'}`}>
+          <div key={day.toString()} className="snap-center min-w-[320px] md:min-w-[200px] flex flex-col gap-6 md:gap-3">
+            <div className={`p-8 md:p-4 rounded-[3rem] md:rounded-2xl text-center transition-all border-2 ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-2xl md:shadow-md scale-105' : 'bg-white text-gray-900 shadow-sm border-gray-100'}`}>
               <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50 mb-1">{format(day, 'EEEE', { locale: es })}</div>
-              <div className="text-3xl md:text-2xl font-black tracking-tighter">{format(day, 'd MMMM', { locale: es })}</div>
+              <div className="text-3xl md:text-xl font-black tracking-tighter">{format(day, 'd MMMM', { locale: es })}</div>
             </div>
             {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                 const slot = getSlot(day, type);
@@ -366,7 +366,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     <div 
                         key={type} 
                         onClick={() => handleSlotClick(dateStr, type, slot?.recipeId, isZombie)}
-                        className={`relative p-8 md:p-5 rounded-[3.5rem] md:rounded-[2.5rem] border-2 h-64 md:h-48 flex flex-col justify-between transition-all active:scale-[0.98] cursor-pointer group shadow-sm overflow-hidden ${
+                        className={`relative p-8 md:p-3 rounded-[3.5rem] md:rounded-3xl border-2 h-64 md:h-36 flex flex-col justify-between transition-all active:scale-[0.98] cursor-pointer group shadow-sm overflow-hidden ${
                             isMovingSource ? 'bg-orange-50 border-orange-500 scale-95 opacity-50 ring-4 ring-orange-200' :
                             isMovingTarget ? 'bg-orange-50 border-dashed border-orange-300 hover:bg-orange-100 hover:scale-105' :
                             isZombie ? 'bg-red-50 border-red-200' :
@@ -394,8 +394,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                         
                         {isSpecial ? (
                             <div className="flex-1 flex flex-col justify-center items-center gap-3 opacity-60">
-                                {specialType === 'leftovers' ? <Repeat className="w-10 h-10 text-teal-600" /> : <Utensils className="w-10 h-10 text-orange-500" />}
-                                <span className="font-black text-sm uppercase tracking-widest text-gray-600">
+                                {specialType === 'leftovers' ? <Repeat className="w-10 h-10 md:w-6 md:h-6 text-teal-600" /> : <Utensils className="w-10 h-10 md:w-6 md:h-6 text-orange-500" />}
+                                <span className="font-black text-sm md:text-xs uppercase tracking-widest text-gray-600">
                                     {specialType === 'leftovers' ? 'Sobras / Tupper' : 'Comer Fuera'}
                                 </span>
                             </div>
@@ -405,14 +405,14 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                 <span className="font-black text-xs uppercase tracking-widest">Receta Eliminada</span>
                             </div>
                         ) : recipe ? (
-                            <div className="flex-1 flex flex-col justify-center gap-4 relative z-0">
-                                <div className={`font-black text-gray-900 text-xl md:text-lg line-clamp-2 leading-tight transition-colors ${!isCooked && 'group-hover:text-teal-700'}`}>{recipe.title}</div>
+                            <div className="flex-1 flex flex-col justify-center gap-4 md:gap-2 relative z-0">
+                                <div className={`font-black text-gray-900 text-xl md:text-sm line-clamp-2 leading-tight transition-colors ${!isCooked && 'group-hover:text-teal-700'}`}>{recipe.title}</div>
                                 <div className="flex items-center justify-between">
-                                    <img src={recipe.image_url} className="w-16 h-16 md:w-12 md:h-12 rounded-[1.5rem] object-cover shadow-lg border-2 border-white" />
+                                    <img src={recipe.image_url} className="w-16 h-16 md:w-10 md:h-10 rounded-[1.5rem] md:rounded-xl object-cover shadow-lg border-2 border-white" />
                                     {!isCooked && (
                                         <div className="flex gap-2">
-                                            <button onClick={(e) => handleStartMove(e, dateStr, type, recipe.id)} className="p-3 md:p-2 bg-gray-100 text-gray-500 rounded-2xl hover:bg-orange-500 hover:text-white transition-all"><Move className="w-4 h-4" /></button>
-                                            <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-3 md:p-2 bg-red-50 text-red-400 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 className="w-4 h-4" /></button>
+                                            <button onClick={(e) => handleStartMove(e, dateStr, type, recipe.id)} className="p-3 md:p-1.5 bg-gray-100 text-gray-500 rounded-2xl md:rounded-lg hover:bg-orange-500 hover:text-white transition-all"><Move className="w-4 h-4 md:w-3 md:h-3" /></button>
+                                            <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-3 md:p-1.5 bg-red-50 text-red-400 rounded-2xl md:rounded-lg hover:bg-red-500 hover:text-white transition-all"><Trash2 className="w-4 h-4 md:w-3 md:h-3" /></button>
                                         </div>
                                     )}
                                 </div>
@@ -422,7 +422,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                 {isMovingTarget ? (
                                     <Move className="w-12 h-12 stroke-[3px] animate-bounce text-orange-400" />
                                 ) : (
-                                    <Plus className="w-12 h-12 stroke-[3px] group-hover:scale-110 group-hover:text-teal-600/40 transition-all" />
+                                    <Plus className="w-12 h-12 md:w-8 md:h-8 stroke-[3px] group-hover:scale-110 group-hover:text-teal-600/40 transition-all" />
                                 )}
                                 <span className="text-[10px] font-black uppercase tracking-[0.3em]">{isMovingTarget ? 'Mover Aquí' : 'Planificar'}</span>
                             </div>

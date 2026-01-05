@@ -71,7 +71,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
   }, []);
 
   return (
-    <div className="p-4 md:p-6 space-y-8 pb-32 max-w-6xl mx-auto animate-fade-in relative">
+    <div className="p-4 md:p-5 space-y-6 pb-32 max-w-6xl mx-auto animate-fade-in relative">
       
       {showBriefing && (
           <MorningBriefing 
@@ -88,20 +88,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
 
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4 w-full">
-          <div className="w-10 h-10 rounded-full bg-teal-900 flex items-center justify-center text-white font-black flex-shrink-0 text-sm">{user.name[0]}</div>
+          <div className="w-10 h-10 md:w-8 md:h-8 rounded-full bg-teal-900 flex items-center justify-center text-white font-black flex-shrink-0 text-sm">{user.name[0]}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 text-teal-600 font-bold text-[10px] uppercase tracking-widest mb-0.5">
                 <timeGreeting.icon className="w-3 h-3" /> {timeGreeting.text}
             </div>
             <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-2xl font-black text-teal-900 leading-none truncate max-w-[200px] md:max-w-none">{user.name.split(' ')[0]}</h1>
+                <h1 className="text-2xl md:text-xl font-black text-teal-900 leading-none truncate max-w-[200px] md:max-w-none">{user.name.split(' ')[0]}</h1>
                 <span className="bg-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest flex items-center gap-1 shadow-sm animate-pulse-slow cursor-help flex-shrink-0" title="Versión de prueba">
                     <FlaskConical className="w-3 h-3" /> Beta
                 </span>
             </div>
           </div>
           {isOnline ? (
-            <div className="hidden md:flex items-center gap-2 bg-teal-50 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-teal-600 border border-teal-100 shadow-sm">
+            <div className="hidden md:flex items-center gap-2 bg-teal-50 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-teal-600 border border-teal-100 shadow-sm">
                 <CloudCog className="w-3 h-3" /> Nube
             </div>
           ) : (
@@ -112,45 +112,45 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-6 md:p-5 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-teal-600">
-              <PiggyBank className="w-6 h-6 text-teal-600 mb-3" />
-              <div className="text-3xl md:text-2xl font-black text-gray-900">{user.total_savings.toFixed(1)}€</div>
-              <div className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest">Ahorro Acumulado</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="bg-white p-6 md:p-4 rounded-3xl md:rounded-2xl border border-gray-100 shadow-sm border-b-4 border-b-teal-600">
+              <PiggyBank className="w-6 h-6 md:w-5 md:h-5 text-teal-600 mb-2 md:mb-1" />
+              <div className="text-3xl md:text-xl font-black text-gray-900">{user.total_savings.toFixed(1)}€</div>
+              <div className="text-[10px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">Ahorro Acumulado</div>
           </div>
 
-          <div className="bg-white p-6 md:p-5 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-orange-500">
-              <Timer className="w-6 h-6 text-orange-500 mb-3" />
-              <div className="text-3xl md:text-2xl font-black text-gray-900">{user.time_saved_mins || 0}m</div>
-              <div className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest">Tiempo Recuperado</div>
+          <div className="bg-white p-6 md:p-4 rounded-3xl md:rounded-2xl border border-gray-100 shadow-sm border-b-4 border-b-orange-500">
+              <Timer className="w-6 h-6 md:w-5 md:h-5 text-orange-500 mb-2 md:mb-1" />
+              <div className="text-3xl md:text-xl font-black text-gray-900">{user.time_saved_mins || 0}m</div>
+              <div className="text-[10px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">Tiempo Recuperado</div>
           </div>
 
-          <div className="bg-white p-6 md:p-5 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-purple-600">
-              <ChefHat className="w-6 h-6 text-purple-600 mb-3" />
-              <div className="text-3xl md:text-2xl font-black text-gray-900">{user.meals_cooked}</div>
-              <div className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest">Platos Saludables</div>
+          <div className="bg-white p-6 md:p-4 rounded-3xl md:rounded-2xl border border-gray-100 shadow-sm border-b-4 border-b-purple-600">
+              <ChefHat className="w-6 h-6 md:w-5 md:h-5 text-purple-600 mb-2 md:mb-1" />
+              <div className="text-3xl md:text-xl font-black text-gray-900">{user.meals_cooked}</div>
+              <div className="text-[10px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">Platos Saludables</div>
           </div>
       </div>
 
       {snackItems.length > 0 && onQuickConsume && (
           <section>
-              <div className="flex items-center gap-2 mb-3 px-1">
+              <div className="flex items-center gap-2 mb-2 px-1">
                   <Apple className="w-4 h-4 text-red-400" />
                   <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Picoteo Rápido (-1)</h3>
               </div>
-              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                   {snackItems.map(item => (
                       <button 
                         key={item.id}
                         onClick={() => onQuickConsume(item.id)}
-                        className="bg-white p-3 pr-5 rounded-2xl border border-gray-100 flex items-center gap-3 hover:shadow-lg hover:border-orange-200 transition-all group flex-shrink-0"
+                        className="bg-white p-3 pr-5 md:p-2 md:pr-4 rounded-2xl md:rounded-xl border border-gray-100 flex items-center gap-3 md:gap-2 hover:shadow-lg hover:border-orange-200 transition-all group flex-shrink-0"
                       >
-                          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-lg shadow-sm group-hover:bg-orange-50 group-hover:scale-110 transition-transform">
+                          <div className="w-10 h-10 md:w-8 md:h-8 bg-gray-50 rounded-xl md:rounded-lg flex items-center justify-center text-lg md:text-base shadow-sm group-hover:bg-orange-50 group-hover:scale-110 transition-transform">
                               {item.category === 'fruits' ? '🍎' : item.category === 'dairy' ? '🥛' : '🥨'}
                           </div>
                           <div className="text-left">
-                              <div className="font-black text-gray-900 truncate max-w-[80px] text-sm">{item.name}</div>
-                              <div className="text-[9px] font-bold text-gray-400 group-hover:text-orange-500">Quedan {item.quantity}</div>
+                              <div className="font-black text-gray-900 truncate max-w-[80px] text-sm md:text-xs">{item.name}</div>
+                              <div className="text-[9px] md:text-[8px] font-bold text-gray-400 group-hover:text-orange-500">Quedan {item.quantity}</div>
                           </div>
                           <div className="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Minus className="w-3 h-3" />
@@ -161,23 +161,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
           </section>
       )}
 
-      <section className="bg-teal-900 rounded-[3rem] p-8 text-white relative overflow-hidden shadow-xl">
-        <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center">
+      <section className="bg-teal-900 rounded-[3rem] md:rounded-[2rem] p-8 md:p-6 text-white relative overflow-hidden shadow-xl">
+        <div className="relative z-10 flex flex-col md:flex-row gap-6 items-center">
             <div className="flex-1 text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
                   <div className="bg-orange-500 p-2 rounded-xl shadow-lg">
-                      <Sparkles className="w-5 h-5 text-white" />
+                      <Sparkles className="w-5 h-5 md:w-4 md:h-4 text-white" />
                   </div>
-                  <h3 className="text-2xl font-black">Planificador</h3>
+                  <h3 className="text-2xl md:text-xl font-black">Planificador</h3>
               </div>
-              <p className="text-teal-100/60 text-sm mb-6 font-medium max-w-md mx-auto md:mx-0">¿Hoy cocinas para toda la semana? Usa Batch Cooking.</p>
+              <p className="text-teal-100/60 text-sm md:text-xs mb-4 font-medium max-w-md mx-auto md:mx-0 leading-tight">¿Hoy cocinas para toda la semana? Usa Batch Cooking.</p>
               
-              <div className="flex flex-col md:flex-row gap-3">
-                  <button onClick={() => onNavigate('planner')} className="px-6 py-3 bg-orange-500 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-orange-600 active:scale-95 transition-all">
-                    Planificar Semana <ArrowRight className="w-3 h-3" />
+              <div className="flex flex-col md:flex-row gap-2">
+                  <button onClick={() => onNavigate('planner')} className="px-5 py-2.5 bg-orange-500 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-orange-600 active:scale-95 transition-all">
+                    Planificar <ArrowRight className="w-3 h-3" />
                   </button>
-                  <button onClick={() => onNavigate('shopping')} className="px-6 py-3 bg-white/10 border border-white/20 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all">
-                    Lista de Compra
+                  <button onClick={() => onNavigate('shopping')} className="px-5 py-2.5 bg-white/10 border border-white/20 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all">
+                    Lista
                   </button>
               </div>
             </div>
