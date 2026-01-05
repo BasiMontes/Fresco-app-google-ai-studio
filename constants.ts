@@ -93,7 +93,8 @@ export const MOCK_USER: UserProfile = {
   history_savings: [{ date: '2024-05-01', amount: 124.80 }]
 };
 
-// REPOSITORIO ESTÁTICO DE RECETAS (AMPLIADO A 30+ RECETAS)
+// REPOSITORIO ESTÁTICO DE RECETAS (OPTIMIZADO Y EXPANDIDO)
+// Tipologías: Vegetarian, Vegan, Keto, Paleo, Gluten Free, Lactose Free, Meat, Fish
 export const STATIC_RECIPES: Recipe[] = [
   // --- DESAYUNOS ---
   {
@@ -106,7 +107,7 @@ export const STATIC_RECIPES: Recipe[] = [
     prep_time: 10,
     servings: 1,
     calories: 350,
-    dietary_tags: ["vegetarian"],
+    dietary_tags: ["vegetarian", "lactose_free"],
     ingredients: [
       { name: "pan integral", quantity: 1, unit: "rebanada", category: "grains" },
       { name: "aguacate", quantity: 0.5, unit: "unidad", category: "fruits" },
@@ -156,25 +157,25 @@ export const STATIC_RECIPES: Recipe[] = [
   },
   {
     id: "static-b4",
-    title: "Gachas de Avena (Porridge)",
-    description: "Desayuno caliente y reconfortante.",
+    title: "Pudin de Chía con Mango",
+    description: "Prepáralo la noche anterior.",
     meal_category: "breakfast",
     cuisine_type: "healthy",
     difficulty: "easy",
-    prep_time: 10,
+    prep_time: 5,
     servings: 1,
-    calories: 300,
-    dietary_tags: ["vegetarian", "vegan"],
+    calories: 250,
+    dietary_tags: ["vegan", "vegetarian", "gluten_free", "keto", "lactose_free"],
     ingredients: [
-      { name: "avena", quantity: 50, unit: "g", category: "grains" },
-      { name: "leche", quantity: 200, unit: "ml", category: "dairy" },
-      { name: "canela", quantity: 1, unit: "pizca", category: "spices" }
+      { name: "semillas de chia", quantity: 3, unit: "cucharada", category: "pantry" },
+      { name: "leche de almendras", quantity: 200, unit: "ml", category: "dairy" },
+      { name: "mango", quantity: 0.5, unit: "unidad", category: "fruits" }
     ],
-    instructions: ["Cocer avena con leche a fuego lento", "Añadir canela al final"],
-    image_url: "https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&q=80"
+    instructions: ["Mezclar chía y leche", "Dejar reposar 4h o noche", "Añadir mango"],
+    image_url: "https://images.unsplash.com/photo-1551800262-1b6b47c0936f?auto=format&fit=crop&q=80"
   },
 
-  // --- MEDITERRÁNEA / ESPAÑOLA ---
+  // --- ALMUERZOS Y CENAS VEGETARIANOS/VEGANOS ---
   {
     id: "static-3",
     title: "Ensalada Mediterránea de Quinoa",
@@ -185,7 +186,7 @@ export const STATIC_RECIPES: Recipe[] = [
     prep_time: 20,
     servings: 2,
     calories: 420,
-    dietary_tags: ["vegetarian", "vegan", "gluten_free"],
+    dietary_tags: ["vegetarian", "vegan", "gluten_free", "lactose_free"],
     ingredients: [
       { name: "quinoa", quantity: 150, unit: "g", category: "grains" },
       { name: "pepino", quantity: 1, unit: "unidad", category: "vegetables" },
@@ -195,6 +196,68 @@ export const STATIC_RECIPES: Recipe[] = [
     instructions: ["Cocer quinoa", "Picar verduras", "Mezclar y aliñar"],
     image_url: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&q=80"
   },
+  {
+    id: "static-v1",
+    title: "Curry de Garbanzos y Espinacas",
+    description: "Plato reconfortante lleno de proteína vegetal.",
+    meal_category: "lunch",
+    cuisine_type: "asian",
+    difficulty: "medium",
+    prep_time: 25,
+    servings: 2,
+    calories: 380,
+    dietary_tags: ["vegan", "vegetarian", "gluten_free", "lactose_free"],
+    ingredients: [
+      { name: "garbanzos", quantity: 400, unit: "g", category: "pantry" },
+      { name: "leche de coco", quantity: 200, unit: "ml", category: "pantry" },
+      { name: "espinacas", quantity: 100, unit: "g", category: "vegetables" },
+      { name: "curry", quantity: 1, unit: "cucharada", category: "spices" }
+    ],
+    instructions: ["Sofreír especias", "Añadir garbanzos y leche de coco", "Cocinar 10 min", "Añadir espinacas al final"],
+    image_url: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-v2",
+    title: "Tacos Veganos de Lentejas",
+    description: "Sabor mexicano sin carne.",
+    meal_category: "dinner",
+    cuisine_type: "mexican",
+    difficulty: "medium",
+    prep_time: 20,
+    servings: 2,
+    calories: 350,
+    dietary_tags: ["vegan", "vegetarian", "lactose_free"],
+    ingredients: [
+      { name: "lentejas", quantity: 200, unit: "g", category: "pantry" },
+      { name: "tortillas", quantity: 4, unit: "unidades", category: "grains" },
+      { name: "pimiento", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" }
+    ],
+    instructions: ["Saltear verduras", "Añadir lentejas y sazonar tipo taco", "Servir en tortillas"],
+    image_url: "https://images.unsplash.com/photo-1504544750208-dc0358e63f7f?auto=format&fit=crop&q=80"
+  },
+  {
+    id: "static-v3",
+    title: "Espaguetis de Calabacín al Pesto",
+    description: "Ligero, fresco y muy rápido.",
+    meal_category: "dinner",
+    cuisine_type: "italian",
+    difficulty: "easy",
+    prep_time: 15,
+    servings: 2,
+    calories: 220,
+    dietary_tags: ["vegetarian", "keto", "gluten_free", "paleo"],
+    ingredients: [
+      { name: "calabacin", quantity: 2, unit: "unidades", category: "vegetables" },
+      { name: "albahaca", quantity: 1, unit: "manojo", category: "vegetables" },
+      { name: "nueces", quantity: 30, unit: "g", category: "pantry" },
+      { name: "aceite", quantity: 50, unit: "ml", category: "pantry" }
+    ],
+    instructions: ["Hacer espirales de calabacín", "Triturar albahaca, nueces y aceite", "Mezclar"],
+    image_url: "https://images.unsplash.com/photo-1551248429-40975aa4de74?auto=format&fit=crop&q=80"
+  },
+
+  // --- CARNES Y PESCADOS (NO VEGETARIANO) ---
   {
     id: "static-4",
     title: "Tortilla de Patatas Express",
@@ -214,27 +277,6 @@ export const STATIC_RECIPES: Recipe[] = [
     ],
     instructions: ["Pochar patata y cebolla", "Batir huevos", "Cuajar en sartén"],
     image_url: "https://images.unsplash.com/photo-1604909052743-94e838986d24?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-5",
-    title: "Gazpacho Andaluz",
-    description: "Bomba de vitaminas fría.",
-    meal_category: "lunch",
-    cuisine_type: "spanish",
-    difficulty: "easy",
-    prep_time: 15,
-    servings: 2,
-    calories: 180,
-    dietary_tags: ["vegan", "vegetarian", "gluten_free"],
-    ingredients: [
-      { name: "tomate", quantity: 5, unit: "unidades", category: "vegetables" },
-      { name: "pimiento", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "pepino", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "ajo", quantity: 1, unit: "diente", category: "vegetables" },
-      { name: "aceite", quantity: 50, unit: "ml", category: "pantry" }
-    ],
-    instructions: ["Triturar todo muy bien", "Enfriar en nevera"],
-    image_url: "https://images.unsplash.com/photo-1557844352-761f2565b576?auto=format&fit=crop&q=80"
   },
   {
     id: "static-new-1",
@@ -266,7 +308,7 @@ export const STATIC_RECIPES: Recipe[] = [
     prep_time: 20,
     servings: 2,
     calories: 320,
-    dietary_tags: ["healthy"],
+    dietary_tags: ["healthy", "paleo"],
     ingredients: [
       { name: "merluza", quantity: 300, unit: "g", category: "fish" },
       { name: "harina", quantity: 50, unit: "g", category: "pantry" },
@@ -276,8 +318,28 @@ export const STATIC_RECIPES: Recipe[] = [
     instructions: ["Pasar pescado por harina y huevo", "Freír en aceite caliente"],
     image_url: "https://images.unsplash.com/photo-1551061956-613d07802874?auto=format&fit=crop&q=80"
   },
-
-  // --- ITALIANA ---
+  {
+    id: "static-k1",
+    title: "Pollo al Horno con Verduras",
+    description: "Todo en una bandeja, fácil limpieza.",
+    meal_category: "lunch",
+    cuisine_type: "healthy",
+    difficulty: "easy",
+    prep_time: 45,
+    servings: 2,
+    calories: 400,
+    dietary_tags: ["gluten_free", "paleo", "keto", "lactose_free"],
+    ingredients: [
+      { name: "muslos de pollo", quantity: 2, unit: "unidades", category: "meat" },
+      { name: "calabacin", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "pimiento", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" }
+    ],
+    instructions: ["Cortar verduras", "Poner todo en bandeja", "Hornear 45 min a 200ºC"],
+    image_url: "https://images.unsplash.com/photo-1588723205368-200f3ec9f54b?auto=format&fit=crop&q=80"
+  },
+  
+  // --- PASTA Y ARROZ ---
   {
     id: "static-6",
     title: "Pasta Caprese",
@@ -338,192 +400,8 @@ export const STATIC_RECIPES: Recipe[] = [
     instructions: ["Sofreír cebolla y carne", "Añadir tomate y reducir", "Mezclar con la pasta cocida"],
     image_url: "https://images.unsplash.com/photo-1622973536968-3ead9e780960?auto=format&fit=crop&q=80"
   },
-  {
-    id: "static-new-9",
-    title: "Ensalada César con Pollo",
-    description: "Crujiente, cremosa y deliciosa.",
-    meal_category: "dinner",
-    cuisine_type: "italian",
-    difficulty: "easy",
-    prep_time: 15,
-    servings: 2,
-    calories: 380,
-    dietary_tags: [],
-    ingredients: [
-      { name: "lechuga", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "pollo", quantity: 200, unit: "g", category: "meat" },
-      { name: "pan", quantity: 1, unit: "rebanada", category: "grains" },
-      { name: "queso", quantity: 30, unit: "g", category: "dairy" }
-    ],
-    instructions: ["Hacer pollo a la plancha", "Tostar pan en cubos", "Mezclar todo con lechuga"],
-    image_url: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&q=80"
-  },
 
-  // --- ASIÁTICA ---
-  {
-    id: "static-8",
-    title: "Stir Fry de Pollo y Verduras",
-    description: "Salteado rápido al wok.",
-    meal_category: "dinner",
-    cuisine_type: "asian",
-    difficulty: "easy",
-    prep_time: 15,
-    servings: 2,
-    calories: 380,
-    dietary_tags: ["lactose_free"],
-    ingredients: [
-      { name: "pollo", quantity: 300, unit: "g", category: "meat" },
-      { name: "pimiento", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "zanahoria", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "soja", quantity: 2, unit: "cucharada", category: "pantry" }
-    ],
-    instructions: ["Cortar todo en tiras", "Saltear pollo a fuego fuerte", "Añadir verduras y soja"],
-    image_url: "https://images.unsplash.com/photo-1603133872878-684f10842619?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-9",
-    title: "Curry de Garbanzos (Chana Masala)",
-    description: "Sabores de la India, vegano y barato.",
-    meal_category: "lunch",
-    cuisine_type: "asian",
-    difficulty: "medium",
-    prep_time: 25,
-    servings: 2,
-    calories: 400,
-    dietary_tags: ["vegan", "vegetarian", "gluten_free"],
-    ingredients: [
-      { name: "garbanzos", quantity: 400, unit: "g", category: "pantry" },
-      { name: "tomate frito", quantity: 200, unit: "ml", category: "pantry" },
-      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "curry", quantity: 1, unit: "cucharada", category: "spices" }
-    ],
-    instructions: ["Sofreír cebolla", "Añadir tomate y especias", "Incorporar garbanzos y cocinar 10 min"],
-    image_url: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-new-4",
-    title: "Arroz Tres Delicias Casero",
-    description: "Mejor que el del restaurante.",
-    meal_category: "dinner",
-    cuisine_type: "asian",
-    difficulty: "easy",
-    prep_time: 20,
-    servings: 2,
-    calories: 350,
-    dietary_tags: [],
-    ingredients: [
-      { name: "arroz", quantity: 200, unit: "g", category: "grains" },
-      { name: "guisantes", quantity: 50, unit: "g", category: "vegetables" },
-      { name: "jamon", quantity: 50, unit: "g", category: "meat" },
-      { name: "huevo", quantity: 1, unit: "unidad", category: "dairy" }
-    ],
-    instructions: ["Cocer arroz", "Hacer tortilla francesa y trocear", "Saltear todo junto"],
-    image_url: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-new-5",
-    title: "Poké Bowl de Salmón",
-    description: "Fresco, saludable y rápido.",
-    meal_category: "lunch",
-    cuisine_type: "asian",
-    difficulty: "easy",
-    prep_time: 15,
-    servings: 1,
-    calories: 450,
-    dietary_tags: ["healthy"],
-    ingredients: [
-      { name: "arroz", quantity: 100, unit: "g", category: "grains" },
-      { name: "salmon", quantity: 100, unit: "g", category: "fish" },
-      { name: "aguacate", quantity: 0.5, unit: "unidad", category: "fruits" },
-      { name: "pepino", quantity: 0.5, unit: "unidad", category: "vegetables" }
-    ],
-    instructions: ["Montar base de arroz", "Colocar ingredientes encima troceados", "Aliñar al gusto"],
-    image_url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-new-10",
-    title: "Pollo al Limón Chino",
-    description: "Crujiente con salsa pegajosa.",
-    meal_category: "lunch",
-    cuisine_type: "asian",
-    difficulty: "medium",
-    prep_time: 30,
-    servings: 2,
-    calories: 420,
-    dietary_tags: [],
-    ingredients: [
-      { name: "pollo", quantity: 300, unit: "g", category: "meat" },
-      { name: "limon", quantity: 2, unit: "unidades", category: "fruits" },
-      { name: "azucar", quantity: 2, unit: "cucharada", category: "pantry" },
-      { name: "harina", quantity: 50, unit: "g", category: "pantry" }
-    ],
-    instructions: ["Rebozar y freír pollo", "Hacer salsa con zumo de limón y azúcar", "Mezclar"],
-    image_url: "https://images.unsplash.com/photo-1562967960-f55499ad7704?auto=format&fit=crop&q=80"
-  },
-
-  // --- MEXICANA ---
-  {
-    id: "static-10",
-    title: "Tacos de Pollo",
-    description: "Fiesta mexicana saludable.",
-    meal_category: "dinner",
-    cuisine_type: "mexican",
-    difficulty: "easy",
-    prep_time: 20,
-    servings: 2,
-    calories: 450,
-    dietary_tags: [],
-    ingredients: [
-      { name: "tortillas", quantity: 4, unit: "unidades", category: "grains" },
-      { name: "pollo", quantity: 250, unit: "g", category: "meat" },
-      { name: "pimiento", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" }
-    ],
-    instructions: ["Saltear pollo y verduras con especias", "Calentar tortillas", "Montar tacos"],
-    image_url: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-11",
-    title: "Huevos Rancheros Simplificados",
-    description: "Desayuno o cena contundente.",
-    meal_category: "lunch",
-    cuisine_type: "mexican",
-    difficulty: "medium",
-    prep_time: 15,
-    servings: 1,
-    calories: 400,
-    dietary_tags: ["vegetarian"],
-    ingredients: [
-      { name: "huevos", quantity: 2, unit: "unidades", category: "dairy" },
-      { name: "tortillas", quantity: 2, unit: "unidades", category: "grains" },
-      { name: "tomate frito", quantity: 100, unit: "ml", category: "pantry" },
-      { name: "frijoles", quantity: 100, unit: "g", category: "pantry" }
-    ],
-    instructions: ["Freír huevos", "Calentar tortillas y frijoles", "Montar con salsa por encima"],
-    image_url: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-new-6",
-    title: "Burritos de Ternera",
-    description: "Comida completa en un rollo.",
-    meal_category: "dinner",
-    cuisine_type: "mexican",
-    difficulty: "medium",
-    prep_time: 25,
-    servings: 2,
-    calories: 600,
-    dietary_tags: [],
-    ingredients: [
-      { name: "tortillas", quantity: 2, unit: "unidades", category: "grains" },
-      { name: "ternera", quantity: 200, unit: "g", category: "meat" },
-      { name: "arroz", quantity: 100, unit: "g", category: "grains" },
-      { name: "queso", quantity: 50, unit: "g", category: "dairy" }
-    ],
-    instructions: ["Cocinar carne picada", "Mezclar con arroz cocido", "Rellenar tortilla, añadir queso y enrollar"],
-    image_url: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&q=80"
-  },
-
-  // --- KETO / BAJO CARBOHIDRATO ---
+  // --- KETO / LOW CARB ---
   {
     id: "static-12",
     title: "Salmón al Horno con Espárragos",
@@ -534,7 +412,7 @@ export const STATIC_RECIPES: Recipe[] = [
     prep_time: 25,
     servings: 2,
     calories: 480,
-    dietary_tags: ["keto", "gluten_free", "paleo"],
+    dietary_tags: ["keto", "gluten_free", "paleo", "lactose_free"],
     ingredients: [
       { name: "salmon", quantity: 300, unit: "g", category: "fish" },
       { name: "esparragos", quantity: 1, unit: "manojo", category: "vegetables" },
@@ -564,150 +442,109 @@ export const STATIC_RECIPES: Recipe[] = [
     instructions: ["Hacer tiras de calabacín", "Dorar bacon", "Mezclar huevo y queso fuera del fuego", "Unir todo"],
     image_url: "https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?auto=format&fit=crop&q=80"
   },
-
-  // --- VEGANO ---
   {
-    id: "static-14",
-    title: "Lentejas con Verduras",
-    description: "El guiso de toda la vida, 100% vegetal.",
-    meal_category: "lunch",
+    id: "static-k2",
+    title: "Revuelto de Gambas y Ajetes",
+    description: "Cena proteica y ligera.",
+    meal_category: "dinner",
     cuisine_type: "spanish",
     difficulty: "easy",
-    prep_time: 40,
-    servings: 4,
-    calories: 350,
-    dietary_tags: ["vegan", "vegetarian", "gluten_free"],
-    ingredients: [
-      { name: "lentejas", quantity: 300, unit: "g", category: "pantry" },
-      { name: "zanahoria", quantity: 2, unit: "unidades", category: "vegetables" },
-      { name: "patata", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" }
-    ],
-    instructions: ["Poner todo en crudo en olla", "Cubrir de agua", "Cocer hasta que estén tiernas (30-40 min)"],
-    image_url: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-new-7",
-    title: "Crema de Calabaza",
-    description: "Suave, ligera y nutritiva.",
-    meal_category: "dinner",
-    cuisine_type: "healthy",
-    difficulty: "easy",
-    prep_time: 30,
-    servings: 4,
-    calories: 150,
-    dietary_tags: ["vegan", "vegetarian", "gluten_free", "healthy"],
-    ingredients: [
-      { name: "calabaza", quantity: 500, unit: "g", category: "vegetables" },
-      { name: "zanahoria", quantity: 2, unit: "unidades", category: "vegetables" },
-      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "patata", quantity: 1, unit: "unidad", category: "vegetables" }
-    ],
-    instructions: ["Cocer verduras troceadas 20 min", "Triturar hasta que quede fino", "Añadir un chorrito de aceite"],
-    image_url: "https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&q=80"
-  },
-  {
-    id: "static-new-8",
-    title: "Berenjenas Rellenas",
-    description: "Plato principal vegetal y saciante.",
-    meal_category: "lunch",
-    cuisine_type: "mediterranean",
-    difficulty: "medium",
-    prep_time: 40,
+    prep_time: 15,
     servings: 2,
     calories: 250,
-    dietary_tags: ["vegetarian", "gluten_free"],
+    dietary_tags: ["keto", "gluten_free", "paleo"],
     ingredients: [
-      { name: "berenjena", quantity: 2, unit: "unidades", category: "vegetables" },
-      { name: "tomate frito", quantity: 100, unit: "ml", category: "pantry" },
-      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" },
-      { name: "queso", quantity: 50, unit: "g", category: "dairy" }
+      { name: "gambas", quantity: 200, unit: "g", category: "fish" },
+      { name: "huevos", quantity: 3, unit: "unidades", category: "dairy" },
+      { name: "ajo", quantity: 2, unit: "dientes", category: "vegetables" },
+      { name: "aceite", quantity: 1, unit: "cucharada", category: "pantry" }
     ],
-    instructions: ["Asar berenjenas partidas", "Vaciar y sofreír carne con cebolla y tomate", "Rellenar, queso y gratinar"],
-    image_url: "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?auto=format&fit=crop&q=80"
+    instructions: ["Saltear gambas y ajo", "Añadir huevos batidos", "Cocinar removiendo hasta cuajar"],
+    image_url: "https://images.unsplash.com/photo-1510629954389-c1e0da47d414?auto=format&fit=crop&q=80"
   },
 
-  // --- FAST FOOD SALUDABLE ---
+  // --- SIN GLUTEN (Extra Specific) ---
   {
-    id: "static-15",
-    title: "Pizza Casera Integral",
-    description: "Date un capricho el fin de semana.",
-    meal_category: "dinner",
-    cuisine_type: "fast",
+    id: "static-gf1",
+    title: "Arroz con Pollo y Verduras",
+    description: "Plato único completo y seguro.",
+    meal_category: "lunch",
+    cuisine_type: "spanish",
     difficulty: "medium",
-    prep_time: 25,
+    prep_time: 35,
     servings: 2,
-    calories: 600,
-    dietary_tags: ["vegetarian"],
+    calories: 450,
+    dietary_tags: ["gluten_free", "lactose_free"],
     ingredients: [
-      { name: "pan", quantity: 2, unit: "unidades", category: "grains" }, // Base de pan o tortilla
-      { name: "tomate frito", quantity: 100, unit: "ml", category: "pantry" },
-      { name: "mozzarella", quantity: 100, unit: "g", category: "dairy" },
-      { name: "oregano", quantity: 1, unit: "cucharada", category: "spices" }
+      { name: "arroz", quantity: 200, unit: "g", category: "grains" },
+      { name: "pollo", quantity: 200, unit: "g", category: "meat" },
+      { name: "pimiento", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "azafran", quantity: 1, unit: "pizca", category: "spices" }
     ],
-    instructions: ["Usar pan o tortilla como base", "Añadir tomate y queso", "Hornear hasta dorar"],
-    image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80"
+    instructions: ["Dorar pollo y verduras", "Añadir arroz y agua (doble cantidad)", "Cocer 18 min"],
+    image_url: "https://images.unsplash.com/photo-1604908177453-7462950a6a3b?auto=format&fit=crop&q=80"
+  },
+
+  // --- ASIÁTICA & MEXICANA ---
+  {
+    id: "static-8",
+    title: "Stir Fry de Pollo y Verduras",
+    description: "Salteado rápido al wok.",
+    meal_category: "dinner",
+    cuisine_type: "asian",
+    difficulty: "easy",
+    prep_time: 15,
+    servings: 2,
+    calories: 380,
+    dietary_tags: ["lactose_free"],
+    ingredients: [
+      { name: "pollo", quantity: 300, unit: "g", category: "meat" },
+      { name: "pimiento", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "zanahoria", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "soja", quantity: 2, unit: "cucharada", category: "pantry" }
+    ],
+    instructions: ["Cortar todo en tiras", "Saltear pollo a fuego fuerte", "Añadir verduras y soja"],
+    image_url: "https://images.unsplash.com/photo-1603133872878-684f10842619?auto=format&fit=crop&q=80"
   },
   {
-    id: "static-16",
-    title: "Hamburguesa de Pollo Casera",
-    description: "Jugosa y sin ingredientes extraños.",
+    id: "static-10",
+    title: "Tacos de Pollo",
+    description: "Fiesta mexicana saludable.",
     meal_category: "dinner",
-    cuisine_type: "fast",
-    difficulty: "medium",
+    cuisine_type: "mexican",
+    difficulty: "easy",
     prep_time: 20,
     servings: 2,
     calories: 450,
     dietary_tags: [],
     ingredients: [
-      { name: "carne picada", quantity: 250, unit: "g", category: "meat" }, // Pollo picado
-      { name: "pan", quantity: 2, unit: "unidades", category: "grains" },
-      { name: "lechuga", quantity: 2, unit: "hojas", category: "vegetables" },
-      { name: "tomate", quantity: 1, unit: "unidad", category: "vegetables" }
+      { name: "tortillas", quantity: 4, unit: "unidades", category: "grains" },
+      { name: "pollo", quantity: 250, unit: "g", category: "meat" },
+      { name: "pimiento", quantity: 1, unit: "unidad", category: "vegetables" },
+      { name: "cebolla", quantity: 1, unit: "unidad", category: "vegetables" }
     ],
-    instructions: ["Formar hamburguesas y hacer a la plancha", "Montar en pan con verduras"],
-    image_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80"
-  },
-  
-  // --- EXTRAS Y POSTRES ---
-  {
-    id: "static-new-11",
-    title: "Brochetas de Fruta",
-    description: "Postre o merienda ligera y divertida.",
-    meal_category: "breakfast",
-    cuisine_type: "healthy",
-    difficulty: "easy",
-    prep_time: 10,
-    servings: 2,
-    calories: 120,
-    dietary_tags: ["vegan", "vegetarian", "gluten_free"],
-    ingredients: [
-      { name: "platano", quantity: 1, unit: "unidad", category: "fruits" },
-      { name: "manzana", quantity: 1, unit: "unidad", category: "fruits" },
-      { name: "yogur", quantity: 1, unit: "unidad", category: "dairy" }
-    ],
-    instructions: ["Cortar fruta en dados", "Ensartar en palillos", "Servir con yogur para mojar"],
-    image_url: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80"
+    instructions: ["Saltear pollo y verduras con especias", "Calentar tortillas", "Montar tacos"],
+    image_url: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&q=80"
   },
   {
-    id: "static-new-12",
-    title: "Brownie de Aguacate",
-    description: "Versión saludable y cremosa.",
-    meal_category: "breakfast",
-    cuisine_type: "healthy",
+    id: "static-new-6",
+    title: "Burritos de Ternera",
+    description: "Comida completa en un rollo.",
+    meal_category: "dinner",
+    cuisine_type: "mexican",
     difficulty: "medium",
-    prep_time: 35,
-    servings: 6,
-    calories: 200,
-    dietary_tags: ["gluten_free", "vegetarian"],
+    prep_time: 25,
+    servings: 2,
+    calories: 600,
+    dietary_tags: [],
     ingredients: [
-      { name: "aguacate", quantity: 1, unit: "unidad", category: "fruits" },
-      { name: "huevo", quantity: 2, unit: "unidades", category: "dairy" },
-      { name: "azucar", quantity: 100, unit: "g", category: "pantry" },
-      { name: "harina", quantity: 50, unit: "g", category: "pantry" } // Cacao en polvo simulado
+      { name: "tortillas", quantity: 2, unit: "unidades", category: "grains" },
+      { name: "ternera", quantity: 200, unit: "g", category: "meat" },
+      { name: "arroz", quantity: 100, unit: "g", category: "grains" },
+      { name: "queso", quantity: 50, unit: "g", category: "dairy" }
     ],
-    instructions: ["Triturar aguacate", "Mezclar con resto de ingredientes", "Hornear 25 min a 180ºC"],
-    image_url: "https://images.unsplash.com/photo-1606313564200-e75d5e30476d?auto=format&fit=crop&q=80"
+    instructions: ["Cocinar carne picada", "Mezclar con arroz cocido", "Rellenar tortilla, añadir queso y enrollar"],
+    image_url: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&q=80"
   }
 ];
 

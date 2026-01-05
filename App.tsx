@@ -611,23 +611,41 @@ const App: React.FC = () => {
           onboarding_completed: true
       }).eq('id', userId);
 
-      // Usar seed estático para evitar llamadas a IA iniciales
-      // NOTA: Aquí podemos llamar a initData de nuevo o hacerlo manual, 
-      // pero para UX rápida, mejor inyectar y listo.
-      const seedRecipes = STATIC_RECIPES.map(r => ({
+      // OPTIMIZACIÓN MÁXIMA: Filtro local instantáneo + Guardado en background
+      // 1. Filtramos las recetas estáticas según preferencias del usuario
+      const filteredRecipes = STATIC_RECIPES.filter(r => {
+          if (profile.dietary_preferences.includes('none')) return true;
+          // Si tiene preferencias, verificamos si la receta cumple TODAS
+          return profile.dietary_preferences.every(pref => r.dietary_tags.includes(pref));
+      });
+
+      // 2. Fallback inteligente: Si el filtro es demasiado estricto y devuelve pocas (<3), 
+      // relajamos el filtro para mostrar al menos opciones vegetarianas o "healthy"
+      const finalSelection = filteredRecipes.length < 3 
+          ? STATIC_RECIPES.filter(r => r.dietary_tags.includes('vegetarian') || r.cuisine_type === 'healthy')
+          : filteredRecipes;
+
+      // 3. Personalización de Raciones
+      const personalizedRecipes = finalSelection.map(r => ({
           ...r,
           id: `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          user_id: userId
+          user_id: userId,
+          servings: profile.household_size // Ajustamos raciones a la familia
       }));
-      setRecipes(seedRecipes);
-      db.saveRecipesBulkDB(userId, seedRecipes);
 
+      // 4. Update UI Instantáneo
+      setRecipes(personalizedRecipes);
+
+      // 5. Persistencia en Background (Fire and Forget)
+      db.saveRecipesBulkDB(userId, personalizedRecipes).catch(console.error);
+
+      // 6. Seed de Despensa (Igual que antes)
       const seedPantry = [
           { id: `start-1`, name: 'Aceite de Oliva', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
           { id: `start-2`, name: 'Sal', quantity: 1, unit: 'kg', category: 'spices', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 700).toISOString() },
       ].map(p => ({...p, user_id: userId}));
       setPantry(seedPantry);
-      db.addPantryItemsBulkDB(userId, seedPantry);
+      db.addPantryItemsBulkDB(userId, seedPantry).catch(console.error);
 
       setView('app');
   };
