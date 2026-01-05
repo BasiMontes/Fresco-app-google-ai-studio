@@ -21,11 +21,11 @@ interface RecipesProps {
 }
 
 const RecipeSkeleton = () => (
-    <div className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm flex flex-col h-[400px]">
-        <div className="h-48 w-full skeleton-bg relative">
+    <div className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm flex flex-col h-auto">
+        <div className="h-48 md:h-40 w-full skeleton-bg relative">
             <div className="absolute top-4 left-4 w-16 h-6 rounded-xl bg-white/50" />
         </div>
-        <div className="p-6 flex-1 flex flex-col gap-3">
+        <div className="p-6 md:p-4 flex-1 flex flex-col gap-3">
             <div className="w-20 h-4 rounded-lg skeleton-bg" />
             <div className="w-full h-6 rounded-lg skeleton-bg" />
             <div className="w-2/3 h-6 rounded-lg skeleton-bg" />
@@ -43,7 +43,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
   const [activeCategory, setActiveCategory] = useState<string>(() => sessionStorage.getItem('recipes_category') || 'all');
   const [showOnlyCookable, setShowOnlyCookable] = useState(() => sessionStorage.getItem('recipes_cookable') === 'true');
   const [sortByZeroWaste, setSortByZeroWaste] = useState(() => sessionStorage.getItem('recipes_zerowaste') === 'true');
-  const [visibleCount, setVisibleCount] = useState(() => parseInt(sessionStorage.getItem('recipes_count') || '8'));
+  const [visibleCount, setVisibleCount] = useState(() => parseInt(sessionStorage.getItem('recipes_count') || '10'));
 
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
@@ -234,7 +234,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
       )}
 
       {/* Grid de Contenido Compacto */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
           
           {loadingAI && (
               <>
@@ -311,7 +311,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
                     onClick={() => { setInitialMode('view'); setSelectedRecipe(recipe); }}
                     className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col group cursor-pointer"
                 >
-                <div className="relative h-48 overflow-hidden bg-gray-100 flex items-center justify-center">
+                <div className="relative h-48 md:h-40 overflow-hidden bg-gray-100 flex items-center justify-center">
                     <SmartImage 
                         src={recipe.image_url} 
                         alt={recipe.title} 
@@ -346,7 +346,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
                     </div>
                 </div>
                 
-                <div className="p-6 flex-1 flex flex-col">
+                <div className="p-6 md:p-4 flex-1 flex flex-col">
                     <div className="flex items-center justify-between gap-2 mb-3">
                         <span className="text-[8px] font-black uppercase tracking-widest text-teal-600 bg-teal-50 px-2 py-1 rounded-lg border border-teal-100">{recipe.cuisine_type}</span>
                         {recipe.calories && (
@@ -356,7 +356,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
                         )}
                     </div>
                     
-                    <h3 className="text-xl font-black text-gray-900 mb-2 line-clamp-2 leading-tight tracking-tight group-hover:text-teal-700 transition-colors">{recipe.title}</h3>
+                    <h3 className="text-xl md:text-lg font-black text-gray-900 mb-2 line-clamp-2 leading-tight tracking-tight group-hover:text-teal-700 transition-colors">{recipe.title}</h3>
                     <p className="text-gray-400 text-xs line-clamp-2 mb-6 font-medium leading-relaxed">{recipe.description}</p>
                     
                     <button 
@@ -379,7 +379,7 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
       {visibleCount < filteredRecipes.length && (
           <div className="flex justify-center pb-10">
               <button 
-                onClick={() => setVisibleCount(prev => prev + 8)}
+                onClick={() => setVisibleCount(prev => prev + 10)}
                 className="bg-white text-teal-900 border border-gray-100 px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-sm hover:shadow-lg transition-all flex items-center gap-2"
               >
                   Ver más recetas <ChevronDown className="w-4 h-4" />

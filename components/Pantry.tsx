@@ -336,17 +336,18 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
               </button>
 
               {expandedCategories[cat] && (
-                  <div className="p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 border-t border-gray-50">
+                  <div className="p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 border-t border-gray-50">
                     {filteredItems.filter(i => i.category === cat).map((item: PantryItem) => {
                       const status = getExpiryStatus(item);
-                      const step = getSmartStep(item.unit || '');
+                      // Force string type to avoid unknown/any type issues
+                      const step = getSmartStep(String(item.unit || ''));
                       const isHighlighted = highlightId === item.id;
 
                       return (
                         <div 
                             key={item.id} 
                             ref={(el) => { if (el && itemRefs.current) itemRefs.current[String(item.id)] = el; }}
-                            className={`bg-gray-50 p-4 rounded-2xl border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
+                            className={`bg-gray-50 p-4 md:p-3 rounded-2xl border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
                                 isHighlighted 
                                 ? 'ring-2 ring-orange-400 scale-[1.02] shadow-xl z-10 bg-orange-50 border-orange-200' 
                                 : 'border-gray-100 hover:border-teal-400 hover:shadow-md hover:bg-white'
@@ -367,7 +368,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                 <div className="flex gap-1">
                                     {onCook && (
                                         <button 
-                                            onClick={() => onCook?.(item.name || '')}
+                                            onClick={() => onCook?.(String(item.name || ''))}
                                             className="p-1.5 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
                                             title="Cocinar con esto"
                                         >
@@ -391,12 +392,12 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                           </div>
                           
                           <div>
-                            <div className="font-black text-gray-900 capitalize text-base mb-3 truncate pr-2">
-                                {renderHighlightedText(`${item.name || ''}`, `${searchTerm || ''}`)}
+                            <div className="font-black text-gray-900 capitalize text-base md:text-sm mb-3 truncate pr-2">
+                                {renderHighlightedText(String(item.name || ''), String(searchTerm || ''))}
                             </div>
                             <div className="flex items-center justify-between bg-white p-1 rounded-xl border border-gray-100 group-hover:border-teal-100 transition-colors shadow-sm">
                                 <button 
-                                    onClick={() => onUpdateQuantity(item.id, -step)}
+                                    onClick={() => onUpdateQuantity(String(item.id), -step)}
                                     className="w-8 h-8 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
                                 >
                                     <Minus className="w-4 h-4" />
@@ -415,7 +416,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                 </button>
 
                                 <button 
-                                    onClick={() => onUpdateQuantity(item.id, step)}
+                                    onClick={() => onUpdateQuantity(String(item.id), step)}
                                     className="w-8 h-8 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
                                 >
                                     <PlusIcon className="w-4 h-4" />

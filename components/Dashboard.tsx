@@ -94,7 +94,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
                 <timeGreeting.icon className="w-3 h-3" /> {timeGreeting.text}
             </div>
             <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-3xl font-black text-teal-900 leading-none truncate max-w-[200px] md:max-w-none">{user.name.split(' ')[0]}</h1>
+                <h1 className="text-2xl md:text-2xl font-black text-teal-900 leading-none truncate max-w-[200px] md:max-w-none">{user.name.split(' ')[0]}</h1>
                 <span className="bg-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest flex items-center gap-1 shadow-sm animate-pulse-slow cursor-help flex-shrink-0" title="Versión de prueba">
                     <FlaskConical className="w-3 h-3" /> Beta
                 </span>
@@ -113,22 +113,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-teal-600">
+          <div className="bg-white p-6 md:p-5 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-teal-600">
               <PiggyBank className="w-6 h-6 text-teal-600 mb-3" />
-              <div className="text-3xl font-black text-gray-900">{user.total_savings.toFixed(1)}€</div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ahorro Acumulado</div>
+              <div className="text-3xl md:text-2xl font-black text-gray-900">{user.total_savings.toFixed(1)}€</div>
+              <div className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest">Ahorro Acumulado</div>
           </div>
 
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-orange-500">
+          <div className="bg-white p-6 md:p-5 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-orange-500">
               <Timer className="w-6 h-6 text-orange-500 mb-3" />
-              <div className="text-3xl font-black text-gray-900">{user.time_saved_mins || 0}m</div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tiempo Recuperado</div>
+              <div className="text-3xl md:text-2xl font-black text-gray-900">{user.time_saved_mins || 0}m</div>
+              <div className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest">Tiempo Recuperado</div>
           </div>
 
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-purple-600">
+          <div className="bg-white p-6 md:p-5 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-purple-600">
               <ChefHat className="w-6 h-6 text-purple-600 mb-3" />
-              <div className="text-3xl font-black text-gray-900">{user.meals_cooked}</div>
-              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Platos Saludables</div>
+              <div className="text-3xl md:text-2xl font-black text-gray-900">{user.meals_cooked}</div>
+              <div className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest">Platos Saludables</div>
           </div>
       </div>
 

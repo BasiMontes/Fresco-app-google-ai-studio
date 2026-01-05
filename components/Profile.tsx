@@ -144,9 +144,9 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
 
   return (
     <div className="p-4 md:p-10 space-y-10 animate-fade-in pb-48" role="main">
-      <div className="bg-white p-12 rounded-[4rem] shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-10">
+      <div className="bg-white p-12 md:p-8 rounded-[4rem] md:rounded-[3rem] shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-10">
         <div className="relative">
-            <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2rem] shadow-2xl border-4 border-gray-50 overflow-hidden">
+            <div className="w-32 h-32 md:w-32 md:h-32 rounded-[2rem] shadow-2xl border-4 border-gray-50 overflow-hidden">
                 <InitialsAvatar name={user.name} />
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center text-white shadow-xl border-4 border-white">
@@ -154,7 +154,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
             </div>
         </div>
         <div className="text-center md:text-left flex-1">
-            <h1 className="text-5xl font-black text-teal-900 tracking-tight leading-none mb-2">{user.name}</h1>
+            <h1 className="text-5xl md:text-4xl font-black text-teal-900 tracking-tight leading-none mb-2">{user.name}</h1>
             <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.3em] mb-6">{user.email || 'Planificador Fresco'}</p>
             <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                 <div className="bg-teal-50 text-teal-700 px-4 py-2 rounded-2xl text-[10px] font-black uppercase flex items-center gap-2">
@@ -190,16 +190,16 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
         )}
 
         {/* Zona Beta Tester (NUEVO) */}
-        <section className="bg-white p-10 rounded-[3.5rem] shadow-sm border border-gray-100 space-y-8 md:col-span-2" aria-labelledby="beta-title">
+        <section className="bg-white p-10 md:p-8 rounded-[3.5rem] shadow-sm border border-gray-100 space-y-8 md:col-span-2" aria-labelledby="beta-title">
             <h3 id="beta-title" className="text-[11px] font-black uppercase tracking-[0.4em] text-teal-700 flex items-center gap-2">
                 <Bug className="w-4 h-4" /> Zona Beta Tester
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button 
                     onClick={handleShareApp}
-                    className="p-6 bg-teal-50 rounded-[2.5rem] flex items-center gap-4 hover:bg-teal-100 transition-colors group text-left"
+                    className="p-6 md:p-4 bg-teal-50 rounded-[2.5rem] flex items-center gap-4 hover:bg-teal-100 transition-colors group text-left"
                 >
-                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-teal-600 shadow-sm group-hover:scale-110 transition-transform">
+                    <div className="w-14 h-14 md:w-12 md:h-12 bg-white rounded-2xl flex items-center justify-center text-teal-600 shadow-sm group-hover:scale-110 transition-transform">
                         <ShareIcon className="w-6 h-6" />
                     </div>
                     <div>
@@ -210,9 +210,9 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
 
                 <button 
                     onClick={handleFeedback}
-                    className="p-6 bg-orange-50 rounded-[2.5rem] flex items-center gap-4 hover:bg-orange-100 transition-colors group text-left"
+                    className="p-6 md:p-4 bg-orange-50 rounded-[2.5rem] flex items-center gap-4 hover:bg-orange-100 transition-colors group text-left"
                 >
-                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-sm group-hover:scale-110 transition-transform">
+                    <div className="w-14 h-14 md:w-12 md:h-12 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-sm group-hover:scale-110 transition-transform">
                         <Mail className="w-6 h-6" />
                     </div>
                     <div>
@@ -224,7 +224,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
         </section>
 
         {/* Ajustes Básicos */}
-        <section className="bg-white p-10 rounded-[3.5rem] shadow-sm border border-gray-100 space-y-8" aria-labelledby="settings-title">
+        <section className="bg-white p-10 md:p-8 rounded-[3.5rem] shadow-sm border border-gray-100 space-y-8" aria-labelledby="settings-title">
             <h3 id="settings-title" className="text-[11px] font-black uppercase tracking-[0.4em] text-orange-600 flex items-center gap-2">
                 <Settings className="w-4 h-4" /> Perfil de Cocina
             </h3>
@@ -277,7 +277,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
         </section>
 
         {/* Dieta */}
-        <section className="bg-white p-10 rounded-[3.5rem] shadow-sm border border-gray-100 space-y-6" aria-labelledby="diet-title">
+        <section className="bg-white p-10 md:p-8 rounded-[3.5rem] shadow-sm border border-gray-100 space-y-6" aria-labelledby="diet-title">
             <h3 id="diet-title" className="text-[11px] font-black uppercase tracking-[0.4em] text-teal-700 flex items-center gap-2">
                 <Heart className="w-4 h-4" /> Restricciones
             </h3>
@@ -305,7 +305,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
         </section>
 
         {/* Centro de Seguridad */}
-        <section className="bg-teal-900 p-12 rounded-[4rem] shadow-2xl space-y-8 md:col-span-2 text-white relative overflow-hidden">
+        <section className="bg-teal-900 p-12 md:p-8 rounded-[4rem] md:rounded-[3rem] shadow-2xl space-y-8 md:col-span-2 text-white relative overflow-hidden">
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-10">
                 <div className="flex-1 space-y-4 text-center md:text-left">
                     <h3 className="text-3xl font-black tracking-tight">Tus datos son tuyos.</h3>
@@ -324,7 +324,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4 mt-10">
                 <button 
                     onClick={() => { if(confirm("¿Cerrar sesión?")) onLogout(); }}
-                    className="flex items-center justify-between p-8 bg-white/5 rounded-[2.5rem] hover:bg-white/10 group transition-all border border-white/10"
+                    className="flex items-center justify-between p-8 md:p-6 bg-white/5 rounded-[2.5rem] hover:bg-white/10 group transition-all border border-white/10"
                 >
                     <div className="flex items-center gap-4">
                         <LogOut className="w-7 h-7 text-orange-400" />
@@ -335,7 +335,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
 
                 <button 
                     onClick={() => { if(confirm("¿BORRAR TODO? Esto no se puede deshacer.")) onReset(); }}
-                    className="flex items-center justify-between p-8 bg-red-500/10 rounded-[2.5rem] hover:bg-red-500/20 group transition-all border border-red-500/20"
+                    className="flex items-center justify-between p-8 md:p-6 bg-red-500/10 rounded-[2.5rem] hover:bg-red-500/20 group transition-all border border-red-500/20"
                 >
                     <div className="flex items-center gap-4">
                         <Trash2 className="w-7 h-7 text-red-400" />

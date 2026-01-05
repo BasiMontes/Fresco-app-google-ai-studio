@@ -394,9 +394,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   return (
     <div className="p-4 md:p-10 max-w-5xl mx-auto pb-48 safe-pt animate-fade-in">
       {/* Header Panel ... (Sin cambios) ... */}
-      <div className="bg-teal-900 rounded-[3.5rem] p-12 text-white shadow-2xl mb-12 relative overflow-hidden">
+      <div className="bg-teal-900 rounded-[3.5rem] p-12 md:p-8 text-white shadow-2xl mb-12 relative overflow-hidden">
         <div className="relative z-10">
-            <h1 className="text-5xl font-black mb-4">Lista de Compra</h1>
+            <h1 className="text-5xl md:text-4xl font-black mb-4">Lista de Compra</h1>
             {hasServingsMismatch && (
                 <div className="bg-orange-500/90 backdrop-blur-md p-4 rounded-2xl mb-6 flex items-center justify-between border border-orange-400/50 shadow-xl animate-pulse-slow">
                     <div className="flex items-center gap-3">
@@ -518,7 +518,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                         {groupedItems[catKey].map(item => (
                             <div 
                                 key={item.id} 
-                                className={`w-full p-4 md:p-6 rounded-[2rem] border-2 flex flex-col transition-all group select-none ${
+                                className={`w-full p-4 md:p-4 rounded-[2rem] border-2 flex flex-col transition-all group select-none ${
                                     item.is_purchased ? 'bg-gray-50 border-transparent opacity-60' : 'bg-white border-gray-100 hover:border-teal-200 shadow-sm'
                                 }`}
                                 onClick={() => toggleItemCheck(item)}
@@ -529,7 +529,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                             {item.is_purchased ? <Check className="w-5 h-5 stroke-[4px]" /> : <div className="w-4 h-4 border-2 border-gray-300 rounded-md" />}
                                         </div>
                                         <div className="text-left flex-1 min-w-0">
-                                            <div className={`font-black text-lg md:text-xl text-gray-900 capitalize leading-none mb-1 truncate ${item.is_purchased ? 'line-through text-gray-400' : ''}`}>{item.name}</div>
+                                            <div className={`font-black text-lg md:text-lg text-gray-900 capitalize leading-none mb-1 truncate ${item.is_purchased ? 'line-through text-gray-400' : ''}`}>{item.name}</div>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs font-bold text-teal-600 uppercase tracking-widest">{item.quantity.toFixed(item.unit === 'g' || item.unit === 'ml' ? 0 : 2)} {item.unit}</span>
                                                 {!item.id.includes('calc') && (
@@ -584,7 +584,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                             ) : (
                                                 <button 
                                                     onClick={() => setEditingPriceId(item.id)}
-                                                    className={`text-lg md:text-xl font-black ${item.is_purchased ? 'text-gray-300' : 'text-gray-900'} hover:text-teal-600 transition-colors flex items-center gap-1`}
+                                                    className={`text-lg md:text-lg font-black ${item.is_purchased ? 'text-gray-300' : 'text-gray-900'} hover:text-teal-600 transition-colors flex items-center gap-1`}
                                                 >
                                                     {item.estimated_price.toFixed(2)}€
                                                     {customPrices[item.name] && <span className="w-2 h-2 bg-orange-500 rounded-full" title="Precio personalizado" />}

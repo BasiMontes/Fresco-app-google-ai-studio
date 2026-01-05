@@ -736,8 +736,8 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} onEnterDemo={handleDemoLogin} /> : 
          view === 'onboarding' ? <Onboarding onComplete={handleOnboardingComplete} /> :
          <>
-          {/* SIDEBAR: Reducido ancho y padding */}
-          <aside className="hidden md:flex flex-col w-64 bg-teal-800 text-white p-6 fixed h-full z-50">
+          {/* SIDEBAR: Compacted for desktop */}
+          <aside className="hidden md:flex flex-col md:w-60 bg-teal-800 text-white md:p-4 fixed h-full z-50">
             <Logo variant="inverted" className="mb-10 scale-90 origin-left" />
             <nav className="flex-1 space-y-2">
                 {[
@@ -748,15 +748,15 @@ const App: React.FC = () => {
                   {id:'shopping', icon:ShoppingBag, label:'Lista'}, 
                   {id:'profile', icon:User, label:'Perfil'}
                 ].map(item => (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center space-x-4 px-4 py-3 rounded-2xl transition-all ${activeTab === item.id ? 'bg-white text-teal-800 font-black' : 'opacity-60 hover:opacity-100 hover:bg-white/10'}`}>
+                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center space-x-4 px-4 py-2.5 rounded-2xl transition-all ${activeTab === item.id ? 'bg-white text-teal-800 font-black' : 'opacity-60 hover:opacity-100 hover:bg-white/10'}`}>
                     <item.icon className="w-5 h-5" /> <span className="text-sm">{item.label}</span>
                   </button>
                 ))}
             </nav>
           </aside>
 
-          {/* MAIN: Ajustado margen y max-width */}
-          <main className="flex-1 md:ml-64 safe-pt min-h-screen max-w-6xl mx-auto w-full pb-32 md:pb-0">
+          {/* MAIN: Adjusted max-width and margins */}
+          <main className="flex-1 md:ml-60 safe-pt min-h-screen max-w-7xl mx-auto w-full pb-32 md:pb-0">
             <Suspense fallback={<PageLoader message="Cargando módulo..." />}>
               {activeTab === 'dashboard' && user && <Dashboard 
                   user={user} 
