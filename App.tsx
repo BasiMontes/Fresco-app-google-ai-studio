@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, Suspense } from 'react';
 import { UserProfile, Recipe, MealSlot, PantryItem, MealCategory, ShoppingItem, BatchSession } from './types';
 import { Onboarding } from './components/Onboarding';
@@ -77,7 +76,7 @@ const App: React.FC = () => {
       }
   }, []);
 
-  // SAFETY TIMEOUT: Si la app tarda más de 5s en cargar, mostramos botón de recarga
+  // SAFETY TIMEOUT
   useEffect(() => {
       if (!isLoaded) {
           const timer = setTimeout(() => setShowLoaderReload(true), 5000);
@@ -85,7 +84,7 @@ const App: React.FC = () => {
       }
   }, [isLoaded]);
 
-  // TOAST TIMEOUT (5s)
+  // TOAST TIMEOUT
   useEffect(() => {
       if (toast) {
           const timer = setTimeout(() => setToast(null), 5000);
@@ -135,13 +134,11 @@ const App: React.FC = () => {
 
   const handleDemoLogin = () => {
       setIsLoaded(false);
-      // Simular login
       setTimeout(() => {
           const demoProfile: UserProfile = { ...MOCK_USER, name: "Invitado Demo" };
           setUser(demoProfile);
           setUserId(DEMO_USER_ID);
           
-          // Cargar datos dummy
           setPantry([
               { id: '1', name: 'Pasta', quantity: 500, unit: 'g', category: 'grains', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 180).toISOString() },
               { id: '2', name: 'Tomate Frito', quantity: 2, unit: 'uds', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 90).toISOString() },
@@ -238,10 +235,8 @@ const App: React.FC = () => {
           if (index === -1) return prev;
 
           const item = updatedPantry[index];
-          // QA Fix: BB-02 Round Safe
           const newQuantity = roundSafe(item.quantity + delta);
 
-          // QA Fix: BB-01 Stock Negativo
           if (newQuantity <= 0) {
               safeDbCall(() => db.deletePantryItemDB(id), 'DELETE_PANTRY', { id });
               updatedPantry.splice(index, 1);
@@ -278,10 +273,6 @@ const App: React.FC = () => {
   const handleAddRecipes = (newRecipes: Recipe[]) => {
       setRecipes(prev => [...prev, ...newRecipes]);
       if (userId) {
-          // Usar bulk insert si hay muchas, o single si pocas.
-          // Para consistencia con addRecipes, usamos saveRecipeDB o creamos un helper bulk si fuera necesario.
-          // Como esto viene del generador IA, suelen ser pocas (3-5), el loop con promises es aceptable aquí,
-          // pero para ser robustos:
           db.saveRecipesBulkDB(userId, newRecipes).catch(e => console.error("Error saving generated recipes", e));
       }
   };
@@ -371,7 +362,6 @@ const App: React.FC = () => {
       if (!userId) return;
 
       let updatedPantry = [...pantry];
-      let ingredientsFound = 0;
       
       usedIngredients.forEach(used => {
           const usedName = normalizeName(used.name);
@@ -381,7 +371,6 @@ const App: React.FC = () => {
           });
 
           if (pantryIndex >= 0) {
-              ingredientsFound++;
               const item = updatedPantry[pantryIndex];
               const result = subtractIngredient(
                   item.quantity, 
@@ -392,7 +381,6 @@ const App: React.FC = () => {
 
               if (result) {
                   const newItem = { ...item, quantity: result.quantity, unit: result.unit };
-                  // QA Fix: BB-01 Tolerancia de 0.05 para flotantes y eliminación automática
                   if (newItem.quantity <= 0.05) {
                       updatedPantry.splice(pantryIndex, 1);
                       safeDbCall(() => db.deletePantryItemDB(item.id), 'DELETE_PANTRY', { id: item.id });
@@ -406,36 +394,18 @@ const App: React.FC = () => {
 
       setPantry(updatedPantry);
       
-      let updatedPlan = false;
-      let updateMsg = "Inventario actualizado.";
-
       if (recipeId) {
           const today = format(new Date(), 'yyyy-MM-dd');
-          const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd');
-          const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
-
           let slotIndex = mealPlan.findIndex(p => p.date === today && p.recipeId === recipeId && !p.isCooked);
-          
-          if (slotIndex === -1) {
-              slotIndex = mealPlan.findIndex(p => p.date === tomorrow && p.recipeId === recipeId && !p.isCooked);
-              if (slotIndex !== -1) updateMsg = "Meal Prep: Menú de mañana completado.";
-          }
-          if (slotIndex === -1) {
-              slotIndex = mealPlan.findIndex(p => p.date === yesterday && p.recipeId === recipeId && !p.isCooked);
-              if (slotIndex !== -1) updateMsg = "Menú de ayer completado.";
-          }
           
           if (slotIndex >= 0) {
               const updatedSlot = { ...mealPlan[slotIndex], isCooked: true };
-              
               setMealPlan(prev => {
                   const newPlan = [...prev];
                   newPlan[slotIndex] = updatedSlot;
                   return newPlan;
               });
-              
               safeDbCall(() => db.updateMealSlotDB(userId, updatedSlot), 'UPDATE_SLOT', updatedSlot);
-              updatedPlan = true;
           }
       }
 
@@ -452,18 +422,39 @@ const App: React.FC = () => {
           );
       }
       
-      if (updatedPlan) {
-          setToast({ msg: `¡Hecho! ${updateMsg}`, type: 'success' });
-      } else if (ingredientsFound > 0) {
-          setToast({ msg: `¡Cocinado! Stock descontado.`, type: 'success' });
-      } else {
-           setToast({ msg: "Cocinado (sin cambios en stock)", type: 'info' });
-      }
+      setToast({ msg: "Cocinado (Stock actualizado)", type: 'success' });
   };
 
   const handleQuickRecipeSearch = (ingredientName: string) => {
       sessionStorage.setItem('recipes_search', ingredientName);
       setActiveTab('recipes');
+  };
+
+  const handleOnboardingComplete = async (profile: UserProfile) => {
+      if (!userId) return;
+
+      const updatedUser: UserProfile = { ...profile, onboarding_completed: true };
+      setUser(updatedUser);
+
+      if (userId === DEMO_USER_ID) {
+          setView('app');
+          return;
+      }
+
+      const { error } = await supabase.from('profiles').update({
+          dietary_preferences: profile.dietary_preferences,
+          favorite_cuisines: profile.favorite_cuisines,
+          household_size: profile.household_size,
+          cooking_experience: profile.cooking_experience,
+          onboarding_completed: true
+      }).eq('id', userId);
+
+      if (error) {
+          console.error("Error saving profile", error);
+          setToast({ msg: "Error guardando perfil", type: 'error' });
+      }
+
+      setView('app');
   };
 
   useEffect(() => {
@@ -472,7 +463,6 @@ const App: React.FC = () => {
     const handleCustomToast = (e: any) => setToast({ msg: e.detail.message, type: e.detail.type || 'info', action: e.detail.action });
     window.addEventListener('fresco-toast', handleCustomToast);
 
-    // FIX: Escuchar evento de repoblación forzada desde Profile
     const handleForceRepopulate = async () => {
         if (userId) {
             await db.forceRepopulateRecipes(userId);
@@ -506,7 +496,6 @@ const App: React.FC = () => {
             setUserId(uid);
 
             if (appUser.onboarding_completed) {
-                // OPTIMIZACIÓN: Carga paralela de todo
                 const [fetchedPantry, fetchedRecipes, fetchedPlan, fetchedShopping] = await Promise.all([
                     db.fetchPantry(uid),
                     db.fetchRecipes(uid),
@@ -517,29 +506,23 @@ const App: React.FC = () => {
                 let finalPantry = fetchedPantry;
                 let finalRecipes = fetchedRecipes;
 
-                // Si no hay recetas, inyectar estáticas localmente Y lanzar guardado en background
                 if (fetchedRecipes.length === 0 && navigator.onLine) {
                     const seedRecipes = STATIC_RECIPES.map(r => ({
                         ...r,
                         id: `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                         user_id: uid
                     }));
-                    finalRecipes = seedRecipes; // Optimistic UI update
-                    // Background sync
+                    finalRecipes = seedRecipes;
                     db.saveRecipesBulkDB(uid, seedRecipes).catch(e => console.error("Error background seeding recipes", e));
                 }
 
-                // Si no hay despensa, inyectar básicos localmente Y guardar en background
                 if (fetchedPantry.length === 0 && navigator.onLine) {
                     const seedPantry = [
                         { id: `start-1`, name: 'Aceite de Oliva', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
                         { id: `start-2`, name: 'Sal', quantity: 1, unit: 'kg', category: 'spices', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 700).toISOString() },
-                        { id: `start-3`, name: 'Arroz', quantity: 1, unit: 'kg', category: 'grains', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 180).toISOString() },
-                        { id: `start-4`, name: 'Huevos', quantity: 6, unit: 'unidades', category: 'dairy', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 14).toISOString() },
-                        { id: `start-5`, name: 'Leche', quantity: 2, unit: 'l', category: 'dairy', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 30).toISOString() },
                     ].map(p => ({...p, user_id: uid}));
                     
-                    finalPantry = seedPantry; // Optimistic UI
+                    finalPantry = seedPantry;
                     db.addPantryItemsBulkDB(uid, seedPantry).catch(e => console.error("Error background seeding pantry", e));
                 }
                 
@@ -592,63 +575,7 @@ const App: React.FC = () => {
       window.removeEventListener('fresco-force-repopulate', handleForceRepopulate);
       authListener.subscription.unsubscribe();
     };
-  }, [userId]); // Dependency on userId to handle force repopulate correctly
-
-  const handleOnboardingComplete = async (profile: UserProfile) => {
-      if (!userId) return;
-      setUser(profile);
-      
-      // FIX: Demo mode bypass for onboarding save
-      if (userId === DEMO_USER_ID) {
-          setView('app');
-          return;
-      }
-
-      await supabase.from('profiles').update({
-          dietary_preferences: profile.dietary_preferences,
-          favorite_cuisines: profile.favorite_cuisines,
-          household_size: profile.household_size,
-          onboarding_completed: true
-      }).eq('id', userId);
-
-      // OPTIMIZACIÓN MÁXIMA: Filtro local instantáneo + Guardado en background
-      // 1. Filtramos las recetas estáticas según preferencias del usuario
-      const filteredRecipes = STATIC_RECIPES.filter(r => {
-          if (profile.dietary_preferences.includes('none')) return true;
-          // Si tiene preferencias, verificamos si la receta cumple TODAS
-          return profile.dietary_preferences.every(pref => r.dietary_tags.includes(pref));
-      });
-
-      // 2. Fallback inteligente: Si el filtro es demasiado estricto y devuelve pocas (<3), 
-      // relajamos el filtro para mostrar al menos opciones vegetarianas o "healthy"
-      const finalSelection = filteredRecipes.length < 3 
-          ? STATIC_RECIPES.filter(r => r.dietary_tags.includes('vegetarian') || r.cuisine_type === 'healthy')
-          : filteredRecipes;
-
-      // 3. Personalización de Raciones
-      const personalizedRecipes = finalSelection.map(r => ({
-          ...r,
-          id: `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          user_id: userId,
-          servings: profile.household_size // Ajustamos raciones a la familia
-      }));
-
-      // 4. Update UI Instantáneo
-      setRecipes(personalizedRecipes);
-
-      // 5. Persistencia en Background (Fire and Forget)
-      db.saveRecipesBulkDB(userId, personalizedRecipes).catch(console.error);
-
-      // 6. Seed de Despensa (Igual que antes)
-      const seedPantry = [
-          { id: `start-1`, name: 'Aceite de Oliva', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
-          { id: `start-2`, name: 'Sal', quantity: 1, unit: 'kg', category: 'spices', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 700).toISOString() },
-      ].map(p => ({...p, user_id: userId}));
-      setPantry(seedPantry);
-      db.addPantryItemsBulkDB(userId, seedPantry).catch(console.error);
-
-      setView('app');
-  };
+  }, [userId]);
 
   const handleStartBatch = async () => {
       if (!isOnline) {
@@ -674,7 +601,6 @@ const App: React.FC = () => {
 
   const finishBatch = async (timeSaved: number, completedIds: string[]) => {
       const completedRecipes = batchRecipes.filter(r => completedIds.includes(r.id));
-      
       const usedIngredients: {name: string, quantity: number, unit: string}[] = [];
       completedRecipes.forEach(rec => {
           rec.ingredients.forEach(ing => {
@@ -704,7 +630,6 @@ const App: React.FC = () => {
               { time_saved_mins: updatedUser.time_saved_mins, meals_cooked: updatedUser.meals_cooked }
           );
       }
-      
       setActiveBatchSession(null);
       setToast({ msg: `¡Sesión terminada! ${completedRecipes.length} platos listos.`, type: 'success' });
   };
@@ -713,22 +638,11 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[#FDFDFD] flex flex-col md:flex-row overflow-x-hidden">
+      <div className="min-h-screen bg-[#FDFDFD] flex flex-col md:flex-row overflow-x-hidden font-sans">
         {toast && (
             <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9000] px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-slide-up ${toast.type === 'success' ? 'bg-green-500 text-white' : toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-teal-900 text-white'}`}>
                 {toast.type === 'success' ? <CloudCog className="w-5 h-5" /> : toast.type === 'error' ? <AlertOctagon className="w-5 h-5" /> : <WifiOff className="w-5 h-5" />}
                 <span className="font-bold text-sm">{toast.msg}</span>
-                {toast.action && (
-                    <button 
-                        onClick={() => {
-                            toast.action?.onClick();
-                            setToast(null);
-                        }}
-                        className="bg-white text-teal-900 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-gray-100 flex items-center gap-1"
-                    >
-                        {toast.action.label} <ArrowRight className="w-3 h-3" />
-                    </button>
-                )}
                 <button onClick={() => setToast(null)} className="ml-2 hover:opacity-50"><X className="w-4 h-4" /></button>
             </div>
         )}
@@ -736,10 +650,12 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} onEnterDemo={handleDemoLogin} /> : 
          view === 'onboarding' ? <Onboarding onComplete={handleOnboardingComplete} /> :
          <>
-          {/* SIDEBAR: Reduced width (w-48) and padding for desktop density */}
-          <aside className="hidden md:flex flex-col md:w-48 bg-teal-800 text-white md:p-4 fixed h-full z-50">
-            <Logo variant="inverted" className="mb-8 scale-90 origin-left" />
-            <nav className="flex-1 space-y-1">
+          {/* SIDEBAR: Fixed Left - Matches Design */}
+          <aside className="hidden md:flex flex-col w-64 bg-teal-900 text-white fixed h-full z-50 shadow-2xl">
+            <div className="p-8">
+                <Logo variant="inverted" />
+            </div>
+            <nav className="flex-1 px-4 space-y-2 mt-4">
                 {[
                   {id:'dashboard', icon:Home, label:'Impacto'}, 
                   {id:'planner', icon:Calendar, label:'Calendario'}, 
@@ -748,90 +664,108 @@ const App: React.FC = () => {
                   {id:'shopping', icon:ShoppingBag, label:'Lista'}, 
                   {id:'profile', icon:User, label:'Perfil'}
                 ].map(item => (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center space-x-3 px-3 py-2 rounded-xl transition-all ${activeTab === item.id ? 'bg-white text-teal-800 font-bold' : 'opacity-70 hover:opacity-100 hover:bg-white/10'}`}>
-                    <item.icon className="w-4 h-4" /> <span className="text-xs font-bold">{item.label}</span>
+                  <button 
+                    key={item.id} 
+                    onClick={() => setActiveTab(item.id)} 
+                    className={`w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all group ${activeTab === item.id ? 'bg-white text-teal-900 font-bold shadow-lg' : 'text-teal-100 hover:bg-white/10'}`}
+                  >
+                    <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-teal-900' : 'text-teal-400 group-hover:text-white'}`} /> 
+                    <span className="text-sm font-medium tracking-wide">{item.label}</span>
                   </button>
                 ))}
             </nav>
+            <div className="p-8">
+                <div className="bg-teal-800 rounded-2xl p-4 flex items-center gap-3 border border-teal-700">
+                    <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center font-bold text-xs">
+                        {user?.name?.[0] || 'U'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold truncate">{user?.name}</p>
+                        <p className="text-[10px] text-teal-300 truncate">Plan Gratuito</p>
+                    </div>
+                </div>
+            </div>
           </aside>
 
-          {/* MAIN: Adjusted max-width (6xl) and left margin (ml-48) for density */}
-          <main className="flex-1 md:ml-48 safe-pt min-h-screen max-w-6xl mx-auto w-full pb-32 md:pb-0 md:p-6">
-            <Suspense fallback={<PageLoader message="Cargando módulo..." />}>
-              {activeTab === 'dashboard' && user && <Dashboard 
-                  user={user} 
-                  pantry={pantry} 
-                  mealPlan={mealPlan} 
-                  recipes={recipes}   
-                  onNavigate={setActiveTab} 
-                  onQuickRecipe={handleQuickRecipeSearch} 
-                  onResetApp={() => {}} 
-                  isOnline={isOnline} 
-                  onQuickConsume={(id) => handleUpdatePantryQuantity(id, -1)} 
-              />}
-              
-              {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} 
-                  onUpdateSlot={handleUpdateSlot} 
-                  onAIPlanGenerated={(p, r) => { handleAddRecipes(r); setMealPlan(p); if(userId) p.forEach(s => db.updateMealSlotDB(userId, s)); }} 
-                  onClear={handleClearPlan} 
-                  onAddToPlan={(r, servings) => handleAddToPlan(r, servings || user.household_size)} 
-                  onCookFinish={handleCookFinish}
-                  onAddToShoppingList={handleAddToShoppingList} 
-                  isOnline={isOnline} />}
-              
-              {activeTab === 'pantry' && <Pantry items={pantry} 
-                  onRemove={handleRemovePantry} 
-                  onAdd={handleAddPantry} 
-                  onUpdateQuantity={handleUpdatePantryQuantity} 
-                  onAddMany={(items) => smartPantryMerge(items)} 
-                  onEdit={handleUpdatePantryItem} 
-                  onWaste={handleWasteReport} 
-                  onCook={handleQuickRecipeSearch} 
-                  isOnline={isOnline} />}
-              
-              {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} 
-                  onAddRecipes={handleAddRecipes} 
-                  onAddToPlan={(r, servings, date, type) => handleAddToPlan(r, servings || user.household_size, date, type)} 
-                  onCookFinish={(used, rId) => handleCookFinish(used, rId)}
-                  onAddToShoppingList={handleAddToShoppingList}
-                  isOnline={isOnline} 
-                  initialRecipeId={initialRecipeId}
-              />}
-              
-              {activeTab === 'shopping' && user && <ShoppingList 
-                  plan={mealPlan} 
-                  recipes={recipes} 
-                  pantry={pantry} 
-                  user={user} 
-                  dbItems={shoppingList}
-                  onAddShoppingItem={handleAddToShoppingList}
-                  onUpdateShoppingItem={handleUpdateShoppingItem}
-                  onRemoveShoppingItem={handleRemoveShoppingItem}
-                  onFinishShopping={handleFinishShopping} 
-                  onOpenRecipe={() => {}} 
-                  onSyncServings={() => {}} 
-              />}
-              
-              {activeTab === 'profile' && user && <Profile user={user} 
-                  onUpdate={(u) => { setUser(u); if(userId) supabase.from('profiles').update({ household_size: u.household_size, dietary_preferences: u.dietary_preferences }).eq('id', userId); }} 
-                  onLogout={() => {
-                      if(userId === DEMO_USER_ID) {
-                          setUserId(null); setUser(null); setView('auth');
-                      } else {
-                          supabase.auth.signOut();
-                      }
-                  }} 
-                  onReset={() => {
-                      if(userId) {
-                          alert("Para borrar la cuenta completamente contacta con soporte.");
-                      }
-                  }} />}
-            </Suspense>
+          {/* MAIN CONTENT AREA */}
+          <main className="flex-1 md:ml-64 min-h-screen bg-[#FDFDFD] w-full pb-32 md:pb-0">
+            <div className="max-w-7xl mx-auto p-4 md:p-12 h-full">
+                <Suspense fallback={<PageLoader message="Cargando módulo..." />}>
+                {activeTab === 'dashboard' && user && <Dashboard 
+                    user={user} 
+                    pantry={pantry} 
+                    mealPlan={mealPlan} 
+                    recipes={recipes}   
+                    onNavigate={setActiveTab} 
+                    onQuickRecipe={handleQuickRecipeSearch} 
+                    onResetApp={() => {}} 
+                    isOnline={isOnline} 
+                    onQuickConsume={(id) => handleUpdatePantryQuantity(id, -1)} 
+                />}
+                
+                {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} 
+                    onUpdateSlot={handleUpdateSlot} 
+                    onAIPlanGenerated={(p, r) => { handleAddRecipes(r); setMealPlan(p); if(userId) p.forEach(s => db.updateMealSlotDB(userId, s)); }} 
+                    onClear={handleClearPlan} 
+                    onAddToPlan={(r, servings) => handleAddToPlan(r, servings || user.household_size)} 
+                    onCookFinish={handleCookFinish}
+                    onAddToShoppingList={handleAddToShoppingList} 
+                    isOnline={isOnline} />}
+                
+                {activeTab === 'pantry' && <Pantry items={pantry} 
+                    onRemove={handleRemovePantry} 
+                    onAdd={handleAddPantry} 
+                    onUpdateQuantity={handleUpdatePantryQuantity} 
+                    onAddMany={(items) => smartPantryMerge(items)} 
+                    onEdit={handleUpdatePantryItem} 
+                    onWaste={handleWasteReport} 
+                    onCook={handleQuickRecipeSearch} 
+                    isOnline={isOnline} />}
+                
+                {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} 
+                    onAddRecipes={handleAddRecipes} 
+                    onAddToPlan={(r, servings, date, type) => handleAddToPlan(r, servings || user.household_size, date, type)} 
+                    onCookFinish={(used, rId) => handleCookFinish(used, rId)}
+                    onAddToShoppingList={handleAddToShoppingList}
+                    isOnline={isOnline} 
+                    initialRecipeId={initialRecipeId}
+                />}
+                
+                {activeTab === 'shopping' && user && <ShoppingList 
+                    plan={mealPlan} 
+                    recipes={recipes} 
+                    pantry={pantry} 
+                    user={user} 
+                    dbItems={shoppingList}
+                    onAddShoppingItem={handleAddToShoppingList}
+                    onUpdateShoppingItem={handleUpdateShoppingItem}
+                    onRemoveShoppingItem={handleRemoveShoppingItem}
+                    onFinishShopping={handleFinishShopping} 
+                    onOpenRecipe={() => {}} 
+                    onSyncServings={() => {}} 
+                />}
+                
+                {activeTab === 'profile' && user && <Profile user={user} 
+                    onUpdate={(u) => { setUser(u); if(userId) supabase.from('profiles').update({ household_size: u.household_size, dietary_preferences: u.dietary_preferences }).eq('id', userId); }} 
+                    onLogout={() => {
+                        if(userId === DEMO_USER_ID) {
+                            setUserId(null); setUser(null); setView('auth');
+                        } else {
+                            supabase.auth.signOut();
+                        }
+                    }} 
+                    onReset={() => {
+                        if(userId) {
+                            alert("Para borrar la cuenta completamente contacta con soporte.");
+                        }
+                    }} />}
+                </Suspense>
+            </div>
 
             {activeTab === 'planner' && mealPlan.length > 0 && !activeBatchSession && (
                 <button 
                   onClick={handleStartBatch}
-                  className="fixed bottom-24 right-6 md:right-10 bg-orange-500 text-white p-4 px-6 rounded-full shadow-2xl flex items-center gap-3 animate-bounce-subtle z-50 hover:bg-orange-600 transition-all font-black text-xs uppercase tracking-widest"
+                  className="fixed bottom-10 right-10 bg-orange-500 text-white p-4 px-8 rounded-full shadow-2xl flex items-center gap-3 animate-bounce-subtle z-50 hover:bg-orange-600 transition-all font-black text-sm uppercase tracking-widest"
                 >
                     <Sparkles className="w-5 h-5" /> Batch Cooking
                 </button>
@@ -847,6 +781,7 @@ const App: React.FC = () => {
               />
           )}
           
+           {/* Mobile Nav */}
            <nav className="md:hidden fixed bottom-6 left-4 right-4 z-[800] bg-teal-800/95 backdrop-blur-3xl p-1.5 rounded-3xl shadow-2xl flex gap-1 safe-pb">
               {[
                 {id:'dashboard', icon:Home}, 

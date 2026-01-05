@@ -264,7 +264,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                                                 const newItems = [...detectedItems];
                                                 const val = String(e.target.value);
                                                 newItems[i].category = val;
-                                                newItems[i].daysToExpire = EXPIRY_DAYS_BY_CATEGORY[val] || 14;
+                                                newItems[i].daysToExpire = EXPIRY_DAYS_BY_CATEGORY[val as string] || 14;
                                                 setDetectedItems(newItems);
                                             }}
                                             className="appearance-none bg-teal-50 text-teal-700 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg pr-8 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer w-full"

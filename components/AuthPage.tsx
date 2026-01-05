@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { supabase } from '../lib/supabase';
 import { Logo } from './Logo';
-import { ArrowRight, Mail, Lock, User, AlertCircle, Loader2, Check, Send, ChevronLeft, Database, ShieldCheck, XCircle } from 'lucide-react';
+import { ArrowRight, Mail, Lock, User, AlertCircle, Loader2, Check, Send, ChevronLeft, Database, ShieldCheck, XCircle, Smartphone, AlertTriangle } from 'lucide-react';
 import { LegalModal } from './LegalModal';
 
 interface AuthPageProps {
@@ -12,34 +12,19 @@ interface AuthPageProps {
   onEnterDemo: () => void;
 }
 
-// Helper para traducir errores de Supabase a humano
 const translateAuthError = (error: any): string => {
     const msg = (error?.message || '').toLowerCase();
-    
-    // Errores de Configuración / API Key
     if (error?.status === 401 || msg.includes('jwt') || msg.includes('api key')) {
         return 'Error 401: API Key inválida o expirada. Revisa Vercel/Supabase.';
     }
     if (msg.includes('fetch') || msg.includes('network')) {
         return 'Error de conexión. Verifica tu internet.';
     }
-
-    // Errores de Base de Datos comunes en primer despliegue
-    if (msg.includes('relation') && msg.includes('does not exist')) {
-        return 'Faltan las tablas en Supabase. Ejecuta el script SQL (ver SUPABASE_SCHEMA.sql).';
-    }
-    if (msg.includes('trigger')) {
-        return 'Error en el Trigger de base de datos. Revisa el SQL.';
-    }
-
-    // Errores de Usuario
     if (msg.includes('invalid login credentials')) return 'Email o contraseña incorrectos.';
     if (msg.includes('user already registered')) return 'Este email ya está registrado.';
     if (msg.includes('email not confirmed')) return 'Debes confirmar tu email antes de entrar.';
     if (msg.includes('password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.';
     if (msg.includes('rate limit exceeded')) return 'Demasiados intentos. Espera un momento.';
-    
-    // Fallback: Mostrar el error real para debugging
     return error?.message || 'Ocurrió un error desconocido.';
 };
 
@@ -52,26 +37,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
-  
   const [verificationSent, setVerificationSent] = useState(false);
-  
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showLegalModal, setShowLegalModal] = useState<'privacy' | 'terms' | null>(null);
+  const [isLocalhost, setIsLocalhost] = useState(false);
 
-  // Debug Estado
-  const [configStatus, setConfigStatus] = useState({ url: false, key: false });
-
+  // FIX: Clear auth state on mount to prevent ghost sessions
   useEffect(() => {
-      // Chequeo simple de longitud para ver si las env vars llegaron
-      // @ts-ignore
-      const url = import.meta.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-      // @ts-ignore
-      const key = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      
-      setConfigStatus({
-          url: !!url && url.length > 10 && !url.includes('PON_AQUI'),
-          key: !!key && key.length > 20
-      });
+      const clearGhostSession = async () => {
+          const { data } = await supabase.auth.getSession();
+          if (data.session && !data.session.user) {
+              await supabase.auth.signOut();
+          }
+      };
+      clearGhostSession();
+      setIsLocalhost(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -83,7 +63,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
     try {
         if (isRecovery) {
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin, // Forzar URL actual
+                redirectTo: window.location.origin, 
             });
             if (error) throw error;
             setSuccessMsg('Hemos enviado un enlace de recuperación a tu correo.');
@@ -104,7 +84,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
                         full_name: name,
                         onboarding_completed: false
                     },
-                    emailRedirectTo: window.location.origin // CRITICAL: Redirigir a la URL actual (deploy), no localhost
+                    emailRedirectTo: window.location.origin 
                 }
             });
             if (error) throw error;
@@ -130,16 +110,34 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
                   <div className="w-24 h-24 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce-subtle">
                       <Send className="w-10 h-10 text-teal-600" />
                   </div>
-                  <h2 className="text-3xl font-black text-teal-900 mb-4">¡Casi listo!</h2>
+                  <h2 className="text-3xl font-black text-teal-900 mb-4">Revisa tu correo</h2>
                   <p className="text-gray-500 text-lg mb-8 leading-relaxed">
                       Hemos enviado un enlace de confirmación a <span className="font-bold text-teal-700">{email}</span>.
                   </p>
+                  
+                  {isLocalhost && (
+                      <div className="bg-orange-50 p-6 rounded-2xl text-left mb-8 border-2 border-orange-100 flex gap-4">
+                          <AlertTriangle className="w-8 h-8 text-orange-500 flex-shrink-0" />
+                          <div>
+                              <p className="text-sm text-orange-900 font-bold mb-1">AVISO IMPORTANTE (Localhost)</p>
+                              <p className="text-xs text-orange-800 leading-relaxed">
+                                  Estás ejecutando la app en tu PC. Si intentas abrir el enlace del correo en tu móvil, fallará porque tu móvil no sabe qué es "localhost".
+                                  <br/><br/>
+                                  <strong>Solución:</strong> Abre el correo en este mismo ordenador.
+                              </p>
+                          </div>
+                      </div>
+                  )}
+
                   <button 
                       onClick={() => { setVerificationSent(false); setIsLogin(true); }}
                       className="w-full py-4 bg-teal-900 text-white font-bold rounded-xl shadow-lg hover:bg-teal-800 transition-all active:scale-[0.98]"
                   >
-                      Ya lo he confirmado, ir a Login
+                      Volver a Iniciar Sesión
                   </button>
+                  <p className="text-xs text-gray-400 mt-4">
+                      (Si pudiste entrar sin verificar, es porque tu proyecto Supabase tiene desactivada la confirmación de email)
+                  </p>
               </div>
           </div>
       );
@@ -178,6 +176,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
             </div>
 
             <form onSubmit={handleAuth} className="space-y-6">
+                {/* Inputs ... (Same as before) */}
                 {!isLogin && !isRecovery && (
                     <div className="space-y-2 animate-slide-up">
                         <label className="text-sm font-semibold text-gray-700 ml-1">Nombre Completo</label>
@@ -231,20 +230,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
                     {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>{isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar' : 'Crear cuenta')}<ArrowRight className="w-5 h-5" /></>}
                 </button>
             </form>
-            
-            {/* Debug Info para confirmar conexión */}
-            <div className="mt-8 pt-4 border-t border-gray-100 text-center">
-                <div className="flex items-center justify-center gap-4 text-[10px] font-mono text-gray-400">
-                    <div className="flex items-center gap-1">
-                        {configStatus.url ? <Check className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500" />}
-                        URL {configStatus.url ? 'OK' : 'MISS'}
-                    </div>
-                    <div className="flex items-center gap-1">
-                        {configStatus.key ? <Check className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500" />}
-                        KEY {configStatus.key ? 'OK' : 'MISS'}
-                    </div>
-                </div>
-            </div>
         </div>
       </div>
     </div>

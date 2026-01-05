@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PantryItem } from '../types';
 import { Package, Plus, Trash2, Calendar, X, Save, AlertTriangle, Clock, Minus, Plus as PlusIcon, Camera, Sparkles, Pencil, CheckCircle2, AlertOctagon, WifiOff, Search, ChevronDown, ChevronUp, Wand2, RotateCcw, Utensils, ArrowRight, Skull, Zap } from 'lucide-react';
@@ -65,12 +66,12 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   }, []);
 
   useEffect(() => {
-      if (highlightId && itemRefs.current[highlightId]) {
+      if (highlightId && itemRefs.current[String(highlightId)]) {
           const item = items.find(i => i.id === highlightId);
           if(item) {
               setExpandedCategories(prev => ({...prev, [item.category]: true}));
               setTimeout(() => {
-                  itemRefs.current[highlightId]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  itemRefs.current[String(highlightId)]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }, 300);
           }
       }
@@ -215,7 +216,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   };
 
   return (
-    <div className="space-y-6 animate-fade-in relative pb-32">
+    <div className="space-y-4 animate-fade-in relative pb-32">
       <div className="flex flex-col gap-4 mb-6">
         <div className="flex justify-between items-center">
             <div>
@@ -309,7 +310,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
           </div>
           <h2 className="text-2xl font-black text-gray-900 mb-2">Tu nevera está vacía</h2>
           <p className="text-gray-400 font-medium max-w-sm mx-auto leading-relaxed text-sm">
-            Escanea tu ticket de compra para que Fresco empiece a gestionar tus ahorros automáticamente.
+            Escanea tu ticket de compra.
           </p>
           <button 
             onClick={() => { if(isOnline) setShowScanner(true); }}
@@ -335,71 +336,55 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
               </button>
 
               {expandedCategories[cat] && (
-                  <div className="p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 border-t border-gray-50">
+                  <div className="p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-10 gap-2 border-t border-gray-50">
                     {filteredItems.filter(i => i.category === cat).map((item: PantryItem) => {
                       const status = getExpiryStatus(item);
-                      // FIX: Force string type to avoid unknown/any type issues
-                      const step = getSmartStep(`${item.unit || ''}`);
+                      const step = getSmartStep(String(item.unit || ''));
                       const isHighlighted = highlightId === item.id;
 
                       return (
                         <div 
                             key={item.id} 
                             ref={(el) => { if (el && itemRefs.current) itemRefs.current[String(item.id)] = el; }}
-                            className={`bg-gray-50 p-4 md:p-2.5 rounded-2xl border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
+                            className={`bg-gray-50 p-4 md:p-1.5 rounded-2xl border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
                                 isHighlighted 
                                 ? 'ring-2 ring-orange-400 scale-[1.02] shadow-xl z-10 bg-orange-50 border-orange-200' 
                                 : 'border-gray-100 hover:border-teal-400 hover:shadow-md hover:bg-white'
                             }`}
                         >
-                          <div className="flex justify-between items-start mb-4">
+                          <div className="flex justify-between items-start mb-4 md:mb-1">
                             <div className="flex gap-1 items-center w-full overflow-hidden">
                                 {status && status.type !== 'fresh' ? (
-                                    <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase flex items-center gap-1 shadow-sm flex-shrink-0 ${status.color}`}>
-                                        <AlertTriangle className="w-3 h-3" /> {status.label}
+                                    <div className={`px-2 py-1 md:py-0.5 rounded-lg text-[8px] md:text-[6px] font-black uppercase flex items-center gap-1 shadow-sm flex-shrink-0 ${status.color}`}>
+                                        <AlertTriangle className="w-3 h-3 md:w-2 md:h-2" />
                                     </div>
                                 ) : (
-                                    <div className="px-2 py-1 rounded-lg text-[8px] font-black uppercase flex items-center gap-1 bg-white text-gray-300 border border-gray-100 flex-shrink-0">
-                                        Fresco
+                                    <div className="px-2 py-1 md:py-0.5 rounded-lg text-[8px] md:text-[6px] font-black uppercase flex items-center gap-1 bg-white text-gray-300 border border-gray-100 flex-shrink-0">
+                                        OK
                                     </div>
                                 )}
                                 <div className="flex-1" />
                                 <div className="flex gap-1">
-                                    {onCook && (
-                                        <button 
-                                            onClick={() => onCook?.(String(item.name || ''))}
-                                            className="p-1.5 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
-                                            title="Cocinar con esto"
-                                        >
-                                            <Zap className="w-3 h-3" />
-                                        </button>
-                                    )}
                                     <button 
                                         onClick={() => setItemToEdit(item)} 
-                                        className="p-1.5 text-gray-300 hover:text-teal-600 transition-colors"
+                                        className="p-1.5 md:p-0.5 text-gray-300 hover:text-teal-600 transition-colors"
                                     >
-                                        <Pencil className="w-3 h-3" />
-                                    </button>
-                                    <button 
-                                        onClick={() => initDelete(item)} 
-                                        className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"
-                                    >
-                                        <Trash2 className="w-3 h-3" />
+                                        <Pencil className="w-3 h-3 md:w-2 md:h-2" />
                                     </button>
                                 </div>
                             </div>
                           </div>
                           
                           <div>
-                            <div className="font-black text-gray-900 capitalize text-base md:text-xs mb-3 truncate pr-2">
+                            <div className="font-black text-gray-900 capitalize text-base md:text-[10px] mb-3 md:mb-1 truncate pr-2">
                                 {renderHighlightedText(String(item.name || ''), String(searchTerm || ''))}
                             </div>
                             <div className="flex items-center justify-between bg-white p-1 rounded-xl border border-gray-100 group-hover:border-teal-100 transition-colors shadow-sm">
                                 <button 
                                     onClick={() => onUpdateQuantity(String(item.id), -step)}
-                                    className="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
+                                    className="w-8 h-8 md:w-4 md:h-4 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
                                 >
-                                    <Minus className="w-4 h-4 md:w-3 md:h-3" />
+                                    <Minus className="w-4 h-4 md:w-2 md:h-2" />
                                 </button>
                                 
                                 <button
@@ -409,21 +394,17 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                     }}
                                     className="flex-1 text-center min-w-0 px-1"
                                 >
-                                    <span className="text-xs font-black text-teal-900 tabular-nums border-b border-dashed border-teal-200 hover:border-orange-400 hover:text-orange-500 transition-colors block truncate">
-                                        {Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(2)} <span className="opacity-40 text-[9px]">{item.unit}</span>
+                                    <span className="text-xs md:text-[8px] font-black text-teal-900 tabular-nums hover:text-orange-500 transition-colors block truncate">
+                                        {Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(2)}
                                     </span>
                                 </button>
 
                                 <button 
                                     onClick={() => onUpdateQuantity(String(item.id), step)}
-                                    className="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
+                                    className="w-8 h-8 md:w-4 md:h-4 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
                                 >
-                                    <PlusIcon className="w-4 h-4 md:w-3 md:h-3" />
+                                    <PlusIcon className="w-4 h-4 md:w-2 md:h-2" />
                                 </button>
-                            </div>
-                            <div className="mt-3 flex items-center gap-1.5 text-[8px] text-gray-300 font-black uppercase tracking-widest">
-                                <Clock className="w-3 h-3" />
-                                {format(new Date(item.added_at), 'd MMM')}
                             </div>
                           </div>
                           {status && status.type !== 'fresh' && <div className="absolute bottom-0 left-0 h-1 bg-orange-500 w-full animate-pulse" />}
@@ -437,41 +418,107 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
         </div>
       )}
 
-      {/* ... Modals (Keeping logic same, reducing padding/radius) ... */}
-      
+      {showAddModal && (
+        <div className="fixed inset-0 z-[1000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
+            <div className="w-full max-w-md bg-white rounded-[2.5rem] p-8 shadow-2xl relative">
+                <button onClick={() => setShowAddModal(false)} className="absolute top-6 right-6 p-2 bg-gray-50 rounded-full hover:bg-gray-100"><X className="w-5 h-5" /></button>
+                <h2 className="text-2xl font-black text-teal-900 mb-6 flex items-center gap-3">
+                    <div className="p-3 bg-teal-50 rounded-2xl"><Package className="w-6 h-6 text-teal-600" /></div>
+                    Añadir Producto
+                </h2>
+                
+                <form onSubmit={handleManualAdd} className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Nombre</label>
+                        <input autoFocus type="text" placeholder="Ej. Arroz Integral" className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} />
+                    </div>
+                    
+                    <div className="flex gap-4">
+                        <div className="flex-1 space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-gray-400">Cantidad</label>
+                            <input type="number" step="0.1" className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500" value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value)})} />
+                        </div>
+                        <div className="flex-1 space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-gray-400">Unidad</label>
+                            <input type="text" className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500" value={newItem.unit} onChange={e => { setNewItem({...newItem, unit: e.target.value}); setManualOverride(prev => ({...prev, unit: true})); }} />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Categoría</label>
+                        <select className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 appearance-none" value={newItem.category} onChange={e => { setNewItem({...newItem, category: e.target.value}); setManualOverride(prev => ({...prev, category: true})); }}>
+                            {CATEGORIES_OPTIONS.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
+                        </select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Días para caducar</label>
+                        <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl">
+                            <Calendar className="w-5 h-5 text-gray-400" />
+                            <input type="number" className="bg-transparent font-bold text-gray-900 w-full focus:outline-none" value={newItem.daysToExpire} onChange={e => setNewItem({...newItem, daysToExpire: parseInt(e.target.value)})} />
+                            <span className="text-sm font-bold text-gray-400">días</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" className="w-full py-5 bg-teal-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl active:scale-95 transition-all">Guardar</button>
+                </form>
+            </div>
+        </div>
+      )}
+
+      {showScanner && (
+          <TicketScanner 
+              onClose={() => setShowScanner(false)}
+              onAddItems={(items) => {
+                  onAddMany(items);
+                  setShowScanner(false);
+              }}
+          />
+      )}
+
+      {itemToEdit && (
+        <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
+            <div className="w-full max-w-sm bg-white rounded-[2rem] p-8 shadow-2xl relative">
+                <h3 className="text-xl font-black text-gray-900 mb-6">Editar Producto</h3>
+                <form onSubmit={handleEditSubmit} className="space-y-4">
+                    <input className="w-full p-3 bg-gray-50 rounded-xl font-bold" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} />
+                    <div className="flex gap-2">
+                        <input type="number" step="0.1" className="flex-1 p-3 bg-gray-50 rounded-xl font-bold" value={itemToEdit.quantity} onChange={e => setItemToEdit({...itemToEdit, quantity: parseFloat(e.target.value)})} />
+                        <input className="flex-1 p-3 bg-gray-50 rounded-xl font-bold" value={itemToEdit.unit} onChange={e => setItemToEdit({...itemToEdit, unit: e.target.value})} />
+                    </div>
+                    <select className="w-full p-3 bg-gray-50 rounded-xl font-bold" value={itemToEdit.category} onChange={e => setItemToEdit({...itemToEdit, category: e.target.value})}>
+                        {CATEGORIES_OPTIONS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                    </select>
+                    <div className="flex gap-2 pt-2">
+                        <button type="button" onClick={() => setItemToEdit(null)} className="flex-1 py-3 bg-gray-100 rounded-xl font-bold text-gray-500">Cancelar</button>
+                        <button type="submit" className="flex-1 py-3 bg-teal-600 text-white rounded-xl font-bold">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      )}
+
       {wasteItem && (
-          <div className="fixed inset-0 z-[1200] bg-teal-900/60 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in" onClick={() => setWasteItem(null)}>
-              <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
-                  <div className="text-center mb-6">
-                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <Trash2 className="w-6 h-6 text-gray-400" />
-                      </div>
-                      <h3 className="text-xl font-black text-gray-900 mb-1">¿Ya no está?</h3>
-                      <p className="text-gray-500 font-medium text-xs leading-relaxed">
-                          Ayúdanos a calcular tu ahorro real.
-                      </p>
+          <div className="fixed inset-0 z-[1000] bg-red-900/60 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
+              <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl relative text-center">
+                  <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Skull className="w-10 h-10 text-red-500" />
                   </div>
-
-                  <div className="space-y-2">
-                      <button onClick={() => confirmDelete('consumed')} className="w-full p-3 rounded-xl bg-green-50 border border-green-100 hover:bg-green-100 flex items-center gap-3 transition-all group">
-                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-green-600 shadow-sm"><Utensils className="w-4 h-4" /></div>
-                          <div className="text-left">
-                              <div className="font-black text-teal-900 text-xs">Me lo comí</div>
-                          </div>
+                  <h3 className="text-xl font-black text-gray-900 mb-2">¿Eliminar {wasteItem.name}?</h3>
+                  <p className="text-gray-500 text-sm mb-8">Ayúdanos a mejorar tus estadísticas.</p>
+                  
+                  <div className="space-y-3">
+                      <button onClick={() => confirmDelete('consumed')} className="w-full py-4 bg-green-500 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-green-600">
+                          😋 Me lo he comido
                       </button>
-
-                      <button onClick={() => confirmDelete('wasted')} className="w-full p-3 rounded-xl bg-red-50 border border-red-100 hover:bg-red-100 flex items-center gap-3 transition-all group">
-                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-red-500 shadow-sm"><Skull className="w-4 h-4" /></div>
-                          <div className="text-left">
-                              <div className="font-black text-teal-900 text-xs">Se echó a perder</div>
-                          </div>
+                      <button onClick={() => confirmDelete('wasted')} className="w-full py-4 bg-red-500 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-red-600">
+                          🗑️ Se ha estropeado
                       </button>
-
-                      <button onClick={() => confirmDelete('mistake')} className="w-full p-3 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 flex items-center gap-3 transition-all group">
-                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-gray-400 shadow-sm"><RotateCcw className="w-4 h-4" /></div>
-                          <div className="text-left">
-                              <div className="font-black text-teal-900 text-xs">Error / Corrección</div>
-                          </div>
+                      <button onClick={() => confirmDelete('mistake')} className="w-full py-4 bg-gray-100 text-gray-400 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-200">
+                          Corregir error
+                      </button>
+                      <button onClick={() => setWasteItem(null)} className="mt-4 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                          Cancelar
                       </button>
                   </div>
               </div>
@@ -479,200 +526,32 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       )}
 
       {quickAdjustItem && (
-          <div className="fixed inset-0 z-[1100] bg-teal-900/40 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in" onClick={() => setQuickAdjustItem(null)}>
-              <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
-                  <div className="text-center mb-6">
-                      <h3 className="text-xl font-black text-gray-900 capitalize mb-1 truncate">{quickAdjustItem.name}</h3>
-                      <p className="text-gray-400 font-bold uppercase text-[9px] tracking-widest">Ajuste Rápido</p>
+          <div className="fixed inset-0 z-[1000] bg-black/40 backdrop-blur-sm flex items-end justify-center md:items-center animate-fade-in">
+              <div className="w-full md:max-w-sm bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] p-8 shadow-2xl animate-slide-up pb-10">
+                  <div className="text-center mb-8">
+                      <h3 className="text-2xl font-black text-gray-900 mb-1">{quickAdjustItem.name}</h3>
+                      <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Ajuste Rápido</p>
                   </div>
                   
-                  <div className="flex items-center justify-center gap-4 mb-6">
-                      <button onClick={() => setQuickValue(Math.max(0, quickValue - getSmartStep(String(quickAdjustItem.unit || ''))))} className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg font-bold hover:bg-gray-200"><Minus className="w-4 h-4" /></button>
-                      <div className="text-3xl font-black text-teal-900 w-24 text-center flex flex-col items-center justify-center">
-                          {quickValue.toFixed(quickAdjustItem.unit === 'g' || quickAdjustItem.unit === 'ml' ? 0 : 2)}
-                          <span className="text-sm text-gray-400 ml-1 block">{quickAdjustItem.unit}</span>
+                  <div className="flex items-center justify-center gap-6 mb-8">
+                      <button onClick={() => setQuickValue(Math.max(0, quickValue - 1))} className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center text-teal-900 shadow-sm active:scale-90 transition-all">
+                          <Minus className="w-8 h-8" />
+                      </button>
+                      <div className="text-center w-24">
+                          <div className="text-5xl font-black text-teal-900 tracking-tighter">{Number.isInteger(quickValue) ? quickValue : quickValue.toFixed(1)}</div>
+                          <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">{quickAdjustItem.unit}</div>
                       </div>
-                      <button onClick={() => setQuickValue(quickValue + getSmartStep(String(quickAdjustItem.unit || '')))} className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg font-bold hover:bg-gray-200"><PlusIcon className="w-4 h-4" /></button>
+                      <button onClick={() => setQuickValue(quickValue + 1)} className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center text-teal-900 shadow-sm active:scale-90 transition-all">
+                          <PlusIcon className="w-8 h-8" />
+                      </button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 mb-6">
-                      <button onClick={() => setQuickValue(quickAdjustItem.quantity * 0.5)} className="py-2 bg-orange-50 text-orange-700 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-orange-100 transition-colors">Mitad</button>
-                      <button onClick={() => setQuickValue(0)} className="py-2 bg-red-50 text-red-500 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-100 transition-colors">Se acabó (0)</button>
+                  <div className="flex gap-3">
+                      <button onClick={() => setQuickAdjustItem(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest">Cancelar</button>
+                      <button onClick={handleQuickAdjustConfirm} className="flex-[2] py-4 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">Confirmar</button>
                   </div>
-
-                  <button onClick={handleQuickAdjustConfirm} className="w-full py-4 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">
-                      Confirmar
-                  </button>
               </div>
           </div>
-      )}
-
-      {showAddModal && (
-        <div className="fixed inset-0 z-[1000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
-          <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl animate-slide-up overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-2xl font-black text-teal-900">Añadir Stock</h3>
-              <button onClick={() => setShowAddModal(false)} className="p-2 bg-gray-50 rounded-xl text-gray-400"><X className="w-5 h-5" /></button>
-            </div>
-            <form onSubmit={handleManualAdd} className="space-y-6">
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Nombre</label>
-                <div className="relative">
-                    <input 
-                      type="text" 
-                      autoFocus
-                      required
-                      value={newItem.name}
-                      onChange={e => setNewItem({...newItem, name: e.target.value})}
-                      onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                              e.preventDefault();
-                              quantityInputRef.current?.focus();
-                          }
-                      }}
-                      className="w-full p-4 pl-10 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base transition-all"
-                    />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                        <Wand2 className={`w-4 h-4 ${newItem.name ? 'text-orange-400 animate-pulse' : 'text-gray-300'}`} />
-                    </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Categoría</label>
-                <div className="grid grid-cols-3 gap-2">
-                    {CATEGORIES_OPTIONS.map(cat => (
-                        <button
-                            key={cat.id}
-                            type="button"
-                            onClick={() => {
-                                setNewItem({...newItem, category: cat.id});
-                                setManualOverride(p => ({...p, category: true}));
-                            }}
-                            className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
-                                newItem.category === cat.id 
-                                    ? 'bg-orange-50 border-orange-500 text-orange-700' 
-                                    : 'bg-white border-gray-100 text-gray-400 hover:border-teal-200'
-                            }`}
-                        >
-                            <span className="text-lg">{cat.emoji}</span>
-                            <span className="text-[8px] font-black uppercase tracking-tighter">{cat.label}</span>
-                        </button>
-                    ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Cantidad</label>
-                  <input 
-                    type="number" 
-                    step="0.1"
-                    required
-                    ref={quantityInputRef}
-                    value={newItem.quantity}
-                    onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value)})}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleManualAdd(e);
-                    }}
-                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Unidad</label>
-                  <select 
-                    value={newItem.unit}
-                    onChange={e => {
-                        setNewItem({...newItem, unit: e.target.value});
-                        setManualOverride(p => ({...p, unit: true}));
-                    }}
-                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base appearance-none transition-all"
-                  >
-                    <option value="unidades">Uds</option>
-                    <option value="g">Gramos</option>
-                    <option value="kg">Kilos</option>
-                    <option value="ml">Mililitros</option>
-                    <option value="l">Litros</option>
-                  </select>
-                </div>
-              </div>
-              <button type="submit" className="w-full py-5 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95">
-                <Save className="w-4 h-4" /> Registrar Producto
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {itemToEdit && (
-        <div className="fixed inset-0 z-[1000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
-          <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl animate-slide-up overflow-y-auto max-h-[90vh]">
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-2xl font-black text-teal-900">Editar Stock</h3>
-              <button onClick={() => setItemToEdit(null)} className="p-2 bg-gray-50 rounded-xl text-gray-400"><X className="w-5 h-5" /></button>
-            </div>
-            <form onSubmit={handleEditSubmit} className="space-y-6">
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Nombre</label>
-                <input 
-                  type="text" 
-                  required
-                  value={itemToEdit.name}
-                  onChange={e => setItemToEdit({...itemToEdit!, name: e.target.value})}
-                  className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Fecha de Caducidad</label>
-                <input 
-                  type="date" 
-                  value={itemToEdit.expires_at ? itemToEdit.expires_at.split('T')[0] : ''}
-                  onChange={e => setItemToEdit({...itemToEdit!, expires_at: new Date(e.target.value).toISOString()})}
-                  className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base transition-all"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Cantidad</label>
-                  <input 
-                    type="number" 
-                    step="0.1"
-                    required
-                    value={itemToEdit.quantity}
-                    onChange={e => setItemToEdit({...itemToEdit!, quantity: parseFloat(e.target.value)})}
-                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Unidad</label>
-                  <select 
-                    value={itemToEdit.unit}
-                    onChange={e => setItemToEdit({...itemToEdit!, unit: e.target.value})}
-                    className="w-full p-4 bg-gray-50 rounded-xl border-2 border-transparent focus:border-teal-500 focus:outline-none font-black text-base appearance-none transition-all"
-                  >
-                    <option value="unidades">Uds</option>
-                    <option value="g">Gramos</option>
-                    <option value="kg">Kilos</option>
-                    <option value="ml">Mililitros</option>
-                    <option value="l">Litros</option>
-                  </select>
-                </div>
-              </div>
-              <button type="submit" className="w-full py-5 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95">
-                <Save className="w-4 h-4" /> Guardar Cambios
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showScanner && (
-        <TicketScanner 
-          onClose={() => setShowScanner(false)} 
-          onAddItems={onAddMany} 
-        />
       )}
     </div>
   );
