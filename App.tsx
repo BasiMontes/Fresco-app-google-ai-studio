@@ -442,13 +442,17 @@ const App: React.FC = () => {
           return;
       }
 
-      const { error } = await supabase.from('profiles').update({
+      // CRITICAL FIX: Use upsert to guarantee profile exists, even if DB trigger failed
+      const { error } = await supabase.from('profiles').upsert({
+          id: userId,
           dietary_preferences: profile.dietary_preferences,
           favorite_cuisines: profile.favorite_cuisines,
           household_size: profile.household_size,
           cooking_experience: profile.cooking_experience,
-          onboarding_completed: true
-      }).eq('id', userId);
+          onboarding_completed: true,
+          full_name: profile.name || user?.name || 'Usuario', // Ensure name is preserved
+          updated_at: new Date().toISOString()
+      });
 
       if (error) {
           console.error("Error saving profile", error);
