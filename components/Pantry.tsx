@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PantryItem } from '../types';
 import { Package, Plus, Trash2, Calendar, X, Save, AlertTriangle, Clock, Minus, Plus as PlusIcon, Camera, Sparkles, Pencil, CheckCircle2, AlertOctagon, WifiOff, Search, ChevronDown, ChevronUp, Wand2, RotateCcw, Utensils, ArrowRight, Skull, Zap } from 'lucide-react';
@@ -337,17 +336,18 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
               </button>
 
               {expandedCategories[cat] && (
-                  <div className="p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 border-t border-gray-50">
+                  <div className="p-4 pt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 border-t border-gray-50">
                     {filteredItems.filter(i => i.category === cat).map((item: PantryItem) => {
                       const status = getExpiryStatus(item);
-                      const step = getSmartStep(item.unit || '');
+                      // FIX: Force string type to avoid unknown/any type issues
+                      const step = getSmartStep(String(item.unit || ''));
                       const isHighlighted = highlightId === item.id;
 
                       return (
                         <div 
                             key={item.id} 
-                            ref={(el) => { if (el && itemRefs.current) itemRefs.current[item.id] = el; }}
-                            className={`bg-gray-50 p-4 md:p-2.5 rounded-2xl border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
+                            ref={(el) => { if (el && itemRefs.current) itemRefs.current[String(item.id)] = el; }}
+                            className={`bg-gray-50 p-4 md:p-3 rounded-2xl border flex flex-col justify-between group relative overflow-hidden transition-all duration-300 ${
                                 isHighlighted 
                                 ? 'ring-2 ring-orange-400 scale-[1.02] shadow-xl z-10 bg-orange-50 border-orange-200' 
                                 : 'border-gray-100 hover:border-teal-400 hover:shadow-md hover:bg-white'
@@ -368,7 +368,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                 <div className="flex gap-1">
                                     {onCook && (
                                         <button 
-                                            onClick={() => onCook?.(item.name || '')}
+                                            onClick={() => onCook?.(String(item.name || ''))}
                                             className="p-1.5 text-orange-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
                                             title="Cocinar con esto"
                                         >
@@ -392,15 +392,15 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                           </div>
                           
                           <div>
-                            <div className="font-black text-gray-900 capitalize text-base md:text-xs mb-3 truncate pr-2">
-                                {renderHighlightedText(item.name || '', searchTerm || '')}
+                            <div className="font-black text-gray-900 capitalize text-base md:text-sm mb-3 truncate pr-2">
+                                {renderHighlightedText(String(item.name || ''), String(searchTerm || ''))}
                             </div>
                             <div className="flex items-center justify-between bg-white p-1 rounded-xl border border-gray-100 group-hover:border-teal-100 transition-colors shadow-sm">
                                 <button 
-                                    onClick={() => onUpdateQuantity(item.id, -step)}
-                                    className="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
+                                    onClick={() => onUpdateQuantity(String(item.id), -step)}
+                                    className="w-8 h-8 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
                                 >
-                                    <Minus className="w-4 h-4 md:w-3 md:h-3" />
+                                    <Minus className="w-4 h-4" />
                                 </button>
                                 
                                 <button
@@ -416,10 +416,10 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                 </button>
 
                                 <button 
-                                    onClick={() => onUpdateQuantity(item.id, step)}
-                                    className="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
+                                    onClick={() => onUpdateQuantity(String(item.id), step)}
+                                    className="w-8 h-8 flex items-center justify-center text-teal-900 hover:bg-gray-50 rounded-lg transition-all active:scale-75 flex-shrink-0"
                                 >
-                                    <PlusIcon className="w-4 h-4 md:w-3 md:h-3" />
+                                    <PlusIcon className="w-4 h-4" />
                                 </button>
                             </div>
                             <div className="mt-3 flex items-center gap-1.5 text-[8px] text-gray-300 font-black uppercase tracking-widest">
@@ -488,12 +488,12 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                   </div>
                   
                   <div className="flex items-center justify-center gap-4 mb-6">
-                      <button onClick={() => setQuickValue(Math.max(0, quickValue - getSmartStep(quickAdjustItem.unit)))} className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg font-bold hover:bg-gray-200"><Minus className="w-4 h-4" /></button>
+                      <button onClick={() => setQuickValue(Math.max(0, quickValue - getSmartStep(String(quickAdjustItem.unit || ''))))} className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg font-bold hover:bg-gray-200"><Minus className="w-4 h-4" /></button>
                       <div className="text-3xl font-black text-teal-900 w-24 text-center flex flex-col items-center justify-center">
                           {quickValue.toFixed(quickAdjustItem.unit === 'g' || quickAdjustItem.unit === 'ml' ? 0 : 2)}
                           <span className="text-sm text-gray-400 ml-1 block">{quickAdjustItem.unit}</span>
                       </div>
-                      <button onClick={() => setQuickValue(quickValue + getSmartStep(quickAdjustItem.unit))} className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg font-bold hover:bg-gray-200"><PlusIcon className="w-4 h-4" /></button>
+                      <button onClick={() => setQuickValue(quickValue + getSmartStep(String(quickAdjustItem.unit || '')))} className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg font-bold hover:bg-gray-200"><PlusIcon className="w-4 h-4" /></button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 mb-6">
