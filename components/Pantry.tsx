@@ -36,7 +36,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   const [showScanner, setShowScanner] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
-  // Simplificado: Todas expandidas por defecto en grid denso, o usamos filtro.
   const [itemToEdit, setItemToEdit] = useState<PantryItem | null>(null);
   
   const [quickAdjustItem, setQuickAdjustItem] = useState<PantryItem | null>(null);
@@ -187,7 +186,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       return result;
   }, [items, activeFilter, searchTerm]);
 
-  // Agrupado por categorías para visualización ordenada pero compacta
+  // Agrupado por categorías
   const groupedItems = useMemo(() => {
       const grouped: Record<string, PantryItem[]> = {};
       filteredItems.forEach(item => {
@@ -210,39 +209,39 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   };
 
   return (
-    <div className="space-y-6 animate-fade-in relative pb-32">
+    <div className="space-y-8 animate-fade-in relative pb-32">
       
       {/* Header Compacto */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h1 className="text-3xl md:text-xl font-black text-teal-900 leading-none mb-1">Stock Actual</h1>
+            <h1 className="text-3xl md:text-2xl font-black text-teal-900 leading-none mb-1">Stock Actual</h1>
             <p className="text-gray-400 font-bold uppercase text-[10px] md:text-[9px] tracking-widest">Gestión de activos alimentarios</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
             {items.length > 0 && (
                 <div className="relative group flex-1 md:flex-none md:w-64">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4 md:w-3 md:h-3 group-focus-within:text-teal-500 transition-colors" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4 group-focus-within:text-teal-500 transition-colors" />
                     <input 
                         type="text" 
                         placeholder="Buscar..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 md:py-1.5 bg-white border border-gray-100 rounded-full font-bold text-gray-700 text-sm md:text-xs shadow-sm focus:outline-none focus:border-teal-500 focus:shadow-md transition-all"
+                        className="w-full pl-10 pr-4 py-3 bg-white border border-gray-100 rounded-full font-bold text-gray-700 text-sm shadow-sm focus:outline-none focus:border-teal-500 focus:shadow-md transition-all"
                     />
                 </div>
             )}
             <button 
                 onClick={() => { if(isOnline) setShowScanner(true); }}
                 disabled={!isOnline}
-                className={`text-white px-4 py-2.5 md:py-1.5 rounded-xl md:rounded-lg flex items-center justify-center gap-2 font-black text-[10px] md:text-[9px] uppercase tracking-widest shadow-md transition-all ${isOnline ? 'bg-orange-500 hover:bg-orange-600 active:scale-95' : 'bg-gray-400 opacity-50 cursor-not-allowed'}`}
+                className={`text-white px-4 py-3 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-md transition-all ${isOnline ? 'bg-orange-500 hover:bg-orange-600 active:scale-95' : 'bg-gray-400 opacity-50 cursor-not-allowed'}`}
             >
-                {isOnline ? <><Camera className="w-4 h-4 md:w-3 md:h-3" /> <span className="hidden md:inline">Escanear</span></> : <WifiOff className="w-4 h-4" />}
+                {isOnline ? <><Camera className="w-4 h-4" /> <span className="hidden md:inline">Escanear</span></> : <WifiOff className="w-4 h-4" />}
             </button>
             <button 
                 onClick={() => setShowAddModal(true)} 
-                className="w-12 h-12 md:w-8 md:h-8 bg-teal-900 text-white rounded-xl md:rounded-lg flex items-center justify-center shadow-md hover:bg-teal-800 active:scale-90 transition-all flex-shrink-0"
+                className="w-10 h-10 bg-teal-900 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-teal-800 active:scale-90 transition-all flex-shrink-0"
             >
-                <Plus className="w-6 h-6 md:w-4 md:h-4" />
+                <Plus className="w-5 h-5" />
             </button>
         </div>
       </div>
@@ -272,7 +271,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
           </div>
       )}
 
-      {/* Grid de Contenido (Diseño Stock Card) */}
+      {/* Grid de Contenido (Diseño Stock Card - LARGER) */}
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-[40vh] text-center px-12 border-2 border-dashed border-gray-200 rounded-[2rem]">
           <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4">
@@ -290,13 +289,14 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
           </button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
             {Object.keys(groupedItems).sort().map(cat => (
-                <div key={cat} className="space-y-3">
-                    <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 pl-1">
+                <div key={cat} className="space-y-4">
+                    <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 pl-1 border-b border-gray-100 pb-2">
                         {CATEGORIES_OPTIONS.find(c => c.id === cat)?.emoji} {CATEGORIES_OPTIONS.find(c => c.id === cat)?.label || cat}
                     </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {/* REDUCED COLUMNS TO MAKE CARDS BIGGER (Max 4 cols) */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {groupedItems[cat].map(item => {
                             const status = getExpiryStatus(item);
                             const isHighlighted = highlightId === item.id;
@@ -306,22 +306,22 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                 <div 
                                     key={item.id}
                                     ref={(el) => { if (el && itemRefs.current) itemRefs.current[String(item.id)] = el; }}
-                                    className={`bg-white rounded-xl border p-3 relative group transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
+                                    className={`bg-white rounded-2xl border p-4 relative group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
                                         isHighlighted ? 'ring-2 ring-orange-400 border-orange-200 shadow-xl z-10' : 'border-gray-100 hover:border-teal-200'
                                     }`}
                                 >
                                     {/* Status Line */}
-                                    <div className={`absolute top-3 left-0 w-1 h-8 rounded-r-full ${status?.color}`} />
+                                    <div className={`absolute top-4 left-0 w-1.5 h-10 rounded-r-full ${status?.color}`} />
                                     
-                                    <div className="pl-3 flex flex-col h-full justify-between gap-3">
+                                    <div className="pl-4 flex flex-col h-full justify-between gap-4">
                                         <div className="flex justify-between items-start">
                                             <div className="min-w-0 pr-1">
-                                                <h4 className="font-black text-gray-900 text-sm md:text-xs truncate capitalize leading-tight mb-0.5" title={item.name}>
+                                                <h4 className="font-black text-gray-900 text-lg md:text-base truncate capitalize leading-tight mb-1" title={item.name}>
                                                     {renderHighlightedText(item.name, searchTerm)}
                                                 </h4>
-                                                <div className="flex items-center gap-1.5">
+                                                <div className="flex items-center gap-2">
                                                     {status && status.type !== 'fresh' && (
-                                                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded text-white ${status.color}`}>
+                                                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded text-white ${status.color}`}>
                                                             {status.label}
                                                         </span>
                                                     )}
@@ -329,29 +329,29 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                             </div>
                                             <button 
                                                 onClick={() => setItemToEdit(item)}
-                                                className="text-gray-300 hover:text-teal-600 transition-colors"
+                                                className="text-gray-300 hover:text-teal-600 transition-colors p-1"
                                             >
-                                                <Pencil className="w-3 h-3" />
+                                                <Pencil className="w-4 h-4" />
                                             </button>
                                         </div>
 
-                                        <div className="flex items-center justify-between bg-gray-50 rounded-lg p-1">
+                                        <div className="flex items-center justify-between bg-gray-50 rounded-xl p-1.5">
                                             <button 
                                                 onClick={() => onUpdateQuantity(String(item.id), -step)}
-                                                className="w-6 h-6 flex items-center justify-center text-gray-400 hover:bg-white hover:text-teal-900 rounded shadow-sm transition-all"
-                                            ><Minus className="w-3 h-3" /></button>
+                                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-white hover:text-teal-900 rounded-lg shadow-sm transition-all"
+                                            ><Minus className="w-4 h-4" /></button>
                                             
                                             <button 
                                                 onClick={() => { setQuickAdjustItem(item); setQuickValue(item.quantity); }}
-                                                className="text-xs md:text-[10px] font-black text-teal-900 tabular-nums hover:text-orange-500 transition-colors"
+                                                className="text-sm font-black text-teal-900 tabular-nums hover:text-orange-500 transition-colors px-2"
                                             >
-                                                {Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(1)} <span className="text-gray-400 text-[8px]">{item.unit}</span>
+                                                {Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(1)} <span className="text-gray-400 text-[10px] uppercase ml-0.5">{item.unit}</span>
                                             </button>
 
                                             <button 
                                                 onClick={() => onUpdateQuantity(String(item.id), step)}
-                                                className="w-6 h-6 flex items-center justify-center text-gray-400 hover:bg-white hover:text-teal-900 rounded shadow-sm transition-all"
-                                            ><PlusIcon className="w-3 h-3" /></button>
+                                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:bg-white hover:text-teal-900 rounded-lg shadow-sm transition-all"
+                                            ><PlusIcon className="w-4 h-4" /></button>
                                         </div>
                                     </div>
                                 </div>
@@ -363,7 +363,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
         </div>
       )}
 
-      {/* Modals (Misma lógica, solo asegurando tamaños) */}
+      {/* Modals */}
       {showAddModal && (
         <div className="fixed inset-0 z-[1000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
             <div className="w-full max-w-sm bg-white rounded-[2rem] p-8 shadow-2xl relative">
@@ -421,7 +421,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
           />
       )}
 
-      {/* Edit & Waste Modals remain largely the same style-wise, functionality untouched */}
+      {/* Edit & Waste Modals */}
       {itemToEdit && (
         <div className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
             <div className="w-full max-w-sm bg-white rounded-[2rem] p-8 shadow-2xl relative">

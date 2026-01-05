@@ -38,15 +38,15 @@ const UNIT_EQUIVALENCES: Record<string, { weight: number, unit: string }> = {
 };
 
 const CATEGORY_LABELS: Record<string, { label: string, emoji: string, color: string }> = {
-    "vegetables": { label: "Verdulería", emoji: "🥦", color: "bg-green-100 text-green-700" },
-    "fruits": { label: "Frutería", emoji: "🍎", color: "bg-red-100 text-red-700" },
-    "dairy": { label: "Lácteos", emoji: "🧀", color: "bg-yellow-100 text-yellow-700" },
-    "meat": { label: "Carnicería", emoji: "🥩", color: "bg-rose-100 text-rose-700" },
-    "fish": { label: "Pescadería", emoji: "🐟", color: "bg-blue-100 text-blue-700" },
-    "grains": { label: "Cereales", emoji: "🥖", color: "bg-orange-100 text-orange-700" },
-    "spices": { label: "Especias", emoji: "🧂", color: "bg-gray-100 text-gray-700" },
-    "pantry": { label: "Despensa", emoji: "🥫", color: "bg-slate-100 text-slate-700" },
-    "other": { label: "Varios", emoji: "🛍️", color: "bg-purple-100 text-purple-700" }
+    "vegetables": { label: "Verdulería", emoji: "🥦", color: "text-green-700" },
+    "fruits": { label: "Frutería", emoji: "🍎", color: "text-red-700" },
+    "dairy": { label: "Lácteos", emoji: "🧀", color: "text-yellow-700" },
+    "meat": { label: "Carnicería", emoji: "🥩", color: "text-rose-700" },
+    "fish": { label: "Pescadería", emoji: "🐟", color: "text-blue-700" },
+    "grains": { label: "Cereales", emoji: "🥖", color: "text-orange-700" },
+    "spices": { label: "Especias", emoji: "🧂", color: "text-gray-700" },
+    "pantry": { label: "Despensa", emoji: "🥫", color: "text-slate-700" },
+    "other": { label: "Varios", emoji: "🛍️", color: "text-purple-700" }
 };
 
 export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantry, user, dbItems, onAddShoppingItem, onUpdateShoppingItem, onRemoveShoppingItem, onFinishShopping, onOpenRecipe, onSyncServings }) => {
@@ -379,137 +379,134 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   };
 
   return (
-    <div className="p-4 md:p-2 max-w-full mx-auto pb-48 safe-pt animate-fade-in">
-      <div className="bg-teal-900 rounded-[3.5rem] md:rounded-lg p-12 md:p-3 text-white shadow-2xl mb-12 md:mb-3 relative overflow-hidden">
+    <div className="p-4 md:p-2 max-w-5xl mx-auto pb-48 safe-pt animate-fade-in">
+      <div className="bg-teal-900 rounded-[3.5rem] md:rounded-3xl p-10 md:p-8 text-white shadow-2xl mb-12 md:mb-8 relative overflow-hidden">
         <div className="relative z-10">
-            <h1 className="text-5xl md:text-xl font-black mb-4 md:mb-1">Lista de Compra</h1>
-            <div className="flex flex-wrap gap-4 md:gap-2 mb-10 md:mb-2">
-                <div className="bg-white/10 px-6 py-3 md:py-1 md:px-3 rounded-2xl border border-white/10 flex items-center gap-3">
-                    <TrendingUp className="text-orange-400 w-5 h-5 md:w-3 md:h-3" />
-                    <span className="text-2xl md:text-sm font-black">{shoppingData.totalEstimated.toFixed(2)}€</span>
+            <div className="flex justify-between items-start mb-6">
+                <h1 className="text-4xl md:text-3xl font-black">Lista de Compra</h1>
+                <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10 flex items-center gap-2">
+                    <TrendingUp className="text-orange-400 w-4 h-4" />
+                    <span className="text-lg md:text-sm font-black">{shoppingData.totalEstimated.toFixed(2)}€</span>
                 </div>
             </div>
-            <div className="bg-white/10 rounded-full h-4 md:h-1.5 w-full mb-3 p-1">
+            
+            <div className="bg-white/10 rounded-full h-3 w-full mb-3 p-0.5">
                 <div className="bg-orange-500 h-full rounded-full transition-all duration-700" style={{ width: `${progress}%` }} />
             </div>
-            <div className="flex justify-between text-[10px] md:text-[8px] font-black uppercase tracking-widest text-teal-300">
+            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-teal-300">
                 <span>{progress}% Comprado</span>
                 <button onClick={() => setShowComparison(true)} className="flex items-center gap-2 hover:text-white transition-all group">
-                    <TrendingDown className="w-4 h-4 md:w-3 md:h-3 group-hover:scale-110 transition-transform" /> Comparar
+                    <TrendingDown className="w-3 h-3 group-hover:scale-110 transition-transform" /> Comparar
                 </button>
             </div>
         </div>
       </div>
 
       {/* Input de Extras */}
-      <div className="mb-8 flex flex-col md:flex-row gap-4 md:gap-2">
+      <div className="mb-10 flex gap-3 max-w-2xl mx-auto">
           <form onSubmit={addExtraItem} className="relative group flex-1">
             <input 
                 type="text" 
                 value={newExtra}
                 onChange={(e) => setNewExtra(e.target.value)}
                 placeholder="Añadir..."
-                className="w-full p-6 pl-8 pr-32 md:p-2 md:pl-4 bg-white border-2 border-gray-100 rounded-[2.5rem] focus:outline-none focus:border-teal-500 font-bold text-gray-700 placeholder-gray-300 shadow-sm transition-all focus:shadow-xl text-sm md:text-xs"
+                className="w-full p-4 pl-6 pr-12 bg-white border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-teal-500 font-bold text-gray-700 placeholder-gray-300 shadow-sm transition-all focus:shadow-md text-sm"
             />
-            <div className="absolute right-3 top-3 bottom-3 flex gap-2 md:right-1 md:top-1 md:bottom-1">
-                <button 
-                    type="submit"
-                    disabled={!newExtra}
-                    className="w-14 md:w-8 bg-gray-100 text-gray-400 rounded-[2rem] flex items-center justify-center hover:bg-teal-100 hover:text-teal-700 transition-all disabled:opacity-30"
-                >
-                    <Plus className="w-6 h-6 md:w-4 md:h-4" />
-                </button>
-            </div>
+            <button 
+                type="submit"
+                disabled={!newExtra}
+                className="absolute right-2 top-2 bottom-2 w-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center hover:bg-teal-100 transition-all disabled:opacity-30"
+            >
+                <Plus className="w-5 h-5" />
+            </button>
           </form>
           
           <button 
             onClick={() => setHidePurchased(!hidePurchased)}
-            className={`px-6 py-4 md:py-1 md:px-3 rounded-[2.5rem] flex items-center justify-center gap-2 font-black text-xs md:text-[9px] uppercase tracking-widest transition-all border-2 ${
+            className={`px-4 rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all border-2 ${
                 hidePurchased ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
             }`}
           >
-              {hidePurchased ? <EyeOff className="w-5 h-5 md:w-3 md:h-3" /> : <Eye className="w-5 h-5 md:w-3 md:h-3" />}
-              <span className="hidden md:inline">{hidePurchased ? 'Ver Todo' : 'Ocultar'}</span>
+              {hidePurchased ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
       </div>
 
-      {/* Renderizado de Lista */}
+      {/* Renderizado de Lista Minimalista */}
       {shoppingData.itemsList.length === 0 ? (
-          <div className="bg-white p-12 rounded-[3.5rem] border border-gray-100 text-center space-y-4">
-              <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto text-gray-300">
-                  <ShoppingBag size={40} />
+          <div className="bg-white p-12 rounded-[2.5rem] border border-gray-100 text-center space-y-4 max-w-md mx-auto">
+              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto text-gray-300">
+                  <ShoppingBag size={32} />
               </div>
-              <h3 className="text-2xl font-black text-teal-900">Tu lista está vacía</h3>
+              <h3 className="text-xl font-black text-teal-900">Tu lista está vacía</h3>
           </div>
       ) : (
-        <div className="space-y-8 md:space-y-2 pb-32">
+        <div className="space-y-10 pb-32">
             {Object.keys(groupedItems).sort().map(catKey => {
                 const info = CATEGORY_LABELS[catKey] || CATEGORY_LABELS['other'];
                 const allChecked = groupedItems[catKey].every(i => i.is_purchased);
                 
                 return (
-                    <div key={catKey} className="space-y-3 md:space-y-1">
-                        <div className="flex items-center justify-between px-2 md:px-1">
-                            <div className={`flex items-center gap-2 px-4 py-2 md:py-0.5 rounded-xl w-fit ${info.color} bg-opacity-10`}>
-                                <span className="text-lg md:text-sm">{info.emoji}</span>
-                                <span className="text-xs md:text-[9px] font-black uppercase tracking-widest">{info.label}</span>
+                    <div key={catKey} className="space-y-4">
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-2 mx-2">
+                            <div className={`flex items-center gap-2 ${info.color}`}>
+                                <span className="text-lg">{info.emoji}</span>
+                                <span className="text-xs font-black uppercase tracking-widest">{info.label}</span>
                             </div>
                             <button 
                                 onClick={() => checkAllCategory(groupedItems[catKey])}
-                                className={`text-[9px] md:text-[8px] font-black uppercase tracking-widest flex items-center gap-1 px-3 py-1 rounded-lg transition-all ${
+                                className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1 px-3 py-1 rounded-lg transition-all ${
                                     allChecked ? 'bg-teal-50 text-teal-600' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
                                 }`}
                             >
-                                <CheckSquare className="w-3 h-3 md:w-2 md:h-2" />
+                                <CheckSquare className="w-3 h-3" />
                                 {allChecked ? 'Desmarcar' : 'Todo'}
                             </button>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
                         {groupedItems[catKey].map(item => (
                             <div 
                                 key={item.id} 
-                                className={`w-full p-4 md:p-1 rounded-[2rem] md:rounded-md border flex items-center justify-between transition-all group select-none ${
-                                    item.is_purchased ? 'bg-gray-50 border-transparent opacity-60' : 'bg-white border-gray-100 hover:border-teal-200 shadow-sm'
+                                className={`group flex items-center justify-between py-2 px-3 rounded-xl transition-all cursor-pointer select-none ${
+                                    item.is_purchased ? 'opacity-40' : 'hover:bg-white hover:shadow-sm'
                                 }`}
                                 onClick={() => toggleItemCheck(item)}
                             >
-                                    <div className="flex items-center gap-4 md:gap-2 flex-1 cursor-pointer overflow-hidden">
-                                        <div className={`w-10 h-10 md:w-5 md:h-5 rounded-xl flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-300 group-hover:bg-teal-50 group-hover:text-teal-500'}`}>
-                                            {item.is_purchased ? <Check className="w-5 h-5 md:w-3 md:h-3 stroke-[4px]" /> : <div className="w-4 h-4 md:w-2.5 md:h-2.5 border-2 border-gray-300 rounded-md" />}
-                                        </div>
-                                        <div className="text-left flex-1 min-w-0">
-                                            <div className={`font-black text-lg md:text-[10px] text-gray-900 capitalize leading-none mb-1 md:mb-0 truncate ${item.is_purchased ? 'line-through text-gray-400' : ''}`}>{item.name}</div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs md:text-[9px] font-bold text-teal-600 uppercase tracking-widest">{item.quantity.toFixed(item.unit === 'g' || item.unit === 'ml' ? 0 : 2)} {item.unit}</span>
-                                            </div>
+                                <div className="flex items-center gap-4 flex-1 overflow-hidden">
+                                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                                        item.is_purchased ? 'bg-teal-600 border-teal-600' : 'border-gray-200 bg-white group-hover:border-teal-400'
+                                    }`}>
+                                        {item.is_purchased && <Check className="w-4 h-4 text-white stroke-[3px]" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className={`font-bold text-sm text-gray-900 capitalize truncate ${item.is_purchased ? 'line-through' : ''}`}>
+                                            {item.name}
                                         </div>
                                     </div>
+                                </div>
+                                
+                                <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                                    <span className="text-xs font-black text-gray-500 tabular-nums">
+                                        {item.quantity.toFixed(item.unit === 'g' || item.unit === 'ml' ? 0 : 1)} <span className="text-[9px] uppercase">{item.unit}</span>
+                                    </span>
                                     
-                                    <div className="flex items-center gap-2 md:gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                                        {!item.is_purchased && (
-                                            <div className="flex items-center gap-1 bg-gray-50 rounded-xl p-1 mr-2 md:mr-0">
-                                                <button 
-                                                    onClick={() => {
-                                                        const step = (item.unit === 'kg' || item.unit === 'l') ? -0.25 : (item.unit === 'g' || item.unit === 'ml' ? -100 : -1);
-                                                        handleAdjust(item.id, step, item.quantity);
-                                                    }}
-                                                    className="w-8 h-8 md:w-4 md:h-4 flex items-center justify-center text-gray-400 hover:bg-white hover:text-teal-600 rounded-lg transition-all"
-                                                >
-                                                    <Minus className="w-3 h-3 md:w-2 md:h-2" />
-                                                </button>
-                                                <button 
-                                                    onClick={() => {
-                                                        const step = (item.unit === 'kg' || item.unit === 'l') ? 0.25 : (item.unit === 'g' || item.unit === 'ml' ? 100 : 1);
-                                                        handleAdjust(item.id, step, item.quantity);
-                                                    }}
-                                                    className="w-8 h-8 md:w-4 md:h-4 flex items-center justify-center text-gray-400 hover:bg-white hover:text-teal-600 rounded-lg transition-all"
-                                                >
-                                                    <Plus className="w-3 h-3 md:w-2 md:h-2" />
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
+                                    {!item.is_purchased && (
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button 
+                                                onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1, item.quantity)}
+                                                className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md"
+                                            >
+                                                <Minus className="w-3 h-3" />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? 0.25 : 1, item.quantity)}
+                                                className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-teal-600 hover:bg-teal-50 rounded-md"
+                                            >
+                                                <Plus className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         ))}
                         </div>
@@ -520,13 +517,13 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       )}
       
        {/* Botones Flotantes */}
-       <div className="fixed bottom-24 left-6 right-6 flex gap-4 z-50 animate-slide-up">
+       <div className="fixed bottom-24 left-6 right-6 flex justify-center z-50 animate-slide-up pointer-events-none">
           <button 
             onClick={handleFinishClick}
             disabled={shoppingData.itemsList.length === 0}
-            className="flex-1 bg-teal-900 text-white py-7 md:py-3 rounded-[2.5rem] md:rounded-xl font-black shadow-2xl flex items-center justify-center gap-4 hover:bg-teal-800 transition-all active:scale-95 border-4 border-white/10 disabled:opacity-50 text-sm md:text-xs uppercase tracking-widest"
+            className="pointer-events-auto bg-teal-900 text-white px-12 py-4 rounded-full font-black shadow-2xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95 border-4 border-white disabled:opacity-0 disabled:translate-y-10 text-sm uppercase tracking-widest"
           >
-              <ShoppingBag className="w-6 h-6 md:w-4 md:h-4" /> Terminar
+              <ShoppingBag className="w-5 h-5" /> Terminar Compra
           </button>
       </div>
       

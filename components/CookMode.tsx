@@ -409,11 +409,11 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
             </div>
         )}
 
-        <header className="p-8 flex justify-between items-center border-b border-white/10 select-none">
+        <header className="p-6 md:p-8 flex justify-between items-center border-b border-white/10 select-none">
             <div className="flex items-center gap-4">
                 <ChefHat className="text-orange-500 w-8 h-8" />
                 <div>
-                    <h3 className="font-black text-xl leading-none truncate max-w-[200px]">{recipe.title}</h3>
+                    <h3 className="font-black text-xl md:text-lg leading-none truncate max-w-[200px]">{recipe.title}</h3>
                     <div className="flex items-center gap-2 mt-1">
                         <p className="text-teal-400 text-[10px] font-black uppercase tracking-widest">Paso {currentStep + 1}/{recipe.instructions.length}</p>
                         {listening && <div className="flex items-center gap-1 text-[8px] font-black uppercase text-red-400 bg-red-400/10 px-2 py-0.5 rounded-full animate-pulse"><Mic className="w-2 h-2" /> Oído</div>}
@@ -438,10 +438,11 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
             <div className="absolute left-0 top-1/2 -translate-y-1/2 opacity-20 hidden md:block"><ChevronLeft className="w-16 h-16" /></div>
             <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-20 hidden md:block"><ChevronRight className="w-16 h-16" /></div>
 
-            <div className="w-24 h-24 bg-orange-500 rounded-[2rem] flex items-center justify-center mb-10 shadow-2xl animate-pulse-subtle">
-                <Flame className="w-10 h-10" />
+            <div className="w-20 h-20 bg-orange-500 rounded-[2rem] flex items-center justify-center mb-8 shadow-2xl animate-pulse-subtle">
+                <Flame className="w-8 h-8" />
             </div>
-            <h4 className="text-2xl md:text-5xl font-black mb-10 leading-snug md:leading-tight">{recipe.instructions[currentStep]}</h4>
+            {/* Reduced text size for desktop density */}
+            <h4 className="text-2xl md:text-4xl font-black mb-10 leading-snug md:leading-tight">{recipe.instructions[currentStep]}</h4>
             
             <div className="mt-8 flex gap-4 opacity-60">
                 <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/5 flex items-center gap-2">
@@ -473,12 +474,12 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
         </div>
 
         <div className="p-8 border-t border-white/10 bg-teal-900/50 backdrop-blur-lg pb-safe select-none">
-            <div className="w-full bg-white/10 h-3 rounded-full mb-8 p-1 cursor-pointer flex gap-1">
+            <div className="w-full bg-white/10 h-2 rounded-full mb-8 p-0.5 cursor-pointer flex gap-1">
                  {recipe.instructions.map((_, idx) => (
                     <div key={idx} className={`h-full rounded-full transition-all duration-300 flex-1 ${idx <= currentStep ? 'bg-orange-500' : 'bg-transparent'}`} />
                  ))}
             </div>
-            <div className="flex gap-4 items-stretch h-24">
+            <div className="flex gap-4 items-stretch h-20 md:h-24 max-w-3xl mx-auto">
                 {currentStep > 0 ? (
                     <button onClick={handlePrev} className="w-24 bg-white/10 text-white rounded-[2rem] font-black flex items-center justify-center hover:bg-white/20 transition-all active:scale-90"><ArrowLeft className="w-8 h-8" /></button>
                 ) : <div className="w-24" />}

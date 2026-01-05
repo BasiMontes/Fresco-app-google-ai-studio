@@ -164,12 +164,12 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
   }
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm animate-fade-in flex justify-center items-end md:items-center">
-        {/* Contenedor Modal: Full Height en mobile (h-full) para evitar cortes */}
-        <div className="bg-[#FDFDFD] w-full h-full md:h-[90vh] md:max-w-4xl md:rounded-[3rem] overflow-hidden flex flex-col relative shadow-2xl animate-slide-up">
+    <div className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm animate-fade-in flex justify-center items-end md:items-center p-0 md:p-6">
+        {/* Contenedor Modal: Limit max width on desktop to md:max-w-3xl */}
+        <div className="bg-[#FDFDFD] w-full h-full md:h-[85vh] md:max-w-3xl md:rounded-[2.5rem] overflow-hidden flex flex-col relative shadow-2xl animate-slide-up">
             
             {/* Header con Imagen */}
-            <div className="relative h-[35vh] flex-shrink-0">
+            <div className="relative h-[30vh] md:h-[28vh] flex-shrink-0">
                 <SmartImage 
                     src={recipe.image_url} 
                     alt={recipe.title}
@@ -188,14 +188,14 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
                             <span key={t} className="px-3 py-1 bg-teal-800 text-white rounded-full text-[9px] font-black uppercase tracking-widest">{t.replace('_', ' ')}</span>
                         ))}
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-teal-900 leading-tight tracking-tighter">{recipe.title}</h2>
+                    <h2 className="text-3xl font-black text-teal-900 leading-tight tracking-tighter">{recipe.title}</h2>
                 </div>
             </div>
             
             {/* Contenido Scrollable */}
-            <div className="flex-1 overflow-y-auto px-6 md:px-10 py-6 pb-32 no-scrollbar">
+            <div className="flex-1 overflow-y-auto px-6 md:px-8 py-6 pb-32 no-scrollbar">
                 {/* Quick Stats Bar & Scaling Controls */}
-                <div className="bg-teal-900 rounded-[2rem] p-4 text-white grid grid-cols-3 gap-2 shadow-2xl -mt-6 relative z-20 mb-8 transform -translate-y-6">
+                <div className="bg-teal-900 rounded-3xl p-4 text-white grid grid-cols-3 gap-2 shadow-xl -mt-6 relative z-20 mb-8 transform -translate-y-6">
                     <div className="text-center flex flex-col items-center justify-center">
                         <Clock className={`w-4 h-4 mx-auto mb-1 ${dynamicPrepTime > recipe.prep_time ? 'text-red-400 animate-pulse' : 'text-orange-400'}`} />
                         <div className="text-sm font-black">{dynamicPrepTime}'</div>
@@ -223,19 +223,11 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
                     </div>
                 </div>
 
-                {/* Substitution Note */}
-                {extendedRecipe.substitution_note && (
-                    <div className="mb-8 bg-orange-50 border border-orange-200 p-6 rounded-2xl flex gap-4 animate-pulse-slow">
-                        <Sparkles className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                        <p className="text-orange-900 text-xs font-medium leading-relaxed">{extendedRecipe.substitution_note}</p>
-                    </div>
-                )}
-
                 {/* Tab System */}
-                <div className="flex p-1 bg-gray-100 rounded-[1.5rem] mb-8 border border-gray-200 sticky top-0 z-30">
+                <div className="flex p-1 bg-gray-100 rounded-2xl mb-6 border border-gray-200 sticky top-0 z-30">
                     <button 
                         onClick={() => setActiveTab('ingredients')}
-                        className={`flex-1 py-3 flex items-center justify-center gap-2 rounded-[1.2rem] font-black text-xs uppercase tracking-widest transition-all ${
+                        className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
                             activeTab === 'ingredients' ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-400'
                         }`}
                     >
@@ -243,7 +235,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
                     </button>
                     <button 
                         onClick={() => setActiveTab('steps')}
-                        className={`flex-1 py-3 flex items-center justify-center gap-2 rounded-[1.2rem] font-black text-xs uppercase tracking-widest transition-all ${
+                        className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
                             activeTab === 'steps' ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-400'
                         }`}
                     >
@@ -259,13 +251,13 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
                                 const stock = checkItemStock(ing.name, ing.quantity);
                                 const hasEnough = stock && stock.quantity >= ing.quantity;
                                 return (
-                                    <div key={i} className={`flex justify-between items-center p-4 rounded-2xl border transition-all ${
-                                        hasEnough ? 'bg-green-50 border-green-200 text-green-900' : 
-                                        stock ? 'bg-orange-50 border-orange-200 text-orange-900' : 
+                                    <div key={i} className={`flex justify-between items-center p-3 rounded-2xl border transition-all ${
+                                        hasEnough ? 'bg-green-50/50 border-green-200 text-green-900' : 
+                                        stock ? 'bg-orange-50/50 border-orange-200 text-orange-900' : 
                                         'bg-white border-gray-100 text-gray-700'
                                     }`}>
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-2 h-2 rounded-full ${hasEnough ? 'bg-green-500' : stock ? 'bg-orange-500' : 'bg-gray-200'}`} />
+                                            <div className={`w-1.5 h-1.5 rounded-full ${hasEnough ? 'bg-green-500' : stock ? 'bg-orange-500' : 'bg-gray-200'}`} />
                                             <span className="capitalize font-bold text-sm">{ing.name}</span>
                                         </div>
                                         <div className="flex flex-col items-end">
@@ -298,15 +290,15 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
                                         key={i} 
                                         onClick={() => toggleStep(i)}
                                         className={`flex gap-4 group p-4 rounded-2xl transition-all cursor-pointer ${
-                                            isDone ? 'bg-gray-50 opacity-60' : 'hover:bg-white hover:shadow-lg hover:border-gray-100 border border-transparent'
+                                            isDone ? 'bg-gray-50 opacity-60' : 'hover:bg-white hover:shadow-sm hover:border-gray-100 border border-transparent'
                                         }`}
                                     >
-                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0 border transition-all duration-300 ${
+                                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-black text-xs flex-shrink-0 border transition-all duration-300 ${
                                             isDone ? 'bg-green-100 text-green-700 border-green-200' : 'bg-teal-50 text-teal-900 border-teal-100 group-hover:bg-teal-900 group-hover:text-white'
                                         }`}>
-                                            {isDone ? <Check className="w-4 h-4" /> : i + 1}
+                                            {isDone ? <Check className="w-3 h-3" /> : i + 1}
                                         </div>
-                                        <p className={`font-medium text-sm leading-relaxed pt-1 transition-all ${
+                                        <p className={`font-medium text-sm leading-relaxed transition-all ${
                                             isDone ? 'text-gray-400 line-through' : 'text-gray-700'
                                         }`}>{step}</p>
                                     </div>
@@ -337,18 +329,6 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
                             </div>
                         </div>
                         
-                        <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-                            {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map(cat => (
-                                <button 
-                                    key={cat}
-                                    onClick={() => setPlanType(cat)}
-                                    className={`flex-1 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${planType === cat ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-400'}`}
-                                >
-                                    {cat === 'breakfast' ? 'Desayuno' : cat === 'lunch' ? 'Comida' : 'Cena'}
-                                </button>
-                            ))}
-                        </div>
-
                         <div className="flex gap-3">
                             <button 
                                 onClick={() => {
@@ -380,14 +360,14 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
                     <div className="flex gap-3">
                         <button 
                             onClick={() => setIsCooking(true)}
-                            className="flex-[2] py-4 bg-orange-500 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-lg hover:bg-orange-600 transition-all active:scale-95 flex items-center justify-center gap-3"
+                            className="flex-[2] py-4 bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-orange-600 transition-all active:scale-95 flex items-center justify-center gap-3"
                         >
                             <PlayCircle className="w-5 h-5" /> Cocinar
                         </button>
                         {onAddToPlan && (
                             <button 
                                 onClick={() => setShowPlanningMode(true)}
-                                className="flex-1 py-4 bg-teal-900 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-lg hover:bg-teal-800 transition-all active:scale-95"
+                                className="flex-1 py-4 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-teal-800 transition-all active:scale-95"
                             >
                                 Planificar
                             </button>

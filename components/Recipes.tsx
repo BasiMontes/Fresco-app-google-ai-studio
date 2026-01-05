@@ -153,8 +153,8 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
         </div>
       )}
 
-      {/* Grid Elegante y Denso */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-3">
+      {/* Grid Elegante y Denso (Max 4 cols for bigger cards) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-3">
           
           {loadingAI && <><RecipeSkeleton /><RecipeSkeleton /><RecipeSkeleton /></>}
 
