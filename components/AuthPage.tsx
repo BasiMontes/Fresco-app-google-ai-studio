@@ -164,9 +164,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
         </div>
       </div>
 
-      {/* Right Panel - Centered and confined content */}
-      <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-4 relative">
-        <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-2xl border border-gray-100/50">
+      {/* Right Panel - Centered and confined content with scroll if needed */}
+      <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-4 relative overflow-y-auto">
+        <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-2xl border border-gray-100/50 min-h-[580px] flex flex-col justify-center transition-all duration-300">
             <div className="flex justify-center mb-6">
                 <Logo className="w-48" align="center" />
             </div>
