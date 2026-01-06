@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { supabase } from '../lib/supabase';
@@ -166,11 +165,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
 
       {/* Right Panel - Centered content with EXACT fixed height card */}
       <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-4 relative overflow-y-auto">
-        {/* Usamos un style inline para forzar la altura a 700px exactamente sin que Tailwind interfiera */}
-        <div 
-            className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-gray-100/50 flex flex-col justify-center"
-            style={{ height: '700px', minHeight: '700px', maxHeight: '700px' }}
-        >
+        <div className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-gray-100/50 h-[640px] flex flex-col justify-center relative">
             <div className="flex justify-center mb-6">
                 <Logo className="w-48" align="center" />
             </div>
