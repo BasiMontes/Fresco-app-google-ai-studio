@@ -142,13 +142,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex bg-gray-50 font-sans">
+    <div className="h-screen w-screen flex bg-gray-50 font-sans overflow-hidden">
       {showLegalModal && (
           <LegalModal type={showLegalModal} onClose={() => setShowLegalModal(null)} />
       )}
 
       {/* Left Panel */}
-      <div className="hidden lg:flex w-1/2 h-full bg-teal-800 relative overflow-hidden flex-col justify-between p-16 text-white flex-shrink-0">
+      <div className="hidden lg:flex w-1/2 h-full bg-teal-800 relative flex-col justify-between p-16 text-white flex-shrink-0 z-10">
         <div className="relative z-10 animate-fade-in">
             <div className="flex items-center gap-3 mb-16">
                 <Logo variant="inverted" className="w-64" align="left" />
@@ -164,71 +164,76 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
       </div>
 
       {/* Right Panel - Centered content with EXACT fixed height card */}
-      <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-4 relative overflow-y-auto">
-        <div className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-gray-100/50 h-[640px] flex flex-col justify-center relative">
-            <div className="flex justify-center mb-6">
-                <Logo className="w-48" align="center" />
-            </div>
-            
-            <div className="flex p-1.5 bg-gray-100 rounded-2xl mb-6 border border-gray-200">
-                <button onClick={() => { setIsLogin(true); setError(''); }} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-500'}`}>Iniciar Sesión</button>
-                <button onClick={() => { setIsLogin(false); setError(''); }} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${!isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-500'}`}>Registrarse</button>
-            </div>
-
-            <form onSubmit={handleAuth} className="space-y-3">
-                {!isLogin && !isRecovery && (
-                    <div className="space-y-1.5 animate-slide-up">
-                        <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Nombre Completo</label>
-                        <div className="relative group">
-                            <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                            <input type="text" required placeholder="Ej. Alex García" value={name} onChange={(e) => setName(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
-                        </div>
-                    </div>
-                )}
+      <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-4 bg-gray-50 overflow-y-auto relative z-0">
+        <div 
+            className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-gray-100/50 flex flex-col justify-center relative transition-all duration-300"
+            style={{ height: '620px', minHeight: '620px' }}
+        >
+            <div className="px-8 md:px-10 pb-8 pt-6 w-full">
+                <div className="flex justify-center mb-8">
+                    <Logo className="w-48" align="center" />
+                </div>
                 
-                <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Correo Electrónico</label>
-                    <div className="relative group">
-                        <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                        <input type="email" required placeholder="hola@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
-                    </div>
+                <div className="flex p-1.5 bg-gray-100 rounded-2xl mb-8 border border-gray-200">
+                    <button onClick={() => { setIsLogin(true); setError(''); }} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-500'}`}>Iniciar Sesión</button>
+                    <button onClick={() => { setIsLogin(false); setError(''); }} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${!isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-500'}`}>Registrarse</button>
                 </div>
 
-                {!isRecovery && (
+                <form onSubmit={handleAuth} className="space-y-4">
+                    {!isLogin && !isRecovery && (
+                        <div className="space-y-1.5 animate-slide-up">
+                            <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Nombre Completo</label>
+                            <div className="relative group">
+                                <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                                <input type="text" required placeholder="Ej. Alex García" value={name} onChange={(e) => setName(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
+                            </div>
+                        </div>
+                    )}
+                    
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Contraseña</label>
+                        <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Correo Electrónico</label>
                         <div className="relative group">
-                            <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                            <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
+                            <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                            <input type="email" required placeholder="hola@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
                         </div>
                     </div>
-                )}
 
-                {!isLogin && !isRecovery && (
-                    <div className="flex items-start gap-3 pt-1">
-                        <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="mt-0.5 w-4 h-4 text-teal-600 rounded border-gray-300 focus:ring-teal-500" />
-                        <label htmlFor="terms" className="text-xs text-gray-500 leading-tight">He leído y acepto los <span className="font-bold text-teal-700 cursor-pointer hover:underline" onClick={() => setShowLegalModal('terms')}>Términos y Condiciones</span>.</label>
-                    </div>
-                )}
+                    {!isRecovery && (
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Contraseña</label>
+                            <div className="relative group">
+                                <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                                <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
+                            </div>
+                        </div>
+                    )}
 
-                {error && (
-                    <div className="flex items-start gap-2 text-red-600 font-medium text-xs bg-red-50 border border-red-100 p-3 rounded-xl animate-fade-in break-words">
-                        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                        <span>{error}</span>
-                    </div>
-                )}
+                    {!isLogin && !isRecovery && (
+                        <div className="flex items-start gap-3 pt-1">
+                            <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="mt-0.5 w-4 h-4 text-teal-600 rounded border-gray-300 focus:ring-teal-500" />
+                            <label htmlFor="terms" className="text-xs text-gray-500 leading-tight">He leído y acepto los <span className="font-bold text-teal-700 cursor-pointer hover:underline" onClick={() => setShowLegalModal('terms')}>Términos y Condiciones</span>.</label>
+                        </div>
+                    )}
 
-                {successMsg && (
-                    <div className="flex items-center gap-2 text-green-700 font-medium text-sm bg-green-50 border border-green-100 p-3 rounded-xl animate-fade-in">
-                        <Check className="w-4 h-4 flex-shrink-0" />
-                        {successMsg}
-                    </div>
-                )}
+                    {error && (
+                        <div className="flex items-start gap-2 text-red-600 font-medium text-xs bg-red-50 border border-red-100 p-3 rounded-xl animate-fade-in break-words">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <span>{error}</span>
+                        </div>
+                    )}
 
-                <button type="submit" disabled={loading} className="w-full bg-teal-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-teal-900 transition-all flex items-center justify-center gap-2 active:scale-[0.98] mt-2">
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar' : 'Crear cuenta')}<ArrowRight className="w-5 h-5" /></>}
-                </button>
-            </form>
+                    {successMsg && (
+                        <div className="flex items-center gap-2 text-green-700 font-medium text-sm bg-green-50 border border-green-100 p-3 rounded-xl animate-fade-in">
+                            <Check className="w-4 h-4 flex-shrink-0" />
+                            {successMsg}
+                        </div>
+                    )}
+
+                    <button type="submit" disabled={loading} className="w-full bg-teal-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-teal-900 transition-all flex items-center justify-center gap-2 active:scale-[0.98] mt-2">
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar' : 'Crear cuenta')}<ArrowRight className="w-5 h-5" /></>}
+                    </button>
+                </form>
+            </div>
         </div>
       </div>
     </div>
