@@ -148,7 +148,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
           <LegalModal type={showLegalModal} onClose={() => setShowLegalModal(null)} />
       )}
 
-      {/* Left Panel - Fixed width and height to prevent resizing */}
+      {/* Left Panel */}
       <div className="hidden lg:flex w-1/2 h-full bg-teal-800 relative overflow-hidden flex-col justify-between p-16 text-white flex-shrink-0">
         <div className="relative z-10 animate-fade-in">
             <div className="flex items-center gap-3 mb-16">
@@ -166,8 +166,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
 
       {/* Right Panel - Centered content with EXACT fixed height card */}
       <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-4 relative overflow-y-auto">
-        {/* h-[620px] y min-h-[620px] asegura que la tarjeta tenga SIEMPRE la misma altura, sea Login o Registro */}
-        <div className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-gray-100/50 h-[620px] min-h-[620px] flex flex-col justify-center transition-all duration-300">
+        {/* Usamos un style inline para forzar la altura a 700px exactamente sin que Tailwind interfiera */}
+        <div 
+            className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-gray-100/50 flex flex-col justify-center"
+            style={{ height: '700px', minHeight: '700px', maxHeight: '700px' }}
+        >
             <div className="flex justify-center mb-6">
                 <Logo className="w-48" align="center" />
             </div>
