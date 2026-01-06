@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { supabase } from '../lib/supabase';
 import { Logo } from './Logo';
-import { ArrowRight, Mail, Lock, User, AlertCircle, Loader2, Check, Send, ChevronLeft, Database, ShieldCheck, XCircle, Smartphone, AlertTriangle } from 'lucide-react';
+import { ArrowRight, Mail, Lock, User, AlertCircle, Loader2, Check, Send, AlertTriangle } from 'lucide-react';
 import { LegalModal } from './LegalModal';
 
 interface AuthPageProps {
@@ -42,7 +42,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
   const [showLegalModal, setShowLegalModal] = useState<'privacy' | 'terms' | null>(null);
   const [isLocalhost, setIsLocalhost] = useState(false);
 
-  // FIX: Clear auth state on mount to prevent ghost sessions
   useEffect(() => {
       const clearGhostSession = async () => {
           const { data } = await supabase.auth.getSession();
@@ -144,12 +143,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50 font-sans">
+    <div className="h-screen w-screen overflow-hidden flex bg-gray-50 font-sans">
       {showLegalModal && (
           <LegalModal type={showLegalModal} onClose={() => setShowLegalModal(null)} />
       )}
 
-      <div className="hidden lg:flex w-1/2 bg-teal-800 relative overflow-hidden flex-col justify-between p-16 text-white">
+      {/* Left Panel - Fixed width and height to prevent resizing */}
+      <div className="hidden lg:flex w-1/2 h-full bg-teal-800 relative overflow-hidden flex-col justify-between p-16 text-white flex-shrink-0">
         <div className="relative z-10 animate-fade-in">
             <div className="flex items-center gap-3 mb-16">
                 <Logo variant="inverted" className="w-64" align="left" />
@@ -164,70 +164,70 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
         </div>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative">
-        <div className="w-full max-w-md bg-white p-10 rounded-[2rem] shadow-2xl border border-gray-100/50">
-            <div className="flex justify-center mb-10">
-                <Logo className="w-56" align="center" />
+      {/* Right Panel - Centered and confined content */}
+      <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-4 relative">
+        <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-2xl border border-gray-100/50">
+            <div className="flex justify-center mb-6">
+                <Logo className="w-48" align="center" />
             </div>
             
-            <div className="flex p-1.5 bg-gray-100 rounded-2xl mb-8 border border-gray-200">
+            <div className="flex p-1.5 bg-gray-100 rounded-2xl mb-6 border border-gray-200">
                 <button onClick={() => { setIsLogin(true); setError(''); }} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-500'}`}>Iniciar Sesión</button>
                 <button onClick={() => { setIsLogin(false); setError(''); }} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${!isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-500'}`}>Registrarse</button>
             </div>
 
-            <form onSubmit={handleAuth} className="space-y-6">
-                {/* Inputs ... (Same as before) */}
+            <form onSubmit={handleAuth} className="space-y-4">
                 {!isLogin && !isRecovery && (
-                    <div className="space-y-2 animate-slide-up">
-                        <label className="text-sm font-semibold text-gray-700 ml-1">Nombre Completo</label>
+                    <div className="space-y-1.5 animate-slide-up">
+                        <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Nombre Completo</label>
                         <div className="relative group">
-                            <User className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
-                            <input type="text" required placeholder="Ej. Alex García" value={name} onChange={(e) => setName(e.target.value)} className="w-full pl-12 pr-4 py-4 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all" />
+                            <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                            <input type="text" required placeholder="Ej. Alex García" value={name} onChange={(e) => setName(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
                         </div>
                     </div>
                 )}
                 
-                <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700 ml-1">Correo Electrónico</label>
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Correo Electrónico</label>
                     <div className="relative group">
-                        <Mail className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
-                        <input type="email" required placeholder="hola@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-4 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all" />
+                        <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                        <input type="email" required placeholder="hola@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
                     </div>
                 </div>
 
                 {!isRecovery && (
-                    <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-700 ml-1">Contraseña</label>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Contraseña</label>
                         <div className="relative group">
-                            <Lock className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
-                            <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-12 pr-4 py-4 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all" />
+                            <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                            <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
                         </div>
                     </div>
                 )}
 
                 {!isLogin && !isRecovery && (
-                    <div className="flex items-start gap-3 pt-2">
-                        <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="mt-1 w-4 h-4 text-teal-600" />
-                        <label htmlFor="terms" className="text-xs text-gray-500">He leído y acepto los <span className="font-bold text-teal-700 cursor-pointer" onClick={() => setShowLegalModal('terms')}>Términos y Condiciones</span>.</label>
+                    <div className="flex items-start gap-3 pt-1">
+                        <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="mt-0.5 w-4 h-4 text-teal-600 rounded border-gray-300 focus:ring-teal-500" />
+                        <label htmlFor="terms" className="text-xs text-gray-500 leading-tight">He leído y acepto los <span className="font-bold text-teal-700 cursor-pointer hover:underline" onClick={() => setShowLegalModal('terms')}>Términos y Condiciones</span>.</label>
                     </div>
                 )}
 
                 {error && (
-                    <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 border border-red-100 p-4 rounded-xl animate-fade-in break-words">
-                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <div className="flex items-start gap-2 text-red-600 font-medium text-xs bg-red-50 border border-red-100 p-3 rounded-xl animate-fade-in break-words">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                         <span>{error}</span>
                     </div>
                 )}
 
                 {successMsg && (
-                    <div className="flex items-center gap-3 text-green-700 font-medium text-sm bg-green-50 border border-green-100 p-4 rounded-xl animate-fade-in">
-                        <Check className="w-5 h-5 flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-green-700 font-medium text-sm bg-green-50 border border-green-100 p-3 rounded-xl animate-fade-in">
+                        <Check className="w-4 h-4 flex-shrink-0" />
                         {successMsg}
                     </div>
                 )}
 
-                <button type="submit" disabled={loading} className="w-full bg-teal-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-teal-900 transition-all flex items-center justify-center gap-2">
-                    {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>{isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar' : 'Crear cuenta')}<ArrowRight className="w-5 h-5" /></>}
+                <button type="submit" disabled={loading} className="w-full bg-teal-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-teal-900 transition-all flex items-center justify-center gap-2 active:scale-[0.98] mt-2">
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar' : 'Crear cuenta')}<ArrowRight className="w-5 h-5" /></>}
                 </button>
             </form>
         </div>
