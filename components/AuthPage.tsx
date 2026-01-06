@@ -164,10 +164,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
         </div>
       </div>
 
-      {/* Right Panel - Centered content with STRICT fixed height card */}
+      {/* Right Panel - Centered content with EXACT fixed height card */}
       <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-4 relative overflow-y-auto">
-        {/* Usamos h-[680px] y w-full para fijar el tamaño de la tarjeta independientemente del contenido */}
-        <div className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-gray-100/50 h-[680px] flex flex-col justify-center transition-all duration-300">
+        {/* h-[620px] y min-h-[620px] asegura que la tarjeta tenga SIEMPRE la misma altura, sea Login o Registro */}
+        <div className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-gray-100/50 h-[620px] min-h-[620px] flex flex-col justify-center transition-all duration-300">
             <div className="flex justify-center mb-6">
                 <Logo className="w-48" align="center" />
             </div>
