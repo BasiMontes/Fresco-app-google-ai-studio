@@ -164,9 +164,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
         </div>
       </div>
 
-      {/* Right Panel - Centered content with maintained height */}
+      {/* Right Panel - Centered content with fixed height card */}
       <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-4 relative overflow-y-auto">
-        <div className="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-2xl border border-gray-100/50 min-h-[640px] flex flex-col justify-center transition-all duration-300">
+        <div className="w-full max-w-md bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl border border-gray-100/50 h-[600px] flex flex-col justify-center transition-all duration-300">
             <div className="flex justify-center mb-6">
                 <Logo className="w-48" align="center" />
             </div>
@@ -176,7 +176,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
                 <button onClick={() => { setIsLogin(false); setError(''); }} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${!isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-500'}`}>Registrarse</button>
             </div>
 
-            <form onSubmit={handleAuth} className="space-y-4">
+            <form onSubmit={handleAuth} className="space-y-3">
                 {!isLogin && !isRecovery && (
                     <div className="space-y-1.5 animate-slide-up">
                         <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Nombre Completo</label>
