@@ -104,7 +104,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
 
   if (verificationSent) {
       return (
-          <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 animate-fade-in">
+          <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 animate-fade-in font-sans">
               <div className="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-2xl border border-gray-100 text-center">
                   <div className="w-24 h-24 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce-subtle">
                       <Send className="w-10 h-10 text-teal-600" />
@@ -143,97 +143,182 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
   }
 
   return (
-    <div className="h-screen w-screen flex bg-gray-50 font-sans overflow-hidden">
+    <div className="min-h-screen flex bg-gray-50 font-sans">
       {showLegalModal && (
           <LegalModal type={showLegalModal} onClose={() => setShowLegalModal(null)} />
       )}
 
-      {/* Left Panel */}
-      <div className="hidden lg:flex w-1/2 h-full bg-teal-800 relative flex-col justify-between p-16 text-white flex-shrink-0 z-10">
+      {/* Left Panel - Brand (Desktop Only) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-teal-800 flex-col justify-center px-20 relative overflow-hidden text-white">
         <div className="relative z-10 animate-fade-in">
-            <div className="flex items-center gap-3 mb-16">
-                <Logo variant="inverted" className="w-64" align="left" />
+            <div className="mb-12">
+                <Logo variant="inverted" className="scale-125 origin-left" align="left" />
             </div>
-            <h1 className="text-6xl font-extrabold leading-tight mb-8">
+            
+            <h1 className="text-6xl font-black leading-tight mb-8 tracking-tight">
                 Tu cocina,<br/>
-                <span className="text-orange-400">sincronizada.</span>
+                <span className="text-orange-500">sincronizada.</span>
             </h1>
-            <p className="text-teal-100 text-xl max-w-lg leading-relaxed font-light">
+            <p className="text-teal-100 text-xl max-w-lg leading-relaxed font-medium opacity-90">
                 Gestión de despensa en tiempo real para hogares modernos. Tus datos seguros en la nube.
             </p>
         </div>
+        
+        {/* Abstract Pattern */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-orange-500 opacity-10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* Right Panel - Centered content */}
-      <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-4 bg-gray-50 overflow-y-auto relative z-0">
-        <div className="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-2xl border border-gray-100/50 flex flex-col justify-center relative transition-all duration-300">
-            <div className="flex justify-center mb-8">
-                <Logo className="w-48" align="center" />
+      {/* Right Panel - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-[#F9FAFB] overflow-y-auto">
+        <div className="w-full max-w-[480px] bg-white p-10 md:p-12 rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 relative animate-slide-up">
+            
+            {/* Mobile Header */}
+            <div className="lg:hidden flex justify-center mb-10">
+                <Logo className="scale-110" align="center" />
             </div>
             
-            <div className="flex p-1.5 bg-gray-100 rounded-2xl mb-8 border border-gray-200">
-                <button onClick={() => { setIsLogin(true); setError(''); }} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-500'}`}>Iniciar Sesión</button>
-                <button onClick={() => { setIsLogin(false); setError(''); }} className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${!isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-500'}`}>Registrarse</button>
+            <div className="hidden lg:flex justify-center mb-10">
+                 <div className="w-16 h-16 bg-teal-50 rounded-[1.5rem] flex items-center justify-center">
+                    <Logo className="scale-75" align="center" />
+                 </div>
             </div>
 
-            <form onSubmit={handleAuth} className="space-y-4">
+            {/* Tabs */}
+            <div className="flex p-1.5 bg-gray-50 rounded-2xl mb-8 border border-gray-100">
+                <button 
+                    onClick={() => { setIsLogin(true); setError(''); }}
+                    className={`flex-1 py-3.5 text-sm font-bold rounded-xl transition-all duration-200 ${
+                        isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                >
+                    Iniciar Sesión
+                </button>
+                <button 
+                    onClick={() => { setIsLogin(false); setError(''); }}
+                    className={`flex-1 py-3.5 text-sm font-bold rounded-xl transition-all duration-200 ${
+                        !isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                >
+                    Registrarse
+                </button>
+            </div>
+
+            <form onSubmit={handleAuth} className="space-y-5">
                 {!isLogin && !isRecovery && (
-                    <div className="space-y-1.5 animate-slide-up">
-                        <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Nombre Completo</label>
+                    <div className="space-y-2 animate-fade-in">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nombre Completo</label>
                         <div className="relative group">
-                            <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                            <input type="text" required placeholder="Ej. Alex García" value={name} onChange={(e) => setName(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-teal-600 transition-colors" />
+                            <input 
+                                type="text" 
+                                required 
+                                placeholder="Ej. Alex García" 
+                                value={name} 
+                                onChange={(e) => setName(e.target.value)} 
+                                className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder-gray-300" 
+                            />
                         </div>
                     </div>
                 )}
                 
-                <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Correo Electrónico</label>
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
                     <div className="relative group">
-                        <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                        <input type="email" required placeholder="hola@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-teal-600 transition-colors" />
+                        <input 
+                            type="email" 
+                            required 
+                            placeholder="hola@ejemplo.com" 
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)} 
+                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder-gray-300" 
+                        />
                     </div>
                 </div>
 
                 {!isRecovery && (
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-gray-700 ml-1 uppercase tracking-wider">Contraseña</label>
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center px-1">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contraseña</label>
+                            {isLogin && (
+                                <button type="button" onClick={() => setIsRecovery(true)} className="text-[10px] font-bold text-teal-600 hover:text-teal-800 hover:underline transition-colors">
+                                    ¿Olvidaste tu contraseña?
+                                </button>
+                            )}
+                        </div>
                         <div className="relative group">
-                            <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                            <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-teal-500 transition-all text-sm font-medium" />
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-teal-600 transition-colors" />
+                            <input 
+                                type="password" 
+                                required 
+                                placeholder="••••••••" 
+                                value={password} 
+                                onChange={(e) => setPassword(e.target.value)} 
+                                className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder-gray-300" 
+                            />
                         </div>
                     </div>
                 )}
 
+                {/* Terms Checkbox for Signup */}
                 {!isLogin && !isRecovery && (
-                    <div className="flex items-start gap-3 pt-1">
-                        <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="mt-0.5 w-4 h-4 text-teal-600 rounded border-gray-300 focus:ring-teal-500" />
-                        <label htmlFor="terms" className="text-xs text-gray-500 leading-tight">He leído y acepto los <span className="font-bold text-teal-700 cursor-pointer hover:underline" onClick={() => setShowLegalModal('terms')}>Términos y Condiciones</span>.</label>
+                    <div className="flex items-start gap-3 pt-2 px-1">
+                        <div className="relative flex items-center">
+                            <input 
+                                type="checkbox" 
+                                id="terms"
+                                required
+                                checked={acceptedTerms}
+                                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 bg-white checked:border-teal-600 checked:bg-teal-600 transition-all"
+                            />
+                            <Check className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                        </div>
+                        <label htmlFor="terms" className="text-xs text-gray-500 leading-snug font-medium pt-0.5">
+                            He leído y acepto los <button type="button" className="font-bold text-teal-700 hover:underline" onClick={() => setShowLegalModal('terms')}>Términos y Condiciones</button>.
+                        </label>
                     </div>
                 )}
 
+                {/* Error & Success Messages */}
                 {error && (
-                    <div className="flex items-start gap-2 text-red-600 font-medium text-xs bg-red-50 border border-red-100 p-3 rounded-xl animate-fade-in break-words">
-                        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                        <span>{error}</span>
+                    <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 border border-red-100 p-4 rounded-xl animate-fade-in">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                        <span className="leading-relaxed">{error}</span>
                     </div>
                 )}
 
                 {successMsg && (
-                    <div className="flex items-center gap-2 text-green-700 font-medium text-sm bg-green-50 border border-green-100 p-3 rounded-xl animate-fade-in">
-                        <Check className="w-4 h-4 flex-shrink-0" />
+                    <div className="flex items-center gap-3 text-green-700 font-medium text-sm bg-green-50 border border-green-100 p-4 rounded-xl animate-fade-in">
+                        <Check className="w-5 h-5 flex-shrink-0" />
                         {successMsg}
                     </div>
                 )}
 
-                <button type="submit" disabled={loading} className="w-full bg-teal-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-teal-900 transition-all flex items-center justify-center gap-2 active:scale-[0.98] mt-2">
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar' : 'Crear cuenta')}<ArrowRight className="w-5 h-5" /></>}
+                <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="w-full bg-teal-800 text-white font-black py-4 rounded-2xl shadow-lg shadow-teal-900/20 hover:bg-teal-900 hover:shadow-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 mt-4 text-xs uppercase tracking-widest"
+                >
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                        <>
+                            {isRecovery ? 'Enviar enlace de recuperación' : (isLogin ? 'Entrar' : 'Crear cuenta')}
+                            {!loading && <ArrowRight className="w-4 h-4" />}
+                        </>
+                    )}
                 </button>
+
+                {isRecovery && (
+                    <button type="button" onClick={() => setIsRecovery(false)} className="w-full text-center text-xs font-bold text-gray-400 hover:text-teal-700 transition-colors mt-4 uppercase tracking-widest">
+                        Volver
+                    </button>
+                )}
             </form>
-            
-            <div className="mt-8 text-center">
-                 <button onClick={onEnterDemo} className="text-[10px] font-black uppercase tracking-widest text-orange-500 hover:text-orange-600 transition-colors hover:underline">
-                    Probar Demo
+
+            <div className="mt-8 pt-6 border-t border-gray-50 text-center">
+                 <button onClick={onEnterDemo} className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500 hover:text-orange-600 transition-colors hover:underline">
+                    ¿Solo mirando? Prueba la Demo
                  </button>
             </div>
         </div>
