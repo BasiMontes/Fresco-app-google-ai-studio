@@ -15,16 +15,10 @@ interface AuthPageProps {
 const translateAuthError = (error: any): string => {
     const msg = (error?.message || '').toLowerCase();
     if (error?.status === 401 || msg.includes('jwt') || msg.includes('api key')) {
-        return 'Error 401: API Key inválida o expirada. Revisa Vercel/Supabase.';
-    }
-    if (msg.includes('fetch') || msg.includes('network')) {
-        return 'Error de conexión. Verifica tu internet.';
+        return 'Error 401: API Key inválida o expirada.';
     }
     if (msg.includes('invalid login credentials')) return 'Email o contraseña incorrectos.';
     if (msg.includes('user already registered')) return 'Este email ya está registrado.';
-    if (msg.includes('email not confirmed')) return 'Debes confirmar tu email antes de entrar.';
-    if (msg.includes('password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.';
-    if (msg.includes('rate limit exceeded')) return 'Demasiados intentos. Espera un momento.';
     return error?.message || 'Ocurrió un error desconocido.';
 };
 
@@ -40,17 +34,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
   const [verificationSent, setVerificationSent] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showLegalModal, setShowLegalModal] = useState<'privacy' | 'terms' | null>(null);
-  const [isLocalhost, setIsLocalhost] = useState(false);
 
   useEffect(() => {
       const clearGhostSession = async () => {
           const { data } = await supabase.auth.getSession();
-          if (data.session && !data.session.user) {
-              await supabase.auth.signOut();
-          }
+          if (data.session && !data.session.user) await supabase.auth.signOut();
       };
       clearGhostSession();
-      setIsLocalhost(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -61,41 +51,27 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
 
     try {
         if (isRecovery) {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin, 
-            });
+            const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
             if (error) throw error;
             setSuccessMsg('Hemos enviado un enlace de recuperación a tu correo.');
         } else if (isLogin) {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
         } else {
-            if (!acceptedTerms) throw new Error('Debes aceptar los Términos y la Política de Privacidad.');
-
+            if (!acceptedTerms) throw new Error('Debes aceptar los Términos.');
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
-                    data: {
-                        full_name: name,
-                        onboarding_completed: false
-                    },
+                    data: { full_name: name, onboarding_completed: false },
                     emailRedirectTo: window.location.origin 
                 }
             });
             if (error) throw error;
-            
-            if (data.user && data.user.identities && data.user.identities.length === 0) {
-                 setError('Este usuario ya existe. Intenta iniciar sesión.');
-            } else {
-                 setVerificationSent(true);
-            }
+            if (data.user && data.user.identities && data.user.identities.length === 0) setError('Este usuario ya existe.');
+            else setVerificationSent(true);
         }
     } catch (err: any) {
-        console.error("Auth Error:", err);
         setError(translateAuthError(err));
     } finally {
         setLoading(false);
@@ -104,101 +80,63 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
 
   if (verificationSent) {
       return (
-          <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 animate-fade-in font-sans">
-              <div className="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-2xl border border-gray-100 text-center">
-                  <div className="w-24 h-24 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce-subtle">
-                      <Send className="w-10 h-10 text-teal-600" />
+          <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] p-6 animate-fade-in font-sans">
+              <div className="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-xl text-center">
+                  <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Send className="w-8 h-8 text-[#013b33]" />
                   </div>
-                  <h2 className="text-3xl font-black text-teal-900 mb-4">Revisa tu correo</h2>
-                  <p className="text-gray-500 text-lg mb-8 leading-relaxed">
-                      Hemos enviado un enlace de confirmación a <span className="font-bold text-teal-700">{email}</span>.
-                  </p>
-                  
-                  {isLocalhost && (
-                      <div className="bg-orange-50 p-6 rounded-2xl text-left mb-8 border-2 border-orange-100 flex gap-4">
-                          <AlertTriangle className="w-8 h-8 text-orange-500 flex-shrink-0" />
-                          <div>
-                              <p className="text-sm text-orange-900 font-bold mb-1">AVISO IMPORTANTE (Localhost)</p>
-                              <p className="text-xs text-orange-800 leading-relaxed">
-                                  Estás ejecutando la app en tu PC. Si intentas abrir el enlace del correo en tu móvil, fallará porque tu móvil no sabe qué es "localhost".
-                                  <br/><br/>
-                                  <strong>Solución:</strong> Abre el correo en este mismo ordenador.
-                              </p>
-                          </div>
-                      </div>
-                  )}
-
-                  <button 
-                      onClick={() => { setVerificationSent(false); setIsLogin(true); }}
-                      className="w-full py-4 bg-teal-900 text-white font-bold rounded-xl shadow-lg hover:bg-teal-800 transition-all active:scale-[0.98]"
-                  >
-                      Volver a Iniciar Sesión
-                  </button>
-                  <p className="text-xs text-gray-400 mt-4">
-                      (Si pudiste entrar sin verificar, es porque tu proyecto Supabase tiene desactivada la confirmación de email)
-                  </p>
+                  <h2 className="text-2xl font-black text-[#013b33] mb-2">Revisa tu correo</h2>
+                  <p className="text-gray-500 mb-8">Enlace enviado a <span className="font-bold">{email}</span>.</p>
+                  <button onClick={() => { setVerificationSent(false); setIsLogin(true); }} className="w-full py-4 bg-[#013b33] text-white font-bold rounded-xl">Volver</button>
               </div>
           </div>
       );
   }
 
   return (
-    <div className="min-h-screen w-full flex bg-gray-50">
-      {showLegalModal && (
-          <LegalModal type={showLegalModal} onClose={() => setShowLegalModal(null)} />
-      )}
+    <div className="min-h-screen w-full flex bg-[#f8f9fa] overflow-hidden font-sans">
+      {showLegalModal && <LegalModal type={showLegalModal} onClose={() => setShowLegalModal(null)} />}
 
-      {/* Left Panel - Brand (Desktop Only - 50% width) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-teal-800 flex-col justify-center px-24 relative overflow-hidden text-white">
+      {/* LEFT PANEL - BRANDING */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#013b33] flex-col justify-center px-20 relative text-white">
+        <div className="absolute top-12 left-12">
+            <Logo variant="inverted" />
+        </div>
+        
         <div className="relative z-10 animate-fade-in">
-            <div className="mb-16">
-                <Logo variant="inverted" className="scale-125 origin-left" align="left" />
-            </div>
-            
-            <h1 className="text-6xl font-black leading-tight mb-8 tracking-tight">
+            <h1 className="text-6xl font-black leading-[1.1] mb-8 tracking-tight">
                 Tu cocina,<br/>
-                <span className="text-orange-500">sincronizada.</span>
+                <span className="text-[#e87c3e]">sincronizada.</span>
             </h1>
-            <p className="text-teal-100 text-xl max-w-lg leading-relaxed font-medium opacity-90">
+            <p className="text-teal-50 text-xl max-w-lg leading-relaxed font-normal opacity-90">
                 Gestión de despensa en tiempo real para hogares modernos. Tus datos seguros en la nube.
             </p>
         </div>
-        
-        {/* Abstract Pattern - Subtle shapes */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-orange-500 opacity-10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* Right Panel - Form (50% width) */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-[#F9FAFB]">
-        <div className="w-full max-w-[480px] bg-white p-10 md:p-12 rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 relative animate-slide-up">
+      {/* RIGHT PANEL - FORM */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 relative">
+        <div className="w-full max-w-[450px] bg-white p-10 md:p-12 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up">
             
-            {/* Logo on Card (Mobile Header / Desktop Card Header) */}
-            <div className="flex justify-center mb-10">
-                 {/* Mobile Logo */}
-                 <div className="lg:hidden scale-125">
-                    <Logo align="center" />
-                 </div>
-                 {/* Desktop Logo on Card */}
-                 <div className="hidden lg:flex w-20 h-20 bg-teal-50 rounded-[1.5rem] items-center justify-center mb-2">
-                    <Logo className="scale-75" align="center" />
-                 </div>
+            {/* Logo on Card (Centered) */}
+            <div className="flex justify-center mb-8">
+                 <Logo align="center" className="scale-110" />
             </div>
 
-            {/* Tabs */}
+            {/* Tabs (Segmented Control) */}
             <div className="flex p-1.5 bg-gray-50 rounded-2xl mb-8 border border-gray-100">
                 <button 
                     onClick={() => { setIsLogin(true); setError(''); }}
-                    className={`flex-1 py-3.5 text-sm font-bold rounded-xl transition-all duration-200 ${
-                        isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
+                        isLogin ? 'bg-white text-[#013b33] shadow-sm' : 'text-gray-400 hover:text-gray-600'
                     }`}
                 >
                     Iniciar Sesión
                 </button>
                 <button 
                     onClick={() => { setIsLogin(false); setError(''); }}
-                    className={`flex-1 py-3.5 text-sm font-bold rounded-xl transition-all duration-200 ${
-                        !isLogin ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
+                        !isLogin ? 'bg-white text-[#013b33] shadow-sm' : 'text-gray-400 hover:text-gray-600'
                     }`}
                 >
                     Registrarse
@@ -208,118 +146,92 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
             <form onSubmit={handleAuth} className="space-y-5">
                 {!isLogin && !isRecovery && (
                     <div className="space-y-2 animate-fade-in">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nombre Completo</label>
-                        <div className="relative group">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-teal-600 transition-colors" />
-                            <input 
-                                type="text" 
-                                required 
-                                placeholder="Ej. Alex García" 
-                                value={name} 
-                                onChange={(e) => setName(e.target.value)} 
-                                className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder-gray-300" 
+                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Nombre Completo</label>
+                        <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input type="text" required placeholder="Tu nombre" value={name} onChange={(e) => setName(e.target.value)} 
+                                className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
                             />
                         </div>
                     </div>
                 )}
                 
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
-                    <div className="relative group">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-teal-600 transition-colors" />
-                        <input 
-                            type="email" 
-                            required 
-                            placeholder="hola@ejemplo.com" 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)} 
-                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder-gray-300" 
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Correo Electrónico</label>
+                    <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input type="email" required placeholder="hola@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} 
+                            className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
                         />
                     </div>
                 </div>
 
                 {!isRecovery && (
                     <div className="space-y-2">
-                        <div className="flex justify-between items-center px-1">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contraseña</label>
-                            {isLogin && (
-                                <button type="button" onClick={() => setIsRecovery(true)} className="text-[10px] font-bold text-teal-600 hover:text-teal-800 hover:underline transition-colors">
-                                    ¿Olvidaste tu contraseña?
-                                </button>
-                            )}
-                        </div>
-                        <div className="relative group">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-teal-600 transition-colors" />
-                            <input 
-                                type="password" 
-                                required 
-                                placeholder="••••••••" 
-                                value={password} 
-                                onChange={(e) => setPassword(e.target.value)} 
-                                className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder-gray-300" 
+                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Contraseña</label>
+                        <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} 
+                                className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
                             />
                         </div>
                     </div>
                 )}
 
-                {/* Terms Checkbox for Signup */}
                 {!isLogin && !isRecovery && (
                     <div className="flex items-start gap-3 pt-2 px-1">
-                        <div className="relative flex items-center">
-                            <input 
-                                type="checkbox" 
-                                id="terms"
-                                required
-                                checked={acceptedTerms}
-                                onChange={(e) => setAcceptedTerms(e.target.checked)}
-                                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 bg-white checked:border-teal-600 checked:bg-teal-600 transition-all"
-                            />
-                            <Check className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
-                        </div>
-                        <label htmlFor="terms" className="text-xs text-gray-500 leading-snug font-medium pt-0.5">
-                            He leído y acepto los <button type="button" className="font-bold text-teal-700 hover:underline" onClick={() => setShowLegalModal('terms')}>Términos y Condiciones</button>.
+                        <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 text-[#013b33] rounded border-gray-300 focus:ring-[#013b33]"
+                        />
+                        <label htmlFor="terms" className="text-xs text-gray-500 font-medium">
+                            Acepto los <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={() => setShowLegalModal('terms')}>Términos</button>.
                         </label>
                     </div>
                 )}
 
-                {/* Error & Success Messages */}
                 {error && (
-                    <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 border border-red-100 p-4 rounded-xl animate-fade-in">
+                    <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 p-4 rounded-xl animate-fade-in">
                         <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                        <span className="leading-relaxed">{error}</span>
+                        <span>{error}</span>
                     </div>
                 )}
 
                 {successMsg && (
-                    <div className="flex items-center gap-3 text-green-700 font-medium text-sm bg-green-50 border border-green-100 p-4 rounded-xl animate-fade-in">
+                    <div className="flex items-center gap-3 text-green-700 font-medium text-sm bg-green-50 p-4 rounded-xl animate-fade-in">
                         <Check className="w-5 h-5 flex-shrink-0" />
                         {successMsg}
                     </div>
                 )}
 
-                <button 
-                    type="submit" 
-                    disabled={loading}
-                    className="w-full bg-teal-800 text-white font-black py-4 rounded-2xl shadow-lg shadow-teal-900/20 hover:bg-teal-900 hover:shadow-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 mt-4 text-xs uppercase tracking-widest"
+                <button type="submit" disabled={loading}
+                    className="w-full bg-[#013b33] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#012e28] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 mt-4 text-sm"
                 >
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                         <>
-                            {isRecovery ? 'Enviar enlace de recuperación' : (isLogin ? 'Entrar' : 'Crear cuenta')}
+                            {isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar' : 'Crear cuenta')}
                             {!loading && <ArrowRight className="w-4 h-4" />}
                         </>
                     )}
                 </button>
 
+                {isLogin && !isRecovery && (
+                     <div className="text-center pt-2">
+                        <button type="button" onClick={() => setIsRecovery(true)} className="text-xs font-bold text-gray-400 hover:text-[#013b33] transition-colors">
+                            ¿Olvidaste tu contraseña?
+                        </button>
+                    </div>
+                )}
+
                 {isRecovery && (
-                    <button type="button" onClick={() => setIsRecovery(false)} className="w-full text-center text-xs font-bold text-gray-400 hover:text-teal-700 transition-colors mt-4 uppercase tracking-widest">
-                        Volver
+                    <button type="button" onClick={() => setIsRecovery(false)} className="w-full text-center text-xs font-bold text-gray-400 hover:text-[#013b33] mt-2">
+                        Cancelar
                     </button>
                 )}
             </form>
 
             <div className="mt-8 pt-6 border-t border-gray-50 text-center">
-                 <button onClick={onEnterDemo} className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500 hover:text-orange-600 transition-colors hover:underline">
-                    ¿Solo mirando? Prueba la Demo
+                 <button onClick={onEnterDemo} className="text-[10px] font-black uppercase tracking-[0.2em] text-[#e87c3e] hover:text-orange-600 transition-colors hover:underline">
+                    PROBAR DEMO
                  </button>
             </div>
         </div>
