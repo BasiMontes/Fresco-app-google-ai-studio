@@ -3,13 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { supabase } from '../lib/supabase';
 import { Logo } from './Logo';
-import { ArrowRight, Mail, Lock, User, AlertCircle, Loader2, Check, Send, AlertTriangle } from 'lucide-react';
+import { ArrowRight, Mail, Lock, User, AlertCircle, Loader2, Check, Send } from 'lucide-react';
 import { LegalModal } from './LegalModal';
 
 interface AuthPageProps {
   onLogin: (user: UserProfile) => void;
   onSignup: (name: string, email: string) => void; 
-  onEnterDemo: () => void;
 }
 
 const translateAuthError = (error: any): string => {
@@ -22,7 +21,7 @@ const translateAuthError = (error: any): string => {
     return error?.message || 'Ocurrió un error desconocido.';
 };
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [isRecovery, setIsRecovery] = useState(false);
   const [email, setEmail] = useState('');
@@ -116,7 +115,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
 
       {/* RIGHT PANEL - FORM */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 relative">
-        <div className="w-full max-w-[450px] bg-white p-10 md:p-12 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up">
+        <div className="w-full max-w-[450px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up">
             
             {/* Logo on Card (Centered) */}
             <div className="flex justify-center mb-8">
@@ -143,7 +142,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
                 </button>
             </div>
 
-            <form onSubmit={handleAuth} className="space-y-5">
+            <form onSubmit={handleAuth} className="space-y-6">
                 {!isLogin && !isRecovery && (
                     <div className="space-y-2 animate-fade-in">
                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Nombre Completo</label>
@@ -179,7 +178,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
                 )}
 
                 {!isLogin && !isRecovery && (
-                    <div className="flex items-start gap-3 pt-2 px-1">
+                    <div className="flex items-start gap-3 pt-1 px-1">
                         <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)}
                             className="mt-0.5 w-4 h-4 text-[#013b33] rounded border-gray-300 focus:ring-[#013b33]"
                         />
@@ -204,7 +203,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
                 )}
 
                 <button type="submit" disabled={loading}
-                    className="w-full bg-[#013b33] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#012e28] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 mt-4 text-sm"
+                    className="w-full bg-[#013b33] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#012e28] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
                 >
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                         <>
@@ -228,12 +227,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
                     </button>
                 )}
             </form>
-
-            <div className="mt-8 pt-6 border-t border-gray-50 text-center">
-                 <button onClick={onEnterDemo} className="text-[10px] font-black uppercase tracking-[0.2em] text-[#e87c3e] hover:text-orange-600 transition-colors hover:underline">
-                    PROBAR DEMO
-                 </button>
-            </div>
         </div>
       </div>
     </div>

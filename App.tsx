@@ -652,7 +652,7 @@ const App: React.FC = () => {
             </div>
         )}
 
-        {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} onEnterDemo={handleDemoLogin} /> : 
+        {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={handleOnboardingComplete} /> :
          <>
           {/* SIDEBAR: Fixed Left - Matches Design */}
