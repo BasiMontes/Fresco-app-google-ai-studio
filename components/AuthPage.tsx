@@ -143,15 +143,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50 font-sans">
+    <div className="min-h-screen w-full flex bg-gray-50">
       {showLegalModal && (
           <LegalModal type={showLegalModal} onClose={() => setShowLegalModal(null)} />
       )}
 
-      {/* Left Panel - Brand (Desktop Only) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-teal-800 flex-col justify-center px-20 relative overflow-hidden text-white">
+      {/* Left Panel - Brand (Desktop Only - 50% width) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-teal-800 flex-col justify-center px-24 relative overflow-hidden text-white">
         <div className="relative z-10 animate-fade-in">
-            <div className="mb-12">
+            <div className="mb-16">
                 <Logo variant="inverted" className="scale-125 origin-left" align="left" />
             </div>
             
@@ -164,22 +164,23 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onEnterDemo }) => {
             </p>
         </div>
         
-        {/* Abstract Pattern */}
+        {/* Abstract Pattern - Subtle shapes */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-orange-500 opacity-10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* Right Panel - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-[#F9FAFB] overflow-y-auto">
+      {/* Right Panel - Form (50% width) */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-[#F9FAFB]">
         <div className="w-full max-w-[480px] bg-white p-10 md:p-12 rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 relative animate-slide-up">
             
-            {/* Mobile Header */}
-            <div className="lg:hidden flex justify-center mb-10">
-                <Logo className="scale-110" align="center" />
-            </div>
-            
-            <div className="hidden lg:flex justify-center mb-10">
-                 <div className="w-16 h-16 bg-teal-50 rounded-[1.5rem] flex items-center justify-center">
+            {/* Logo on Card (Mobile Header / Desktop Card Header) */}
+            <div className="flex justify-center mb-10">
+                 {/* Mobile Logo */}
+                 <div className="lg:hidden scale-125">
+                    <Logo align="center" />
+                 </div>
+                 {/* Desktop Logo on Card */}
+                 <div className="hidden lg:flex w-20 h-20 bg-teal-50 rounded-[1.5rem] items-center justify-center mb-2">
                     <Logo className="scale-75" align="center" />
                  </div>
             </div>
