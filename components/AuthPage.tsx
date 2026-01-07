@@ -115,7 +115,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
       {/* RIGHT PANEL - FORM */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 relative">
-        <div className="w-full max-w-[450px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up">
+        {/* Added min-h-[620px] to enforce static height */}
+        <div className="w-full max-w-[450px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up min-h-[620px] flex flex-col">
             
             {/* Logo on Card (Centered) */}
             <div className="flex justify-center mb-8">
@@ -123,7 +124,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             </div>
 
             {/* Tabs (Segmented Control) */}
-            <div className="flex p-1.5 bg-gray-50 rounded-2xl mb-8 border border-gray-100">
+            <div className="flex p-1.5 bg-gray-50 rounded-2xl mb-8 border border-gray-100 flex-shrink-0">
                 <button 
                     onClick={() => { setIsLogin(true); setError(''); }}
                     className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
@@ -142,90 +143,97 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 </button>
             </div>
 
-            <form onSubmit={handleAuth} className="space-y-6">
-                {!isLogin && !isRecovery && (
-                    <div className="space-y-2 animate-fade-in">
-                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Nombre Completo</label>
+            <form onSubmit={handleAuth} className="space-y-6 flex-1 flex flex-col">
+                <div className="space-y-6">
+                    {!isLogin && !isRecovery && (
+                        <div className="space-y-2 animate-fade-in">
+                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Nombre Completo</label>
+                            <div className="relative">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <input type="text" required placeholder="Tu nombre" value={name} onChange={(e) => setName(e.target.value)} 
+                                    className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
+                                />
+                            </div>
+                        </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Correo Electrónico</label>
                         <div className="relative">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <input type="text" required placeholder="Tu nombre" value={name} onChange={(e) => setName(e.target.value)} 
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input type="email" required placeholder="hola@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} 
                                 className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
                             />
                         </div>
                     </div>
-                )}
-                
-                <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Correo Electrónico</label>
-                    <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input type="email" required placeholder="hola@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} 
-                            className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
-                        />
-                    </div>
+
+                    {!isRecovery && (
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Contraseña</label>
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} 
+                                    className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {!isLogin && !isRecovery && (
+                        <div className="flex items-start gap-3 pt-1 px-1">
+                            <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)}
+                                className="mt-0.5 w-4 h-4 text-[#013b33] rounded border-gray-300 focus:ring-[#013b33]"
+                            />
+                            <label htmlFor="terms" className="text-xs text-gray-500 font-medium">
+                                Acepto los <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={() => setShowLegalModal('terms')}>Términos</button>.
+                            </label>
+                        </div>
+                    )}
                 </div>
 
-                {!isRecovery && (
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Contraseña</label>
-                        <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} 
-                                className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {!isLogin && !isRecovery && (
-                    <div className="flex items-start gap-3 pt-1 px-1">
-                        <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)}
-                            className="mt-0.5 w-4 h-4 text-[#013b33] rounded border-gray-300 focus:ring-[#013b33]"
-                        />
-                        <label htmlFor="terms" className="text-xs text-gray-500 font-medium">
-                            Acepto los <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={() => setShowLegalModal('terms')}>Términos</button>.
-                        </label>
-                    </div>
-                )}
-
                 {error && (
-                    <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 p-4 rounded-xl animate-fade-in">
+                    <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 p-4 rounded-xl animate-fade-in mt-4">
                         <AlertCircle className="w-5 h-5 flex-shrink-0" />
                         <span>{error}</span>
                     </div>
                 )}
 
                 {successMsg && (
-                    <div className="flex items-center gap-3 text-green-700 font-medium text-sm bg-green-50 p-4 rounded-xl animate-fade-in">
+                    <div className="flex items-center gap-3 text-green-700 font-medium text-sm bg-green-50 p-4 rounded-xl animate-fade-in mt-4">
                         <Check className="w-5 h-5 flex-shrink-0" />
                         {successMsg}
                     </div>
                 )}
 
-                <button type="submit" disabled={loading}
-                    className="w-full bg-[#013b33] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#012e28] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
-                >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                        <>
-                            {isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar' : 'Crear cuenta')}
-                            {!loading && <ArrowRight className="w-4 h-4" />}
-                        </>
-                    )}
-                </button>
+                {/* Spacer to push content up if needed, or simply utilize the flex container space */}
+                <div className="flex-1" />
 
-                {isLogin && !isRecovery && (
-                     <div className="text-center pt-2">
-                        <button type="button" onClick={() => setIsRecovery(true)} className="text-xs font-bold text-gray-400 hover:text-[#013b33] transition-colors">
-                            ¿Olvidaste tu contraseña?
-                        </button>
-                    </div>
-                )}
-
-                {isRecovery && (
-                    <button type="button" onClick={() => setIsRecovery(false)} className="w-full text-center text-xs font-bold text-gray-400 hover:text-[#013b33] mt-2">
-                        Cancelar
+                <div className="pt-4 space-y-4">
+                    <button type="submit" disabled={loading}
+                        className="w-full bg-[#013b33] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#012e28] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
+                    >
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                            <>
+                                {isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar' : 'Crear cuenta')}
+                                {!loading && <ArrowRight className="w-4 h-4" />}
+                            </>
+                        )}
                     </button>
-                )}
+
+                    {isLogin && !isRecovery && (
+                        <div className="text-center">
+                            <button type="button" onClick={() => setIsRecovery(true)} className="text-xs font-bold text-gray-400 hover:text-[#013b33] transition-colors">
+                                ¿Olvidaste tu contraseña?
+                            </button>
+                        </div>
+                    )}
+
+                    {isRecovery && (
+                        <button type="button" onClick={() => setIsRecovery(false)} className="w-full text-center text-xs font-bold text-gray-400 hover:text-[#013b33]">
+                            Cancelar
+                        </button>
+                    )}
+                </div>
             </form>
         </div>
       </div>
