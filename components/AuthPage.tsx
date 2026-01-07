@@ -79,7 +79,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
   if (verificationSent) {
       return (
-          <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] p-6 animate-fade-in font-sans">
+          <div className="h-screen w-full flex items-center justify-center bg-[#f8f9fa] p-6 animate-fade-in font-sans overflow-hidden">
               <div className="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-xl text-center">
                   <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
                       <Send className="w-8 h-8 text-[#013b33]" />
@@ -93,11 +93,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   }
 
   return (
-    <div className="min-h-screen w-full flex bg-[#f8f9fa] overflow-hidden font-sans">
+    <div className="h-screen w-full flex bg-[#f8f9fa] overflow-hidden font-sans">
       {showLegalModal && <LegalModal type={showLegalModal} onClose={() => setShowLegalModal(null)} />}
 
       {/* LEFT PANEL - BRANDING */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[#013b33] flex-col justify-center px-20 relative text-white">
+      <div className="hidden lg:flex lg:w-1/2 bg-[#013b33] h-full flex-col justify-center px-20 relative text-white">
         <div className="absolute top-12 left-12">
             <Logo variant="inverted" />
         </div>
@@ -114,12 +114,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
       </div>
 
       {/* RIGHT PANEL - FORM */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 relative">
-        {/* Added min-h-[620px] to enforce static height */}
-        <div className="w-full max-w-[450px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up min-h-[620px] flex flex-col">
+      <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-6 relative">
+        {/* CARD WITH FIXED HEIGHT (650px) TO PREVENT LAYOUT SHIFTS */}
+        <div className="w-full max-w-[450px] h-[650px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col">
             
             {/* Logo on Card (Centered) */}
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-8 flex-shrink-0">
                  <Logo align="center" className="scale-110" />
             </div>
 
@@ -143,7 +143,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 </button>
             </div>
 
-            <form onSubmit={handleAuth} className="space-y-6 flex-1 flex flex-col">
+            <form onSubmit={handleAuth} className="flex-1 flex flex-col justify-between">
                 <div className="space-y-6">
                     {!isLogin && !isRecovery && (
                         <div className="space-y-2 animate-fade-in">
@@ -191,24 +191,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                     )}
                 </div>
 
-                {error && (
-                    <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 p-4 rounded-xl animate-fade-in mt-4">
-                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                        <span>{error}</span>
-                    </div>
-                )}
+                <div className="space-y-4 pt-4">
+                    {error && (
+                        <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 p-4 rounded-xl animate-fade-in">
+                            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                            <span>{error}</span>
+                        </div>
+                    )}
 
-                {successMsg && (
-                    <div className="flex items-center gap-3 text-green-700 font-medium text-sm bg-green-50 p-4 rounded-xl animate-fade-in mt-4">
-                        <Check className="w-5 h-5 flex-shrink-0" />
-                        {successMsg}
-                    </div>
-                )}
+                    {successMsg && (
+                        <div className="flex items-center gap-3 text-green-700 font-medium text-sm bg-green-50 p-4 rounded-xl animate-fade-in">
+                            <Check className="w-5 h-5 flex-shrink-0" />
+                            {successMsg}
+                        </div>
+                    )}
 
-                {/* Spacer to push content up if needed, or simply utilize the flex container space */}
-                <div className="flex-1" />
-
-                <div className="pt-4 space-y-4">
                     <button type="submit" disabled={loading}
                         className="w-full bg-[#013b33] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#012e28] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
                     >
