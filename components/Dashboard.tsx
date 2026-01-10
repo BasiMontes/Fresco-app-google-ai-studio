@@ -1,7 +1,7 @@
 
-import React, { useMemo } from 'react';
-import { UserProfile, Recipe, PantryItem, MealSlot } from '../types';
-import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { UserProfile, Recipe, PantryItem, MealSlot, MealCategory } from '../types';
+import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp, ArrowLeft, Clock, Users, Check, X, CheckCircle2 } from 'lucide-react';
 import { getHours, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 import { SmartImage } from './SmartImage';
 
@@ -15,9 +15,29 @@ interface DashboardProps {
   onResetApp: () => void;
   onQuickConsume?: (id: string) => void;
   isOnline?: boolean;
+  onAddToPlan?: (recipe: Recipe, servings: number) => void; // Nuevo prop para favoritos
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recipes = [], onNavigate, isOnline = true }) => {
+// MOCK DATA PARA NOTIFICACIONES
+const MOCK_NOTIFICATIONS = [
+    { id: 1, type: 'cooking', title: '¡Hora de cocinar!', desc: 'Es momento de preparar tu pasta primavera para la cena', time: '10 ene 2026, 20:41', isNew: true, icon: ChefHat, color: 'bg-orange-100 text-orange-600' },
+    { id: 2, type: 'shopping', title: 'Lista de compras lista', desc: 'Tu lista para esta semana está preparada. ¡Ve al supermercado!', time: '10 ene 2026, 19:11', isNew: true, icon: ShoppingCart, color: 'bg-green-100 text-green-600' },
+    { id: 3, type: 'recipes', title: 'Nuevas recetas disponibles', desc: 'Hemos encontrado 3 recetas mediterráneas perfectas para ti', time: '10 ene 2026, 16:11', isNew: false, icon: Sparkles, color: 'bg-purple-100 text-purple-600' },
+    { id: 4, type: 'planning', title: 'Planifica tu semana', desc: '¡No olvides planificar tus comidas para los próximos 7 días!', time: '9 ene 2026, 21:11', isNew: false, icon: Clock, color: 'bg-teal-100 text-teal-600' },
+    { id: 5, type: 'achievement', title: '¡Meta alcanzada!', desc: 'Has planificado 7 días consecutivos. ¡Excelente trabajo!', time: '8 ene 2026, 21:11', isNew: false, icon: CheckCircle2, color: 'bg-blue-100 text-blue-600' },
+];
+
+export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true }) => {
+  const [currentView, setCurrentView] = useState<'dashboard' | 'favorites' | 'notifications'>('dashboard');
+  
+  // Estados para configuración de notificaciones
+  const [configNotifs, setConfigNotifs] = useState({
+      foodReminders: true,
+      iaSuggestions: true,
+      shoppingList: false,
+      weeklyPlan: true
+  });
+
   const timeGreeting = useMemo(() => {
       const h = getHours(new Date());
       if (h < 12) return { text: "Buenos días", icon: Sunrise };
@@ -27,9 +47,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
 
   // Lógica de Presupuesto Semanal (Simulada para UI)
   const budgetStats = useMemo(() => {
-      const BUDGET_LIMIT = 50; // Presupuesto ejemplo 50€
-      
-      // Calcular gasto estimado de la semana actual
+      const BUDGET_LIMIT = 50; 
       const today = new Date();
       const start = startOfWeek(today, { weekStartsOn: 1 });
       const end = endOfWeek(today, { weekStartsOn: 1 });
@@ -40,9 +58,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
           } catch { return false; }
       });
 
-      // Estimación burda: 3€ por comida planificada si no tenemos precio exacto calculado
       const estimatedSpent = weeklySlots.length * 3.5; 
-      
       const percentage = Math.min(100, (estimatedSpent / BUDGET_LIMIT) * 100);
       const isOverBudget = estimatedSpent > BUDGET_LIMIT;
       const remaining = BUDGET_LIMIT - estimatedSpent;
@@ -50,11 +66,188 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
       return { limit: BUDGET_LIMIT, spent: estimatedSpent, percentage, isOverBudget, remaining };
   }, [mealPlan]);
 
-  // Últimas recetas (o random si son pocas)
   const latestRecipes = useMemo(() => {
       return [...recipes].reverse().slice(0, 3);
   }, [recipes]);
 
+  const favoriteRecipes = useMemo(() => {
+      // Simulamos que las 3 primeras son favoritas para la demo visual
+      return recipes.slice(0, 3);
+  }, [recipes]);
+
+  const toggleConfig = (key: keyof typeof configNotifs) => {
+      setConfigNotifs(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // --- VISTA FAVORITOS ---
+  if (currentView === 'favorites') {
+      return (
+          <div className="space-y-8 animate-fade-in pb-10">
+              <div className="flex items-center gap-4">
+                  <button onClick={() => setCurrentView('dashboard')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                      <ArrowLeft className="w-6 h-6 text-gray-600" />
+                  </button>
+                  <div>
+                      <h1 className="text-3xl font-black text-gray-900 flex items-center gap-2">
+                          <Heart className="w-8 h-8 text-red-500 fill-current" /> Mis Favoritos
+                      </h1>
+                      <p className="text-gray-500 font-medium text-sm">Tus recetas guardadas para cocinar cuando quieras</p>
+                  </div>
+              </div>
+
+              <div className="flex justify-center">
+                  <div className="bg-white border border-gray-100 px-6 py-2 rounded-full shadow-sm">
+                      <span className="font-bold text-gray-800 text-sm">{favoriteRecipes.length} recetas favoritas</span>
+                  </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {favoriteRecipes.map(recipe => (
+                      <div key={recipe.id} className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col">
+                          <div className="aspect-[4/3] relative overflow-hidden">
+                              <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                          </div>
+                          <div className="p-6 flex-1 flex flex-col">
+                              <h3 className="text-lg font-black text-gray-900 leading-tight mb-2">{recipe.title}</h3>
+                              <p className="text-gray-500 text-xs font-medium line-clamp-2 mb-4 flex-1">{recipe.description}</p>
+                              
+                              <div className="flex items-center gap-4 mb-6">
+                                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                      recipe.difficulty === 'easy' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                                  }`}>
+                                      {recipe.difficulty === 'easy' ? 'Fácil' : recipe.difficulty === 'medium' ? 'Media' : 'Difícil'}
+                                  </span>
+                                  <div className="flex items-center gap-1 text-gray-500 text-xs">
+                                      <Clock className="w-4 h-4" /> {recipe.prep_time} min
+                                  </div>
+                                  <div className="flex items-center gap-1 text-gray-500 text-xs">
+                                      <Users className="w-4 h-4" /> {recipe.servings}
+                                  </div>
+                              </div>
+
+                              <button 
+                                onClick={() => {
+                                    if(onAddToPlan) {
+                                        onAddToPlan(recipe, recipe.servings);
+                                        // Visual feedback could be added here
+                                    }
+                                }}
+                                className="w-full py-3 bg-teal-700 text-white rounded-xl font-bold text-sm hover:bg-teal-800 active:scale-95 transition-all"
+                              >
+                                  Añadir al planificador
+                              </button>
+                          </div>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      );
+  }
+
+  // --- VISTA NOTIFICACIONES ---
+  if (currentView === 'notifications') {
+      return (
+          <div className="space-y-10 animate-fade-in pb-10">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                      <button onClick={() => setCurrentView('dashboard')} className="p-2 hover:bg-gray-100 rounded-full transition-colors md:hidden">
+                          <ArrowLeft className="w-6 h-6 text-gray-600" />
+                      </button>
+                      <div>
+                          <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
+                              <Bell className="w-8 h-8 text-teal-900" /> Notificaciones
+                          </h1>
+                          <p className="text-gray-500 font-medium text-sm mt-1">Mantente al día con tus comidas y recordatorios</p>
+                      </div>
+                  </div>
+                  <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm">
+                      <CheckCircle2 className="w-4 h-4" /> Marcar todas como leídas (2)
+                  </button>
+              </div>
+
+              {/* LISTA DE NOTIFICACIONES */}
+              <div className="space-y-4">
+                  {MOCK_NOTIFICATIONS.map(notif => (
+                      <div key={notif.id} className="bg-white border border-teal-50 p-4 rounded-2xl shadow-sm flex items-start gap-4 transition-all hover:shadow-md">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${notif.color}`}>
+                              <notif.icon className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-bold text-gray-900 text-sm truncate">{notif.title}</h4>
+                                  {notif.isNew && (
+                                      <span className="bg-teal-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">Nuevo</span>
+                                  )}
+                              </div>
+                              <p className="text-gray-600 text-sm leading-snug mb-2">{notif.desc}</p>
+                              <p className="text-gray-400 text-xs font-medium">{notif.time}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                              {notif.isNew && (
+                                  <button className="p-2 text-teal-600 hover:bg-teal-50 rounded-full transition-all" title="Marcar como leída">
+                                      <CheckCircle2 className="w-5 h-5" />
+                                  </button>
+                              )}
+                              <button className="p-2 text-gray-300 hover:text-gray-500 hover:bg-gray-50 rounded-full transition-all">
+                                  <X className="w-4 h-4" />
+                              </button>
+                          </div>
+                      </div>
+                  ))}
+              </div>
+
+              {/* CONFIGURACIÓN */}
+              <div className="pt-6 border-t border-gray-100">
+                  <h3 className="text-lg font-black text-gray-900 mb-6">Configurar Notificaciones</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
+                      <div className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
+                          <span className="text-sm font-bold text-gray-700">Recordatorios de comida</span>
+                          <button 
+                            onClick={() => toggleConfig('foodReminders')}
+                            className={`w-12 h-7 rounded-full transition-colors relative ${configNotifs.foodReminders ? 'bg-gray-900' : 'bg-gray-200'}`}
+                          >
+                              <div className={`w-5 h-5 bg-white rounded-full absolute top-1 transition-transform ${configNotifs.foodReminders ? 'left-6' : 'left-1'}`} />
+                          </button>
+                      </div>
+
+                      <div className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
+                          <span className="text-sm font-bold text-gray-700">Sugerencias de IA</span>
+                          <button 
+                            onClick={() => toggleConfig('iaSuggestions')}
+                            className={`w-12 h-7 rounded-full transition-colors relative ${configNotifs.iaSuggestions ? 'bg-gray-900' : 'bg-gray-200'}`}
+                          >
+                              <div className={`w-5 h-5 bg-white rounded-full absolute top-1 transition-transform ${configNotifs.iaSuggestions ? 'left-6' : 'left-1'}`} />
+                          </button>
+                      </div>
+
+                      <div className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
+                          <span className="text-sm font-bold text-gray-700">Lista de compras</span>
+                          <button 
+                            onClick={() => toggleConfig('shoppingList')}
+                            className={`w-12 h-7 rounded-full transition-colors relative ${configNotifs.shoppingList ? 'bg-gray-900' : 'bg-gray-200'}`}
+                          >
+                              <div className={`w-5 h-5 bg-white rounded-full absolute top-1 transition-transform ${configNotifs.shoppingList ? 'left-6' : 'left-1'}`} />
+                          </button>
+                      </div>
+
+                      <div className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
+                          <span className="text-sm font-bold text-gray-700">Planificación semanal</span>
+                          <button 
+                            onClick={() => toggleConfig('weeklyPlan')}
+                            className={`w-12 h-7 rounded-full transition-colors relative ${configNotifs.weeklyPlan ? 'bg-gray-900' : 'bg-gray-200'}`}
+                          >
+                              <div className={`w-5 h-5 bg-white rounded-full absolute top-1 transition-transform ${configNotifs.weeklyPlan ? 'left-6' : 'left-1'}`} />
+                          </button>
+                      </div>
+
+                  </div>
+              </div>
+          </div>
+      );
+  }
+
+  // --- VISTA DASHBOARD (DEFAULT) ---
   return (
     <div className="space-y-10 animate-fade-in pb-10">
       
@@ -70,13 +263,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
           
           <div className="flex items-center gap-3">
               <button 
-                onClick={() => onNavigate('recipes')} // Placeholder acción favoritos
+                onClick={() => setCurrentView('favorites')}
                 className="w-12 h-12 bg-white rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50 transition-all shadow-sm group"
               >
                   <Heart className="w-6 h-6 group-hover:fill-current" />
               </button>
               <button 
-                onClick={() => alert("Sin notificaciones nuevas")} 
+                onClick={() => setCurrentView('notifications')}
                 className="w-12 h-12 bg-white rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-teal-900 hover:border-teal-200 transition-all shadow-sm relative"
               >
                   <Bell className="w-6 h-6" />
@@ -88,7 +281,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
       {/* KPI CARDS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           
-          {/* Card 1: Plan Semanal (Usando Recetas Disponibles como pidió el usuario) */}
+          {/* Card 1: Recetas Disponibles */}
           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-4">
                   <div>
@@ -102,7 +295,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
               <p className="text-[10px] text-gray-400 font-medium">En tu biblioteca personal</p>
           </div>
 
-          {/* Card 2: Presupuesto Semanal (Barra de Progreso) */}
+          {/* Card 2: Presupuesto Semanal */}
           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                <div className="flex justify-between items-start mb-2">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Presupuesto Semanal</p>
@@ -222,8 +415,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
                     <div 
                         key={recipe.id}
                         onClick={() => {
-                            // Hack: Navegamos a recetas y luego abrimos el detalle pasando el ID por URL o estado global
-                            // Por simplicidad en esta demo, navegamos a la tab recetas
                              window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}`);
                              onNavigate('recipes');
                         }}
