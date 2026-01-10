@@ -57,7 +57,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
         } else {
-            if (!acceptedTerms) throw new Error('Debes aceptar los Términos.');
+            if (!acceptedTerms) throw new Error('Debes aceptar las condiciones legales.');
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
@@ -180,12 +180,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                     )}
 
                     {!isLogin && !isRecovery && (
-                        <div className="flex items-start gap-3 pt-1 px-1">
+                        <div className="flex items-start gap-3 pt-2 px-1">
                             <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)}
-                                className="mt-0.5 w-3.5 h-3.5 text-[#013b33] rounded border-gray-300 focus:ring-[#013b33]"
+                                className="mt-0.5 w-3.5 h-3.5 text-[#013b33] rounded border-gray-300 focus:ring-[#013b33] cursor-pointer"
                             />
-                            <label htmlFor="terms" className="text-[11px] text-gray-500 font-medium leading-tight">
-                                Acepto los <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={() => setShowLegalModal('terms')}>Términos</button>.
+                            <label htmlFor="terms" className="text-[10px] text-gray-500 font-medium leading-relaxed cursor-pointer select-none">
+                                Al crear una cuenta, aceptas nuestros <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={() => setShowLegalModal('terms')}>Términos de Servicio</button> y nuestra <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={() => setShowLegalModal('privacy')}>Política de Privacidad</button>.
                             </label>
                         </div>
                     )}
