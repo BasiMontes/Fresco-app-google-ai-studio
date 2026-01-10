@@ -119,15 +119,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         <div className="w-full max-w-[450px] h-[650px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col">
             
             {/* Logo on Card (Centered) */}
-            <div className="flex justify-center mb-8 flex-shrink-0">
+            <div className="flex justify-center mb-6 flex-shrink-0">
                  <Logo align="center" className="scale-110" />
             </div>
 
             {/* Tabs (Segmented Control) */}
-            <div className="flex p-1.5 bg-gray-50 rounded-2xl mb-8 border border-gray-100 flex-shrink-0">
+            <div className="flex p-1 bg-gray-50 rounded-xl mb-6 border border-gray-100 flex-shrink-0">
                 <button 
                     onClick={() => { setIsLogin(true); setError(''); }}
-                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200 uppercase tracking-wide ${
                         isLogin ? 'bg-white text-[#013b33] shadow-sm' : 'text-gray-400 hover:text-gray-600'
                     }`}
                 >
@@ -135,7 +135,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 </button>
                 <button 
                     onClick={() => { setIsLogin(false); setError(''); }}
-                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-200 ${
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200 uppercase tracking-wide ${
                         !isLogin ? 'bg-white text-[#013b33] shadow-sm' : 'text-gray-400 hover:text-gray-600'
                     }`}
                 >
@@ -144,36 +144,36 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             </div>
 
             <form onSubmit={handleAuth} className="flex-1 flex flex-col justify-between">
-                <div className="space-y-6">
+                <div className="space-y-4">
                     {!isLogin && !isRecovery && (
-                        <div className="space-y-2 animate-fade-in">
+                        <div className="space-y-1.5 animate-fade-in">
                             <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Nombre Completo</label>
                             <div className="relative">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input type="text" required placeholder="Tu nombre" value={name} onChange={(e) => setName(e.target.value)} 
-                                    className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
+                                    className="w-full pl-10 pr-4 py-3 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
                                 />
                             </div>
                         </div>
                     )}
                     
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Correo Electrónico</label>
                         <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input type="email" required placeholder="hola@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} 
-                                className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
+                                className="w-full pl-10 pr-4 py-3 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
                             />
                         </div>
                     </div>
 
                     {!isRecovery && (
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                             <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Contraseña</label>
                             <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} 
-                                    className="w-full pl-12 pr-4 py-4 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
+                                    className="w-full pl-10 pr-4 py-3 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
                                 />
                             </div>
                         </div>
@@ -182,9 +182,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                     {!isLogin && !isRecovery && (
                         <div className="flex items-start gap-3 pt-1 px-1">
                             <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)}
-                                className="mt-0.5 w-4 h-4 text-[#013b33] rounded border-gray-300 focus:ring-[#013b33]"
+                                className="mt-0.5 w-3.5 h-3.5 text-[#013b33] rounded border-gray-300 focus:ring-[#013b33]"
                             />
-                            <label htmlFor="terms" className="text-xs text-gray-500 font-medium">
+                            <label htmlFor="terms" className="text-[11px] text-gray-500 font-medium leading-tight">
                                 Acepto los <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={() => setShowLegalModal('terms')}>Términos</button>.
                             </label>
                         </div>
@@ -193,23 +193,23 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
                 <div className="space-y-4 pt-4">
                     {error && (
-                        <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 p-4 rounded-xl animate-fade-in">
-                            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                        <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 p-3 rounded-xl animate-fade-in">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
                             <span>{error}</span>
                         </div>
                     )}
 
                     {successMsg && (
-                        <div className="flex items-center gap-3 text-green-700 font-medium text-sm bg-green-50 p-4 rounded-xl animate-fade-in">
-                            <Check className="w-5 h-5 flex-shrink-0" />
+                        <div className="flex items-center gap-3 text-green-700 font-medium text-sm bg-green-50 p-3 rounded-xl animate-fade-in">
+                            <Check className="w-4 h-4 flex-shrink-0" />
                             {successMsg}
                         </div>
                     )}
 
                     <button type="submit" disabled={loading}
-                        className="w-full bg-[#013b33] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#012e28] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
+                        className="w-full bg-[#013b33] text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-[#012e28] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
                     >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                             <>
                                 {isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar' : 'Crear cuenta')}
                                 {!loading && <ArrowRight className="w-4 h-4" />}
@@ -219,14 +219,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
                     {isLogin && !isRecovery && (
                         <div className="text-center">
-                            <button type="button" onClick={() => setIsRecovery(true)} className="text-xs font-bold text-gray-400 hover:text-[#013b33] transition-colors">
+                            <button type="button" onClick={() => setIsRecovery(true)} className="text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-[#013b33] transition-colors">
                                 ¿Olvidaste tu contraseña?
                             </button>
                         </div>
                     )}
 
                     {isRecovery && (
-                        <button type="button" onClick={() => setIsRecovery(false)} className="w-full text-center text-xs font-bold text-gray-400 hover:text-[#013b33]">
+                        <button type="button" onClick={() => setIsRecovery(false)} className="w-full text-center text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-[#013b33]">
                             Cancelar
                         </button>
                     )}
