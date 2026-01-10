@@ -97,7 +97,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
       {showLegalModal && <LegalModal type={showLegalModal} onClose={() => setShowLegalModal(null)} />}
 
       {/* LEFT PANEL - BRANDING */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[#013b33] h-full flex-col justify-center px-20 relative text-white">
+      <div className="hidden lg:flex lg:w-1/2 lg:shrink-0 bg-[#013b33] h-full flex-col justify-center px-20 relative text-white">
         <div className="absolute top-12 left-12">
             <Logo variant="inverted" />
         </div>
@@ -114,7 +114,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
       </div>
 
       {/* RIGHT PANEL - FORM */}
-      <div className="w-full lg:w-1/2 h-full flex items-center justify-center p-6 relative">
+      <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-6 relative">
         {/* CARD WITH FIXED HEIGHT (650px) TO PREVENT LAYOUT SHIFTS */}
         <div className="w-full max-w-[450px] h-[650px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col">
             
