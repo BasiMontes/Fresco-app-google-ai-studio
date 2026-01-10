@@ -88,10 +88,28 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
         const matchesCategory = activeCategory === 'all' || r.meal_category === activeCategory;
         const stock = checkPantryStock(r);
         const isCookable = !showOnlyCookable || (stock.count / stock.total >= 0.6); 
-        return matchesSearch && matchesCategory && isCookable;
+        
+        // Diet Logic: Solo filtramos si NO estamos buscando texto específico (para permitir búsquedas libres)
+        // Y solo si el usuario tiene preferencias estrictas (Vegetariano/Vegano)
+        const isVegetarianUser = user.dietary_preferences.includes('vegetarian');
+        const isVeganUser = user.dietary_preferences.includes('vegan');
+        
+        let matchesDiet = true;
+        if (!searchTerm && (isVegetarianUser || isVeganUser)) {
+             if (isVeganUser) matchesDiet = r.dietary_tags.includes('vegan');
+             else if (isVegetarianUser) matchesDiet = r.dietary_tags.includes('vegetarian') || r.dietary_tags.includes('vegan');
+        }
+
+        return matchesSearch && matchesCategory && isCookable && matchesDiet;
     });
+    
+    // Fallback: Si el filtrado estricto de dieta devuelve 0, mostramos todo pero indicando que no hay coincidencias estrictas
+    if (result.length === 0 && recipes.length > 0 && !searchTerm && activeCategory === 'all' && !showOnlyCookable) {
+        return recipes; // Devolvemos todo para no mostrar pantalla vacía, idealmente con un aviso visual
+    }
+
     return result;
-  }, [recipes, searchTerm, activeCategory, showOnlyCookable, pantry]);
+  }, [recipes, searchTerm, activeCategory, showOnlyCookable, pantry, user.dietary_preferences]);
 
   return (
     <div className="space-y-6 animate-fade-in pb-48">
@@ -228,6 +246,16 @@ export const Recipes: React.FC<RecipesProps> = ({ recipes, user, pantry, onAddRe
             );
           })}
       </div>
+      
+      {filteredRecipes.length === 0 && !loadingAI && (
+          <div className="flex flex-col items-center justify-center py-20 text-center opacity-60">
+              <BookX className="w-12 h-12 text-gray-300 mb-4" />
+              <p className="font-bold text-gray-500">No encontramos recetas con estos filtros.</p>
+              <button onClick={() => { setSearchTerm(''); setActiveCategory('all'); setShowOnlyCookable(false); }} className="mt-4 text-teal-600 font-black text-xs uppercase tracking-widest hover:underline">
+                  Limpiar Filtros
+              </button>
+          </div>
+      )}
       
       {visibleCount < filteredRecipes.length && (
           <div className="flex justify-center pb-10 pt-4">

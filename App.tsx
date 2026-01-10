@@ -17,7 +17,6 @@ const Recipes = React.lazy(() => import('./components/Recipes').then(module => (
 const ShoppingList = React.lazy(() => import('./components/ShoppingList').then(module => ({ default: module.ShoppingList })));
 const Pantry = React.lazy(() => import('./components/Pantry').then(module => ({ default: module.Pantry })));
 const Profile = React.lazy(() => import('./components/Profile').then(module => ({ default: module.Profile })));
-// const BatchCooking = React.lazy(() => import('./components/BatchCooking').then(module => ({ default: module.BatchCooking })));
 
 import { Logo } from './components/Logo';
 import { Home, Calendar, ShoppingBag, BookOpen, Package, User, Sparkles, AlertOctagon, FileText, CloudCog, WifiOff, ArrowRight, RefreshCw, X } from 'lucide-react';
@@ -131,29 +130,6 @@ const App: React.FC = () => {
           console.warn("DB call failed, queueing offline action", e);
           addToSyncQueue(userId, fallbackType, fallbackPayload);
       }
-  };
-
-  const handleDemoLogin = () => {
-      setIsLoaded(false);
-      setTimeout(() => {
-          const demoProfile: UserProfile = { ...MOCK_USER, name: "Invitado Demo" };
-          setUser(demoProfile);
-          setUserId(DEMO_USER_ID);
-          
-          setPantry([
-              { id: '1', name: 'Pasta', quantity: 500, unit: 'g', category: 'grains', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 180).toISOString() },
-              { id: '2', name: 'Tomate Frito', quantity: 2, unit: 'uds', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 90).toISOString() },
-              { id: '3', name: 'Huevos', quantity: 6, unit: 'uds', category: 'dairy', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 14).toISOString() },
-              { id: '4', name: 'Aceite', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
-          ]);
-          setRecipes(FALLBACK_RECIPES);
-          setMealPlan([]);
-          setShoppingList([]);
-          
-          setView('app');
-          setIsLoaded(true);
-          setToast({ msg: "Modo Demo Activado: Los datos son locales.", type: 'info' });
-      }, 800);
   };
 
   const smartPantryMerge = async (incomingItems: PantryItem[]) => {
@@ -437,12 +413,37 @@ const App: React.FC = () => {
       const updatedUser: UserProfile = { ...profile, onboarding_completed: true };
       setUser(updatedUser);
 
+      // FIX CRITICO: Inicializar Recetas Estáticas inmediatamente para que la biblioteca no salga vacía
+      // Si el usuario es vegetariano, intentamos priorizar/filtrar las recetas estáticas, pero siempre cargamos algo.
+      const isVegetarian = profile.dietary_preferences.includes('vegetarian') || profile.dietary_preferences.includes('vegan');
+      const filteredStatic = isVegetarian 
+          ? STATIC_RECIPES.filter(r => r.dietary_tags.includes('vegetarian') || r.dietary_tags.includes('vegan')) 
+          : STATIC_RECIPES;
+          
+      // Si el filtrado deja vacío (que no debería), usamos todas
+      const initialRecipesSource = filteredStatic.length > 0 ? filteredStatic : STATIC_RECIPES;
+      
+      const seedRecipes = initialRecipesSource.map(r => ({
+          ...r,
+          id: `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          user_id: userId
+      }));
+      
+      setRecipes(seedRecipes); // Estado UI instantáneo
+
+      // También poblamos la despensa básica
+      const seedPantry = [
+          { id: `start-1-${Date.now()}`, name: 'Aceite de Oliva', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
+          { id: `start-2-${Date.now()}`, name: 'Sal', quantity: 1, unit: 'kg', category: 'spices', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 700).toISOString() },
+      ].map(p => ({...p, user_id: userId}));
+      setPantry(seedPantry); // Estado UI instantáneo
+
       if (userId === DEMO_USER_ID) {
           setView('app');
           return;
       }
 
-      // CRITICAL FIX: Use upsert to guarantee profile exists, even if DB trigger failed
+      // Persistencia en segundo plano
       const { error } = await supabase.from('profiles').upsert({
           id: userId,
           dietary_preferences: profile.dietary_preferences,
@@ -450,14 +451,15 @@ const App: React.FC = () => {
           household_size: profile.household_size,
           cooking_experience: profile.cooking_experience,
           onboarding_completed: true,
-          full_name: profile.name || user?.name || 'Usuario', // Ensure name is preserved
+          full_name: profile.name || user?.name || 'Usuario', 
           updated_at: new Date().toISOString()
       });
 
-      if (error) {
-          console.error("Error saving profile", error);
-          setToast({ msg: "Error guardando perfil", type: 'error' });
-      }
+      if (error) console.error("Error saving profile", error);
+      
+      // Guardar recetas y despensa inicial en DB
+      db.saveRecipesBulkDB(userId, seedRecipes).catch(e => console.error("Error background seeding recipes", e));
+      db.addPantryItemsBulkDB(userId, seedPantry).catch(e => console.error("Error background seeding pantry", e));
 
       setView('app');
   };
@@ -508,30 +510,25 @@ const App: React.FC = () => {
                     db.fetchShoppingList(uid)
                 ]);
 
-                let finalPantry = fetchedPantry;
+                // Si por alguna razón la DB está vacía pero el user completó onboarding (bug previo), re-sembrar.
                 let finalRecipes = fetchedRecipes;
+                if (fetchedRecipes.length === 0) {
+                     const isVegetarian = appUser.dietary_preferences.includes('vegetarian') || appUser.dietary_preferences.includes('vegan');
+                     const filteredStatic = isVegetarian 
+                        ? STATIC_RECIPES.filter(r => r.dietary_tags.includes('vegetarian') || r.dietary_tags.includes('vegan')) 
+                        : STATIC_RECIPES;
+                     const fallbackRecipes = filteredStatic.length > 0 ? filteredStatic : STATIC_RECIPES;
 
-                if (fetchedRecipes.length === 0 && navigator.onLine) {
-                    const seedRecipes = STATIC_RECIPES.map(r => ({
+                     const seedRecipes = fallbackRecipes.map(r => ({
                         ...r,
-                        id: `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                        id: `static-recover-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                         user_id: uid
                     }));
                     finalRecipes = seedRecipes;
-                    db.saveRecipesBulkDB(uid, seedRecipes).catch(e => console.error("Error background seeding recipes", e));
-                }
-
-                if (fetchedPantry.length === 0 && navigator.onLine) {
-                    const seedPantry = [
-                        { id: `start-1`, name: 'Aceite de Oliva', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
-                        { id: `start-2`, name: 'Sal', quantity: 1, unit: 'kg', category: 'spices', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 700).toISOString() },
-                    ].map(p => ({...p, user_id: uid}));
-                    
-                    finalPantry = seedPantry;
-                    db.addPantryItemsBulkDB(uid, seedPantry).catch(e => console.error("Error background seeding pantry", e));
+                    db.saveRecipesBulkDB(uid, seedRecipes).catch(e => console.error("Error recovering recipes", e));
                 }
                 
-                setPantry(finalPantry);
+                setPantry(fetchedPantry);
                 setRecipes(finalRecipes);
                 setMealPlan(fetchedPlan);
                 setShoppingList(fetchedShopping);
@@ -706,6 +703,7 @@ const App: React.FC = () => {
                     onResetApp={() => {}} 
                     isOnline={isOnline} 
                     onQuickConsume={(id) => handleUpdatePantryQuantity(id, -1)} 
+                    onAddToPlan={(r, servings) => handleAddToPlan(r, servings || user.household_size)}
                 />}
                 
                 {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} 
@@ -766,29 +764,7 @@ const App: React.FC = () => {
                     }} />}
                 </Suspense>
             </div>
-
-            {/* BATCH COOKING DISABLED 
-            {activeTab === 'planner' && mealPlan.length > 0 && !activeBatchSession && (
-                <button 
-                  onClick={handleStartBatch}
-                  className="fixed bottom-10 right-10 bg-orange-500 text-white p-4 px-8 rounded-full shadow-2xl flex items-center gap-3 animate-bounce-subtle z-50 hover:bg-orange-600 transition-all font-black text-sm uppercase tracking-widest"
-                >
-                    <Sparkles className="w-5 h-5" /> Batch Cooking
-                </button>
-            )}
-            */}
           </main>
-
-          {/* 
-          {activeBatchSession && (
-              <BatchCooking 
-                  session={activeBatchSession} 
-                  recipes={batchRecipes} 
-                  onClose={() => setActiveBatchSession(null)} 
-                  onFinish={finishBatch} 
-              />
-          )}
-          */}
           
            {/* Mobile Nav */}
            <nav className="md:hidden fixed bottom-6 left-4 right-4 z-[800] bg-teal-800/95 backdrop-blur-3xl p-1.5 rounded-3xl shadow-2xl flex gap-1 safe-pb">
