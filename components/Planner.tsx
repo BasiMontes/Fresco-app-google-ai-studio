@@ -123,6 +123,20 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
       return { available: availableCount, total: totalIngredients, percentage: totalIngredients > 0 ? availableCount / totalIngredients : 0 };
   };
 
+  const checkDietaryConflict = (recipe: Recipe): boolean => {
+      const prefs = user.dietary_preferences || [];
+      if (prefs.includes('none') || prefs.length === 0) return false;
+      const tags = recipe.dietary_tags || [];
+      
+      if (prefs.includes('vegan') && !tags.includes('vegan')) return true;
+      if (prefs.includes('vegetarian') && !tags.includes('vegetarian') && !tags.includes('vegan')) return true;
+      if (prefs.includes('paleo') && !tags.includes('paleo')) return true;
+      if (prefs.includes('keto') && !tags.includes('keto')) return true;
+      if (prefs.includes('gluten_free') && !tags.includes('gluten_free')) return true;
+      
+      return false;
+  };
+
   const copyToClipboard = () => {
       const text = `Plan de Comidas de ${user.name}:\n` + days.map(d => {
           const dStr = format(d, 'yyyy-MM-dd');
@@ -258,6 +272,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     let isSpecial = false;
                     let specialType = '';
                     let missingIngredientsAlert = false;
+                    let dietConflict = false;
 
                     if (slot?.recipeId) {
                         if (slot.recipeId === SLOT_LEFTOVERS) { isSpecial = true; specialType = 'leftovers'; }
@@ -268,6 +283,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                             else {
                                 const availability = getRecipeAvailability(recipe);
                                 if (availability.percentage < 1) missingIngredientsAlert = true;
+                                if (checkDietaryConflict(recipe)) dietConflict = true;
                             }
                         }
                     }
@@ -313,11 +329,20 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                 </div>
                             ) : recipe ? (
                                 <div className="flex flex-col justify-center gap-1 relative z-0 h-full text-center md:text-left px-2">
-                                    {missingIngredientsAlert && !isCooked && (
-                                        <div className="absolute top-0 right-0 text-red-500 bg-red-50 rounded-full p-0.5 animate-pulse z-20">
+                                    {/* ALERTA DIETA (ROJA, ALTA PRIORIDAD) */}
+                                    {dietConflict && (
+                                        <div className="absolute top-0 left-0 text-red-500 bg-red-100 border border-red-200 rounded-full p-1 z-20 shadow-sm" title="No apto para tu dieta">
                                             <AlertTriangle className="w-3 h-3 md:w-2 md:h-2" />
                                         </div>
                                     )}
+                                    
+                                    {/* ALERTA STOCK (NARANJA, BAJA PRIORIDAD) */}
+                                    {missingIngredientsAlert && !isCooked && !dietConflict && (
+                                        <div className="absolute top-0 right-0 text-orange-500 bg-orange-50 border border-orange-100 rounded-full p-1 z-20 shadow-sm" title="Faltan ingredientes">
+                                            <ShoppingCart className="w-3 h-3 md:w-2 md:h-2" />
+                                        </div>
+                                    )}
+                                    
                                     <div className={`font-black text-gray-900 text-lg md:text-[9px] line-clamp-2 md:line-clamp-3 leading-tight transition-colors ${!isCooked && 'group-hover:text-teal-700'}`}>{recipe.title}</div>
                                 </div>
                             ) : (

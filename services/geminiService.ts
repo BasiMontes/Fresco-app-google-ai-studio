@@ -88,6 +88,27 @@ const validateRecipe = (r: any): any => {
     };
 };
 
+// Helper de filtrado estricto
+const filterRecipesByDiet = (recipes: Recipe[], preferences: string[]) => {
+    if (!preferences || preferences.length === 0 || preferences.includes('none')) return recipes;
+    
+    return recipes.filter(r => {
+        const tags = r.dietary_tags || [];
+        
+        // 1. Estilos de Vida (Bases)
+        if (preferences.includes('vegan') && !tags.includes('vegan')) return false;
+        if (preferences.includes('vegetarian') && !tags.includes('vegetarian') && !tags.includes('vegan')) return false;
+        if (preferences.includes('paleo') && !tags.includes('paleo')) return false;
+
+        // 2. Restricciones
+        if (preferences.includes('gluten_free') && !tags.includes('gluten_free')) return false;
+        if (preferences.includes('keto') && !tags.includes('keto')) return false;
+        if (preferences.includes('lactose_free') && !tags.includes('lactose_free') && !tags.includes('vegan')) return false;
+
+        return true;
+    });
+};
+
 // Generador Local Determinista (Algoritmo Fallback)
 const generateLocalPlanStrategy = (
     user: UserProfile, 
@@ -97,8 +118,19 @@ const generateLocalPlanStrategy = (
 ): MealSlot[] => {
     const plan: MealSlot[] = [];
     
+    // 1. Juntar todas las fuentes
+    const allSources = [...availableRecipes, ...FALLBACK_RECIPES];
+    
+    // 2. Filtrar ESTRICTAMENTE por dieta antes de mezclar
+    const validRecipes = filterRecipesByDiet(allSources, user.dietary_preferences);
+    
     // Mezclar recetas para aleatoriedad
-    const shuffledRecipes = [...availableRecipes, ...FALLBACK_RECIPES].sort(() => 0.5 - Math.random());
+    const shuffledRecipes = validRecipes.sort(() => 0.5 - Math.random());
+
+    // Si nos quedamos sin recetas válidas por filtros muy estrictos, alertamos (pero devolvemos lo que haya o vacío)
+    if (shuffledRecipes.length === 0 && targetDates.length > 0) {
+        console.warn("Local Planner: No recipes found matching diet:", user.dietary_preferences);
+    }
 
     targetDates.forEach(date => {
         targetTypes.forEach(type => {
@@ -153,10 +185,12 @@ export const generateWeeklyPlanAI = async (
   try {
     const pantryList = pantry.map(p => `${p.name} (${p.quantity} ${p.unit})`).join(", ");
     
-    // FIX: Prompt modificado para soportar despensa vacía (Plan First, Buy Later)
-    const prompt = `Actúa como Chef Personal para ${user.name}.
+    // FIX: Prompt modificado para soportar despensa vacía (Plan First, Buy Later) y REFORZAR DIETA
+    const dietString = user.dietary_preferences.join(", ").toUpperCase();
+    const prompt = `Actúa como Chef Personal experto en nutrición para ${user.name}.
     
-    Mis preferencias: ${user.dietary_preferences.join(", ")}, Gustos: ${user.favorite_cuisines.join(", ")}.
+    PERFIL DE DIETA (ESTRICTO): ${dietString}.
+    Gustos: ${user.favorite_cuisines.join(", ")}.
     Tengo estos ingredientes: ${pantryList.length > 5 ? pantryList : "La despensa está vacía, asumiremos que compraré todo lo necesario"}.
     
     TAREA OBLIGATORIA:
@@ -164,11 +198,11 @@ export const generateWeeklyPlanAI = async (
     Para CADA uno de esos días, DEBES asignar receta para: ${safeTypes.join(", ")}.
     
     REGLAS IMPORTANTES:
-    1. PRIORIDAD: Crea un menú apetecible y variado según mis gustos.
+    1. RESPETAR LA DIETA ES CRÍTICO. Si dice VEGETARIAN, prohibido carne/pescado. Si dice VEGAN, prohibido animal. Si dice PALEO, prohibido granos/legumbres.
     2. Si tengo ingredientes (stock), úsalos para ahorrar dinero.
-    3. Si NO tengo ingredientes (o despensa vacía), INVENTA recetas coherentes igualmente. Yo compraré los ingredientes después basándome en este plan.
+    3. Si NO tengo ingredientes (o despensa vacía), INVENTA recetas coherentes igualmente. Yo compraré los ingredientes después.
     4. NO dejes huecos vacíos. Rellena todos los días solicitados.
-    5. Devuelve JSON con 'recipes' (nuevas recetas necesarias) y 'plan' (asignación).
+    5. Devuelve JSON con 'recipes' (nuevas recetas necesarias, con dietary_tags correctos) y 'plan' (asignación).
     `;
 
     const response = await ai.models.generateContent({
@@ -206,7 +240,7 @@ export const generateWeeklyPlanAI = async (
         ...r,
         id: `ai-rec-${Date.now()}-${i}`,
         servings: user.household_size,
-        dietary_tags: user.dietary_preferences,
+        dietary_tags: user.dietary_preferences, // Asumimos que la IA respeta, forzamos tags del user para consistencia
         image_url: `https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&sig=${i}`
       };
     });
@@ -281,7 +315,7 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
     if (!API_KEY) { notifyError("Falta API Key de Gemini"); return []; }
     try {
         const pantryList = pantry.map(p => p.name).join(", ");
-        const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. Dieta: ${user.dietary_preferences.join(", ")}.`;
+        const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. Dieta OBLIGATORIA: ${user.dietary_preferences.join(", ")}.`;
         
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
