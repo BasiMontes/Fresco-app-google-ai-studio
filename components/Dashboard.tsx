@@ -164,7 +164,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
           <div className="space-y-10 animate-fade-in pb-10">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                      <button onClick={() => setCurrentView('dashboard')} className="p-2 hover:bg-gray-100 rounded-full transition-colors md:hidden">
+                      {/* FIX: Botón atrás visible también en desktop */}
+                      <button onClick={() => setCurrentView('dashboard')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                           <ArrowLeft className="w-6 h-6 text-gray-600" />
                       </button>
                       <div>
@@ -357,7 +358,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
               <div className="flex justify-between items-start mb-4">
                   <div>
                       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tiempo Recuperado</p>
-                      <p className="text-3xl font-black text-teal-900">{Math.round(user.time_saved_mins / 60)}h</p>
+                      <p className="text-3xl font-black text-teal-900">{Math.round((user.time_saved_mins || 0) / 60)}h</p>
                   </div>
                   <div className="p-2 bg-purple-50 rounded-xl text-purple-500">
                       <Timer className="w-5 h-5" />

@@ -507,12 +507,14 @@ const App: React.FC = () => {
         setIsLoaded(false);
         try {
             const appUser: UserProfile = {
-                name: profileData.full_name,
+                // FALLBACK ROBUSTO PARA EL NOMBRE: Prioriza DB > "Usuario"
+                name: profileData.full_name || 'Usuario',
                 dietary_preferences: profileData.dietary_preferences || [],
                 favorite_cuisines: profileData.favorite_cuisines || [],
                 cooking_experience: profileData.cooking_experience || 'intermediate',
                 household_size: profileData.household_size || 1,
                 onboarding_completed: profileData.onboarding_completed || false,
+                // FALLBACK PARA NUMEROS: Evita NaNs
                 total_savings: profileData.total_savings || 0,
                 meals_cooked: profileData.meals_cooked || 0,
                 time_saved_mins: profileData.time_saved_mins || 0,
@@ -678,7 +680,7 @@ const App: React.FC = () => {
             </div>
             <nav className="flex-1 px-4 space-y-2 mt-4">
                 {[
-                  {id:'dashboard', icon:Home, label:'Impacto'}, 
+                  {id:'dashboard', icon:Home, label:'Home'}, // Changed Impacto to Home
                   {id:'planner', icon:Calendar, label:'Calendario'}, 
                   {id:'pantry', icon:Package, label:'Despensa'}, 
                   {id:'recipes', icon:BookOpen, label:'Recetas'}, 

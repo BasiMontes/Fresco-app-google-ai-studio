@@ -88,27 +88,36 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     switch (step) {
         case 1:
             return (
-                <div key="step1" className="mt-8 space-y-4 animate-fade-in">
-                    <h1 className="text-3xl font-black leading-tight">Eres lo que<br/>comes.</h1>
-                    <p className="text-teal-200 text-xs font-medium leading-relaxed max-w-xs">
+                <div key="step1" className="mt-8 space-y-4 animate-fade-in relative z-10">
+                    <h1 className="text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
+                        Eres lo que<br/>
+                        <span className="text-[#e87c3e]">comes.</span>
+                    </h1>
+                    <p className="text-teal-50 text-xl max-w-lg leading-relaxed font-normal opacity-90">
                         Dinos qué combustible prefieres. Vegetariano, Keto o sin límites. Nosotros nos encargamos de los ingredientes.
                     </p>
                 </div>
             );
         case 2:
             return (
-                <div key="step2" className="mt-8 space-y-4 animate-fade-in">
-                    <h1 className="text-3xl font-black leading-tight">¿Qué te<br/>hace <span className="text-orange-500">vibrar?</span></h1>
-                    <p className="text-teal-200 text-xs font-medium leading-relaxed max-w-xs">
+                <div key="step2" className="mt-8 space-y-4 animate-fade-in relative z-10">
+                    <h1 className="text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
+                        ¿Qué te hace<br/>
+                        <span className="text-[#e87c3e]">vibrar?</span>
+                    </h1>
+                    <p className="text-teal-50 text-xl max-w-lg leading-relaxed font-normal opacity-90">
                         Desde la nonna italiana hasta el street food de Bangkok. Diseñamos menús que no aburren.
                     </p>
                 </div>
             );
         case 3:
             return (
-                <div key="step3" className="mt-8 space-y-4 animate-fade-in">
-                    <h1 className="text-3xl font-black leading-tight">Ni sobra,<br/>ni <span className="text-orange-500">falta.</span></h1>
-                    <p className="text-teal-200 text-xs font-medium leading-relaxed max-w-xs">
+                <div key="step3" className="mt-8 space-y-4 animate-fade-in relative z-10">
+                    <h1 className="text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
+                        Ni sobra,<br/>
+                        ni <span className="text-[#e87c3e]">falta.</span>
+                    </h1>
+                    <p className="text-teal-50 text-xl max-w-lg leading-relaxed font-normal opacity-90">
                         Ajustamos las compras al milímetro para tu hogar. Ahorra dinero y deja de tirar comida.
                     </p>
                 </div>
@@ -118,69 +127,81 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4 font-sans">
-      {/* Contenedor reducido: max-w-3xl y min-h-[450px] para evitar scroll */}
-      <div className="w-full max-w-3xl bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[450px] transition-all">
-        
-        {/* Left Panel (Visual Context Dynamic) */}
-        <div className="hidden md:flex md:w-5/12 bg-teal-900 p-8 flex-col justify-between text-white relative overflow-hidden transition-all duration-500">
-            <div className="relative z-10">
-                <Logo variant="inverted" className="scale-90 origin-left" />
-                {renderLeftContent()}
-            </div>
-            {/* Steps Indicator Desktop */}
-            <div className="flex gap-2 relative z-10">
-                {[1, 2, 3].map(i => (
-                    <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= step ? 'w-6 bg-orange-500' : 'w-2 bg-white/20'}`} />
-                ))}
-            </div>
-            
-            {/* Background Decorations */}
-            <div className="absolute top-[-20%] right-[-20%] w-80 h-80 bg-teal-800 rounded-full blur-[80px] opacity-50 animate-pulse-slow" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-60 h-60 bg-orange-600 rounded-full blur-[100px] opacity-30 animate-float" />
+    <div className="h-screen w-full flex bg-[#f8f9fa] overflow-hidden font-sans">
+      
+      {/* LEFT PANEL - BRANDING & CONTEXT */}
+      <div className="hidden lg:flex lg:w-1/2 lg:shrink-0 bg-[#013b33] h-full flex-col justify-center px-20 relative text-white transition-colors duration-500">
+        <div className="absolute top-12 left-12">
+            <Logo variant="inverted" />
         </div>
+        
+        {renderLeftContent()}
 
-        {/* Right Panel (Form) */}
-        <div className="w-full md:w-7/12 p-6 md:p-10 flex flex-col relative">
+        {/* Steps Indicator */}
+        <div className="absolute bottom-12 left-12 flex gap-2">
+            {[1, 2, 3].map(i => (
+                <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= step ? 'w-8 bg-orange-500' : 'w-2 bg-white/20'}`} />
+            ))}
+        </div>
+        
+        {/* Background Decorations */}
+        <div className="absolute -right-20 -bottom-20 w-[500px] h-[500px] bg-teal-800 rounded-full blur-[120px] opacity-30 animate-pulse-slow pointer-events-none" />
+      </div>
+
+      {/* RIGHT PANEL - FORM */}
+      <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-6 relative">
+        <div className="w-full max-w-[500px] h-[700px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col">
+            
+            {/* Mobile Header */}
+            <div className="lg:hidden mb-6 flex justify-center">
+                 <Logo align="center" />
+            </div>
+
             {/* Mobile Progress Bar */}
-            <div className="md:hidden w-full bg-gray-100 h-1 rounded-full mb-6 overflow-hidden">
-                <div className="bg-teal-600 h-full transition-all duration-500" style={{ width: `${(step / 3) * 100}%` }} />
+            <div className="lg:hidden w-full bg-gray-100 h-1 rounded-full mb-8 overflow-hidden">
+                <div className="bg-teal-900 h-full transition-all duration-500" style={{ width: `${(step / 3) * 100}%` }} />
             </div>
 
             {/* Back Button */}
-            <div className="flex justify-between items-center mb-4 h-8">
+            <div className="flex justify-between items-center mb-6 h-8">
                 {step > 1 ? (
                     <button onClick={handleBack} className="flex items-center gap-2 text-gray-400 hover:text-teal-900 font-bold text-[10px] uppercase tracking-widest transition-colors group">
-                        <div className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-teal-50">
-                            <ChevronLeft className="w-3 h-3" />
+                        <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
+                            <ChevronLeft className="w-4 h-4" />
                         </div>
                         Atrás
                     </button>
                 ) : <div />}
-                <span className="text-gray-300 font-black text-[9px] uppercase tracking-[0.2em]">Paso {step} de 3</span>
+                <span className="text-gray-300 font-black text-[10px] uppercase tracking-[0.2em]">Paso {step} de 3</span>
             </div>
 
-            <div className="flex-1 flex flex-col justify-center">
+            <div className="flex-1 flex flex-col justify-center overflow-y-auto no-scrollbar py-2">
                 {step === 1 && (
-                    <div className="animate-fade-in space-y-4">
+                    <div className="animate-fade-in space-y-6">
                         <div>
-                            <h2 className="text-2xl font-black text-teal-900 mb-1">Tu Dieta</h2>
-                            <p className="text-gray-500 text-xs font-medium">Selecciona tus restricciones alimentarias.</p>
+                            <h2 className="text-3xl font-black text-teal-900 mb-2">Tu Dieta</h2>
+                            <p className="text-gray-500 font-medium leading-relaxed">Selecciona tus restricciones alimentarias para filtrar recetas incompatibles.</p>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-3">
                             {DIETS.map((diet) => (
                                 <button
                                     key={diet.id}
                                     onClick={() => toggleDiet(diet.id)}
-                                    className={`px-3 py-2.5 rounded-xl border-2 text-left flex items-center space-x-2 transition-all hover:scale-[1.01] active:scale-95 ${
+                                    className={`px-5 py-4 rounded-2xl border-2 text-left flex items-center justify-between transition-all hover:scale-[1.01] active:scale-95 ${
                                         profile.dietary_preferences?.includes(diet.id)
-                                        ? 'border-teal-600 bg-teal-50 text-teal-900 shadow-sm'
+                                        ? 'border-[#013b33] bg-teal-50 text-[#013b33] shadow-sm'
                                         : 'border-gray-100 bg-white text-gray-600 hover:border-gray-200'
                                     }`}
                                 >
-                                    <span className="text-lg">{diet.emoji}</span>
-                                    <span className="font-bold text-xs">{diet.label}</span>
-                                    {profile.dietary_preferences?.includes(diet.id) && <Check className="w-3 h-3 ml-auto text-teal-600" />}
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl">{diet.emoji}</span>
+                                        <span className="font-bold text-sm">{diet.label}</span>
+                                    </div>
+                                    {profile.dietary_preferences?.includes(diet.id) && (
+                                        <div className="w-6 h-6 bg-[#013b33] rounded-full flex items-center justify-center">
+                                            <Check className="w-3 h-3 text-white" />
+                                        </div>
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -188,25 +209,24 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 )}
                 
                 {step === 2 && (
-                    <div className="animate-fade-in space-y-4">
+                    <div className="animate-fade-in space-y-6">
                         <div>
-                            <h2 className="text-2xl font-black text-teal-900 mb-1">Tus Gustos</h2>
-                            <p className="text-gray-500 text-xs font-medium">¿Qué tipo de cocina te inspira más?</p>
+                            <h2 className="text-3xl font-black text-teal-900 mb-2">Tus Gustos</h2>
+                            <p className="text-gray-500 font-medium leading-relaxed">¿Qué tipo de cocina te inspira más en el día a día?</p>
                         </div>
-                        {/* Grid de 3 columnas para ahorrar espacio vertical */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-2 gap-3">
                             {CUISINES.map((cuisine) => (
                                 <button
                                     key={cuisine.id}
                                     onClick={() => toggleCuisine(cuisine.id)}
-                                    className={`p-3 rounded-2xl border-2 text-center flex flex-col items-center justify-center gap-1 transition-all hover:shadow-md active:scale-95 h-24 ${
+                                    className={`p-4 rounded-2xl border-2 text-center flex flex-col items-center justify-center gap-2 transition-all hover:shadow-md active:scale-95 h-32 ${
                                         profile.favorite_cuisines?.includes(cuisine.id)
                                         ? 'border-orange-500 bg-orange-50 text-orange-900 shadow-sm'
                                         : 'border-gray-100 bg-white text-gray-600 hover:border-orange-200'
                                     }`}
                                 >
-                                    <span className="text-3xl mb-1">{cuisine.emoji}</span>
-                                    <span className="font-bold text-[10px] uppercase tracking-wide leading-tight">{cuisine.label}</span>
+                                    <span className="text-4xl mb-1 filter drop-shadow-sm">{cuisine.emoji}</span>
+                                    <span className="font-bold text-xs uppercase tracking-wide leading-tight">{cuisine.label}</span>
                                 </button>
                             ))}
                         </div>
@@ -214,33 +234,37 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 )}
 
                 {step === 3 && (
-                    <div className="animate-fade-in space-y-6">
-                        <div className="text-center">
-                            <div className="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4 text-teal-700">
-                                <ChefHat className="w-8 h-8" />
+                    <div className="animate-fade-in space-y-8">
+                        <div className="text-center space-y-4">
+                            <div className="w-24 h-24 bg-teal-50 rounded-full flex items-center justify-center mx-auto text-[#013b33]">
+                                <ChefHat className="w-10 h-10" />
                             </div>
-                            <h2 className="text-2xl font-black text-teal-900 mb-1">Raciones</h2>
-                            <p className="text-gray-500 text-xs font-medium">¿Para cuántas personas cocinas habitualmente?</p>
+                            <div>
+                                <h2 className="text-3xl font-black text-teal-900 mb-2">Raciones</h2>
+                                <p className="text-gray-500 font-medium">¿Para cuántas personas cocinas habitualmente?</p>
+                            </div>
                         </div>
                         
-                        <div className="flex items-center justify-center gap-6 py-4">
+                        <div className="flex items-center justify-center gap-8 py-6">
                             <button 
                                 onClick={() => setProfile(p => ({ ...p, household_size: Math.max(1, (p.household_size || 1) - 1) }))} 
-                                className="w-12 h-12 rounded-xl border-2 border-gray-100 text-xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-teal-900"
+                                className="w-16 h-16 rounded-2xl border-2 border-gray-100 text-2xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-teal-900 shadow-sm active:scale-90"
                             >-</button>
-                            <div className="text-center w-20">
-                                <span className="text-5xl font-black text-teal-900 tracking-tighter">{profile.household_size}</span>
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mt-1">Personas</p>
+                            <div className="text-center w-24">
+                                <span className="text-7xl font-black text-[#013b33] tracking-tighter">{profile.household_size}</span>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-2">Personas</p>
                             </div>
                             <button 
                                 onClick={() => setProfile(p => ({ ...p, household_size: (p.household_size || 1) + 1 }))} 
-                                className="w-12 h-12 rounded-xl border-2 border-gray-100 text-xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-teal-900"
+                                className="w-16 h-16 rounded-2xl border-2 border-gray-100 text-2xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-teal-900 shadow-sm active:scale-90"
                             >+</button>
                         </div>
                         
-                        <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 flex gap-3">
-                            <Sparkles className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                            <p className="text-orange-800 text-xs font-medium leading-relaxed">
+                        <div className="bg-orange-50 p-6 rounded-3xl border border-orange-100 flex gap-4 items-start">
+                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 text-orange-500">
+                                <Sparkles className="w-5 h-5" />
+                            </div>
+                            <p className="text-orange-900 text-xs font-bold leading-relaxed pt-1">
                                 Al finalizar, generaremos automáticamente un set inicial de recetas adaptadas a tu dieta para que empieces con buen pie.
                             </p>
                         </div>
@@ -248,13 +272,13 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 )}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-50">
+            <div className="mt-8 pt-6 border-t border-gray-50">
                 <button
                 onClick={handleNext}
                 disabled={!isValid && step < 3}
-                className={`w-full py-4 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
+                className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg uppercase tracking-widest ${
                     isValid || step === 3 
-                    ? 'bg-teal-900 text-white hover:bg-teal-800 active:scale-[0.98]' 
+                    ? 'bg-[#013b33] text-white hover:bg-[#012e28] active:scale-[0.98]' 
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
                 >
