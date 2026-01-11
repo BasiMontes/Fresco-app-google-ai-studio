@@ -596,7 +596,7 @@ const App: React.FC = () => {
       window.removeEventListener('fresco-force-repopulate', handleForceRepopulate);
       authListener.subscription.unsubscribe();
     };
-  }, [userId]);
+  }, []); // FIXED: Removed [userId] dependency to prevent infinite loop
 
   const handleStartBatch = async () => {
       if (!isOnline) {
