@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserProfile, DietPreference, CuisineType } from '../types';
-import { ArrowRight, Check, Sparkles, ChevronLeft, ChefHat } from 'lucide-react';
+import { ArrowRight, Check, Sparkles, ChevronLeft, ChefHat, ShoppingCart } from 'lucide-react';
 import { Logo } from './Logo';
 
 interface OnboardingProps {
@@ -113,11 +113,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             return (
                 <div key="step3" className="mt-8 space-y-4 animate-fade-in relative z-10">
                     <h1 className="text-4xl lg:text-6xl font-black leading-[1.1] mb-4 lg:mb-8 tracking-tight text-white">
-                        Ni sobra,<br/>
-                        ni <span className="text-[#e87c3e]">falta.</span>
+                        Compra con<br/>
+                        <span className="text-[#e87c3e]">precisión.</span>
                     </h1>
                     <p className="text-teal-50 text-base lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
-                        Calculamos las cantidades exactas para tu hogar. Genera tu lista de la compra automáticamente y evita desperdicios.
+                        Calculamos las cantidades exactas para tu hogar. Planifica tus comidas y la lista se genera sola.
                     </p>
                 </div>
             );
@@ -146,7 +146,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
       <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-4 relative bg-[#f8f9fa]">
         
         {/* CARD CONTAINER */}
-        <div className="w-full max-w-[500px] bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col max-h-[85vh]">
+        <div className="w-full max-w-[500px] bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col max-h-[85vh] h-auto">
             
             {/* Header Area (Sticky) */}
             <div className="p-8 pb-2 flex-shrink-0">
@@ -169,8 +169,8 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 </div>
             </div>
 
-            {/* Scrollable Content Area - EXTRA BOTTOM PADDING ADDED (pb-12) */}
-            <div className="flex-1 overflow-y-auto no-scrollbar p-6 pt-4 pb-12">
+            {/* Scrollable Content Area - EXTRA BOTTOM PADDING & MIN-H-0 Fix */}
+            <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar p-6 pt-4 pb-8">
                 {step === 1 && (
                     <div className="animate-fade-in space-y-6">
                         <div className="px-2">
@@ -232,7 +232,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 )}
 
                 {step === 3 && (
-                    <div className="animate-fade-in space-y-8 py-4 px-2 pb-8">
+                    <div className="animate-fade-in space-y-8 py-4 px-2">
                         <div className="text-center space-y-4">
                             <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto text-[#013b33] shadow-inner">
                                 <ChefHat className="w-8 h-8" />
@@ -260,10 +260,10 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                         
                         <div className="bg-orange-50 p-5 rounded-3xl border border-orange-100 flex gap-4 items-start">
                             <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 text-orange-500">
-                                <Sparkles className="w-4 h-4" />
+                                <ShoppingCart className="w-4 h-4" />
                             </div>
                             <p className="text-orange-900 text-xs font-bold leading-relaxed pt-0.5">
-                                Ajustaremos automáticamente las cantidades de la lista de la compra para evitar sobras y ahorrar dinero.
+                                Tu lista de la compra se crea sola. Al planificar menús, detectamos qué ingredientes te faltan para que compres con precisión.
                             </p>
                         </div>
                     </div>
