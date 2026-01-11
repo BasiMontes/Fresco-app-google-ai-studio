@@ -11,10 +11,10 @@ interface OnboardingProps {
 const DIETS: { id: DietPreference; label: string; emoji: string }[] = [
   { id: 'vegetarian', label: 'Vegetariano', emoji: '🥦' },
   { id: 'vegan', label: 'Vegano', emoji: '🌱' },
+  { id: 'paleo', label: 'Paleo', emoji: '🦴' },
+  { id: 'keto', label: 'Keto', emoji: '🥩' },
   { id: 'gluten_free', label: 'Sin Gluten', emoji: '🌾' },
   { id: 'lactose_free', label: 'Sin Lactosa', emoji: '🥛' },
-  { id: 'keto', label: 'Keto', emoji: '🥩' },
-  { id: 'paleo', label: 'Paleo', emoji: '🦴' },
   { id: 'none', label: 'Sin límites', emoji: '🍽️' },
 ];
 
@@ -49,18 +49,30 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     let newList = [...(profile.dietary_preferences || [])];
     
     if (item === 'none') {
-        newList = ['none']; 
-    } else {
-        newList = newList.filter(i => i !== 'none');
-        if (item === 'vegan') newList = newList.filter(i => i !== 'vegetarian');
-        if (item === 'vegetarian' && newList.includes('vegan')) newList = newList.filter(i => i !== 'vegan');
-        
-        if (newList.includes(item)) {
-            newList = newList.filter(i => i !== item);
-        } else {
-            newList.push(item);
-        }
+        // "Sin límites" limpia todo lo demás
+        setProfile(p => ({ ...p, dietary_preferences: ['none'] }));
+        return;
     }
+
+    // Si estaba "Sin límites", lo quitamos al marcar una opción específica
+    newList = newList.filter(i => i !== 'none');
+
+    // GRUPO DE EXCLUSIÓN: Estilos de vida incompatibles entre sí
+    // Vegetarian: Sin carne/pescado
+    // Vegan: Sin animal
+    // Paleo: Mucha carne/pescado, sin grano/legumbre
+    const exclusiveGroup = ['vegetarian', 'vegan', 'paleo'];
+
+    if (newList.includes(item)) {
+        newList = newList.filter(i => i !== item);
+    } else {
+        // Si seleccionamos una dieta base (Veg/Vegan/Paleo), desmarcamos las otras bases
+        if (exclusiveGroup.includes(item)) {
+            newList = newList.filter(i => !exclusiveGroup.includes(i));
+        }
+        newList.push(item);
+    }
+    
     setProfile(p => ({ ...p, dietary_preferences: newList as DietPreference[] }));
   };
 
