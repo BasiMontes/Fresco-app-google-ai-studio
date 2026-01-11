@@ -84,21 +84,49 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
       if (step > 1) setStep(step - 1);
   };
 
+  const renderLeftContent = () => {
+    switch (step) {
+        case 1:
+            return (
+                <div key="step1" className="mt-8 space-y-4 animate-fade-in">
+                    <h1 className="text-3xl font-black leading-tight">Eres lo que<br/>comes.</h1>
+                    <p className="text-teal-200 text-xs font-medium leading-relaxed max-w-xs">
+                        Dinos qué combustible prefieres. Vegetariano, Keto o sin límites. Nosotros nos encargamos de los ingredientes.
+                    </p>
+                </div>
+            );
+        case 2:
+            return (
+                <div key="step2" className="mt-8 space-y-4 animate-fade-in">
+                    <h1 className="text-3xl font-black leading-tight">¿Qué te<br/>hace <span className="text-orange-500">vibrar?</span></h1>
+                    <p className="text-teal-200 text-xs font-medium leading-relaxed max-w-xs">
+                        Desde la nonna italiana hasta el street food de Bangkok. Diseñamos menús que no aburren.
+                    </p>
+                </div>
+            );
+        case 3:
+            return (
+                <div key="step3" className="mt-8 space-y-4 animate-fade-in">
+                    <h1 className="text-3xl font-black leading-tight">Ni sobra,<br/>ni <span className="text-orange-500">falta.</span></h1>
+                    <p className="text-teal-200 text-xs font-medium leading-relaxed max-w-xs">
+                        Ajustamos las compras al milímetro para tu hogar. Ahorra dinero y deja de tirar comida.
+                    </p>
+                </div>
+            );
+        default: return null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4 font-sans">
       {/* Contenedor reducido: max-w-3xl y min-h-[450px] para evitar scroll */}
       <div className="w-full max-w-3xl bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[450px] transition-all">
         
-        {/* Left Panel (Visual Context) */}
-        <div className="hidden md:flex md:w-5/12 bg-teal-900 p-8 flex-col justify-between text-white relative overflow-hidden">
+        {/* Left Panel (Visual Context Dynamic) */}
+        <div className="hidden md:flex md:w-5/12 bg-teal-900 p-8 flex-col justify-between text-white relative overflow-hidden transition-all duration-500">
             <div className="relative z-10">
                 <Logo variant="inverted" className="scale-90 origin-left" />
-                <div className="mt-8 space-y-4">
-                    <h1 className="text-3xl font-black leading-tight">Diseña tu<br/>experiencia<br/><span className="text-orange-500">culinaria.</span></h1>
-                    <p className="text-teal-200 text-xs font-medium leading-relaxed max-w-xs">
-                        Personalizamos cada recomendación basándonos en tus gustos y necesidades reales.
-                    </p>
-                </div>
+                {renderLeftContent()}
             </div>
             {/* Steps Indicator Desktop */}
             <div className="flex gap-2 relative z-10">
@@ -108,8 +136,8 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             </div>
             
             {/* Background Decorations */}
-            <div className="absolute top-[-20%] right-[-20%] w-80 h-80 bg-teal-800 rounded-full blur-[80px] opacity-50" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-60 h-60 bg-orange-600 rounded-full blur-[100px] opacity-30" />
+            <div className="absolute top-[-20%] right-[-20%] w-80 h-80 bg-teal-800 rounded-full blur-[80px] opacity-50 animate-pulse-slow" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-60 h-60 bg-orange-600 rounded-full blur-[100px] opacity-30 animate-float" />
         </div>
 
         {/* Right Panel (Form) */}

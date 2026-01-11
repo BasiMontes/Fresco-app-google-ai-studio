@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { UserProfile, Recipe, PantryItem, MealSlot, MealCategory } from '../types';
-import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp, ArrowLeft, Clock, Users, Check, X, CheckCircle2 } from 'lucide-react';
+import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp, ArrowLeft, Clock, Users, Check, X, CheckCircle2, CalendarPlus } from 'lucide-react';
 import { getHours, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 import { SmartImage } from './SmartImage';
 
@@ -15,7 +15,9 @@ interface DashboardProps {
   onResetApp: () => void;
   onQuickConsume?: (id: string) => void;
   isOnline?: boolean;
-  onAddToPlan?: (recipe: Recipe, servings: number) => void; // Nuevo prop para favoritos
+  onAddToPlan?: (recipe: Recipe, servings: number) => void; 
+  favoriteIds?: string[]; // Nuevo prop
+  onToggleFavorite?: (id: string) => void; // Nuevo prop
 }
 
 // MOCK DATA PARA NOTIFICACIONES
@@ -27,7 +29,7 @@ const MOCK_NOTIFICATIONS = [
     { id: 5, type: 'achievement', title: '¡Meta alcanzada!', desc: 'Has planificado 7 días consecutivos. ¡Excelente trabajo!', time: '8 ene 2026, 21:11', isNew: false, icon: CheckCircle2, color: 'bg-blue-100 text-blue-600' },
 ];
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true, favoriteIds = [], onToggleFavorite }) => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'favorites' | 'notifications'>('dashboard');
   
   // Estados para configuración de notificaciones
@@ -67,13 +69,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
   }, [mealPlan]);
 
   const latestRecipes = useMemo(() => {
-      return [...recipes].reverse().slice(0, 3);
+      return [...recipes].reverse().slice(0, 4); // Muestra 4 para mejor grid
   }, [recipes]);
 
   const favoriteRecipes = useMemo(() => {
-      // Simulamos que las 3 primeras son favoritas para la demo visual
-      return recipes.slice(0, 3);
-  }, [recipes]);
+      // Filtrar recetas reales usando los IDs guardados
+      return recipes.filter(r => favoriteIds.includes(r.id));
+  }, [recipes, favoriteIds]);
 
   const toggleConfig = (key: keyof typeof configNotifs) => {
       setConfigNotifs(prev => ({ ...prev, [key]: !prev[key] }));
@@ -101,45 +103,57 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
                   </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {favoriteRecipes.map(recipe => (
-                      <div key={recipe.id} className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col">
-                          <div className="aspect-[4/3] relative overflow-hidden">
-                              <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                          </div>
-                          <div className="p-6 flex-1 flex flex-col">
-                              <h3 className="text-lg font-black text-gray-900 leading-tight mb-2">{recipe.title}</h3>
-                              <p className="text-gray-500 text-xs font-medium line-clamp-2 mb-4 flex-1">{recipe.description}</p>
-                              
-                              <div className="flex items-center gap-4 mb-6">
-                                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                      recipe.difficulty === 'easy' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-                                  }`}>
-                                      {recipe.difficulty === 'easy' ? 'Fácil' : recipe.difficulty === 'medium' ? 'Media' : 'Difícil'}
-                                  </span>
-                                  <div className="flex items-center gap-1 text-gray-500 text-xs">
-                                      <Clock className="w-4 h-4" /> {recipe.prep_time} min
-                                  </div>
-                                  <div className="flex items-center gap-1 text-gray-500 text-xs">
-                                      <Users className="w-4 h-4" /> {recipe.servings}
-                                  </div>
+              {favoriteRecipes.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {favoriteRecipes.map(recipe => (
+                          <div key={recipe.id} className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col">
+                              <div className="aspect-[4/3] relative overflow-hidden">
+                                  <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                  <button 
+                                    onClick={() => onToggleFavorite && onToggleFavorite(recipe.id)}
+                                    className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md z-10"
+                                  >
+                                      <Heart className="w-5 h-5 fill-red-500 text-red-500" />
+                                  </button>
                               </div>
+                              <div className="p-6 flex-1 flex flex-col">
+                                  <h3 className="text-lg font-black text-gray-900 leading-tight mb-2">{recipe.title}</h3>
+                                  <p className="text-gray-500 text-xs font-medium line-clamp-2 mb-4 flex-1">{recipe.description}</p>
+                                  
+                                  <div className="flex items-center gap-4 mb-6">
+                                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                          recipe.difficulty === 'easy' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                                      }`}>
+                                          {recipe.difficulty === 'easy' ? 'Fácil' : recipe.difficulty === 'medium' ? 'Media' : 'Difícil'}
+                                      </span>
+                                      <div className="flex items-center gap-1 text-gray-500 text-xs">
+                                          <Clock className="w-4 h-4" /> {recipe.prep_time} min
+                                      </div>
+                                      <div className="flex items-center gap-1 text-gray-500 text-xs">
+                                          <Users className="w-4 h-4" /> {recipe.servings}
+                                      </div>
+                                  </div>
 
-                              <button 
-                                onClick={() => {
-                                    if(onAddToPlan) {
-                                        onAddToPlan(recipe, recipe.servings);
-                                        // Visual feedback could be added here
-                                    }
-                                }}
-                                className="w-full py-3 bg-teal-700 text-white rounded-xl font-bold text-sm hover:bg-teal-800 active:scale-95 transition-all"
-                              >
-                                  Añadir al planificador
-                              </button>
+                                  <button 
+                                    onClick={() => {
+                                        if(onAddToPlan) {
+                                            onAddToPlan(recipe, recipe.servings);
+                                        }
+                                    }}
+                                    className="w-full py-3 bg-teal-700 text-white rounded-xl font-bold text-sm hover:bg-teal-800 active:scale-95 transition-all"
+                                  >
+                                      Añadir al planificador
+                                  </button>
+                              </div>
                           </div>
-                      </div>
-                  ))}
-              </div>
+                      ))}
+                  </div>
+              ) : (
+                  <div className="text-center py-20 opacity-50">
+                      <Heart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                      <p className="font-bold text-gray-500">Aún no tienes favoritos.</p>
+                  </div>
+              )}
           </div>
       );
   }
@@ -410,29 +424,64 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
       <div className="space-y-6">
           <h2 className="text-xl font-black text-teal-900">Tus Últimas Recetas</h2>
           {latestRecipes.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {latestRecipes.map((recipe) => (
-                    <div 
-                        key={recipe.id}
-                        onClick={() => {
-                             window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}`);
-                             onNavigate('recipes');
-                        }}
-                        className="bg-white p-4 pb-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer group"
-                    >
-                        <div className="aspect-[4/3] rounded-[1.5rem] overflow-hidden mb-4 relative">
-                             <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                             <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg">
-                                 <ChefHat className="w-4 h-4 text-teal-600" />
-                             </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {latestRecipes.map((recipe) => {
+                    const isFav = favoriteIds.includes(recipe.id);
+                    return (
+                        <div 
+                            key={recipe.id}
+                            onClick={() => {
+                                 window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}`);
+                                 onNavigate('recipes');
+                            }}
+                            className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative h-full min-h-[280px]"
+                        >
+                            <div className="relative aspect-[3/2] overflow-hidden bg-gray-100 flex-shrink-0">
+                                <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                <div className="absolute bottom-2 left-2 flex gap-1">
+                                     <div className="bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest text-teal-800 flex items-center gap-1 shadow-sm">
+                                        <Clock className="w-2.5 h-2.5" /> {recipe.prep_time}'
+                                     </div>
+                                </div>
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onToggleFavorite) onToggleFavorite(recipe.id);
+                                    }}
+                                    className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
+                                >
+                                    <Heart className={`w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+                                </button>
+                            </div>
+                            
+                            <div className="p-3 flex-1 flex flex-col">
+                                <h3 className="text-sm md:text-xs font-bold text-gray-900 leading-tight mb-2 line-clamp-2 group-hover:text-teal-700 transition-colors">
+                                    {recipe.title}
+                                </h3>
+                                
+                                <div className="mt-auto flex items-center gap-2 pt-2 border-t border-gray-50">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 truncate max-w-[80px]">
+                                        {recipe.cuisine_type}
+                                    </span>
+                                    <div className="flex-1" />
+                                    <button 
+                                        onClick={(e) => { 
+                                            e.stopPropagation(); 
+                                            // Lógica para abrir planificador si es necesario, 
+                                            // aquí solo redirigimos a detalle en esta vista simplificada
+                                            window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}`);
+                                            onNavigate('recipes');
+                                        }}
+                                        className="w-8 h-8 md:w-7 md:h-7 bg-teal-50 text-teal-700 rounded-lg flex items-center justify-center hover:bg-teal-900 hover:text-white transition-all active:scale-90 flex-shrink-0"
+                                    >
+                                        <CalendarPlus className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <h3 className="font-bold text-gray-900 truncate mb-1 px-2">{recipe.title}</h3>
-                        <div className="flex justify-between items-center px-2">
-                             <p className="text-xs text-gray-500 capitalize">{recipe.cuisine_type}</p>
-                             <p className="text-xs font-bold text-teal-600">{recipe.prep_time} min</p>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
           ) : (
             <div className="bg-gray-50 rounded-[2rem] p-8 text-center border-2 border-dashed border-gray-200">

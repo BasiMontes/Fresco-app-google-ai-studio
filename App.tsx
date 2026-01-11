@@ -63,6 +63,25 @@ const App: React.FC = () => {
   const [activeBatchSession, setActiveBatchSession] = useState<BatchSession | null>(null);
   const [batchRecipes, setBatchRecipes] = useState<Recipe[]>([]);
 
+  // Estado para Favoritos (Persistente Local)
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
+      try {
+          const saved = localStorage.getItem('fresco_favorites');
+          return saved ? JSON.parse(saved) : [];
+      } catch { return []; }
+  });
+
+  useEffect(() => {
+      localStorage.setItem('fresco_favorites', JSON.stringify(favoriteIds));
+  }, [favoriteIds]);
+
+  const toggleFavorite = (id: string) => {
+      setFavoriteIds(prev => prev.includes(id) ? prev.filter(fid => fid !== id) : [...prev, id]);
+      if (!favoriteIds.includes(id)) {
+          setToast({ msg: "Añadido a favoritos", type: 'success' });
+      }
+  };
+
   useEffect(() => {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get('tab');
@@ -704,6 +723,8 @@ const App: React.FC = () => {
                     isOnline={isOnline} 
                     onQuickConsume={(id) => handleUpdatePantryQuantity(id, -1)} 
                     onAddToPlan={(r, servings) => handleAddToPlan(r, servings || user.household_size)}
+                    favoriteIds={favoriteIds}
+                    onToggleFavorite={toggleFavorite}
                 />}
                 
                 {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} 
