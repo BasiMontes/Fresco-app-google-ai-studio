@@ -1,21 +1,25 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserProfile, DietPreference, CuisineType } from '../types';
-import { ArrowRight, Check, Sparkles, ChevronLeft, ChefHat, ShoppingCart } from 'lucide-react';
+import { ArrowRight, Check, Sparkles, ChevronLeft, ChefHat, ShoppingCart, Utensils, AlertCircle } from 'lucide-react';
 import { Logo } from './Logo';
 
 interface OnboardingProps {
   onComplete: (profile: UserProfile) => void;
 }
 
-const DIETS: { id: DietPreference; label: string; emoji: string }[] = [
-  { id: 'vegetarian', label: 'Vegetariano', emoji: '🥦' },
-  { id: 'vegan', label: 'Vegano', emoji: '🌱' },
-  { id: 'paleo', label: 'Paleo', emoji: '🦴' },
-  { id: 'keto', label: 'Keto', emoji: '🥩' },
+// Separamos en dos grupos lógicos para evitar incoherencias
+const DIET_BASES: { id: DietPreference; label: string; emoji: string; desc: string }[] = [
+  { id: 'none', label: 'Todo', emoji: '🍖', desc: 'Como de todo' },
+  { id: 'vegetarian', label: 'Vegetariano', emoji: '🥦', desc: 'Sin carne ni pescado' },
+  { id: 'vegan', label: 'Vegano', emoji: '🌱', desc: '100% vegetal' },
+  { id: 'paleo', label: 'Paleo', emoji: '🦴', desc: 'Carne, pescado, verduras' },
+];
+
+const DIET_RESTRICTIONS: { id: DietPreference; label: string; emoji: string }[] = [
   { id: 'gluten_free', label: 'Sin Gluten', emoji: '🌾' },
   { id: 'lactose_free', label: 'Sin Lactosa', emoji: '🥛' },
-  { id: 'none', label: 'Sin límites', emoji: '🍽️' },
+  { id: 'keto', label: 'Keto', emoji: '🥑' },
 ];
 
 const CUISINES: { id: CuisineType; label: string; emoji: string }[] = [
@@ -31,7 +35,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   const [step, setStep] = useState(1);
   const [profile, setProfile] = useState<Partial<UserProfile>>({
     name: 'Usuario',
-    dietary_preferences: [],
+    dietary_preferences: ['none'], // Por defecto Omnívoro
     favorite_cuisines: [],
     cooking_experience: 'intermediate',
     household_size: 1,
@@ -45,35 +49,38 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     else setIsValid(true);
   }, [step, profile]);
 
-  const toggleDiet = (item: DietPreference) => {
+  const setBaseDiet = (base: DietPreference) => {
+    // Mantenemos solo las restricciones (items que NO son bases)
+    const currentRestrictions = (profile.dietary_preferences || []).filter(
+        p => !DIET_BASES.map(b => b.id).includes(p)
+    );
+    
+    // Añadimos la nueva base (si no es 'none', que es implícita al estar vacía de bases)
+    const newPreferences = [...currentRestrictions];
+    if (base !== 'none') {
+        newPreferences.push(base);
+    } else {
+        newPreferences.push('none');
+    }
+    
+    setProfile(p => ({ ...p, dietary_preferences: newPreferences as DietPreference[] }));
+  };
+
+  const toggleRestriction = (restriction: DietPreference) => {
     let newList = [...(profile.dietary_preferences || [])];
     
-    if (item === 'none') {
-        // "Sin límites" limpia todo lo demás
-        setProfile(p => ({ ...p, dietary_preferences: ['none'] }));
-        return;
-    }
-
-    // Si estaba "Sin límites", lo quitamos al marcar una opción específica
-    newList = newList.filter(i => i !== 'none');
-
-    // GRUPO DE EXCLUSIÓN: Estilos de vida incompatibles entre sí
-    // Vegetarian: Sin carne/pescado
-    // Vegan: Sin animal
-    // Paleo: Mucha carne/pescado, sin grano/legumbre
-    const exclusiveGroup = ['vegetarian', 'vegan', 'paleo'];
-
-    if (newList.includes(item)) {
-        newList = newList.filter(i => i !== item);
+    if (newList.includes(restriction)) {
+        newList = newList.filter(i => i !== restriction);
     } else {
-        // Si seleccionamos una dieta base (Veg/Vegan/Paleo), desmarcamos las otras bases
-        if (exclusiveGroup.includes(item)) {
-            newList = newList.filter(i => !exclusiveGroup.includes(i));
-        }
-        newList.push(item);
+        newList.push(restriction);
     }
-    
     setProfile(p => ({ ...p, dietary_preferences: newList as DietPreference[] }));
+  };
+
+  const getCurrentBase = () => {
+      const bases = DIET_BASES.map(b => b.id);
+      const found = (profile.dietary_preferences || []).find(p => bases.includes(p));
+      return found || 'none';
   };
 
   const toggleCuisine = (item: CuisineType) => {
@@ -105,7 +112,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                         <span className="text-[#e87c3e]">comes.</span>
                     </h1>
                     <p className="text-teal-50 text-base lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
-                        Define tus reglas alimentarias. Nosotros filtramos el ruido y te mostramos solo lo que te interesa.
+                        Define tu estilo de alimentación base y añade restricciones si las tienes.
                     </p>
                 </div>
             );
@@ -184,31 +191,63 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             {/* Scrollable Content Area - EXTRA BOTTOM PADDING & MIN-H-0 Fix */}
             <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar p-6 pt-4 pb-8">
                 {step === 1 && (
-                    <div className="animate-fade-in space-y-6">
+                    <div className="animate-fade-in space-y-8">
                         <div className="px-2">
                             <h2 className="text-3xl font-black text-teal-900 mb-2">Tu Dieta</h2>
-                            <p className="text-gray-500 font-medium leading-relaxed text-sm">Selecciona tus restricciones alimentarias.</p>
+                            <p className="text-gray-500 font-medium leading-relaxed text-sm">Primero, elige tu estilo base.</p>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-2 pb-6">
-                            {DIETS.map((diet) => (
-                                <button
-                                    key={diet.id}
-                                    onClick={() => toggleDiet(diet.id)}
-                                    className={`p-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.05] active:scale-95 aspect-square relative ${
-                                        profile.dietary_preferences?.includes(diet.id)
-                                        ? 'border-[#013b33] bg-teal-50 text-[#013b33] shadow-md z-10'
-                                        : 'border-gray-100 bg-white text-gray-600 hover:border-gray-300 hover:shadow-sm'
-                                    }`}
-                                >
-                                    <span className="text-3xl mb-1">{diet.emoji}</span>
-                                    <span className="font-bold text-[10px] uppercase tracking-wide text-center leading-tight">{diet.label}</span>
-                                    {profile.dietary_preferences?.includes(diet.id) && (
-                                        <div className="absolute top-2 right-2 w-4 h-4 bg-[#013b33] rounded-full flex items-center justify-center shadow-sm">
-                                            <Check className="w-2.5 h-2.5 text-white" />
-                                        </div>
-                                    )}
-                                </button>
-                            ))}
+                        
+                        {/* SECCIÓN 1: BASE (Radio Behavior) */}
+                        <div className="space-y-3 px-1">
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-teal-600 ml-1">Estilo Principal (Elige uno)</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                {DIET_BASES.map((base) => {
+                                    const isSelected = getCurrentBase() === base.id;
+                                    return (
+                                        <button
+                                            key={base.id}
+                                            onClick={() => setBaseDiet(base.id)}
+                                            className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                                                isSelected
+                                                ? 'border-[#013b33] bg-teal-50 shadow-md ring-1 ring-[#013b33]'
+                                                : 'border-gray-100 bg-white text-gray-600 hover:border-gray-300'
+                                            }`}
+                                        >
+                                            <div className="flex justify-between items-start mb-1">
+                                                <span className="text-2xl">{base.emoji}</span>
+                                                {isSelected && <div className="w-4 h-4 bg-[#013b33] rounded-full flex items-center justify-center"><Check className="w-2.5 h-2.5 text-white" /></div>}
+                                            </div>
+                                            <div className={`font-bold text-sm ${isSelected ? 'text-[#013b33]' : 'text-gray-700'}`}>{base.label}</div>
+                                            <div className="text-[10px] text-gray-400 font-medium leading-tight mt-0.5">{base.desc}</div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* SECCIÓN 2: RESTRICCIONES (Checkbox Behavior) */}
+                        <div className="space-y-3 px-1">
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-teal-600 ml-1">Filtros Extra (Opcional)</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {DIET_RESTRICTIONS.map((res) => {
+                                    const isSelected = profile.dietary_preferences?.includes(res.id);
+                                    return (
+                                        <button
+                                            key={res.id}
+                                            onClick={() => toggleRestriction(res.id)}
+                                            className={`px-4 py-3 rounded-xl border-2 flex items-center gap-2 transition-all ${
+                                                isSelected
+                                                ? 'border-orange-500 bg-orange-50 text-orange-800 shadow-sm'
+                                                : 'border-gray-100 bg-white text-gray-600 hover:border-gray-300'
+                                            }`}
+                                        >
+                                            <span>{res.emoji}</span>
+                                            <span className="font-bold text-xs uppercase tracking-wide">{res.label}</span>
+                                            {isSelected && <Check className="w-3 h-3 text-orange-500 ml-1" />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 )}
