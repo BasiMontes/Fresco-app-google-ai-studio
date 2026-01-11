@@ -63,7 +63,6 @@ const App: React.FC = () => {
   const [activeBatchSession, setActiveBatchSession] = useState<BatchSession | null>(null);
   const [batchRecipes, setBatchRecipes] = useState<Recipe[]>([]);
 
-  // Estado para Favoritos (Persistente Local)
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
       try {
           const saved = localStorage.getItem('fresco_favorites');
@@ -95,7 +94,6 @@ const App: React.FC = () => {
       }
   }, []);
 
-  // SAFETY TIMEOUT
   useEffect(() => {
       if (!isLoaded) {
           const timer = setTimeout(() => setShowLoaderReload(true), 5000);
@@ -103,7 +101,6 @@ const App: React.FC = () => {
       }
   }, [isLoaded]);
 
-  // TOAST TIMEOUT
   useEffect(() => {
       if (toast) {
           const timer = setTimeout(() => setToast(null), 5000);
@@ -134,10 +131,9 @@ const App: React.FC = () => {
   
   const normalizeName = (name: string) => cleanName(name);
 
-  // FIX: Bypass DB calls in Demo Mode
   const safeDbCall = async (action: () => Promise<void>, fallbackType: any, fallbackPayload: any) => {
       if (!userId) return;
-      if (userId === DEMO_USER_ID) return; // Demo mode bypass
+      if (userId === DEMO_USER_ID) return;
 
       if (!navigator.onLine) {
           addToSyncQueue(userId, fallbackType, fallbackPayload);
@@ -432,14 +428,11 @@ const App: React.FC = () => {
       const updatedUser: UserProfile = { ...profile, onboarding_completed: true };
       setUser(updatedUser);
 
-      // FIX CRITICO: Inicializar Recetas Estáticas inmediatamente para que la biblioteca no salga vacía
-      // Si el usuario es vegetariano, intentamos priorizar/filtrar las recetas estáticas, pero siempre cargamos algo.
       const isVegetarian = profile.dietary_preferences.includes('vegetarian') || profile.dietary_preferences.includes('vegan');
       const filteredStatic = isVegetarian 
           ? STATIC_RECIPES.filter(r => r.dietary_tags.includes('vegetarian') || r.dietary_tags.includes('vegan')) 
           : STATIC_RECIPES;
           
-      // Si el filtrado deja vacío (que no debería), usamos todas
       const initialRecipesSource = filteredStatic.length > 0 ? filteredStatic : STATIC_RECIPES;
       
       const seedRecipes = initialRecipesSource.map(r => ({
@@ -448,21 +441,19 @@ const App: React.FC = () => {
           user_id: userId
       }));
       
-      setRecipes(seedRecipes); // Estado UI instantáneo
+      setRecipes(seedRecipes);
 
-      // También poblamos la despensa básica
       const seedPantry = [
           { id: `start-1-${Date.now()}`, name: 'Aceite de Oliva', quantity: 1, unit: 'l', category: 'pantry', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 365).toISOString() },
           { id: `start-2-${Date.now()}`, name: 'Sal', quantity: 1, unit: 'kg', category: 'spices', added_at: new Date().toISOString(), expires_at: new Date(Date.now() + 86400000 * 700).toISOString() },
       ].map(p => ({...p, user_id: userId}));
-      setPantry(seedPantry); // Estado UI instantáneo
+      setPantry(seedPantry);
 
       if (userId === DEMO_USER_ID) {
           setView('app');
           return;
       }
 
-      // Persistencia en segundo plano
       const { error } = await supabase.from('profiles').upsert({
           id: userId,
           dietary_preferences: profile.dietary_preferences,
@@ -476,7 +467,6 @@ const App: React.FC = () => {
 
       if (error) console.error("Error saving profile", error);
       
-      // Guardar recetas y despensa inicial en DB
       db.saveRecipesBulkDB(userId, seedRecipes).catch(e => console.error("Error background seeding recipes", e));
       db.addPantryItemsBulkDB(userId, seedPantry).catch(e => console.error("Error background seeding pantry", e));
 
@@ -503,18 +493,18 @@ const App: React.FC = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Initial Data Loader
     const initData = async (uid: string, profileData: any) => {
         setIsLoaded(false);
         try {
             const appUser: UserProfile = {
-                // FALLBACK ROBUSTO PARA EL NOMBRE: Prioriza DB > "Usuario"
+                // FIXED: Use profile name OR fallback to 'Usuario'
                 name: profileData.full_name || 'Usuario',
                 dietary_preferences: profileData.dietary_preferences || [],
                 favorite_cuisines: profileData.favorite_cuisines || [],
                 cooking_experience: profileData.cooking_experience || 'intermediate',
                 household_size: profileData.household_size || 1,
                 onboarding_completed: profileData.onboarding_completed || false,
-                // FALLBACK PARA NUMEROS: Evita NaNs
                 total_savings: profileData.total_savings || 0,
                 meals_cooked: profileData.meals_cooked || 0,
                 time_saved_mins: profileData.time_saved_mins || 0,
@@ -531,7 +521,6 @@ const App: React.FC = () => {
                     db.fetchShoppingList(uid)
                 ]);
 
-                // Si por alguna razón la DB está vacía pero el user completó onboarding (bug previo), re-sembrar.
                 let finalRecipes = fetchedRecipes;
                 if (fetchedRecipes.length === 0) {
                      const isVegetarian = appUser.dietary_preferences.includes('vegetarian') || appUser.dietary_preferences.includes('vegan');
@@ -566,16 +555,10 @@ const App: React.FC = () => {
         }
     };
 
+    // AUTH STATE LISTENER (ROBUST FREEZE FIX)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-            const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-            if (profile) {
-                await initData(session.user.id, profile);
-            } else {
-                setView('onboarding');
-                setIsLoaded(true);
-            }
-        } else if (event === 'SIGNED_OUT') {
+        // Explicit Sign Out
+        if (event === 'SIGNED_OUT') {
             setView('auth');
             setUser(null);
             setUserId(null);
@@ -584,10 +567,46 @@ const App: React.FC = () => {
             setPantry([]);
             setShoppingList([]);
             setIsLoaded(true);
+            return;
+        }
+
+        // Handle Session (Signed In, Initial, Token Refresh)
+        if (session?.user) {
+            // Check for SIGNED_IN or INITIAL_SESSION to trigger load
+            if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+                try {
+                    const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                    if (profile) {
+                        // FIX: Ensure we use name from metadata if profile name is missing
+                        const metaName = session.user.user_metadata?.full_name;
+                        if (!profile.full_name && metaName) {
+                            profile.full_name = metaName;
+                            // Optionally update DB lazily
+                            supabase.from('profiles').update({ full_name: metaName }).eq('id', session.user.id).then(() => {});
+                        }
+                        await initData(session.user.id, profile);
+                    } else {
+                        // Profile missing, maybe redirect to onboarding or assume defaults
+                        const metaName = session.user.user_metadata?.full_name || 'Usuario';
+                        const tempProfile = { full_name: metaName, onboarding_completed: false };
+                        // Treat as new/incomplete
+                        setView('onboarding');
+                        setIsLoaded(true);
+                    }
+                } catch (e) {
+                    console.error("Auth init error:", e);
+                    setIsLoaded(true); // Prevent infinite loading
+                }
+            } else if (event === 'TOKEN_REFRESHED') {
+                // Just ensure we are loaded
+                if (!isLoaded) setIsLoaded(true);
+            }
         } else {
-             if (!session) {
-                 setIsLoaded(true);
-             }
+            // No session found
+            if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') {
+               setView('auth');
+               setIsLoaded(true);
+            }
         }
     });
 
@@ -598,7 +617,7 @@ const App: React.FC = () => {
       window.removeEventListener('fresco-force-repopulate', handleForceRepopulate);
       authListener.subscription.unsubscribe();
     };
-  }, []); // FIXED: Removed [userId] dependency to prevent infinite loop
+  }, []);
 
   const handleStartBatch = async () => {
       if (!isOnline) {
@@ -673,14 +692,14 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={handleOnboardingComplete} /> :
          <>
-          {/* SIDEBAR: Fixed Left - Matches Design */}
+          {/* SIDEBAR */}
           <aside className="hidden md:flex flex-col w-64 bg-teal-900 text-white fixed h-full z-50 shadow-2xl">
             <div className="p-8">
                 <Logo variant="inverted" />
             </div>
             <nav className="flex-1 px-4 space-y-2 mt-4">
                 {[
-                  {id:'dashboard', icon:Home, label:'Home'}, // Changed Impacto to Home
+                  {id:'dashboard', icon:Home, label:'Home'},
                   {id:'planner', icon:Calendar, label:'Calendario'}, 
                   {id:'pantry', icon:Package, label:'Despensa'}, 
                   {id:'recipes', icon:BookOpen, label:'Recetas'}, 

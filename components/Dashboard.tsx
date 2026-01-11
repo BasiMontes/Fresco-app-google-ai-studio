@@ -81,6 +81,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
       setConfigNotifs(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const safeTimeSaved = useMemo(() => {
+      const val = Number(user.time_saved_mins);
+      return isNaN(val) ? 0 : val;
+  }, [user.time_saved_mins]);
+
   // --- VISTA FAVORITOS ---
   if (currentView === 'favorites') {
       return (
@@ -358,7 +363,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
               <div className="flex justify-between items-start mb-4">
                   <div>
                       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tiempo Recuperado</p>
-                      <p className="text-3xl font-black text-teal-900">{Math.round((user.time_saved_mins || 0) / 60)}h</p>
+                      {/* FIX: Safe check for NaN */}
+                      <p className="text-3xl font-black text-teal-900">{Math.round(safeTimeSaved / 60)}h</p>
                   </div>
                   <div className="p-2 bg-purple-50 rounded-xl text-purple-500">
                       <Timer className="w-5 h-5" />
