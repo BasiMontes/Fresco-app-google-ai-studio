@@ -1,10 +1,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { MealSlot, Recipe, MealCategory, PantryItem, UserProfile, ShoppingItem } from '../types';
-import { Plus, Trash2, Calendar, Wand2, X, Eye, Trash, ChefHat, Check, AlertCircle, Sparkles, Loader2, ArrowLeft, ArrowRight, PackageCheck, Clock, Users, Share2, Users2, CheckCircle2, WifiOff, ShoppingCart, ChevronLeft, ChevronRight, Move, AlertOctagon, Utensils, Repeat, AlertTriangle, CheckSquare, Square, Copy, Smartphone } from 'lucide-react';
+import { Plus, Trash2, Calendar, Wand2, X, Eye, Trash, ChefHat, Check, AlertCircle, Sparkles, Loader2, ArrowLeft, ArrowRight, PackageCheck, Clock, Users, Share2, Users2, CheckCircle2, WifiOff, ShoppingCart, ChevronLeft, ChevronRight, Move, AlertOctagon, Utensils, Repeat, AlertTriangle, CheckSquare, Square, Copy, Smartphone, BrainCircuit } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks, isBefore } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { generateWeeklyPlanAI } from '../services/geminiService';
+import { generateSmartMenu } from '../services/geminiService';
 import { RecipeDetail } from './RecipeDetail';
 
 interface PlannerProps {
@@ -31,7 +31,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPlanWizard, setShowPlanWizard] = useState(false);
   const [wizardDays, setWizardDays] = useState<string[]>([]);
-  // FIX: Añadido breakfast por defecto si se desea o vacío
   const [wizardTypes, setWizardTypes] = useState<MealCategory[]>(['lunch', 'dinner']);
 
   const [showSocial, setShowSocial] = useState(false);
@@ -49,7 +48,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
       setShowPlanWizard(true);
   };
 
-  const executeAIPlan = async () => {
+  const executeSmartPlan = async () => {
     if(wizardDays.length === 0 || wizardTypes.length === 0) {
         alert("Selecciona al menos un día y un tipo de comida.");
         return;
@@ -57,7 +56,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
     setIsGenerating(true);
     setShowPlanWizard(false); 
     try {
-        const result = await generateWeeklyPlanAI(user, pantry, plan, wizardDays, wizardTypes, recipes);
+        // Uso de la nueva función local
+        const result = await generateSmartMenu(user, pantry, wizardDays, wizardTypes, recipes);
         if (result.plan && result.plan.length > 0) {
             const newPlan = [...plan.filter(p => !result.plan.some(np => np.date === p.date && np.type === p.type)), ...result.plan];
             onAIPlanGenerated(newPlan, result.newRecipes);
@@ -181,8 +181,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     disabled={isGenerating} 
                     className="flex-[2] md:flex-none bg-teal-900 text-white px-8 py-5 md:py-1.5 md:px-3 rounded-[2rem] md:rounded-lg flex items-center justify-center gap-3 md:gap-2 font-black text-xs md:text-[9px] uppercase tracking-widest shadow-2xl active:scale-95 disabled:opacity-50 transition-all hover:bg-teal-800 disabled:bg-gray-400"
                 >
-                    {isGenerating ? <Loader2 className="w-5 h-5 md:w-3 md:h-3 animate-spin" /> : isOnline ? <Sparkles className="w-5 h-5 md:w-3 md:h-3 text-orange-400" /> : <WifiOff className="w-5 h-5" />}
-                    {isOnline ? 'Asistente Mágico' : 'Plan Local'}
+                    {isGenerating ? <Loader2 className="w-5 h-5 md:w-3 md:h-3 animate-spin" /> : <BrainCircuit className="w-5 h-5 md:w-3 md:h-3 text-orange-400" />}
+                    Asistente Mágico
                 </button>
                </>
            )}
@@ -209,7 +209,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                   <button onClick={() => setShowPlanWizard(false)} className="absolute top-8 right-8 md:top-4 md:right-4 p-2 bg-gray-50 rounded-full hover:bg-gray-100"><X className="w-5 h-5" /></button>
                   <div className="mb-8 md:mb-4">
                       <h3 className="text-3xl md:text-xl font-black text-teal-900 mb-2">Diseña tu Semana</h3>
-                      <p className="text-gray-500 text-sm">La IA rellenará los huecos seleccionados.</p>
+                      <p className="text-gray-500 text-sm">Rellenaremos los huecos con tus recetas.</p>
                   </div>
                   
                   <div className="space-y-6 mb-8">
@@ -232,7 +232,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                       <div>
                           <p className="font-black text-xs uppercase tracking-widest text-teal-600 mb-2">Comidas</p>
                           <div className="flex gap-2">
-                              {/* FIX: Añadida opción Desayuno */}
                               {['breakfast', 'lunch', 'dinner'].map(t => (
                                   <button key={t} onClick={() => {
                                       setWizardTypes(prev => prev.includes(t as any) ? prev.filter(x => x !== t) : [...prev, t as any]);
@@ -244,8 +243,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                       </div>
                   </div>
 
-                  <button onClick={executeAIPlan} className="w-full py-6 md:py-3 bg-teal-900 text-white rounded-[2rem] md:rounded-xl font-black text-sm uppercase tracking-widest shadow-2xl">
-                      Generar Menú
+                  <button onClick={executeSmartPlan} className="w-full py-6 md:py-3 bg-teal-900 text-white rounded-[2rem] md:rounded-xl font-black text-sm uppercase tracking-widest shadow-2xl">
+                      Generar Automáticamente
                   </button>
               </div>
           </div>

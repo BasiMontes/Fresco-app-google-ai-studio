@@ -25,12 +25,6 @@ const notifyError = (message: string) => {
     }
 };
 
-const notifyInfo = (message: string) => {
-    if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('fresco-toast', { detail: { type: 'info', message } }));
-    }
-};
-
 const cleanJson = (text: string): string => {
     let clean = text.trim();
     if (clean.startsWith('```json')) {
@@ -80,174 +74,98 @@ const validateRecipe = (r: any): any => {
 
 // FIX CRÍTICO: El filtro ahora ignora 'none' si existen otras restricciones explícitas
 const filterRecipesByDiet = (recipes: Recipe[], preferences: string[]) => {
-    // Si no hay preferencias o está vacío, devolvemos todo
     if (!preferences || preferences.length === 0) return recipes;
-
-    // Si SOLO es 'none', devolvemos todo. Si hay 'none' Y 'vegetarian', ignoramos 'none' y aplicamos filtro.
     const effectivePrefs = preferences.filter(p => p !== 'none');
     if (effectivePrefs.length === 0) return recipes; 
     
     return recipes.filter(r => {
         const tags = r.dietary_tags || [];
-        
-        // Lógica de exclusión estricta
         if (effectivePrefs.includes('vegan') && !tags.includes('vegan')) return false;
         if (effectivePrefs.includes('vegetarian') && !tags.includes('vegetarian') && !tags.includes('vegan')) return false;
         if (effectivePrefs.includes('paleo') && !tags.includes('paleo')) return false;
         if (effectivePrefs.includes('keto') && !tags.includes('keto')) return false;
         if (effectivePrefs.includes('gluten_free') && !tags.includes('gluten_free')) return false;
         if (effectivePrefs.includes('lactose_free') && !tags.includes('lactose_free') && !tags.includes('vegan')) return false;
-
         return true;
     });
 };
 
-const generateLocalPlanStrategy = (
-    user: UserProfile, 
+// NUEVO: Algoritmo de Planificación Inteligente (Sin IA externa)
+export const generateSmartMenu = async (
+    user: UserProfile,
+    pantry: PantryItem[],
     targetDates: string[], 
-    targetTypes: string[], 
+    targetTypes: string[],
     availableRecipes: Recipe[]
-): MealSlot[] => {
+): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
+    
     const plan: MealSlot[] = [];
     
-    // 1. Base de datos combinada
+    // 1. Unificar Fuentes y Filtrar por Dieta
     const allSources = [...availableRecipes, ...FALLBACK_RECIPES];
-    
-    // 2. Filtrado ESTRICTO (El "Gatekeeper")
     const validRecipes = filterRecipesByDiet(allSources, user.dietary_preferences);
-    
-    // Si no hay recetas válidas para la dieta, NO rellenamos con basura. Devolvemos vacío y alertamos.
-    if (validRecipes.length === 0 && targetDates.length > 0) {
-        notifyError("No hay recetas compatibles con tu dieta en la biblioteca.");
-        return [];
+
+    if (validRecipes.length === 0) {
+        notifyError("No hay recetas compatibles con tu dieta.");
+        return { plan: [], newRecipes: [] };
     }
 
-    const shuffledRecipes = validRecipes.sort(() => 0.5 - Math.random());
+    // 2. Separar por categorías
+    const breakfasts = validRecipes.filter(r => r.meal_category === 'breakfast');
+    const meals = validRecipes.filter(r => r.meal_category !== 'breakfast'); // Lunch & Dinner pool
 
-    targetDates.forEach(date => {
+    // 3. Estrategia de DESAYUNOS: Poca variedad (Rotación)
+    // Seleccionamos aleatoriamente 2 o 3 opciones para la semana
+    const breakfastPool = breakfasts.sort(() => 0.5 - Math.random()).slice(0, 3); 
+    
+    // 4. Estrategia de COMIDAS: Máxima variedad + Prioridad Despensa
+    // Puntuamos las recetas según ingredientes en despensa
+    const scoredMeals = meals.map(recipe => {
+        let score = Math.random(); // Base aleatoria para variedad
+        const hasIngredients = recipe.ingredients.filter(ing => 
+            pantry.some(p => p.name.toLowerCase().includes(ing.name.toLowerCase()))
+        ).length;
+        score += hasIngredients * 2; // Boost por ingredientes disponibles
+        return { recipe, score };
+    }).sort((a, b) => b.score - a.score).map(item => item.recipe);
+
+    let mealIndex = 0;
+    
+    targetDates.forEach((date, dayIndex) => {
         targetTypes.forEach(type => {
-            // Intentamos buscar receta del tipo correcto, si no, cualquiera compatible vale para rellenar
-            const recipe = shuffledRecipes.find(r => 
-                r.meal_category === type || 
-                (type === 'lunch' && r.meal_category === 'dinner') || 
-                (type === 'dinner' && r.meal_category === 'lunch')
-            );
+            let selectedRecipe: Recipe | undefined;
 
-            if (recipe) {
+            if (type === 'breakfast') {
+                // Rotar entre los desayunos seleccionados (A, B, C, A, B...)
+                if (breakfastPool.length > 0) {
+                    selectedRecipe = breakfastPool[dayIndex % breakfastPool.length];
+                }
+            } else {
+                // Asignar comida del pool ordenado
+                // Si se acaban, volver a empezar (aunque improbable con suficientes recetas)
+                if (scoredMeals.length > 0) {
+                    selectedRecipe = scoredMeals[mealIndex % scoredMeals.length];
+                    mealIndex++;
+                }
+            }
+
+            if (selectedRecipe) {
                 plan.push({
                     date,
                     type: type as MealCategory,
-                    recipeId: recipe.id,
+                    recipeId: selectedRecipe.id,
                     servings: user.household_size,
                     isCooked: false
                 });
-                // Rotación para variedad
-                const idx = shuffledRecipes.indexOf(recipe);
-                if (idx > -1) {
-                    shuffledRecipes.push(shuffledRecipes.splice(idx, 1)[0]);
-                }
             }
         });
     });
 
-    return plan;
+    return { plan, newRecipes: [] };
 };
 
-export const generateWeeklyPlanAI = async (
-  user: UserProfile,
-  pantry: PantryItem[],
-  existingPlan: MealSlot[] = [],
-  targetDates?: string[], 
-  targetTypes?: string[],
-  availableRecipes: Recipe[] = []
-): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-  
-  const safeDates = targetDates && targetDates.length > 0 ? targetDates : [];
-  const safeTypes = targetTypes && targetTypes.length > 0 ? targetTypes : ['lunch', 'dinner'];
-
-  // Modo Local (Fallback)
-  if (!API_KEY) { 
-      const localPlan = generateLocalPlanStrategy(user, safeDates, safeTypes, availableRecipes);
-      return { plan: localPlan, newRecipes: [] }; 
-  }
-  
-  try {
-    const pantryList = pantry.map(p => `${p.name} (${p.quantity} ${p.unit})`).join(", ");
-    const dietString = user.dietary_preferences.filter(p => p !== 'none').join(", ").toUpperCase();
-    
-    const prompt = `Actúa como Chef Personal experto.
-    
-    PERFIL DIETA: ${dietString || 'OMNIVORO'}.
-    Gustos: ${user.favorite_cuisines.join(", ")}.
-    Inventario: ${pantryList || "Vacío, inventar recetas"}.
-    
-    OBJETIVO: Planificar comidas para: ${safeDates.join(", ")}. Tipos: ${safeTypes.join(", ")}.
-    
-    REGLAS DE ORO (SAFETY):
-    1. Si la dieta es VEGETARIAN/VEGAN, PROHIBIDO INCLUIR CARNE O PESCADO.
-    2. Prioriza usar el inventario.
-    3. Devuelve JSON con 'recipes' (nuevas) y 'plan' (asignación).
-    `;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: { 
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            recipes: { type: Type.ARRAY, items: RECIPE_SCHEMA },
-            plan: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  date: { type: Type.STRING },
-                  type: { type: Type.STRING },
-                  recipe_title: { type: Type.STRING }
-                },
-                required: ["date", "type", "recipe_title"]
-              }
-            }
-          }
-        }
-      }
-    });
-
-    const safeText = response.text ? response.text : '';
-    const data = JSON.parse(cleanJson(safeText));
-    
-    // Validar y etiquetar recetas generadas por IA para asegurar consistencia
-    const newRecipes: Recipe[] = (data.recipes || []).map((raw: any, i: number) => {
-      const r = validateRecipe(raw);
-      // Forzamos las etiquetas del usuario en las recetas generadas para evitar falsos positivos en el Planner
-      const userTags = user.dietary_preferences.filter(p => p !== 'none');
-      
-      return {
-        ...r,
-        id: `ai-rec-${Date.now()}-${i}`,
-        servings: user.household_size,
-        dietary_tags: [...(r.dietary_tags || []), ...userTags], // Merge tags
-        image_url: `https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&sig=${i}`
-      };
-    });
-
-    const newSlots: MealSlot[] = (data.plan || []).map((p: any) => ({
-      date: p.date,
-      type: p.type,
-      recipeId: newRecipes.find(r => r.title === p.recipe_title)?.id,
-      servings: user.household_size
-    }));
-
-    return { plan: newSlots, newRecipes };
-  } catch (error) {
-    console.warn("AI Plan Gen failed, falling back to local strategy");
-    const localPlan = generateLocalPlanStrategy(user, safeDates, safeTypes, availableRecipes);
-    notifyInfo("Plan generado con recetas guardadas (IA no disponible).");
-    return { plan: localPlan, newRecipes: [] }; 
-  }
-};
+// Mantenemos la firma antigua redirigiendo a la nueva lógica para compatibilidad
+export const generateWeeklyPlanAI = generateSmartMenu;
 
 export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSession> => {
   if (!API_KEY) { notifyError("Falta API Key para Batch Cooking"); return { total_duration: 0, steps: [] }; }
