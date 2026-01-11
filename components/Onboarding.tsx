@@ -93,7 +93,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                         <span className="text-[#e87c3e]">comes.</span>
                     </h1>
                     <p className="text-teal-50 text-base lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
-                        Define tus reglas. Nosotros generaremos recetas increíbles y su lista de la compra automáticamente.
+                        Dinos qué combustible prefieres. Vegetariano, Keto o sin límites. Nosotros generaremos tu lista de la compra.
                     </p>
                 </div>
             );
@@ -105,7 +105,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                         <span className="text-[#e87c3e]">vibrar?</span>
                     </h1>
                     <p className="text-teal-50 text-base lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
-                        Desde la nonna italiana hasta el street food asiático. Diseñamos menús que no aburren para llenar tu despensa poco a poco.
+                        Desde la nonna italiana hasta el street food de Bangkok. Diseñamos menús que no aburren.
                     </p>
                 </div>
             );
@@ -117,7 +117,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                         ni <span className="text-[#e87c3e]">falta.</span>
                     </h1>
                     <p className="text-teal-50 text-base lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
-                        Ajustamos las compras al milímetro para tu hogar. Planifica primero, compra lo justo después.
+                        Planifica tus comidas primero. La lista de la compra se generará automáticamente después.
                     </p>
                 </div>
             );
@@ -145,11 +145,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
       {/* RIGHT PANEL - FIXED CONTAINER FOR MODAL */}
       <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-4 relative bg-[#f8f9fa]">
         
-        {/* CARD CONTAINER: Scroll interno gestionado aqui */}
-        <div className="w-full max-w-[500px] bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col max-h-[90vh]">
+        {/* CARD CONTAINER: Removed fixed heights, added max-height with scroll internally */}
+        <div className="w-full max-w-[500px] bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col max-h-[85vh]">
             
             {/* Header Area (Sticky) */}
-            <div className="p-8 pb-2">
+            <div className="p-8 pb-2 flex-shrink-0">
                 <div className="lg:hidden mb-4 flex justify-center">
                     <Logo align="center" />
                 </div>
@@ -169,24 +169,24 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 </div>
             </div>
 
-            {/* Scrollable Content Area: Aumentado el padding interno (p-6/p-8) para evitar recortes en hover */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-2">
+            {/* Scrollable Content Area - AQUI ESTA LA MAGIA DEL PADDING (p-6 pt-4) */}
+            <div className="flex-1 overflow-y-auto no-scrollbar p-6 pt-4">
                 {step === 1 && (
-                    <div className="animate-fade-in px-6">
-                        <div className="mb-6 px-2">
+                    <div className="animate-fade-in space-y-6">
+                        <div className="px-2">
                             <h2 className="text-3xl font-black text-teal-900 mb-2">Tu Dieta</h2>
                             <p className="text-gray-500 font-medium leading-relaxed text-sm">Selecciona tus restricciones alimentarias.</p>
                         </div>
-                        {/* PADDING EXTRA para el hover */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4">
+                        {/* PADDING EXTRA EN EL GRID PARA QUE EL HOVER NO SE CORTE */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-2 pb-6">
                             {DIETS.map((diet) => (
                                 <button
                                     key={diet.id}
                                     onClick={() => toggleDiet(diet.id)}
-                                    className={`p-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.05] active:scale-95 aspect-square relative ${
+                                    className={`p-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.05] active:scale-95 aspect-square relative ${
                                         profile.dietary_preferences?.includes(diet.id)
-                                        ? 'border-[#013b33] bg-teal-50 text-[#013b33] shadow-lg z-10'
-                                        : 'border-gray-100 bg-white text-gray-600 hover:border-gray-300 hover:shadow-md'
+                                        ? 'border-[#013b33] bg-teal-50 text-[#013b33] shadow-md z-10'
+                                        : 'border-gray-100 bg-white text-gray-600 hover:border-gray-300 hover:shadow-sm'
                                     }`}
                                 >
                                     <span className="text-3xl mb-1">{diet.emoji}</span>
@@ -203,20 +203,20 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 )}
                 
                 {step === 2 && (
-                    <div className="animate-fade-in px-6">
-                        <div className="mb-6 px-2">
+                    <div className="animate-fade-in space-y-6">
+                        <div className="px-2">
                             <h2 className="text-3xl font-black text-teal-900 mb-2">Tus Gustos</h2>
                             <p className="text-gray-500 font-medium leading-relaxed text-sm">¿Qué tipo de cocina te inspira más?</p>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-2 pb-6">
                             {CUISINES.map((cuisine) => (
                                 <button
                                     key={cuisine.id}
                                     onClick={() => toggleCuisine(cuisine.id)}
-                                    className={`p-3 rounded-2xl border-2 text-center flex flex-col items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.05] active:scale-95 aspect-square relative ${
+                                    className={`p-3 rounded-2xl border-2 text-center flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.05] active:scale-95 aspect-square relative ${
                                         profile.favorite_cuisines?.includes(cuisine.id)
-                                        ? 'border-orange-500 bg-orange-50 text-orange-900 shadow-lg z-10'
-                                        : 'border-gray-100 bg-white text-gray-600 hover:border-orange-200 hover:shadow-md'
+                                        ? 'border-orange-500 bg-orange-50 text-orange-900 shadow-md z-10'
+                                        : 'border-gray-100 bg-white text-gray-600 hover:border-orange-200 hover:shadow-sm'
                                     }`}
                                 >
                                     <span className="text-3xl mb-1 filter drop-shadow-sm">{cuisine.emoji}</span>
@@ -233,7 +233,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 )}
 
                 {step === 3 && (
-                    <div className="animate-fade-in space-y-8 py-4 px-8">
+                    <div className="animate-fade-in space-y-8 py-4 px-2">
                         <div className="text-center space-y-4">
                             <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto text-[#013b33] shadow-inner">
                                 <ChefHat className="w-8 h-8" />
@@ -272,7 +272,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             </div>
 
             {/* Footer Action (Sticky) */}
-            <div className="p-8 pt-4">
+            <div className="p-8 pt-4 flex-shrink-0">
                 <button
                 onClick={handleNext}
                 disabled={!isValid && step < 3}
