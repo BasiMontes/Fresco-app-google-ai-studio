@@ -15,7 +15,7 @@ const DIETS: { id: DietPreference; label: string; emoji: string }[] = [
   { id: 'lactose_free', label: 'Sin Lactosa', emoji: '🥛' },
   { id: 'keto', label: 'Keto', emoji: '🥩' },
   { id: 'paleo', label: 'Paleo', emoji: '🦴' },
-  { id: 'none', label: 'Sin restricciones', emoji: '🍽️' },
+  { id: 'none', label: 'Sin límites', emoji: '🍽️' },
 ];
 
 const CUISINES: { id: CuisineType; label: string; emoji: string }[] = [
@@ -89,11 +89,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         case 1:
             return (
                 <div key="step1" className="mt-8 space-y-4 animate-fade-in relative z-10">
-                    <h1 className="text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
+                    <h1 className="text-5xl lg:text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
                         Eres lo que<br/>
                         <span className="text-[#e87c3e]">comes.</span>
                     </h1>
-                    <p className="text-teal-50 text-xl max-w-lg leading-relaxed font-normal opacity-90">
+                    <p className="text-teal-50 text-lg lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
                         Dinos qué combustible prefieres. Vegetariano, Keto o sin límites. Nosotros nos encargamos de los ingredientes.
                     </p>
                 </div>
@@ -101,11 +101,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         case 2:
             return (
                 <div key="step2" className="mt-8 space-y-4 animate-fade-in relative z-10">
-                    <h1 className="text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
+                    <h1 className="text-5xl lg:text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
                         ¿Qué te hace<br/>
                         <span className="text-[#e87c3e]">vibrar?</span>
                     </h1>
-                    <p className="text-teal-50 text-xl max-w-lg leading-relaxed font-normal opacity-90">
+                    <p className="text-teal-50 text-lg lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
                         Desde la nonna italiana hasta el street food de Bangkok. Diseñamos menús que no aburren.
                     </p>
                 </div>
@@ -113,11 +113,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         case 3:
             return (
                 <div key="step3" className="mt-8 space-y-4 animate-fade-in relative z-10">
-                    <h1 className="text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
+                    <h1 className="text-5xl lg:text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
                         Ni sobra,<br/>
                         ni <span className="text-[#e87c3e]">falta.</span>
                     </h1>
-                    <p className="text-teal-50 text-xl max-w-lg leading-relaxed font-normal opacity-90">
+                    <p className="text-teal-50 text-lg lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
                         Ajustamos las compras al milímetro para tu hogar. Ahorra dinero y deja de tirar comida.
                     </p>
                 </div>
@@ -130,7 +130,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     <div className="h-screen w-full flex bg-[#f8f9fa] overflow-hidden font-sans">
       
       {/* LEFT PANEL - BRANDING & CONTEXT */}
-      <div className="hidden lg:flex lg:w-1/2 lg:shrink-0 bg-[#013b33] h-full flex-col justify-center px-20 relative text-white transition-colors duration-500">
+      <div className="hidden lg:flex lg:w-1/2 lg:shrink-0 bg-[#013b33] h-full flex-col justify-center px-16 xl:px-20 relative text-white transition-colors duration-500">
         <div className="absolute top-12 left-12">
             <Logo variant="inverted" />
         </div>
@@ -149,21 +149,21 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
       </div>
 
       {/* RIGHT PANEL - FORM */}
-      <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-6 relative">
-        <div className="w-full max-w-[500px] h-[700px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col">
+      <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-4 md:p-6 relative">
+        <div className="w-full max-w-[500px] h-full max-h-[700px] bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col">
             
             {/* Mobile Header */}
-            <div className="lg:hidden mb-6 flex justify-center">
+            <div className="lg:hidden mb-4 flex justify-center">
                  <Logo align="center" />
             </div>
 
             {/* Mobile Progress Bar */}
-            <div className="lg:hidden w-full bg-gray-100 h-1 rounded-full mb-8 overflow-hidden">
+            <div className="lg:hidden w-full bg-gray-100 h-1 rounded-full mb-6 overflow-hidden">
                 <div className="bg-teal-900 h-full transition-all duration-500" style={{ width: `${(step / 3) * 100}%` }} />
             </div>
 
             {/* Back Button */}
-            <div className="flex justify-between items-center mb-6 h-8 flex-shrink-0">
+            <div className="flex justify-between items-center mb-4 h-8 flex-shrink-0">
                 {step > 1 ? (
                     <button onClick={handleBack} className="flex items-center gap-2 text-gray-400 hover:text-teal-900 font-bold text-[10px] uppercase tracking-widest transition-colors group">
                         <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
@@ -175,30 +175,31 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 <span className="text-gray-300 font-black text-[10px] uppercase tracking-[0.2em]">Paso {step} de 3</span>
             </div>
 
-            <div className="flex-1 flex flex-col justify-center overflow-y-auto no-scrollbar py-2">
+            {/* Content Area - Scroll hidden but enabled if absolutely necessary on tiny screens */}
+            <div className="flex-1 flex flex-col justify-center overflow-y-auto no-scrollbar py-2 px-1">
                 {step === 1 && (
                     <div className="animate-fade-in space-y-6">
                         <div>
                             <h2 className="text-3xl font-black text-teal-900 mb-2">Tu Dieta</h2>
-                            <p className="text-gray-500 font-medium leading-relaxed">Selecciona tus restricciones alimentarias.</p>
+                            <p className="text-gray-500 font-medium leading-relaxed text-sm">Selecciona tus restricciones alimentarias.</p>
                         </div>
-                        {/* CHANGE: Square Grid Layout */}
-                        <div className="grid grid-cols-2 gap-3">
+                        {/* CHANGE: 3 Columns Grid for compact view */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-1">
                             {DIETS.map((diet) => (
                                 <button
                                     key={diet.id}
                                     onClick={() => toggleDiet(diet.id)}
-                                    className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 aspect-square ${
+                                    className={`p-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-95 aspect-square relative ${
                                         profile.dietary_preferences?.includes(diet.id)
-                                        ? 'border-[#013b33] bg-teal-50 text-[#013b33] shadow-sm'
-                                        : 'border-gray-100 bg-white text-gray-600 hover:border-gray-200'
+                                        ? 'border-[#013b33] bg-teal-50 text-[#013b33] shadow-md z-10'
+                                        : 'border-gray-100 bg-white text-gray-600 hover:border-gray-300'
                                     }`}
                                 >
-                                    <span className="text-4xl mb-1">{diet.emoji}</span>
-                                    <span className="font-bold text-xs uppercase tracking-wide">{diet.label}</span>
+                                    <span className="text-3xl mb-1">{diet.emoji}</span>
+                                    <span className="font-bold text-[10px] uppercase tracking-wide text-center leading-tight">{diet.label}</span>
                                     {profile.dietary_preferences?.includes(diet.id) && (
-                                        <div className="absolute top-3 right-3 w-5 h-5 bg-[#013b33] rounded-full flex items-center justify-center">
-                                            <Check className="w-3 h-3 text-white" />
+                                        <div className="absolute top-2 right-2 w-4 h-4 bg-[#013b33] rounded-full flex items-center justify-center shadow-sm">
+                                            <Check className="w-2.5 h-2.5 text-white" />
                                         </div>
                                     )}
                                 </button>
@@ -211,24 +212,24 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                     <div className="animate-fade-in space-y-6">
                         <div>
                             <h2 className="text-3xl font-black text-teal-900 mb-2">Tus Gustos</h2>
-                            <p className="text-gray-500 font-medium leading-relaxed">¿Qué tipo de cocina te inspira más?</p>
+                            <p className="text-gray-500 font-medium leading-relaxed text-sm">¿Qué tipo de cocina te inspira más?</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-1">
                             {CUISINES.map((cuisine) => (
                                 <button
                                     key={cuisine.id}
                                     onClick={() => toggleCuisine(cuisine.id)}
-                                    className={`p-4 rounded-2xl border-2 text-center flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 aspect-square relative ${
+                                    className={`p-3 rounded-2xl border-2 text-center flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-95 aspect-square relative ${
                                         profile.favorite_cuisines?.includes(cuisine.id)
-                                        ? 'border-orange-500 bg-orange-50 text-orange-900 shadow-sm'
+                                        ? 'border-orange-500 bg-orange-50 text-orange-900 shadow-md z-10'
                                         : 'border-gray-100 bg-white text-gray-600 hover:border-orange-200'
                                     }`}
                                 >
-                                    <span className="text-4xl mb-1 filter drop-shadow-sm">{cuisine.emoji}</span>
-                                    <span className="font-bold text-xs uppercase tracking-wide leading-tight">{cuisine.label}</span>
+                                    <span className="text-3xl mb-1 filter drop-shadow-sm">{cuisine.emoji}</span>
+                                    <span className="font-bold text-[10px] uppercase tracking-wide leading-tight">{cuisine.label}</span>
                                     {profile.favorite_cuisines?.includes(cuisine.id) && (
-                                        <div className="absolute top-3 right-3 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
-                                            <Check className="w-3 h-3 text-white" />
+                                        <div className="absolute top-2 right-2 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center shadow-sm">
+                                            <Check className="w-2.5 h-2.5 text-white" />
                                         </div>
                                     )}
                                 </button>
@@ -240,43 +241,43 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 {step === 3 && (
                     <div className="animate-fade-in space-y-8">
                         <div className="text-center space-y-4">
-                            <div className="w-24 h-24 bg-teal-50 rounded-full flex items-center justify-center mx-auto text-[#013b33]">
-                                <ChefHat className="w-10 h-10" />
+                            <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto text-[#013b33] shadow-inner">
+                                <ChefHat className="w-8 h-8" />
                             </div>
                             <div>
                                 <h2 className="text-3xl font-black text-teal-900 mb-2">Raciones</h2>
-                                <p className="text-gray-500 font-medium">¿Para cuántas personas cocinas habitualmente?</p>
+                                <p className="text-gray-500 font-medium text-sm">¿Para cuántas personas cocinas habitualmente?</p>
                             </div>
                         </div>
                         
-                        <div className="flex items-center justify-center gap-8 py-6">
+                        <div className="flex items-center justify-center gap-6 py-4">
                             <button 
                                 onClick={() => setProfile(p => ({ ...p, household_size: Math.max(1, (p.household_size || 1) - 1) }))} 
-                                className="w-16 h-16 rounded-2xl border-2 border-gray-100 text-2xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-teal-900 shadow-sm active:scale-90"
+                                className="w-14 h-14 rounded-2xl border-2 border-gray-100 text-2xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-teal-900 shadow-sm active:scale-90 flex items-center justify-center"
                             >-</button>
                             <div className="text-center w-24">
-                                <span className="text-7xl font-black text-[#013b33] tracking-tighter">{profile.household_size}</span>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-2">Personas</p>
+                                <span className="text-6xl font-black text-[#013b33] tracking-tighter">{profile.household_size}</span>
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mt-1">Personas</p>
                             </div>
                             <button 
                                 onClick={() => setProfile(p => ({ ...p, household_size: (p.household_size || 1) + 1 }))} 
-                                className="w-16 h-16 rounded-2xl border-2 border-gray-100 text-2xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-teal-900 shadow-sm active:scale-90"
+                                className="w-14 h-14 rounded-2xl border-2 border-gray-100 text-2xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-teal-900 shadow-sm active:scale-90 flex items-center justify-center"
                             >+</button>
                         </div>
                         
-                        <div className="bg-orange-50 p-6 rounded-3xl border border-orange-100 flex gap-4 items-start">
-                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 text-orange-500">
-                                <Sparkles className="w-5 h-5" />
+                        <div className="bg-orange-50 p-5 rounded-3xl border border-orange-100 flex gap-4 items-start">
+                            <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 text-orange-500">
+                                <Sparkles className="w-4 h-4" />
                             </div>
-                            <p className="text-orange-900 text-xs font-bold leading-relaxed pt-1">
-                                Al finalizar, generaremos automáticamente un set inicial de recetas adaptadas a tu dieta para que empieces con buen pie.
+                            <p className="text-orange-900 text-xs font-bold leading-relaxed pt-0.5">
+                                Generaremos automáticamente un set inicial de recetas adaptadas a tu dieta para que empieces con buen pie.
                             </p>
                         </div>
                     </div>
                 )}
             </div>
 
-            <div className="mt-8 pt-6 border-t border-gray-50 flex-shrink-0">
+            <div className="mt-4 pt-4 border-t border-gray-50 flex-shrink-0">
                 <button
                 onClick={handleNext}
                 disabled={!isValid && step < 3}
