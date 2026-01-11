@@ -153,21 +153,23 @@ export const generateWeeklyPlanAI = async (
   try {
     const pantryList = pantry.map(p => `${p.name} (${p.quantity} ${p.unit})`).join(", ");
     
-    // FIX: Prompt más estricto y explícito sobre rellenar huecos
+    // FIX: Prompt modificado para soportar despensa vacía (Plan First, Buy Later)
     const prompt = `Actúa como Chef Personal para ${user.name}.
     
-    Tengo estos ingredientes: ${pantryList}.
     Mis preferencias: ${user.dietary_preferences.join(", ")}, Gustos: ${user.favorite_cuisines.join(", ")}.
+    Tengo estos ingredientes: ${pantryList.length > 5 ? pantryList : "La despensa está vacía, asumiremos que compraré todo lo necesario"}.
     
     TAREA OBLIGATORIA:
     Genera un plan completo para los días: ${safeDates.join(", ")}.
     Para CADA uno de esos días, DEBES asignar receta para: ${safeTypes.join(", ")}.
     
-    REGLAS:
-    1. Si tengo stock, úsalo. Si no tengo stock para todo, INVENTA recetas nuevas coherentes con mis gustos.
-    2. NO dejes ningún día/tipo vacío. Si pidieron desayuno, pon desayuno.
-    3. Devuelve JSON con 'recipes' (las nuevas inventadas) y 'plan' (asignación fecha/tipo/titulo).
-    4. Usa 'recipe_title' en el plan para enlazar con las recetas generadas.`;
+    REGLAS IMPORTANTES:
+    1. PRIORIDAD: Crea un menú apetecible y variado según mis gustos.
+    2. Si tengo ingredientes (stock), úsalos para ahorrar dinero.
+    3. Si NO tengo ingredientes (o despensa vacía), INVENTA recetas coherentes igualmente. Yo compraré los ingredientes después basándome en este plan.
+    4. NO dejes huecos vacíos. Rellena todos los días solicitados.
+    5. Devuelve JSON con 'recipes' (nuevas recetas necesarias) y 'plan' (asignación).
+    `;
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",

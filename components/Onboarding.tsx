@@ -48,7 +48,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   const toggleDiet = (item: DietPreference) => {
     let newList = [...(profile.dietary_preferences || [])];
     
-    // Lógica Excluyente
     if (item === 'none') {
         newList = ['none']; 
     } else {
@@ -89,23 +88,23 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         case 1:
             return (
                 <div key="step1" className="mt-8 space-y-4 animate-fade-in relative z-10">
-                    <h1 className="text-5xl lg:text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
+                    <h1 className="text-4xl lg:text-6xl font-black leading-[1.1] mb-4 lg:mb-8 tracking-tight text-white">
                         Eres lo que<br/>
                         <span className="text-[#e87c3e]">comes.</span>
                     </h1>
-                    <p className="text-teal-50 text-lg lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
-                        Dinos qué combustible prefieres. Vegetariano, Keto o sin límites. Nosotros nos encargamos de los ingredientes.
+                    <p className="text-teal-50 text-base lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
+                        Dinos qué combustible prefieres. Vegetariano, Keto o sin límites. Nosotros generaremos tu lista de la compra.
                     </p>
                 </div>
             );
         case 2:
             return (
                 <div key="step2" className="mt-8 space-y-4 animate-fade-in relative z-10">
-                    <h1 className="text-5xl lg:text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
+                    <h1 className="text-4xl lg:text-6xl font-black leading-[1.1] mb-4 lg:mb-8 tracking-tight text-white">
                         ¿Qué te hace<br/>
                         <span className="text-[#e87c3e]">vibrar?</span>
                     </h1>
-                    <p className="text-teal-50 text-lg lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
+                    <p className="text-teal-50 text-base lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
                         Desde la nonna italiana hasta el street food de Bangkok. Diseñamos menús que no aburren.
                     </p>
                 </div>
@@ -113,11 +112,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         case 3:
             return (
                 <div key="step3" className="mt-8 space-y-4 animate-fade-in relative z-10">
-                    <h1 className="text-5xl lg:text-6xl font-black leading-[1.1] mb-8 tracking-tight text-white">
+                    <h1 className="text-4xl lg:text-6xl font-black leading-[1.1] mb-4 lg:mb-8 tracking-tight text-white">
                         Ni sobra,<br/>
                         ni <span className="text-[#e87c3e]">falta.</span>
                     </h1>
-                    <p className="text-teal-50 text-lg lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
+                    <p className="text-teal-50 text-base lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
                         Ajustamos las compras al milímetro para tu hogar. Ahorra dinero y deja de tirar comida.
                     </p>
                 </div>
@@ -129,70 +128,65 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   return (
     <div className="h-screen w-full flex bg-[#f8f9fa] overflow-hidden font-sans">
       
-      {/* LEFT PANEL - BRANDING & CONTEXT */}
+      {/* LEFT PANEL */}
       <div className="hidden lg:flex lg:w-1/2 lg:shrink-0 bg-[#013b33] h-full flex-col justify-center px-16 xl:px-20 relative text-white transition-colors duration-500">
         <div className="absolute top-12 left-12">
             <Logo variant="inverted" />
         </div>
-        
         {renderLeftContent()}
-
-        {/* Steps Indicator */}
         <div className="absolute bottom-12 left-12 flex gap-2">
             {[1, 2, 3].map(i => (
                 <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= step ? 'w-8 bg-orange-500' : 'w-2 bg-white/20'}`} />
             ))}
         </div>
-        
-        {/* Background Decorations */}
         <div className="absolute -right-20 -bottom-20 w-[500px] h-[500px] bg-teal-800 rounded-full blur-[120px] opacity-30 animate-pulse-slow pointer-events-none" />
       </div>
 
-      {/* RIGHT PANEL - FORM */}
-      <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-4 md:p-6 relative">
-        <div className="w-full max-w-[500px] h-full max-h-[700px] bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col">
+      {/* RIGHT PANEL - FIXED CONTAINER FOR MODAL */}
+      <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-4 relative bg-[#f8f9fa]">
+        
+        {/* CARD CONTAINER: Removed fixed heights, added max-height with scroll internally */}
+        <div className="w-full max-w-[500px] bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col max-h-[90vh]">
             
-            {/* Mobile Header */}
-            <div className="lg:hidden mb-4 flex justify-center">
-                 <Logo align="center" />
+            {/* Header Area (Sticky) */}
+            <div className="p-8 pb-2">
+                <div className="lg:hidden mb-4 flex justify-center">
+                    <Logo align="center" />
+                </div>
+                <div className="lg:hidden w-full bg-gray-100 h-1 rounded-full mb-6 overflow-hidden">
+                    <div className="bg-teal-900 h-full transition-all duration-500" style={{ width: `${(step / 3) * 100}%` }} />
+                </div>
+                <div className="flex justify-between items-center h-8">
+                    {step > 1 ? (
+                        <button onClick={handleBack} className="flex items-center gap-2 text-gray-400 hover:text-teal-900 font-bold text-[10px] uppercase tracking-widest transition-colors group">
+                            <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
+                                <ChevronLeft className="w-4 h-4" />
+                            </div>
+                            Atrás
+                        </button>
+                    ) : <div />}
+                    <span className="text-gray-300 font-black text-[10px] uppercase tracking-[0.2em]">Paso {step} de 3</span>
+                </div>
             </div>
 
-            {/* Mobile Progress Bar */}
-            <div className="lg:hidden w-full bg-gray-100 h-1 rounded-full mb-6 overflow-hidden">
-                <div className="bg-teal-900 h-full transition-all duration-500" style={{ width: `${(step / 3) * 100}%` }} />
-            </div>
-
-            {/* Back Button */}
-            <div className="flex justify-between items-center mb-4 h-8 flex-shrink-0">
-                {step > 1 ? (
-                    <button onClick={handleBack} className="flex items-center gap-2 text-gray-400 hover:text-teal-900 font-bold text-[10px] uppercase tracking-widest transition-colors group">
-                        <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
-                            <ChevronLeft className="w-4 h-4" />
-                        </div>
-                        Atrás
-                    </button>
-                ) : <div />}
-                <span className="text-gray-300 font-black text-[10px] uppercase tracking-[0.2em]">Paso {step} de 3</span>
-            </div>
-
-            {/* Content Area - Scroll hidden but enabled if absolutely necessary on tiny screens */}
-            <div className="flex-1 flex flex-col justify-center overflow-y-auto no-scrollbar py-2 px-1">
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-8 py-2">
                 {step === 1 && (
                     <div className="animate-fade-in space-y-6">
                         <div>
                             <h2 className="text-3xl font-black text-teal-900 mb-2">Tu Dieta</h2>
                             <p className="text-gray-500 font-medium leading-relaxed text-sm">Selecciona tus restricciones alimentarias.</p>
                         </div>
-                        {/* CHANGE: 3 Columns Grid for compact view */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-1">
+                        {/* PADDING EXTRA EN EL GRID PARA QUE EL HOVER NO SE CORTE */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-2">
                             {DIETS.map((diet) => (
                                 <button
                                     key={diet.id}
                                     onClick={() => toggleDiet(diet.id)}
-                                    className={`p-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-95 aspect-square relative ${
+                                    className={`p-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.05] active:scale-95 aspect-square relative ${
                                         profile.dietary_preferences?.includes(diet.id)
                                         ? 'border-[#013b33] bg-teal-50 text-[#013b33] shadow-md z-10'
-                                        : 'border-gray-100 bg-white text-gray-600 hover:border-gray-300'
+                                        : 'border-gray-100 bg-white text-gray-600 hover:border-gray-300 hover:shadow-sm'
                                     }`}
                                 >
                                     <span className="text-3xl mb-1">{diet.emoji}</span>
@@ -214,15 +208,15 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                             <h2 className="text-3xl font-black text-teal-900 mb-2">Tus Gustos</h2>
                             <p className="text-gray-500 font-medium leading-relaxed text-sm">¿Qué tipo de cocina te inspira más?</p>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-1">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-2">
                             {CUISINES.map((cuisine) => (
                                 <button
                                     key={cuisine.id}
                                     onClick={() => toggleCuisine(cuisine.id)}
-                                    className={`p-3 rounded-2xl border-2 text-center flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.03] active:scale-95 aspect-square relative ${
+                                    className={`p-3 rounded-2xl border-2 text-center flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.05] active:scale-95 aspect-square relative ${
                                         profile.favorite_cuisines?.includes(cuisine.id)
                                         ? 'border-orange-500 bg-orange-50 text-orange-900 shadow-md z-10'
-                                        : 'border-gray-100 bg-white text-gray-600 hover:border-orange-200'
+                                        : 'border-gray-100 bg-white text-gray-600 hover:border-orange-200 hover:shadow-sm'
                                     }`}
                                 >
                                     <span className="text-3xl mb-1 filter drop-shadow-sm">{cuisine.emoji}</span>
@@ -239,7 +233,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 )}
 
                 {step === 3 && (
-                    <div className="animate-fade-in space-y-8">
+                    <div className="animate-fade-in space-y-8 py-4">
                         <div className="text-center space-y-4">
                             <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto text-[#013b33] shadow-inner">
                                 <ChefHat className="w-8 h-8" />
@@ -270,14 +264,15 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                                 <Sparkles className="w-4 h-4" />
                             </div>
                             <p className="text-orange-900 text-xs font-bold leading-relaxed pt-0.5">
-                                Generaremos automáticamente un set inicial de recetas adaptadas a tu dieta para que empieces con buen pie.
+                                Generaremos automáticamente recetas adaptadas. La lista de la compra se creará cuando planifiques tus comidas.
                             </p>
                         </div>
                     </div>
                 )}
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-50 flex-shrink-0">
+            {/* Footer Action (Sticky) */}
+            <div className="p-8 pt-4">
                 <button
                 onClick={handleNext}
                 disabled={!isValid && step < 3}
