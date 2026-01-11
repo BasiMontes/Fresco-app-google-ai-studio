@@ -6,6 +6,7 @@ import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks, isBefore }
 import { es } from 'date-fns/locale';
 import { generateSmartMenu } from '../services/geminiService';
 import { RecipeDetail } from './RecipeDetail';
+import { cleanName } from '../services/unitService';
 
 interface PlannerProps {
   user: UserProfile;
@@ -56,7 +57,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
     setIsGenerating(true);
     setShowPlanWizard(false); 
     try {
-        // Uso de la nueva función local
         const result = await generateSmartMenu(user, pantry, wizardDays, wizardTypes, recipes);
         if (result.plan && result.plan.length > 0) {
             const newPlan = [...plan.filter(p => !result.plan.some(np => np.date === p.date && np.type === p.type)), ...result.plan];
@@ -95,46 +95,39 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           if(confirm(`¿Quitar "${label}" de este hueco?`)) onUpdateSlot(date, type, undefined);
           return;
       }
+      // If zombie, treating it as empty slot click effectively, or we can prompt to clear.
+      // But user said "no more zombie errors", so we just treat it as a re-pick.
       if (isZombie) {
-          if(confirm("Esta receta ya no existe. ¿Eliminar del plan?")) onUpdateSlot(date, type, undefined);
+          setShowPicker({ date, type });
           return;
       }
       if (existingRecipeId) {
           const r = getRecipe(existingRecipeId);
           if (r) setSelectedRecipe(r);
       } else {
-          // OPEN PICKER
           setShowPicker({ date, type });
       }
   };
 
-  const getRecipeAvailability = (recipe: Recipe) => {
-      const normalize = (s: string) => s.toLowerCase().trim().replace(/s$/, '').replace(/es$/, '');
-      const totalIngredients = recipe.ingredients.length;
-      let availableCount = 0;
+  // Helper para calcular estado de inventario para una receta
+  const getIngredientStatus = (recipe: Recipe) => {
+      let missingCount = 0;
       recipe.ingredients.forEach(ing => {
-          const normIng = normalize(ing.name);
+          const ingName = cleanName(ing.name);
+          // Buscar coincidencia laxa en despensa
           const inPantry = pantry.find(p => {
-              const normP = normalize(p.name);
-              return normP === normIng || normP.includes(normIng) || normIng.includes(normP);
+              const pName = cleanName(p.name);
+              return pName === ingName || pName.includes(ingName) || ingName.includes(pName);
           });
-          if (inPantry && inPantry.quantity > 0) availableCount++;
+          
+          // Si no está, o la cantidad es muy baja (heurística simple: < 10% de lo requerido si las unidades coinciden, o 0)
+          // Para simplificar UI "faltan", asumimos que si no hay nada o cantidad es 0, falta.
+          // Una lógica más compleja de unidades requeriría normalización, aquí hacemos check básico de existencia.
+          if (!inPantry || inPantry.quantity <= 0.1) {
+              missingCount++;
+          }
       });
-      return { available: availableCount, total: totalIngredients, percentage: totalIngredients > 0 ? availableCount / totalIngredients : 0 };
-  };
-
-  const checkDietaryConflict = (recipe: Recipe): boolean => {
-      const prefs = user.dietary_preferences || [];
-      if (prefs.includes('none') || prefs.length === 0) return false;
-      const tags = recipe.dietary_tags || [];
-      
-      if (prefs.includes('vegan') && !tags.includes('vegan')) return true;
-      if (prefs.includes('vegetarian') && !tags.includes('vegetarian') && !tags.includes('vegan')) return true;
-      if (prefs.includes('paleo') && !tags.includes('paleo')) return true;
-      if (prefs.includes('keto') && !tags.includes('keto')) return true;
-      if (prefs.includes('gluten_free') && !tags.includes('gluten_free')) return true;
-      
-      return false;
+      return missingCount;
   };
 
   const copyToClipboard = () => {
@@ -250,39 +243,39 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           </div>
       )}
 
-      {/* Grid del Planner (FIXED: Full Width) */}
-      <div className="flex flex-col md:grid md:grid-cols-7 gap-8 md:gap-2 pb-12 w-full">
+      {/* Grid del Planner */}
+      <div className="flex flex-col md:grid md:grid-cols-7 gap-8 md:gap-4 pb-12 w-full">
         {days.map((day) => {
           const isToday = isSameDay(day, new Date());
           const dateStr = format(day, 'yyyy-MM-dd');
           
           return (
-          <div key={day.toString()} className="flex flex-col gap-6 md:gap-2 md:h-full w-full">
-            <div className={`p-8 md:p-3 rounded-[3rem] md:rounded-lg text-center transition-all border-2 ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-2xl md:shadow-md' : 'bg-white text-gray-900 shadow-sm border-gray-100'}`}>
-              <div className="text-[10px] md:text-[8px] font-black uppercase tracking-[0.3em] opacity-50 mb-1">{format(day, 'EEEE', { locale: es }).substring(0,3)}</div>
-              <div className="text-3xl md:text-lg font-black tracking-tighter">{format(day, 'd', { locale: es })}</div>
+          <div key={day.toString()} className="flex flex-col gap-6 md:gap-3 md:h-full w-full">
+            {/* Header del Día */}
+            <div className={`p-8 md:p-4 rounded-[3rem] md:rounded-xl text-center transition-all border-2 ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-2xl md:shadow-md' : 'bg-white text-gray-900 shadow-sm border-gray-100'}`}>
+              <div className="text-[10px] md:text-[9px] font-black uppercase tracking-[0.3em] opacity-50 mb-1">{format(day, 'EEEE', { locale: es }).substring(0,3)}</div>
+              <div className="text-3xl md:text-xl font-black tracking-tighter">{format(day, 'd', { locale: es })}</div>
             </div>
             
-            <div className="flex flex-col gap-3 md:gap-2 md:flex-1">
+            <div className="flex flex-col gap-4 md:gap-3 md:flex-1">
                 {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                     const slot = getSlot(day, type);
                     let recipe = null;
                     let isZombie = false;
                     let isSpecial = false;
                     let specialType = '';
-                    let missingIngredientsAlert = false;
-                    let dietConflict = false;
+                    let missingCount = 0;
 
                     if (slot?.recipeId) {
                         if (slot.recipeId === SLOT_LEFTOVERS) { isSpecial = true; specialType = 'leftovers'; }
                         else if (slot.recipeId === SLOT_EAT_OUT) { isSpecial = true; specialType = 'eatout'; }
                         else {
                             recipe = getRecipe(slot.recipeId);
-                            if (!recipe) isZombie = true;
-                            else {
-                                const availability = getRecipeAvailability(recipe);
-                                if (availability.percentage < 1) missingIngredientsAlert = true;
-                                if (checkDietaryConflict(recipe)) dietConflict = true;
+                            if (!recipe) {
+                                isZombie = true; 
+                                // Silent fallback: Don't show scary error, just treat as empty-ish slot
+                            } else {
+                                missingCount = getIngredientStatus(recipe);
                             }
                         }
                     }
@@ -295,61 +288,64 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                         <div 
                             key={type} 
                             onClick={() => handleSlotClick(dateStr, type, slot?.recipeId, isZombie)}
-                            className={`relative p-6 md:p-2 rounded-[3rem] md:rounded-lg border-2 h-48 md:h-auto md:flex-1 flex flex-col justify-center transition-all active:scale-[0.98] cursor-pointer group shadow-sm overflow-hidden ${
+                            // Increased Height: h-64 for desktop (md:h-64) to allow vertical breathing room
+                            className={`relative p-6 md:p-4 rounded-[3rem] md:rounded-xl border-2 h-auto md:h-48 md:min-h-[180px] flex flex-col justify-between transition-all active:scale-[0.98] cursor-pointer group shadow-sm overflow-hidden ${
                                 isMovingSource ? 'bg-orange-50 border-orange-500 scale-95 opacity-50 ring-4 ring-orange-200' :
                                 isMovingTarget ? 'bg-orange-50 border-dashed border-orange-300 hover:bg-orange-100 hover:scale-105' :
-                                isZombie ? 'bg-red-50 border-red-200' :
+                                isZombie ? 'bg-white border-dashed border-gray-200' : // Subtle Zombie
                                 isSpecial ? 'bg-gray-50 border-gray-200' :
-                                recipe ? (isCooked ? 'bg-green-50/50 border-green-200' : 'bg-white border-transparent hover:border-teal-500 hover:shadow-md') : 'bg-gray-50/50 border-dashed border-gray-200 hover:bg-gray-100'
+                                recipe ? (isCooked ? 'bg-green-50/50 border-green-200' : 'bg-white border-transparent hover:border-teal-200 hover:shadow-lg') : 'bg-gray-50/30 border-dashed border-gray-200 hover:bg-gray-50'
                             }`}
                         >
-                            {isCooked && !isSpecial && (
-                                <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex items-center justify-center">
-                                    <div className="bg-green-500 text-white px-2 py-1 rounded-lg font-black text-[8px] uppercase tracking-widest shadow-xl flex items-center gap-1 transform rotate-[-5deg] border border-white">
-                                        <CheckCircle2 className="w-3 h-3 md:w-2 md:h-2" />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="absolute top-4 left-4 md:static md:mb-1 flex items-center justify-center text-[10px] font-black uppercase text-gray-400 tracking-widest md:hidden">
-                                <span>{type === 'breakfast' ? '🍳' : type === 'lunch' ? '🥘' : '🌙'}</span>
+                            {/* Icono de tipo de comida pequeño */}
+                            <div className="absolute top-4 right-4 md:top-3 md:right-3 opacity-20">
+                                {type === 'breakfast' ? '🍳' : type === 'lunch' ? '🥘' : '🌙'}
                             </div>
-                            
+
+                            {/* Contenido Principal */}
                             {isSpecial ? (
-                                <div className="flex flex-col justify-center items-center gap-1 opacity-60">
-                                    {specialType === 'leftovers' ? <Repeat className="w-8 h-8 md:w-4 md:h-4 text-teal-600" /> : <Utensils className="w-8 h-8 md:w-4 md:h-4 text-orange-500" />}
-                                    <span className="font-black text-xs md:text-[8px] uppercase tracking-widest text-gray-600 text-center leading-tight">
-                                        {specialType === 'leftovers' ? 'Sobras' : 'Fuera'}
+                                <div className="flex flex-col justify-center items-center gap-2 h-full opacity-60">
+                                    {specialType === 'leftovers' ? <Repeat className="w-8 h-8 text-teal-600" /> : <Utensils className="w-8 h-8 text-orange-500" />}
+                                    <span className="font-black text-xs uppercase tracking-widest text-gray-600 text-center leading-tight">
+                                        {specialType === 'leftovers' ? 'Sobras' : 'Comer Fuera'}
                                     </span>
                                 </div>
-                            ) : isZombie ? (
-                                <div className="flex flex-col justify-center items-center gap-2 text-red-400 animate-pulse">
-                                    <AlertOctagon className="w-8 h-8 md:w-4 md:h-4" />
-                                </div>
                             ) : recipe ? (
-                                <div className="flex flex-col justify-center gap-1 relative z-0 h-full text-center md:text-left px-2">
-                                    {/* ALERTA DIETA (ROJA, ALTA PRIORIDAD) */}
-                                    {dietConflict && (
-                                        <div className="absolute top-0 left-0 text-red-500 bg-red-100 border border-red-200 rounded-full p-1 z-20 shadow-sm" title="No apto para tu dieta">
-                                            <AlertTriangle className="w-3 h-3 md:w-2 md:h-2" />
+                                <>
+                                    <div className="flex flex-col gap-2 relative z-10 pt-2">
+                                        <div className={`font-black text-gray-900 text-xl md:text-sm line-clamp-3 leading-tight ${isCooked && 'opacity-50 line-through'}`}>
+                                            {recipe.title}
                                         </div>
-                                    )}
-                                    
-                                    {/* ALERTA STOCK (NARANJA, BAJA PRIORIDAD) */}
-                                    {missingIngredientsAlert && !isCooked && !dietConflict && (
-                                        <div className="absolute top-0 right-0 text-orange-500 bg-orange-50 border border-orange-100 rounded-full p-1 z-20 shadow-sm" title="Faltan ingredientes">
-                                            <ShoppingCart className="w-3 h-3 md:w-2 md:h-2" />
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md uppercase tracking-wider md:text-[8px]">
+                                                {recipe.cuisine_type}
+                                            </span>
                                         </div>
-                                    )}
-                                    
-                                    <div className={`font-black text-gray-900 text-lg md:text-[9px] line-clamp-2 md:line-clamp-3 leading-tight transition-colors ${!isCooked && 'group-hover:text-teal-700'}`}>{recipe.title}</div>
-                                </div>
+                                    </div>
+
+                                    {/* FOOTER: Semáforo de ingredientes */}
+                                    <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
+                                        {isCooked ? (
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-green-600 flex items-center gap-1">
+                                                <CheckCircle2 className="w-3 h-3" /> Hecho
+                                            </span>
+                                        ) : missingCount === 0 ? (
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-green-600 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
+                                                <PackageCheck className="w-3 h-3" /> Tienes todo
+                                            </span>
+                                        ) : (
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-orange-500 flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-full">
+                                                <ShoppingCart className="w-3 h-3" /> Faltan {missingCount}
+                                            </span>
+                                        )}
+                                    </div>
+                                </>
                             ) : (
-                                <div className="flex flex-col items-center justify-center text-teal-600/20 gap-3 relative z-0 h-full">
+                                <div className="flex flex-col items-center justify-center text-teal-600/20 gap-3 h-full">
                                     {isMovingTarget ? (
                                         <Move className="w-8 h-8 stroke-[3px] animate-bounce text-orange-400" />
                                     ) : (
-                                        <Plus className="w-8 h-8 md:w-4 md:h-4 stroke-[3px] group-hover:scale-110 group-hover:text-teal-600/40 transition-all" />
+                                        <Plus className="w-8 h-8 md:w-5 md:h-5 stroke-[3px] group-hover:scale-110 group-hover:text-teal-600/40 transition-all" />
                                     )}
                                 </div>
                             )}
