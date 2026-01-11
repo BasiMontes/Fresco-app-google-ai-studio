@@ -93,7 +93,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                         <span className="text-[#e87c3e]">comes.</span>
                     </h1>
                     <p className="text-teal-50 text-base lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
-                        Dinos qué combustible prefieres. Vegetariano, Keto o sin límites. Nosotros generaremos tu lista de la compra.
+                        Define tus reglas alimentarias. Nosotros filtramos el ruido y te mostramos solo lo que te interesa.
                     </p>
                 </div>
             );
@@ -105,7 +105,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                         <span className="text-[#e87c3e]">vibrar?</span>
                     </h1>
                     <p className="text-teal-50 text-base lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
-                        Desde la nonna italiana hasta el street food de Bangkok. Diseñamos menús que no aburren.
+                        Selecciona tus cocinas favoritas para que la IA diseñe menús variados que nunca te aburran.
                     </p>
                 </div>
             );
@@ -117,7 +117,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                         ni <span className="text-[#e87c3e]">falta.</span>
                     </h1>
                     <p className="text-teal-50 text-base lg:text-xl max-w-lg leading-relaxed font-normal opacity-90">
-                        Planifica tus comidas primero. La lista de la compra se generará automáticamente después.
+                        Calculamos las cantidades exactas para tu hogar. Genera tu lista de la compra automáticamente y evita desperdicios.
                     </p>
                 </div>
             );
@@ -145,7 +145,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
       {/* RIGHT PANEL - FIXED CONTAINER FOR MODAL */}
       <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-4 relative bg-[#f8f9fa]">
         
-        {/* CARD CONTAINER: Removed fixed heights, added max-height with scroll internally */}
+        {/* CARD CONTAINER */}
         <div className="w-full max-w-[500px] bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col max-h-[85vh]">
             
             {/* Header Area (Sticky) */}
@@ -169,15 +169,14 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 </div>
             </div>
 
-            {/* Scrollable Content Area - AQUI ESTA LA MAGIA DEL PADDING (p-6 pt-4) */}
-            <div className="flex-1 overflow-y-auto no-scrollbar p-6 pt-4">
+            {/* Scrollable Content Area - EXTRA BOTTOM PADDING ADDED (pb-12) */}
+            <div className="flex-1 overflow-y-auto no-scrollbar p-6 pt-4 pb-12">
                 {step === 1 && (
                     <div className="animate-fade-in space-y-6">
                         <div className="px-2">
                             <h2 className="text-3xl font-black text-teal-900 mb-2">Tu Dieta</h2>
                             <p className="text-gray-500 font-medium leading-relaxed text-sm">Selecciona tus restricciones alimentarias.</p>
                         </div>
-                        {/* PADDING EXTRA EN EL GRID PARA QUE EL HOVER NO SE CORTE */}
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-2 pb-6">
                             {DIETS.map((diet) => (
                                 <button
@@ -233,7 +232,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 )}
 
                 {step === 3 && (
-                    <div className="animate-fade-in space-y-8 py-4 px-2">
+                    <div className="animate-fade-in space-y-8 py-4 px-2 pb-8">
                         <div className="text-center space-y-4">
                             <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto text-[#013b33] shadow-inner">
                                 <ChefHat className="w-8 h-8" />
@@ -264,7 +263,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                                 <Sparkles className="w-4 h-4" />
                             </div>
                             <p className="text-orange-900 text-xs font-bold leading-relaxed pt-0.5">
-                                Empezarás con la despensa vacía. Añade recetas a tu calendario y generaremos la lista de la compra automáticamente.
+                                Ajustaremos automáticamente las cantidades de la lista de la compra para evitar sobras y ahorrar dinero.
                             </p>
                         </div>
                     </div>
