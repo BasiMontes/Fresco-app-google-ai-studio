@@ -8,7 +8,6 @@ interface OnboardingProps {
   onComplete: (profile: UserProfile) => void;
 }
 
-// Separamos en dos grupos lógicos para evitar incoherencias
 const DIET_BASES: { id: DietPreference; label: string; emoji: string; desc: string }[] = [
   { id: 'none', label: 'Todo', emoji: '🍖', desc: 'Como de todo' },
   { id: 'vegetarian', label: 'Vegetariano', emoji: '🥦', desc: 'Sin carne ni pescado' },
@@ -35,7 +34,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   const [step, setStep] = useState(1);
   const [profile, setProfile] = useState<Partial<UserProfile>>({
     name: 'Usuario',
-    dietary_preferences: ['none'], // Por defecto Omnívoro
+    dietary_preferences: ['none'],
     favorite_cuisines: [],
     cooking_experience: 'intermediate',
     household_size: 1,
@@ -50,18 +49,14 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   }, [step, profile]);
 
   const setBaseDiet = (base: DietPreference) => {
-    // Mantenemos solo las restricciones (items que NO son bases)
+    // Si elegimos una base específica, limpiamos 'none'
+    // Si elegimos 'none', limpiamos las otras bases
     const currentRestrictions = (profile.dietary_preferences || []).filter(
         p => !DIET_BASES.map(b => b.id).includes(p)
     );
     
-    // Añadimos la nueva base (si no es 'none', que es implícita al estar vacía de bases)
     const newPreferences = [...currentRestrictions];
-    if (base !== 'none') {
-        newPreferences.push(base);
-    } else {
-        newPreferences.push('none');
-    }
+    newPreferences.push(base); // 'none' es una base válida aquí
     
     setProfile(p => ({ ...p, dietary_preferences: newPreferences as DietPreference[] }));
   };
@@ -69,11 +64,19 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   const toggleRestriction = (restriction: DietPreference) => {
     let newList = [...(profile.dietary_preferences || [])];
     
+    // Al activar una restricción, por seguridad quitamos 'none' si estaba, 
+    // aunque técnicamente 'none' es una base, es mejor ser explícito.
+    newList = newList.filter(i => i !== 'none');
+
     if (newList.includes(restriction)) {
         newList = newList.filter(i => i !== restriction);
     } else {
         newList.push(restriction);
     }
+    
+    // Si nos quedamos sin nada, volvemos a poner 'none' por defecto (base implícita)
+    if (newList.length === 0) newList.push('none');
+
     setProfile(p => ({ ...p, dietary_preferences: newList as DietPreference[] }));
   };
 
@@ -252,6 +255,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                     </div>
                 )}
                 
+                {/* Steps 2 and 3 omitted for brevity as they are unchanged from previous fix */}
                 {step === 2 && (
                     <div className="animate-fade-in space-y-6">
                         <div className="px-2">

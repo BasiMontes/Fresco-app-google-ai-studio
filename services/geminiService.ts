@@ -5,38 +5,29 @@ import { FALLBACK_RECIPES } from "../constants";
 
 // HELPER: Lectura segura de entorno compatible con Vite y Node
 const getEnv = (key: string) => {
-  // 1. Intento Vite (Estándar Frontend)
   // @ts-ignore
   if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
     // @ts-ignore
     return import.meta.env[key];
   }
-  // 2. Intento Process (Estándar Node/Fallback)
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
     return process.env[key];
   }
   return '';
 };
 
-// Buscamos primero la versión VITE_ (segura para navegador) y luego la genérica
 const API_KEY = getEnv('VITE_API_KEY') || getEnv('API_KEY');
-
-// Instancia segura de la IA
 const ai = new GoogleGenAI({ apiKey: API_KEY || 'MISSING_KEY' });
 
 const notifyError = (message: string) => {
     if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('fresco-toast', { 
-            detail: { type: 'error', message } 
-        }));
+        window.dispatchEvent(new CustomEvent('fresco-toast', { detail: { type: 'error', message } }));
     }
 };
 
 const notifyInfo = (message: string) => {
     if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('fresco-toast', { 
-            detail: { type: 'info', message } 
-        }));
+        window.dispatchEvent(new CustomEvent('fresco-toast', { detail: { type: 'info', message } }));
     }
 };
 
@@ -77,39 +68,40 @@ const RECIPE_SCHEMA = {
   }
 };
 
-// QA Fix BB-05: Validador de Recetas para evitar crashes en UI
 const validateRecipe = (r: any): any => {
     return {
         ...r,
         ingredients: Array.isArray(r.ingredients) ? r.ingredients : [],
-        instructions: Array.isArray(r.instructions) ? r.instructions : ["Mezclar ingredientes y cocinar."], // Fallback seguro
+        instructions: Array.isArray(r.instructions) ? r.instructions : ["Mezclar ingredientes y cocinar."],
         prep_time: typeof r.prep_time === 'number' ? r.prep_time : 15,
         dietary_tags: Array.isArray(r.dietary_tags) ? r.dietary_tags : []
     };
 };
 
-// Helper de filtrado estricto
+// FIX CRÍTICO: El filtro ahora ignora 'none' si existen otras restricciones explícitas
 const filterRecipesByDiet = (recipes: Recipe[], preferences: string[]) => {
-    if (!preferences || preferences.length === 0 || preferences.includes('none')) return recipes;
+    // Si no hay preferencias o está vacío, devolvemos todo
+    if (!preferences || preferences.length === 0) return recipes;
+
+    // Si SOLO es 'none', devolvemos todo. Si hay 'none' Y 'vegetarian', ignoramos 'none' y aplicamos filtro.
+    const effectivePrefs = preferences.filter(p => p !== 'none');
+    if (effectivePrefs.length === 0) return recipes; 
     
     return recipes.filter(r => {
         const tags = r.dietary_tags || [];
         
-        // 1. Estilos de Vida (Bases)
-        if (preferences.includes('vegan') && !tags.includes('vegan')) return false;
-        if (preferences.includes('vegetarian') && !tags.includes('vegetarian') && !tags.includes('vegan')) return false;
-        if (preferences.includes('paleo') && !tags.includes('paleo')) return false;
-
-        // 2. Restricciones
-        if (preferences.includes('gluten_free') && !tags.includes('gluten_free')) return false;
-        if (preferences.includes('keto') && !tags.includes('keto')) return false;
-        if (preferences.includes('lactose_free') && !tags.includes('lactose_free') && !tags.includes('vegan')) return false;
+        // Lógica de exclusión estricta
+        if (effectivePrefs.includes('vegan') && !tags.includes('vegan')) return false;
+        if (effectivePrefs.includes('vegetarian') && !tags.includes('vegetarian') && !tags.includes('vegan')) return false;
+        if (effectivePrefs.includes('paleo') && !tags.includes('paleo')) return false;
+        if (effectivePrefs.includes('keto') && !tags.includes('keto')) return false;
+        if (effectivePrefs.includes('gluten_free') && !tags.includes('gluten_free')) return false;
+        if (effectivePrefs.includes('lactose_free') && !tags.includes('lactose_free') && !tags.includes('vegan')) return false;
 
         return true;
     });
 };
 
-// Generador Local Determinista (Algoritmo Fallback)
 const generateLocalPlanStrategy = (
     user: UserProfile, 
     targetDates: string[], 
@@ -118,23 +110,23 @@ const generateLocalPlanStrategy = (
 ): MealSlot[] => {
     const plan: MealSlot[] = [];
     
-    // 1. Juntar todas las fuentes
+    // 1. Base de datos combinada
     const allSources = [...availableRecipes, ...FALLBACK_RECIPES];
     
-    // 2. Filtrar ESTRICTAMENTE por dieta antes de mezclar
+    // 2. Filtrado ESTRICTO (El "Gatekeeper")
     const validRecipes = filterRecipesByDiet(allSources, user.dietary_preferences);
     
-    // Mezclar recetas para aleatoriedad
-    const shuffledRecipes = validRecipes.sort(() => 0.5 - Math.random());
-
-    // Si nos quedamos sin recetas válidas por filtros muy estrictos, alertamos (pero devolvemos lo que haya o vacío)
-    if (shuffledRecipes.length === 0 && targetDates.length > 0) {
-        console.warn("Local Planner: No recipes found matching diet:", user.dietary_preferences);
+    // Si no hay recetas válidas para la dieta, NO rellenamos con basura. Devolvemos vacío y alertamos.
+    if (validRecipes.length === 0 && targetDates.length > 0) {
+        notifyError("No hay recetas compatibles con tu dieta en la biblioteca.");
+        return [];
     }
+
+    const shuffledRecipes = validRecipes.sort(() => 0.5 - Math.random());
 
     targetDates.forEach(date => {
         targetTypes.forEach(type => {
-            // Buscar receta compatible con el tipo (lunch/dinner)
+            // Intentamos buscar receta del tipo correcto, si no, cualquiera compatible vale para rellenar
             const recipe = shuffledRecipes.find(r => 
                 r.meal_category === type || 
                 (type === 'lunch' && r.meal_category === 'dinner') || 
@@ -149,7 +141,7 @@ const generateLocalPlanStrategy = (
                     servings: user.household_size,
                     isCooked: false
                 });
-                // Mover la receta usada al final para variar si hay pocas
+                // Rotación para variedad
                 const idx = shuffledRecipes.indexOf(recipe);
                 if (idx > -1) {
                     shuffledRecipes.push(shuffledRecipes.splice(idx, 1)[0]);
@@ -167,42 +159,34 @@ export const generateWeeklyPlanAI = async (
   existingPlan: MealSlot[] = [],
   targetDates?: string[], 
   targetTypes?: string[],
-  availableRecipes: Recipe[] = [] // Nuevo parámetro para fallback
+  availableRecipes: Recipe[] = []
 ): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
   
-  // Definir targets por defecto si faltan
-  const safeDates = targetDates && targetDates.length > 0 ? targetDates : []; // Debería venir relleno del frontend
+  const safeDates = targetDates && targetDates.length > 0 ? targetDates : [];
   const safeTypes = targetTypes && targetTypes.length > 0 ? targetTypes : ['lunch', 'dinner'];
 
-  // Si no hay API KEY o falla la red, vamos directo al local
+  // Modo Local (Fallback)
   if (!API_KEY) { 
-      console.warn("API Key missing, using local planner.");
       const localPlan = generateLocalPlanStrategy(user, safeDates, safeTypes, availableRecipes);
-      notifyInfo("Plan generado con tus recetas (Modo Local).");
       return { plan: localPlan, newRecipes: [] }; 
   }
   
   try {
     const pantryList = pantry.map(p => `${p.name} (${p.quantity} ${p.unit})`).join(", ");
+    const dietString = user.dietary_preferences.filter(p => p !== 'none').join(", ").toUpperCase();
     
-    // FIX: Prompt modificado para soportar despensa vacía (Plan First, Buy Later) y REFORZAR DIETA
-    const dietString = user.dietary_preferences.join(", ").toUpperCase();
-    const prompt = `Actúa como Chef Personal experto en nutrición para ${user.name}.
+    const prompt = `Actúa como Chef Personal experto.
     
-    PERFIL DE DIETA (ESTRICTO): ${dietString}.
+    PERFIL DIETA: ${dietString || 'OMNIVORO'}.
     Gustos: ${user.favorite_cuisines.join(", ")}.
-    Tengo estos ingredientes: ${pantryList.length > 5 ? pantryList : "La despensa está vacía, asumiremos que compraré todo lo necesario"}.
+    Inventario: ${pantryList || "Vacío, inventar recetas"}.
     
-    TAREA OBLIGATORIA:
-    Genera un plan completo para los días: ${safeDates.join(", ")}.
-    Para CADA uno de esos días, DEBES asignar receta para: ${safeTypes.join(", ")}.
+    OBJETIVO: Planificar comidas para: ${safeDates.join(", ")}. Tipos: ${safeTypes.join(", ")}.
     
-    REGLAS IMPORTANTES:
-    1. RESPETAR LA DIETA ES CRÍTICO. Si dice VEGETARIAN, prohibido carne/pescado. Si dice VEGAN, prohibido animal. Si dice PALEO, prohibido granos/legumbres.
-    2. Si tengo ingredientes (stock), úsalos para ahorrar dinero.
-    3. Si NO tengo ingredientes (o despensa vacía), INVENTA recetas coherentes igualmente. Yo compraré los ingredientes después.
-    4. NO dejes huecos vacíos. Rellena todos los días solicitados.
-    5. Devuelve JSON con 'recipes' (nuevas recetas necesarias, con dietary_tags correctos) y 'plan' (asignación).
+    REGLAS DE ORO (SAFETY):
+    1. Si la dieta es VEGETARIAN/VEGAN, PROHIBIDO INCLUIR CARNE O PESCADO.
+    2. Prioriza usar el inventario.
+    3. Devuelve JSON con 'recipes' (nuevas) y 'plan' (asignación).
     `;
 
     const response = await ai.models.generateContent({
@@ -234,13 +218,17 @@ export const generateWeeklyPlanAI = async (
     const safeText = response.text ? response.text : '';
     const data = JSON.parse(cleanJson(safeText));
     
+    // Validar y etiquetar recetas generadas por IA para asegurar consistencia
     const newRecipes: Recipe[] = (data.recipes || []).map((raw: any, i: number) => {
       const r = validateRecipe(raw);
+      // Forzamos las etiquetas del usuario en las recetas generadas para evitar falsos positivos en el Planner
+      const userTags = user.dietary_preferences.filter(p => p !== 'none');
+      
       return {
         ...r,
         id: `ai-rec-${Date.now()}-${i}`,
         servings: user.household_size,
-        dietary_tags: user.dietary_preferences, // Asumimos que la IA respeta, forzamos tags del user para consistencia
+        dietary_tags: [...(r.dietary_tags || []), ...userTags], // Merge tags
         image_url: `https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&sig=${i}`
       };
     });
@@ -254,11 +242,9 @@ export const generateWeeklyPlanAI = async (
 
     return { plan: newSlots, newRecipes };
   } catch (error) {
-    console.error("AI Plan Gen failed, falling back to local strategy", error);
-    // FALLBACK SILENCIOSO: Si la IA falla, usamos el algoritmo local
+    console.warn("AI Plan Gen failed, falling back to local strategy");
     const localPlan = generateLocalPlanStrategy(user, safeDates, safeTypes, availableRecipes);
-    
-    notifyInfo("Plan generado con recetas guardadas (IA ocupada).");
+    notifyInfo("Plan generado con recetas guardadas (IA no disponible).");
     return { plan: localPlan, newRecipes: [] }; 
   }
 };
@@ -267,9 +253,7 @@ export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSe
   if (!API_KEY) { notifyError("Falta API Key para Batch Cooking"); return { total_duration: 0, steps: [] }; }
   try {
     const recipeTitles = recipes.map(r => r.title).join(", ");
-    const prompt = `Como experto en eficiencia culinaria, crea un plan de Batch Cooking para cocinar estas ${recipes.length} recetas a la vez: ${recipeTitles}. 
-    Optimiza para que el tiempo total sea el mínimo posible usando tareas paralelas. 
-    Responde solo con el JSON siguiendo el esquema.`;
+    const prompt = `Plan de Batch Cooking optimizado para: ${recipeTitles}. JSON output.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -315,7 +299,9 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
     if (!API_KEY) { notifyError("Falta API Key de Gemini"); return []; }
     try {
         const pantryList = pantry.map(p => p.name).join(", ");
-        const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. Dieta OBLIGATORIA: ${user.dietary_preferences.join(", ")}.`;
+        const dietString = user.dietary_preferences.filter(p => p !== 'none').join(", ");
+        const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. 
+        Dieta OBLIGATORIA: ${dietString}. Si es vegetariano, NADA de carne/pescado.`;
         
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
@@ -337,7 +323,7 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
                 ...r,
                 id: `gen-rec-${Date.now()}-${i}`,
                 servings: user.household_size,
-                dietary_tags: user.dietary_preferences,
+                dietary_tags: user.dietary_preferences.filter(p => p !== 'none'),
                 image_url: `https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&sig=${Math.random()}`
             };
         });
