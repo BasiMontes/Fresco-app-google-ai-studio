@@ -163,7 +163,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             </div>
 
             {/* Back Button */}
-            <div className="flex justify-between items-center mb-6 h-8">
+            <div className="flex justify-between items-center mb-6 h-8 flex-shrink-0">
                 {step > 1 ? (
                     <button onClick={handleBack} className="flex items-center gap-2 text-gray-400 hover:text-teal-900 font-bold text-[10px] uppercase tracking-widest transition-colors group">
                         <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
@@ -180,25 +180,24 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                     <div className="animate-fade-in space-y-6">
                         <div>
                             <h2 className="text-3xl font-black text-teal-900 mb-2">Tu Dieta</h2>
-                            <p className="text-gray-500 font-medium leading-relaxed">Selecciona tus restricciones alimentarias para filtrar recetas incompatibles.</p>
+                            <p className="text-gray-500 font-medium leading-relaxed">Selecciona tus restricciones alimentarias.</p>
                         </div>
-                        <div className="grid grid-cols-1 gap-3">
+                        {/* CHANGE: Square Grid Layout */}
+                        <div className="grid grid-cols-2 gap-3">
                             {DIETS.map((diet) => (
                                 <button
                                     key={diet.id}
                                     onClick={() => toggleDiet(diet.id)}
-                                    className={`px-5 py-4 rounded-2xl border-2 text-left flex items-center justify-between transition-all hover:scale-[1.01] active:scale-95 ${
+                                    className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 aspect-square ${
                                         profile.dietary_preferences?.includes(diet.id)
                                         ? 'border-[#013b33] bg-teal-50 text-[#013b33] shadow-sm'
                                         : 'border-gray-100 bg-white text-gray-600 hover:border-gray-200'
                                     }`}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">{diet.emoji}</span>
-                                        <span className="font-bold text-sm">{diet.label}</span>
-                                    </div>
+                                    <span className="text-4xl mb-1">{diet.emoji}</span>
+                                    <span className="font-bold text-xs uppercase tracking-wide">{diet.label}</span>
                                     {profile.dietary_preferences?.includes(diet.id) && (
-                                        <div className="w-6 h-6 bg-[#013b33] rounded-full flex items-center justify-center">
+                                        <div className="absolute top-3 right-3 w-5 h-5 bg-[#013b33] rounded-full flex items-center justify-center">
                                             <Check className="w-3 h-3 text-white" />
                                         </div>
                                     )}
@@ -212,14 +211,14 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                     <div className="animate-fade-in space-y-6">
                         <div>
                             <h2 className="text-3xl font-black text-teal-900 mb-2">Tus Gustos</h2>
-                            <p className="text-gray-500 font-medium leading-relaxed">¿Qué tipo de cocina te inspira más en el día a día?</p>
+                            <p className="text-gray-500 font-medium leading-relaxed">¿Qué tipo de cocina te inspira más?</p>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             {CUISINES.map((cuisine) => (
                                 <button
                                     key={cuisine.id}
                                     onClick={() => toggleCuisine(cuisine.id)}
-                                    className={`p-4 rounded-2xl border-2 text-center flex flex-col items-center justify-center gap-2 transition-all hover:shadow-md active:scale-95 h-32 ${
+                                    className={`p-4 rounded-2xl border-2 text-center flex flex-col items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 aspect-square relative ${
                                         profile.favorite_cuisines?.includes(cuisine.id)
                                         ? 'border-orange-500 bg-orange-50 text-orange-900 shadow-sm'
                                         : 'border-gray-100 bg-white text-gray-600 hover:border-orange-200'
@@ -227,6 +226,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                                 >
                                     <span className="text-4xl mb-1 filter drop-shadow-sm">{cuisine.emoji}</span>
                                     <span className="font-bold text-xs uppercase tracking-wide leading-tight">{cuisine.label}</span>
+                                    {profile.favorite_cuisines?.includes(cuisine.id) && (
+                                        <div className="absolute top-3 right-3 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                                            <Check className="w-3 h-3 text-white" />
+                                        </div>
+                                    )}
                                 </button>
                             ))}
                         </div>
@@ -272,7 +276,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 )}
             </div>
 
-            <div className="mt-8 pt-6 border-t border-gray-50">
+            <div className="mt-8 pt-6 border-t border-gray-50 flex-shrink-0">
                 <button
                 onClick={handleNext}
                 disabled={!isValid && step < 3}

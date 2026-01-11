@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { MealSlot, Recipe, MealCategory, PantryItem, UserProfile, ShoppingItem } from '../types';
-import { Plus, Trash2, Calendar, Wand2, X, Eye, Trash, ChefHat, Check, AlertCircle, Sparkles, Loader2, ArrowLeft, ArrowRight, PackageCheck, Clock, Users, Share2, Users2, CheckCircle2, WifiOff, ShoppingCart, ChevronLeft, ChevronRight, Move, AlertOctagon, Utensils, Repeat, AlertTriangle, CheckSquare, Square } from 'lucide-react';
+import { Plus, Trash2, Calendar, Wand2, X, Eye, Trash, ChefHat, Check, AlertCircle, Sparkles, Loader2, ArrowLeft, ArrowRight, PackageCheck, Clock, Users, Share2, Users2, CheckCircle2, WifiOff, ShoppingCart, ChevronLeft, ChevronRight, Move, AlertOctagon, Utensils, Repeat, AlertTriangle, CheckSquare, Square, Copy, Smartphone } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks, isBefore } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { generateWeeklyPlanAI } from '../services/geminiService';
@@ -31,6 +31,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPlanWizard, setShowPlanWizard] = useState(false);
   const [wizardDays, setWizardDays] = useState<string[]>([]);
+  // FIX: Añadido breakfast por defecto si se desea o vacío
   const [wizardTypes, setWizardTypes] = useState<MealCategory[]>(['lunch', 'dinner']);
 
   const [showSocial, setShowSocial] = useState(false);
@@ -72,13 +73,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
     const dateStr = format(date, 'yyyy-MM-dd');
     return plan.find(p => p.date === dateStr && p.type === type);
   };
-
-  const isWeekEmpty = useMemo(() => {
-      return !days.some(day => {
-          const dateStr = format(day, 'yyyy-MM-dd');
-          return plan.some(p => p.date === dateStr);
-      });
-  }, [days, plan]);
 
   const getRecipe = (id?: string) => recipes.find(r => r.id === id);
 
@@ -129,8 +123,20 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
       return { available: availableCount, total: totalIngredients, percentage: totalIngredients > 0 ? availableCount / totalIngredients : 0 };
   };
 
+  const copyToClipboard = () => {
+      const text = `Plan de Comidas de ${user.name}:\n` + days.map(d => {
+          const dStr = format(d, 'yyyy-MM-dd');
+          const lunch = getRecipe(getSlot(d, 'lunch')?.recipeId)?.title || 'Libre';
+          const dinner = getRecipe(getSlot(d, 'dinner')?.recipeId)?.title || 'Libre';
+          return `${format(d, 'EEEE', {locale: es})}: 🥘 ${lunch} | 🌙 ${dinner}`;
+      }).join('\n');
+      navigator.clipboard.writeText(text);
+      alert("Menú copiado al portapapeles");
+      setShowSocial(false);
+  };
+
   return (
-    <div className="animate-fade-in pb-48">
+    <div className="animate-fade-in pb-48 w-full max-w-full">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6 md:mb-4 px-4 md:px-0">
         <div>
           <h1 className="text-5xl md:text-xl font-black text-teal-900 tracking-tight leading-none mb-2 md:mb-0">Mi Menú</h1>
@@ -169,6 +175,19 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         </div>
       </header>
 
+      {/* Social Modal */}
+      {showSocial && (
+          <div className="fixed inset-0 z-[5000] bg-teal-900/95 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in" onClick={() => setShowSocial(false)}>
+              <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 text-center shadow-2xl" onClick={e => e.stopPropagation()}>
+                  <h3 className="text-2xl font-black text-teal-900 mb-2">Compartir Menú</h3>
+                  <p className="text-gray-500 text-sm mb-8">Envía tu planificación a familiares o amigos.</p>
+                  <button onClick={copyToClipboard} className="w-full py-4 bg-teal-50 text-teal-900 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-teal-100 transition-all">
+                      <Copy className="w-4 h-4" /> Copiar Texto
+                  </button>
+              </div>
+          </div>
+      )}
+
       {/* Modal Wizard de Planificación */}
       {showPlanWizard && (
           <div className="fixed inset-0 z-[5000] bg-teal-900/95 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
@@ -199,11 +218,12 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                       <div>
                           <p className="font-black text-xs uppercase tracking-widest text-teal-600 mb-2">Comidas</p>
                           <div className="flex gap-2">
-                              {['lunch', 'dinner'].map(t => (
+                              {/* FIX: Añadida opción Desayuno */}
+                              {['breakfast', 'lunch', 'dinner'].map(t => (
                                   <button key={t} onClick={() => {
                                       setWizardTypes(prev => prev.includes(t as any) ? prev.filter(x => x !== t) : [...prev, t as any]);
                                   }} className={`flex-1 py-3 rounded-lg text-xs font-bold border uppercase tracking-widest ${wizardTypes.includes(t as any) ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-400 border-gray-200'}`}>
-                                      {t === 'lunch' ? 'Comidas' : 'Cenas'}
+                                      {t === 'breakfast' ? 'Desayuno' : t === 'lunch' ? 'Comida' : 'Cena'}
                                   </button>
                               ))}
                           </div>
@@ -217,102 +237,102 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           </div>
       )}
 
-      {/* Grid del Planner */}
-      <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-8 md:gap-2 pb-12 -mx-4 px-8 md:px-0 scroll-smooth">
+      {/* Grid del Planner (FIXED: Full Width) */}
+      <div className="flex flex-col md:grid md:grid-cols-7 gap-8 md:gap-2 pb-12 w-full">
         {days.map((day) => {
           const isToday = isSameDay(day, new Date());
           const dateStr = format(day, 'yyyy-MM-dd');
           
           return (
-          <div key={day.toString()} className="snap-center min-w-[320px] md:min-w-[90px] flex flex-col gap-6 md:gap-2">
-            <div className={`p-8 md:p-2 rounded-[3rem] md:rounded-lg text-center transition-all border-2 ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-2xl md:shadow-md scale-105' : 'bg-white text-gray-900 shadow-sm border-gray-100'}`}>
+          <div key={day.toString()} className="flex flex-col gap-6 md:gap-2 md:h-full w-full">
+            <div className={`p-8 md:p-3 rounded-[3rem] md:rounded-lg text-center transition-all border-2 ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-2xl md:shadow-md' : 'bg-white text-gray-900 shadow-sm border-gray-100'}`}>
               <div className="text-[10px] md:text-[8px] font-black uppercase tracking-[0.3em] opacity-50 mb-1">{format(day, 'EEEE', { locale: es }).substring(0,3)}</div>
-              <div className="text-3xl md:text-sm font-black tracking-tighter">{format(day, 'd', { locale: es })}</div>
+              <div className="text-3xl md:text-lg font-black tracking-tighter">{format(day, 'd', { locale: es })}</div>
             </div>
-            {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
-                const slot = getSlot(day, type);
-                let recipe = null;
-                let isZombie = false;
-                let isSpecial = false;
-                let specialType = '';
-                let missingIngredientsAlert = false;
+            
+            <div className="flex flex-col gap-3 md:gap-2 md:flex-1">
+                {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
+                    const slot = getSlot(day, type);
+                    let recipe = null;
+                    let isZombie = false;
+                    let isSpecial = false;
+                    let specialType = '';
+                    let missingIngredientsAlert = false;
 
-                if (slot?.recipeId) {
-                    if (slot.recipeId === SLOT_LEFTOVERS) { isSpecial = true; specialType = 'leftovers'; }
-                    else if (slot.recipeId === SLOT_EAT_OUT) { isSpecial = true; specialType = 'eatout'; }
-                    else {
-                        recipe = getRecipe(slot.recipeId);
-                        if (!recipe) isZombie = true;
+                    if (slot?.recipeId) {
+                        if (slot.recipeId === SLOT_LEFTOVERS) { isSpecial = true; specialType = 'leftovers'; }
+                        else if (slot.recipeId === SLOT_EAT_OUT) { isSpecial = true; specialType = 'eatout'; }
                         else {
-                            const availability = getRecipeAvailability(recipe);
-                            if (availability.percentage < 1) missingIngredientsAlert = true;
+                            recipe = getRecipe(slot.recipeId);
+                            if (!recipe) isZombie = true;
+                            else {
+                                const availability = getRecipeAvailability(recipe);
+                                if (availability.percentage < 1) missingIngredientsAlert = true;
+                            }
                         }
                     }
-                }
 
-                const isCooked = slot?.isCooked;
-                const isMovingSource = moveSource?.date === dateStr && moveSource?.type === type;
-                const isMovingTarget = moveSource && !isMovingSource;
+                    const isCooked = slot?.isCooked;
+                    const isMovingSource = moveSource?.date === dateStr && moveSource?.type === type;
+                    const isMovingTarget = moveSource && !isMovingSource;
 
-                return (
-                    <div 
-                        key={type} 
-                        onClick={() => handleSlotClick(dateStr, type, slot?.recipeId, isZombie)}
-                        className={`relative p-8 md:p-2 rounded-[3.5rem] md:rounded-lg border-2 h-64 md:h-20 flex flex-col justify-between transition-all active:scale-[0.98] cursor-pointer group shadow-sm overflow-hidden ${
-                            isMovingSource ? 'bg-orange-50 border-orange-500 scale-95 opacity-50 ring-4 ring-orange-200' :
-                            isMovingTarget ? 'bg-orange-50 border-dashed border-orange-300 hover:bg-orange-100 hover:scale-105' :
-                            isZombie ? 'bg-red-50 border-red-200' :
-                            isSpecial ? 'bg-gray-50 border-gray-200' :
-                            recipe ? (isCooked ? 'bg-green-50/50 border-green-200' : 'bg-white border-transparent hover:border-teal-500 hover:shadow-md') : 'bg-gray-50/50 border-dashed border-gray-200 hover:bg-gray-100'
-                        }`}
-                    >
-                        {isCooked && !isSpecial && (
-                            <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex items-center justify-center">
-                                <div className="bg-green-500 text-white px-2 py-1 rounded-lg font-black text-[8px] uppercase tracking-widest shadow-xl flex items-center gap-1 transform rotate-[-5deg] border border-white">
-                                    <CheckCircle2 className="w-3 h-3 md:w-2 md:h-2" />
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="flex justify-between items-center text-[10px] font-black uppercase text-gray-400 tracking-widest relative z-0 md:hidden">
-                            <span>{type === 'breakfast' ? '🍳' : type === 'lunch' ? '🥘' : '🌙'}</span>
-                        </div>
-                        
-                        {isSpecial ? (
-                            <div className="flex-1 flex flex-col justify-center items-center gap-1 opacity-60">
-                                {specialType === 'leftovers' ? <Repeat className="w-10 h-10 md:w-4 md:h-4 text-teal-600" /> : <Utensils className="w-10 h-10 md:w-4 md:h-4 text-orange-500" />}
-                                <span className="font-black text-sm md:text-[8px] uppercase tracking-widest text-gray-600 text-center leading-tight hidden md:block">
-                                    {specialType === 'leftovers' ? 'Sobras' : 'Fuera'}
-                                </span>
-                            </div>
-                        ) : isZombie ? (
-                            <div className="flex-1 flex flex-col justify-center items-center gap-2 text-red-400 animate-pulse">
-                                <AlertOctagon className="w-8 h-8 md:w-4 md:h-4" />
-                            </div>
-                        ) : recipe ? (
-                            <div className="flex-1 flex flex-col justify-center gap-1 relative z-0 h-full">
-                                {missingIngredientsAlert && !isCooked && (
-                                    <div className="absolute top-0 right-0 text-red-500 bg-red-50 rounded-full p-0.5 animate-pulse z-20">
-                                        <AlertTriangle className="w-3 h-3 md:w-2 md:h-2" />
+                    return (
+                        <div 
+                            key={type} 
+                            onClick={() => handleSlotClick(dateStr, type, slot?.recipeId, isZombie)}
+                            className={`relative p-6 md:p-2 rounded-[3rem] md:rounded-lg border-2 h-48 md:h-auto md:flex-1 flex flex-col justify-center transition-all active:scale-[0.98] cursor-pointer group shadow-sm overflow-hidden ${
+                                isMovingSource ? 'bg-orange-50 border-orange-500 scale-95 opacity-50 ring-4 ring-orange-200' :
+                                isMovingTarget ? 'bg-orange-50 border-dashed border-orange-300 hover:bg-orange-100 hover:scale-105' :
+                                isZombie ? 'bg-red-50 border-red-200' :
+                                isSpecial ? 'bg-gray-50 border-gray-200' :
+                                recipe ? (isCooked ? 'bg-green-50/50 border-green-200' : 'bg-white border-transparent hover:border-teal-500 hover:shadow-md') : 'bg-gray-50/50 border-dashed border-gray-200 hover:bg-gray-100'
+                            }`}
+                        >
+                            {isCooked && !isSpecial && (
+                                <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 flex items-center justify-center">
+                                    <div className="bg-green-500 text-white px-2 py-1 rounded-lg font-black text-[8px] uppercase tracking-widest shadow-xl flex items-center gap-1 transform rotate-[-5deg] border border-white">
+                                        <CheckCircle2 className="w-3 h-3 md:w-2 md:h-2" />
                                     </div>
-                                )}
-                                <div className={`font-black text-gray-900 text-xl md:text-[9px] line-clamp-3 leading-tight transition-colors ${!isCooked && 'group-hover:text-teal-700'}`}>{recipe.title}</div>
-                                <div className="flex items-center justify-between mt-auto md:hidden">
-                                    <img src={recipe.image_url} className="w-16 h-16 rounded-[1.5rem] object-cover shadow-lg border-2 border-white" />
                                 </div>
+                            )}
+
+                            <div className="absolute top-4 left-4 md:static md:mb-1 flex items-center justify-center text-[10px] font-black uppercase text-gray-400 tracking-widest md:hidden">
+                                <span>{type === 'breakfast' ? '🍳' : type === 'lunch' ? '🥘' : '🌙'}</span>
                             </div>
-                        ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center text-teal-600/20 gap-3 relative z-0 h-full">
-                                {isMovingTarget ? (
-                                    <Move className="w-12 h-12 stroke-[3px] animate-bounce text-orange-400" />
-                                ) : (
-                                    <Plus className="w-12 h-12 md:w-4 md:h-4 stroke-[3px] group-hover:scale-110 group-hover:text-teal-600/40 transition-all" />
-                                )}
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
+                            
+                            {isSpecial ? (
+                                <div className="flex flex-col justify-center items-center gap-1 opacity-60">
+                                    {specialType === 'leftovers' ? <Repeat className="w-8 h-8 md:w-4 md:h-4 text-teal-600" /> : <Utensils className="w-8 h-8 md:w-4 md:h-4 text-orange-500" />}
+                                    <span className="font-black text-xs md:text-[8px] uppercase tracking-widest text-gray-600 text-center leading-tight">
+                                        {specialType === 'leftovers' ? 'Sobras' : 'Fuera'}
+                                    </span>
+                                </div>
+                            ) : isZombie ? (
+                                <div className="flex flex-col justify-center items-center gap-2 text-red-400 animate-pulse">
+                                    <AlertOctagon className="w-8 h-8 md:w-4 md:h-4" />
+                                </div>
+                            ) : recipe ? (
+                                <div className="flex flex-col justify-center gap-1 relative z-0 h-full text-center md:text-left px-2">
+                                    {missingIngredientsAlert && !isCooked && (
+                                        <div className="absolute top-0 right-0 text-red-500 bg-red-50 rounded-full p-0.5 animate-pulse z-20">
+                                            <AlertTriangle className="w-3 h-3 md:w-2 md:h-2" />
+                                        </div>
+                                    )}
+                                    <div className={`font-black text-gray-900 text-lg md:text-[9px] line-clamp-2 md:line-clamp-3 leading-tight transition-colors ${!isCooked && 'group-hover:text-teal-700'}`}>{recipe.title}</div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center text-teal-600/20 gap-3 relative z-0 h-full">
+                                    {isMovingTarget ? (
+                                        <Move className="w-8 h-8 stroke-[3px] animate-bounce text-orange-400" />
+                                    ) : (
+                                        <Plus className="w-8 h-8 md:w-4 md:h-4 stroke-[3px] group-hover:scale-110 group-hover:text-teal-600/40 transition-all" />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
           </div>
         )})}
       </div>
