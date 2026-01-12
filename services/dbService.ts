@@ -134,8 +134,10 @@ export const saveRecipeDB = async (userId: string, recipe: Recipe) => {
     if (error) console.error('Error saving recipe:', error);
 };
 
-// OPTIMIZACIÓN: Inserción masiva de recetas
+// OPTIMIZACIÓN: Inserción masiva de recetas con CHUNKING
 export const saveRecipesBulkDB = async (userId: string, recipes: Recipe[]) => {
+    const BATCH_SIZE = 50; // Supabase tiene límites de payload, insertamos de 50 en 50
+    
     const records = recipes.map(recipe => ({
         id: recipe.id,
         user_id: userId,
@@ -148,13 +150,21 @@ export const saveRecipesBulkDB = async (userId: string, recipes: Recipe[]) => {
         servings: recipe.servings,
         calories: recipe.calories,
         image_url: recipe.image_url,
-        ingredients: recipe.ingredients,
+        ingredients: recipe.ingredients, // Supabase client auto-stringifies arrays/objects for jsonb columns usually, but explicit is safer if configured otherwise. Assuming standard setup handled by client.
         instructions: recipe.instructions,
         dietary_tags: recipe.dietary_tags
     }));
 
-    const { error } = await supabase.from('recipes').upsert(records);
-    if (error) console.error('Error bulk saving recipes:', error);
+    for (let i = 0; i < records.length; i += BATCH_SIZE) {
+        const chunk = records.slice(i, i + BATCH_SIZE);
+        const { error } = await supabase.from('recipes').upsert(chunk);
+        
+        if (error) {
+            console.error(`Error bulk saving recipes batch ${i}-${i+BATCH_SIZE}:`, error);
+        } else {
+            console.log(`Saved batch ${i/BATCH_SIZE + 1}`);
+        }
+    }
 };
 
 export const deleteRecipeDB = async (userId: string) => {
