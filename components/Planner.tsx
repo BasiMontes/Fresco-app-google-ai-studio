@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { MealSlot, Recipe, MealCategory, PantryItem, UserProfile, ShoppingItem } from '../types';
-import { Plus, X, Loader2, ArrowRight, PackageCheck, ShoppingCart, ChevronLeft, ChevronRight, Move, Utensils, Repeat, Copy, BrainCircuit, Users2, ChefHat, AlertTriangle, CalendarDays, Sparkles } from 'lucide-react';
+import { Plus, X, Loader2, ArrowRight, PackageCheck, ShoppingCart, ChevronLeft, ChevronRight, Move, Utensils, Repeat, Copy, BrainCircuit, Users2, ChefHat, AlertTriangle, CalendarDays, Sparkles, Trash2, RefreshCw } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks, isBefore } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { generateSmartMenu } from '../services/geminiService';
@@ -28,6 +28,8 @@ const SLOT_EAT_OUT = 'SPECIAL_EAT_OUT';
 export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, onUpdateSlot, onAIPlanGenerated, onClear, onCookFinish, onAddToPlan, onAddToShoppingList, isOnline = true }) => {
   const [showPicker, setShowPicker] = useState<{ date: string, type: MealCategory } | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  // Nuevo estado para saber de qué hueco viene la receta seleccionada y permitir edición
+  const [activeSlotContext, setActiveSlotContext] = useState<{ date: string, type: MealCategory } | null>(null);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPlanWizard, setShowPlanWizard] = useState(false);
@@ -101,7 +103,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
       }
       if (existingRecipeId) {
           const r = getRecipe(existingRecipeId);
-          if (r) setSelectedRecipe(r);
+          if (r) {
+              setSelectedRecipe(r);
+              setActiveSlotContext({ date, type }); // Guardamos el contexto para poder editar/borrar
+          }
       } else {
           setShowPicker({ date, type });
       }
@@ -121,14 +126,32 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   };
 
   const copyToClipboard = () => {
-      const text = `Plan de Comidas de ${user.name}:\n` + days.map(d => {
-          const lunch = getRecipe(getSlot(d, 'lunch')?.recipeId)?.title || 'Libre';
-          const dinner = getRecipe(getSlot(d, 'dinner')?.recipeId)?.title || 'Libre';
-          return `${format(d, 'EEEE', {locale: es})}: 🥘 ${lunch} | 🌙 ${dinner}`;
+      const header = `📅 *MENÚ SEMANAL DE ${user.name.toUpperCase()}*\nSemana del ${format(currentWeekStart, 'd MMM', {locale: es})}\n`;
+      
+      const body = days.map(d => {
+          const dayName = format(d, 'EEEE d', {locale: es}).toUpperCase();
+          const getTitle = (t: MealCategory) => {
+              const s = getSlot(d, t);
+              if (!s?.recipeId) return '—';
+              if (s.recipeId === SLOT_LEFTOVERS) return '🥡 Sobras';
+              if (s.recipeId === SLOT_EAT_OUT) return '🍴 Comer Fuera';
+              return getRecipe(s.recipeId)?.title || '—';
+          };
+
+          return `\n*${dayName}*\n🍳 ${getTitle('breakfast')}\n☀️ ${getTitle('lunch')}\n🌙 ${getTitle('dinner')}`;
       }).join('\n');
-      navigator.clipboard.writeText(text);
-      alert("Copiado");
+
+      const footer = `\n✨ _Planificado con Fresco_`;
+
+      navigator.clipboard.writeText(header + body + footer);
+      alert("Menú copiado al portapapeles con formato.");
       setShowSocial(false);
+  };
+
+  const handleClearWeek = () => {
+      if (confirm("¿Estás seguro de que quieres borrar TODA la planificación de esta semana?")) {
+          onClear();
+      }
   };
 
   // --- UI RENDERERS ---
@@ -158,9 +181,15 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         <div className="flex gap-2">
             {!moveSource && (
                 <>
-                    <button onClick={() => setShowSocial(true)} className="p-3 bg-white text-teal-900 rounded-xl hover:bg-teal-50 transition-all border border-gray-100 shadow-sm" title="Compartir">
+                    <button onClick={() => setShowSocial(true)} className="p-3 bg-white text-teal-900 rounded-xl hover:bg-teal-50 transition-all border border-gray-100 shadow-sm" title="Compartir Menú">
                         <Users2 className="w-4 h-4" />
                     </button>
+                    
+                    {/* Botón Borrar Semana */}
+                    <button onClick={handleClearWeek} className="p-3 bg-white text-red-500 rounded-xl hover:bg-red-50 transition-all border border-gray-100 shadow-sm" title="Borrar Semana">
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+
                     <button 
                         onClick={openPlanWizard} 
                         disabled={isGenerating}
@@ -420,9 +449,22 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         <RecipeDetail 
             recipe={selectedRecipe} 
             pantry={pantry}
-            onClose={() => setSelectedRecipe(null)} 
+            onClose={() => { setSelectedRecipe(null); setActiveSlotContext(null); }} 
             onCookFinish={(used) => onCookFinish && onCookFinish(used, selectedRecipe.id)}
             onAddToShoppingList={onAddToShoppingList}
+            onRemoveFromPlan={activeSlotContext ? () => {
+                if (confirm('¿Quitar esta receta del plan?')) {
+                    onUpdateSlot(activeSlotContext.date, activeSlotContext.type, undefined);
+                    setSelectedRecipe(null);
+                    setActiveSlotContext(null);
+                }
+            } : undefined}
+            onChangeSlot={activeSlotContext ? () => {
+                const ctx = activeSlotContext;
+                setSelectedRecipe(null);
+                setActiveSlotContext(null);
+                setShowPicker(ctx);
+            } : undefined}
         />
       )}
     </div>

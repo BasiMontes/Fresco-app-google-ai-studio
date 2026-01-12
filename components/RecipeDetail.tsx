@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Recipe, PantryItem, ShoppingItem, UserProfile, MealCategory } from '../types';
-import { X, Clock, ChefHat, Check, ArrowLeft, PlayCircle, ShoppingCart, Calendar, CheckCircle, Minus, Plus, ListFilter, Users } from 'lucide-react';
+import { X, Clock, ChefHat, Check, ArrowLeft, PlayCircle, ShoppingCart, Calendar, CheckCircle, Minus, Plus, ListFilter, Users, RefreshCw, Trash2 } from 'lucide-react';
 import { CookMode } from './CookMode';
 import { SmartImage } from './SmartImage';
 import { SPANISH_PRICES } from '../constants';
@@ -16,11 +16,14 @@ interface RecipeDetailProps {
   onAddToPlan?: (servings: number, date?: string, type?: MealCategory) => void;
   onCookFinish?: (usedIngredients: { name: string, quantity: number }[]) => void;
   onAddToShoppingList?: (items: ShoppingItem[]) => void;
+  // New props for planner management
+  onRemoveFromPlan?: () => void;
+  onChangeSlot?: () => void;
 }
 
-export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, userProfile, initialMode = 'view', onClose, onAddToPlan, onCookFinish, onAddToShoppingList }) => {
+export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, userProfile, initialMode = 'view', onClose, onAddToPlan, onCookFinish, onAddToShoppingList, onRemoveFromPlan, onChangeSlot }) => {
   const [isCooking, setIsCooking] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ingredients' | 'steps'>('ingredients'); // Mobile only
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'steps'>('ingredients'); 
   const [completedSteps, setCompletedSteps] = useState<number[]>([]); 
   
   const [showPlanningMode, setShowPlanningMode] = useState(initialMode === 'plan');
@@ -221,7 +224,14 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
                     </button>
 
                     <div className="p-8 pb-4 flex-shrink-0">
-                        <h2 className="text-3xl font-black text-teal-900 leading-tight mb-4">{recipe.title}</h2>
+                        <div className="flex justify-between items-start">
+                            <h2 className="text-3xl font-black text-teal-900 leading-tight mb-4 pr-10">{recipe.title}</h2>
+                            {onRemoveFromPlan && (
+                                <button onClick={onRemoveFromPlan} className="mr-10 p-2 text-red-400 hover:bg-red-50 rounded-full transition-all" title="Eliminar del plan">
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
                         <div className="flex gap-4">
                             <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                                 <Clock className="w-4 h-4 text-teal-600" />
@@ -253,7 +263,11 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
                             </div>
                         ) : (
                             <>
-                                {onAddToPlan && (
+                                {onChangeSlot ? (
+                                    <button onClick={onChangeSlot} className="px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest border-2 border-teal-900 text-teal-900 hover:bg-teal-50 transition-all flex items-center gap-2">
+                                        <RefreshCw className="w-4 h-4" /> Cambiar
+                                    </button>
+                                ) : onAddToPlan && (
                                     <button onClick={() => setShowPlanningMode(true)} className="px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest border-2 border-teal-900 text-teal-900 hover:bg-teal-50 transition-all">
                                         Planificar
                                     </button>
@@ -271,9 +285,14 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
             <div className="md:hidden flex flex-col h-full bg-white">
                 <div className="h-48 relative flex-shrink-0">
                     <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover" />
-                    <button onClick={handleManualClose} className="absolute top-4 right-4 p-2 bg-white/90 rounded-full shadow-md"><X className="w-5 h-5" /></button>
-                    <div className="absolute bottom-4 left-4">
-                        <h2 className="text-2xl font-black text-white drop-shadow-md">{recipe.title}</h2>
+                    <button onClick={handleManualClose} className="absolute top-4 right-4 p-2 bg-white/90 rounded-full shadow-md z-10"><X className="w-5 h-5" /></button>
+                    {onRemoveFromPlan && (
+                        <button onClick={onRemoveFromPlan} className="absolute top-4 left-4 p-2 bg-red-100 rounded-full shadow-md z-10 text-red-500">
+                            <Trash2 className="w-5 h-5" />
+                        </button>
+                    )}
+                    <div className="absolute bottom-4 left-4 right-4">
+                        <h2 className="text-2xl font-black text-white drop-shadow-md truncate">{recipe.title}</h2>
                     </div>
                 </div>
 
@@ -320,7 +339,11 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
                         </div>
                     ) : (
                         <>
-                            <button onClick={() => setShowPlanningMode(true)} className="flex-1 py-3 border-2 border-teal-900 text-teal-900 rounded-xl font-black text-xs uppercase tracking-widest">Planificar</button>
+                            {onChangeSlot ? (
+                                <button onClick={onChangeSlot} className="flex-1 py-3 border-2 border-teal-900 text-teal-900 rounded-xl font-black text-xs uppercase tracking-widest">Cambiar</button>
+                            ) : (
+                                <button onClick={() => setShowPlanningMode(true)} className="flex-1 py-3 border-2 border-teal-900 text-teal-900 rounded-xl font-black text-xs uppercase tracking-widest">Planificar</button>
+                            )}
                             <button onClick={() => setIsCooking(true)} className="flex-[2] py-3 bg-orange-500 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg flex items-center justify-center gap-2">
                                 <PlayCircle className="w-5 h-5" /> Cocinar
                             </button>
