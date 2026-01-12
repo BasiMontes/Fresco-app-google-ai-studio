@@ -28,7 +28,6 @@ const SLOT_EAT_OUT = 'SPECIAL_EAT_OUT';
 export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, onUpdateSlot, onAIPlanGenerated, onClear, onCookFinish, onAddToPlan, onAddToShoppingList, isOnline = true }) => {
   const [showPicker, setShowPicker] = useState<{ date: string, type: MealCategory } | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  // Nuevo estado para saber de qué hueco viene la receta seleccionada
   const [activeSlotContext, setActiveSlotContext] = useState<{ date: string, type: MealCategory } | null>(null);
   
   const [isGenerating, setIsGenerating] = useState(false);
@@ -47,8 +46,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
       // FIX: Seleccionar SIEMPRE todos los días de la vista actual por defecto
       const allDaysInView = days.map(d => format(d, 'yyyy-MM-dd'));
       setWizardDays(allDaysInView);
-      // Por defecto activar Comida y Cena, Desayuno opcional
-      setWizardTypes(['lunch', 'dinner']);
+      // FIX: Preseleccionar TODAS las comidas por defecto para evitar olvidos
+      setWizardTypes(['breakfast', 'lunch', 'dinner']);
       setShowPlanWizard(true);
   };
 
@@ -58,7 +57,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         return;
     }
     setIsGenerating(true);
-    // No cerramos el modal inmediatamente para evitar sensación de "no pasó nada"
     try {
         const result = await generateSmartMenu(user, pantry, wizardDays, wizardTypes, recipes);
         if (result.plan && result.plan.length > 0) {
@@ -113,7 +111,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           const r = getRecipe(existingRecipeId);
           if (r) {
               setSelectedRecipe(r);
-              setActiveSlotContext({ date, type }); // Contexto para edición
+              setActiveSlotContext({ date, type }); 
           }
       } else {
           setShowPicker({ date, type });

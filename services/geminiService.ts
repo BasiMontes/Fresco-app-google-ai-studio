@@ -72,7 +72,6 @@ const validateRecipe = (r: any): any => {
     };
 };
 
-// FIX CRÍTICO: El filtro ahora ignora 'none' si existen otras restricciones explícitas
 const filterRecipesByDiet = (recipes: Recipe[], preferences: string[]) => {
     if (!preferences || preferences.length === 0) return recipes;
     const effectivePrefs = preferences.filter(p => p !== 'none');
@@ -101,9 +100,20 @@ export const generateSmartMenu = async (
     
     const plan: MealSlot[] = [];
     
-    // 1. Unificar Fuentes y Filtrar por Dieta
-    const allSources = [...availableRecipes, ...FALLBACK_RECIPES];
-    const validRecipes = filterRecipesByDiet(allSources, user.dietary_preferences);
+    // 1. Unificar Fuentes y Eliminar Duplicados (Por ID y Título)
+    const rawSources = [...availableRecipes, ...FALLBACK_RECIPES];
+    const uniqueRecipesMap = new Map<string, Recipe>();
+    
+    rawSources.forEach(r => {
+        // Usamos el título como clave secundaria para evitar duplicados lógicos (mismo plato con distinto ID)
+        const key = r.title.toLowerCase().trim();
+        if (!uniqueRecipesMap.has(key)) {
+            uniqueRecipesMap.set(key, r);
+        }
+    });
+    
+    const uniqueSources = Array.from(uniqueRecipesMap.values());
+    const validRecipes = filterRecipesByDiet(uniqueSources, user.dietary_preferences);
 
     if (validRecipes.length === 0) {
         notifyError("No hay recetas compatibles con tu dieta.");
@@ -112,22 +122,26 @@ export const generateSmartMenu = async (
 
     // 2. Separar por categorías
     const breakfasts = validRecipes.filter(r => r.meal_category === 'breakfast');
-    const meals = validRecipes.filter(r => r.meal_category !== 'breakfast'); // Lunch & Dinner pool
+    const mainMeals = validRecipes.filter(r => r.meal_category === 'lunch' || r.meal_category === 'dinner');
 
-    // 3. Estrategia de DESAYUNOS: Poca variedad (Rotación)
-    // Seleccionamos aleatoriamente 2 o 3 opciones para la semana
-    const breakfastPool = breakfasts.sort(() => 0.5 - Math.random()).slice(0, 3); 
+    // 3. Pools de selección
+    // Desayunos: Seleccionamos 3 aleatorios para rotar
+    const breakfastPool = breakfasts.sort(() => 0.5 - Math.random()).slice(0, 3);
     
-    // 4. Estrategia de COMIDAS: Máxima variedad + Prioridad Despensa
-    // Puntuamos las recetas según ingredientes en despensa
-    const scoredMeals = meals.map(recipe => {
-        let score = Math.random(); // Base aleatoria para variedad
+    // Comidas Principales: Priorizar despensa, pero asegurar variedad
+    const scoredMeals = mainMeals.map(recipe => {
+        let score = Math.random(); 
         const hasIngredients = recipe.ingredients.filter(ing => 
             pantry.some(p => p.name.toLowerCase().includes(ing.name.toLowerCase()))
         ).length;
-        score += hasIngredients * 2; // Boost por ingredientes disponibles
+        score += hasIngredients * 2;
         return { recipe, score };
     }).sort((a, b) => b.score - a.score).map(item => item.recipe);
+
+    // Fallback crítico: Si no hay comidas principales válidas, usar lo que haya (aunque sea desayuno) para no dejar huecos
+    // o repetir mucho si hay pocas.
+    const safeMainPool = scoredMeals.length > 0 ? scoredMeals : breakfasts; 
+    const safeBreakfastPool = breakfastPool.length > 0 ? breakfastPool : mainMeals;
 
     let mealIndex = 0;
     
@@ -136,15 +150,13 @@ export const generateSmartMenu = async (
             let selectedRecipe: Recipe | undefined;
 
             if (type === 'breakfast') {
-                // Rotar entre los desayunos seleccionados (A, B, C, A, B...)
-                if (breakfastPool.length > 0) {
-                    selectedRecipe = breakfastPool[dayIndex % breakfastPool.length];
+                if (safeBreakfastPool.length > 0) {
+                    selectedRecipe = safeBreakfastPool[dayIndex % safeBreakfastPool.length];
                 }
             } else {
-                // Asignar comida del pool ordenado
-                // Si se acaban, volver a empezar (aunque improbable con suficientes recetas)
-                if (scoredMeals.length > 0) {
-                    selectedRecipe = scoredMeals[mealIndex % scoredMeals.length];
+                if (safeMainPool.length > 0) {
+                    // Usamos modulo para ciclar infinitamente si hay pocas recetas
+                    selectedRecipe = safeMainPool[mealIndex % safeMainPool.length];
                     mealIndex++;
                 }
             }
@@ -164,7 +176,6 @@ export const generateSmartMenu = async (
     return { plan, newRecipes: [] };
 };
 
-// Mantenemos la firma antigua redirigiendo a la nueva lógica para compatibilidad
 export const generateWeeklyPlanAI = generateSmartMenu;
 
 export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSession> => {
