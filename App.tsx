@@ -428,14 +428,8 @@ const App: React.FC = () => {
       const updatedUser: UserProfile = { ...profile, onboarding_completed: true };
       setUser(updatedUser);
 
-      const isVegetarian = profile.dietary_preferences.includes('vegetarian') || profile.dietary_preferences.includes('vegan');
-      const filteredStatic = isVegetarian 
-          ? STATIC_RECIPES.filter(r => r.dietary_tags.includes('vegetarian') || r.dietary_tags.includes('vegan')) 
-          : STATIC_RECIPES;
-          
-      const initialRecipesSource = filteredStatic.length > 0 ? filteredStatic : STATIC_RECIPES;
-      
-      const seedRecipes = initialRecipesSource.map(r => ({
+      // Usar STATIC_RECIPES completas para el seed inicial
+      const seedRecipes = STATIC_RECIPES.map(r => ({
           ...r,
           id: `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           user_id: userId
@@ -522,20 +516,21 @@ const App: React.FC = () => {
                 ]);
 
                 let finalRecipes = fetchedRecipes;
-                if (fetchedRecipes.length === 0) {
-                     const isVegetarian = appUser.dietary_preferences.includes('vegetarian') || appUser.dietary_preferences.includes('vegan');
-                     const filteredStatic = isVegetarian 
-                        ? STATIC_RECIPES.filter(r => r.dietary_tags.includes('vegetarian') || r.dietary_tags.includes('vegan')) 
-                        : STATIC_RECIPES;
-                     const fallbackRecipes = filteredStatic.length > 0 ? filteredStatic : STATIC_RECIPES;
-
-                     const seedRecipes = fallbackRecipes.map(r => ({
+                
+                // AUTO-SEEDING UPGRADE: Si hay muy pocas recetas en DB (<50), inyectamos el pack masivo de STATIC_RECIPES
+                if (fetchedRecipes.length < 50) {
+                     console.log("Detectadas pocas recetas. Inyectando paquete estático masivo...");
+                     const seedRecipes = STATIC_RECIPES.map(r => ({
                         ...r,
-                        id: `static-recover-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                        id: `static-boost-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                         user_id: uid
                     }));
-                    finalRecipes = seedRecipes;
-                    db.saveRecipesBulkDB(uid, seedRecipes).catch(e => console.error("Error recovering recipes", e));
+                    // Combinamos las existentes con las nuevas (filtrando duplicados por título si es necesario, pero IDs aleatorios evitan colisión técnica)
+                    // Para evitar duplicados lógicos, podríamos filtrar, pero por simplicidad y rendimiento asumimos que si hay <50, necesitamos más.
+                    finalRecipes = [...fetchedRecipes, ...seedRecipes];
+                    
+                    // Guardar en background sin bloquear UI
+                    db.saveRecipesBulkDB(uid, seedRecipes).then(() => console.log("Recetas inyectadas en DB")).catch(e => console.error("Error boosting recipes", e));
                 }
                 
                 setPantry(fetchedPantry);
