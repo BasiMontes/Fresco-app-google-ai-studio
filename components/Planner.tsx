@@ -43,10 +43,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   const days = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i)), [currentWeekStart]);
 
   const openPlanWizard = () => {
-      // FIX: Seleccionar SIEMPRE todos los días de la vista actual por defecto
+      // FIX CRÍTICO: Seleccionar SIEMPRE todos los días de la semana visible, independientemente del día actual
       const allDaysInView = days.map(d => format(d, 'yyyy-MM-dd'));
       setWizardDays(allDaysInView);
-      // FIX: Preseleccionar TODAS las comidas por defecto para evitar olvidos
+      // Preseleccionar Desayuno, Comida y Cena para evitar huecos
       setWizardTypes(['breakfast', 'lunch', 'dinner']);
       setShowPlanWizard(true);
   };
@@ -60,12 +60,16 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
     try {
         const result = await generateSmartMenu(user, pantry, wizardDays, wizardTypes, recipes);
         if (result.plan && result.plan.length > 0) {
-            // Combinar plan existente con el nuevo (sobreescribiendo coincidencias)
-            const newPlan = [...plan.filter(p => !result.plan.some(np => np.date === p.date && np.type === p.type)), ...result.plan];
+            // Eliminar slots previos que coincidan con los nuevos para evitar duplicados
+            const filteredPlan = plan.filter(p => 
+                !result.plan.some(np => np.date === p.date && np.type === p.type)
+            );
+            // Fusionar
+            const newPlan = [...filteredPlan, ...result.plan];
             onAIPlanGenerated(newPlan, result.newRecipes);
             setShowPlanWizard(false);
         } else {
-            alert("No hemos podido generar un menú con tus restricciones y recetas disponibles.");
+            alert("Error al generar: Intenta seleccionar menos restricciones.");
             setShowPlanWizard(false);
         }
     } catch (e) {

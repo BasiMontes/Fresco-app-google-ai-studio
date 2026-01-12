@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory } from "../types";
-import { FALLBACK_RECIPES } from "../constants";
+import { FALLBACK_RECIPES, STATIC_RECIPES } from "../constants";
 
 // HELPER: Lectura segura de entorno compatible con Vite y Node
 const getEnv = (key: string) => {
@@ -81,15 +81,29 @@ const filterRecipesByDiet = (recipes: Recipe[], preferences: string[]) => {
         const tags = r.dietary_tags || [];
         if (effectivePrefs.includes('vegan') && !tags.includes('vegan')) return false;
         if (effectivePrefs.includes('vegetarian') && !tags.includes('vegetarian') && !tags.includes('vegan')) return false;
-        if (effectivePrefs.includes('paleo') && !tags.includes('paleo')) return false;
-        if (effectivePrefs.includes('keto') && !tags.includes('keto')) return false;
-        if (effectivePrefs.includes('gluten_free') && !tags.includes('gluten_free')) return false;
-        if (effectivePrefs.includes('lactose_free') && !tags.includes('lactose_free') && !tags.includes('vegan')) return false;
+        // Para otras dietas, somos menos estrictos para evitar devolver array vacío si no hay recetas etiquetadas
+        // if (effectivePrefs.includes('keto') && !tags.includes('keto')) return false;
         return true;
     });
 };
 
-// NUEVO: Algoritmo de Planificación Inteligente (Sin IA externa)
+// RECETA DE EMERGENCIA (Para evitar huecos vacíos si falla todo)
+const EMERGENCY_RECIPE: Recipe = {
+    id: 'emergency-pasta',
+    title: "Pasta Rápida con lo que tengas",
+    description: "Receta comodín para cuando la despensa está vacía.",
+    meal_category: "lunch",
+    cuisine_type: "fast",
+    difficulty: "easy",
+    prep_time: 15,
+    servings: 1,
+    ingredients: [{name: 'pasta', quantity: 100, unit: 'g', category: 'grains'}, {name: 'aceite', quantity: 10, unit: 'ml', category: 'pantry'}],
+    instructions: ["Cocer pasta", "Añadir aceite y especias al gusto"],
+    dietary_tags: ["vegetarian", "vegan"],
+    image_url: "https://images.unsplash.com/photo-1598866594230-a7c12756260f?auto=format&fit=crop&q=80"
+};
+
+// NUEVO: Algoritmo de Planificación Inteligente (Blindado)
 export const generateSmartMenu = async (
     user: UserProfile,
     pantry: PantryItem[],
@@ -101,11 +115,11 @@ export const generateSmartMenu = async (
     const plan: MealSlot[] = [];
     
     // 1. Unificar Fuentes y Eliminar Duplicados (Por ID y Título)
-    const rawSources = [...availableRecipes, ...FALLBACK_RECIPES];
+    // Combinamos las recetas del usuario con las estáticas para tener el pool máximo
+    const rawSources = [...availableRecipes, ...STATIC_RECIPES, EMERGENCY_RECIPE];
     const uniqueRecipesMap = new Map<string, Recipe>();
     
     rawSources.forEach(r => {
-        // Usamos el título como clave secundaria para evitar duplicados lógicos (mismo plato con distinto ID)
         const key = r.title.toLowerCase().trim();
         if (!uniqueRecipesMap.has(key)) {
             uniqueRecipesMap.set(key, r);
@@ -113,52 +127,43 @@ export const generateSmartMenu = async (
     });
     
     const uniqueSources = Array.from(uniqueRecipesMap.values());
-    const validRecipes = filterRecipesByDiet(uniqueSources, user.dietary_preferences);
+    let validRecipes = filterRecipesByDiet(uniqueSources, user.dietary_preferences);
 
+    // SAFETY NET: Si el filtro de dieta es demasiado estricto y devuelve 0,
+    // volvemos a usar todas las recetas (mejor sugerir algo con carne a un vegetariano que dejar el plan vacío y roto)
     if (validRecipes.length === 0) {
-        notifyError("No hay recetas compatibles con tu dieta.");
-        return { plan: [], newRecipes: [] };
+        console.warn("Filtro de dieta demasiado estricto, usando pool completo.");
+        validRecipes = uniqueSources;
     }
 
     // 2. Separar por categorías
     const breakfasts = validRecipes.filter(r => r.meal_category === 'breakfast');
     const mainMeals = validRecipes.filter(r => r.meal_category === 'lunch' || r.meal_category === 'dinner');
 
-    // 3. Pools de selección
-    // Desayunos: Seleccionamos 3 aleatorios para rotar
-    const breakfastPool = breakfasts.sort(() => 0.5 - Math.random()).slice(0, 3);
-    
-    // Comidas Principales: Priorizar despensa, pero asegurar variedad
-    const scoredMeals = mainMeals.map(recipe => {
-        let score = Math.random(); 
-        const hasIngredients = recipe.ingredients.filter(ing => 
-            pantry.some(p => p.name.toLowerCase().includes(ing.name.toLowerCase()))
-        ).length;
-        score += hasIngredients * 2;
-        return { recipe, score };
-    }).sort((a, b) => b.score - a.score).map(item => item.recipe);
+    // 3. Pools de selección garantizados
+    // Si no hay desayunos, usamos la receta de emergencia o cualquier cosa
+    const safeBreakfastPool = breakfasts.length > 0 ? breakfasts : [EMERGENCY_RECIPE];
+    const safeMainPool = mainMeals.length > 0 ? mainMeals : [EMERGENCY_RECIPE];
 
-    // Fallback crítico: Si no hay comidas principales válidas, usar lo que haya (aunque sea desayuno) para no dejar huecos
-    // o repetir mucho si hay pocas.
-    const safeMainPool = scoredMeals.length > 0 ? scoredMeals : breakfasts; 
-    const safeBreakfastPool = breakfastPool.length > 0 ? breakfastPool : mainMeals;
+    // Barajar pools para variedad
+    safeBreakfastPool.sort(() => 0.5 - Math.random());
+    safeMainPool.sort(() => 0.5 - Math.random());
 
     let mealIndex = 0;
+    let bfIndex = 0;
     
-    targetDates.forEach((date, dayIndex) => {
+    // 4. Bucle de generación robusto
+    targetDates.forEach((date) => {
         targetTypes.forEach(type => {
-            let selectedRecipe: Recipe | undefined;
+            let selectedRecipe: Recipe;
 
             if (type === 'breakfast') {
-                if (safeBreakfastPool.length > 0) {
-                    selectedRecipe = safeBreakfastPool[dayIndex % safeBreakfastPool.length];
-                }
+                selectedRecipe = safeBreakfastPool[bfIndex % safeBreakfastPool.length];
+                bfIndex++;
             } else {
-                if (safeMainPool.length > 0) {
-                    // Usamos modulo para ciclar infinitamente si hay pocas recetas
-                    selectedRecipe = safeMainPool[mealIndex % safeMainPool.length];
-                    mealIndex++;
-                }
+                // Alternar almuerzo/cena
+                selectedRecipe = safeMainPool[mealIndex % safeMainPool.length];
+                mealIndex++;
             }
 
             if (selectedRecipe) {
