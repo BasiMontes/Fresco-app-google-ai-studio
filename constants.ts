@@ -19,7 +19,7 @@ export const SPANISH_PRICES: Record<string, number> = {
   "aceitunas": 1.20, "calabacin": 1.10, "default": 1.50, "lentejas": 2.00, "garbanzos": 1.80,
   "espinacas": 1.50, "atun": 1.00, "merluza": 12.00, "gbas": 15.00, "avena": 2.00,
   "champiñones": 3.50, "pavo": 8.00, "tofu": 4.50, "gambas": 12.00, "brocoli": 1.80,
-  "coliflor": 1.90, "judias": 2.50, "guisantes": 2.00
+  "coliflor": 1.90, "judias": 2.50, "guisantes": 2.00, "cerdo": 6.50, "batata": 1.50, "cuscus": 2.00
 };
 
 // Motor de equivalencias (Unidad -> Gramos)
@@ -118,11 +118,10 @@ const CORE_RECIPES: Recipe[] = [
     instructions: ["Cortar patatas", "Poner todo en bandeja", "Hornear 1h a 200ºC"],
     image_url: "https://images.unsplash.com/photo-1588723205368-200f3ec9f54b?auto=format&fit=crop&q=80"
   },
-  // ... (Podemos mantener las manuales existentes si queremos, o dejarlas subsumidas por el generador)
 ];
 
 // --- GENERADOR PROCEDURAL DE RECETAS ---
-// Esto crea cientos de combinaciones válidas para asegurar que el planificador nunca falle.
+// EXPANDIDO: Ahora con más bases y estilos para superar las 500 combinaciones
 
 const BASES = [
     { name: 'Arroz Integral', cat: 'grains', tags: ['gluten_free', 'vegan', 'vegetarian', 'lactose_free'] },
@@ -132,13 +131,17 @@ const BASES = [
     { name: 'Ensalada Mezclum', cat: 'vegetables', tags: ['keto', 'paleo', 'gluten_free', 'vegan', 'vegetarian', 'lactose_free', 'healthy'] },
     { name: 'Salteado de Brócoli', cat: 'vegetables', tags: ['keto', 'paleo', 'gluten_free', 'vegan', 'vegetarian', 'lactose_free', 'healthy'] },
     { name: 'Puré de Coliflor', cat: 'vegetables', tags: ['keto', 'paleo', 'gluten_free', 'vegan', 'vegetarian', 'lactose_free', 'healthy'] },
+    { name: 'Cuscús', cat: 'grains', tags: ['vegan', 'vegetarian', 'lactose_free'] },
+    { name: 'Batata Asada', cat: 'vegetables', tags: ['paleo', 'gluten_free', 'vegan', 'vegetarian', 'lactose_free', 'healthy'] }
 ];
 
 const PROTEINS = [
     { name: 'Pollo', cat: 'meat', tags: ['keto', 'paleo', 'gluten_free', 'lactose_free', 'healthy'] },
     { name: 'Ternera', cat: 'meat', tags: ['keto', 'paleo', 'gluten_free', 'lactose_free'] },
+    { name: 'Cerdo', cat: 'meat', tags: ['keto', 'paleo', 'gluten_free', 'lactose_free'] },
     { name: 'Salmón', cat: 'fish', tags: ['keto', 'paleo', 'gluten_free', 'lactose_free', 'healthy'] },
     { name: 'Merluza', cat: 'fish', tags: ['keto', 'paleo', 'gluten_free', 'lactose_free', 'healthy'] },
+    { name: 'Atún', cat: 'fish', tags: ['keto', 'paleo', 'gluten_free', 'lactose_free', 'healthy'] },
     { name: 'Tofu', cat: 'pantry', tags: ['vegan', 'vegetarian', 'gluten_free', 'lactose_free', 'healthy'] },
     { name: 'Lentejas', cat: 'pantry', tags: ['vegan', 'vegetarian', 'gluten_free', 'lactose_free', 'healthy'] },
     { name: 'Garbanzos', cat: 'pantry', tags: ['vegan', 'vegetarian', 'gluten_free', 'lactose_free', 'healthy'] },
@@ -154,6 +157,8 @@ const STYLES = [
     { name: 'con Pesto', cuisine: 'italian', sauce: ['albahaca', 'queso', 'nueces'], time: 10 },
     { name: 'Estofado', cuisine: 'spanish', sauce: ['caldo', 'zanahoria', 'patata'], time: 45 },
     { name: 'Tex-Mex', cuisine: 'mexican', sauce: ['pimiento', 'comino', 'maíz'], time: 20 },
+    { name: 'a la Crema', cuisine: 'french', sauce: ['nata', 'pimienta'], time: 25 },
+    { name: 'Salteado Rústico', cuisine: 'healthy', sauce: ['aceite', 'pimentón'], time: 20 }
 ];
 
 const BREAKFAST_BASES = [
@@ -184,6 +189,7 @@ function generateProceduralRecipes(): Recipe[] {
                 // Lógica de compatibilidad básica
                 if (base.name.includes('Ensalada') && style.name.includes('Estofado')) return; // Skip ilógicos
                 if (base.name.includes('Puré') && style.name.includes('Boloñesa')) return;
+                if (base.name.includes('Puré') && style.name.includes('Salteado')) return;
 
                 // Combinar Tags (Intersección o Unión según lógica estricta)
                 // Un plato es vegano solo si base Y proteína son veganos.

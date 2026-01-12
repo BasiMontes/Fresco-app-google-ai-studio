@@ -517,9 +517,10 @@ const App: React.FC = () => {
 
                 let finalRecipes = fetchedRecipes;
                 
-                // AUTO-SEEDING UPGRADE: Si hay muy pocas recetas en DB (<50), inyectamos el pack masivo de STATIC_RECIPES
-                if (fetchedRecipes.length < 50) {
-                     console.log("Detectadas pocas recetas. Inyectando paquete estático masivo...");
+                // AUTO-SEEDING UPGRADE: Si hay menos de 300 recetas (antes era 50), inyectamos el pack masivo
+                if (fetchedRecipes.length < 300) {
+                     setToast({ msg: "Actualizando biblioteca de recetas...", type: 'info' });
+                     console.log("Detectadas pocas recetas (<300). Inyectando paquete estático masivo...");
                      const seedRecipes = STATIC_RECIPES.map(r => ({
                         ...r,
                         id: `static-boost-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -530,7 +531,10 @@ const App: React.FC = () => {
                     finalRecipes = [...fetchedRecipes, ...seedRecipes];
                     
                     // Guardar en background sin bloquear UI
-                    db.saveRecipesBulkDB(uid, seedRecipes).then(() => console.log("Recetas inyectadas en DB")).catch(e => console.error("Error boosting recipes", e));
+                    db.saveRecipesBulkDB(uid, seedRecipes).then(() => {
+                        console.log("Recetas inyectadas en DB");
+                        setToast({ msg: "¡Biblioteca actualizada!", type: 'success' });
+                    }).catch(e => console.error("Error boosting recipes", e));
                 }
                 
                 setPantry(fetchedPantry);
