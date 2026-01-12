@@ -28,7 +28,7 @@ const SLOT_EAT_OUT = 'SPECIAL_EAT_OUT';
 export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, onUpdateSlot, onAIPlanGenerated, onClear, onCookFinish, onAddToPlan, onAddToShoppingList, isOnline = true }) => {
   const [showPicker, setShowPicker] = useState<{ date: string, type: MealCategory } | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  // Nuevo estado para saber de qué hueco viene la receta seleccionada y permitir edición
+  // Nuevo estado para saber de qué hueco viene la receta seleccionada
   const [activeSlotContext, setActiveSlotContext] = useState<{ date: string, type: MealCategory } | null>(null);
   
   const [isGenerating, setIsGenerating] = useState(false);
@@ -44,10 +44,11 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   const days = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i)), [currentWeekStart]);
 
   const openPlanWizard = () => {
-      const today = new Date();
-      const remainingDays = days.filter(d => !isBefore(d, today) || isSameDay(d, today))
-                               .map(d => format(d, 'yyyy-MM-dd'));
-      setWizardDays(remainingDays.length > 0 ? remainingDays : days.map(d => format(d, 'yyyy-MM-dd')));
+      // FIX: Seleccionar SIEMPRE todos los días de la vista actual por defecto
+      const allDaysInView = days.map(d => format(d, 'yyyy-MM-dd'));
+      setWizardDays(allDaysInView);
+      // Por defecto activar Comida y Cena, Desayuno opcional
+      setWizardTypes(['lunch', 'dinner']);
       setShowPlanWizard(true);
   };
 
@@ -57,15 +58,22 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         return;
     }
     setIsGenerating(true);
-    setShowPlanWizard(false); 
+    // No cerramos el modal inmediatamente para evitar sensación de "no pasó nada"
     try {
         const result = await generateSmartMenu(user, pantry, wizardDays, wizardTypes, recipes);
         if (result.plan && result.plan.length > 0) {
+            // Combinar plan existente con el nuevo (sobreescribiendo coincidencias)
             const newPlan = [...plan.filter(p => !result.plan.some(np => np.date === p.date && np.type === p.type)), ...result.plan];
             onAIPlanGenerated(newPlan, result.newRecipes);
+            setShowPlanWizard(false);
+        } else {
+            alert("No hemos podido generar un menú con tus restricciones y recetas disponibles.");
+            setShowPlanWizard(false);
         }
     } catch (e) {
         console.error(e);
+        alert("Ocurrió un error al generar el menú.");
+        setShowPlanWizard(false);
     } finally {
         setIsGenerating(false);
     }
@@ -105,7 +113,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           const r = getRecipe(existingRecipeId);
           if (r) {
               setSelectedRecipe(r);
-              setActiveSlotContext({ date, type }); // Guardamos el contexto para poder editar/borrar
+              setActiveSlotContext({ date, type }); // Contexto para edición
           }
       } else {
           setShowPicker({ date, type });
@@ -135,7 +143,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
               if (!s?.recipeId) return '—';
               if (s.recipeId === SLOT_LEFTOVERS) return '🥡 Sobras';
               if (s.recipeId === SLOT_EAT_OUT) return '🍴 Comer Fuera';
-              return getRecipe(s.recipeId)?.title || '—';
+              return getRecipe(s.recipeId)?.title || 'Receta no encontrada';
           };
 
           return `\n*${dayName}*\n🍳 ${getTitle('breakfast')}\n☀️ ${getTitle('lunch')}\n🌙 ${getTitle('dinner')}`;
@@ -144,12 +152,12 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
       const footer = `\n✨ _Planificado con Fresco_`;
 
       navigator.clipboard.writeText(header + body + footer);
-      alert("Menú copiado al portapapeles con formato.");
+      alert("Menú copiado al portapapeles con formato WhatsApp.");
       setShowSocial(false);
   };
 
   const handleClearWeek = () => {
-      if (confirm("¿Estás seguro de que quieres borrar TODA la planificación de esta semana?")) {
+      if (confirm("¿Estás seguro de que quieres borrar TODA la planificación de esta semana visible?")) {
           onClear();
       }
   };
@@ -383,8 +391,12 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                       </div>
                   </div>
 
-                  <button onClick={executeSmartPlan} className="w-full py-4 bg-teal-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:bg-teal-800 active:scale-95 transition-all flex items-center justify-center gap-2">
-                      <Sparkles className="w-4 h-4 text-orange-400" /> Generar Menú
+                  <button 
+                    onClick={executeSmartPlan} 
+                    disabled={isGenerating}
+                    className="w-full py-4 bg-teal-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:bg-teal-800 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                      {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" /> Pensando...</> : <><Sparkles className="w-4 h-4 text-orange-400" /> Generar Menú</>}
                   </button>
               </div>
           </div>
