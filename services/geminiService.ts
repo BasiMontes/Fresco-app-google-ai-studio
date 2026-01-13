@@ -3,21 +3,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory } from "../types";
 import { FALLBACK_RECIPES, STATIC_RECIPES } from "../constants";
 
-// HELPER: Lectura segura de entorno compatible con Vite y Node
-const getEnv = (key: string) => {
-  // @ts-ignore
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    // @ts-ignore
-    return import.meta.env[key];
-  }
-  if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key];
-  }
-  return '';
-};
-
-const API_KEY = getEnv('VITE_API_KEY') || getEnv('API_KEY');
-const ai = new GoogleGenAI({ apiKey: API_KEY || 'MISSING_KEY' });
+// Always use const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const notifyError = (message: string) => {
     if (typeof window !== 'undefined') {
@@ -184,13 +171,13 @@ export const generateSmartMenu = async (
 export const generateWeeklyPlanAI = generateSmartMenu;
 
 export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSession> => {
-  if (!API_KEY) { notifyError("Falta API Key para Batch Cooking"); return { total_duration: 0, steps: [] }; }
   try {
     const recipeTitles = recipes.map(r => r.title).join(", ");
     const prompt = `Plan de Batch Cooking optimizado para: ${recipeTitles}. JSON output.`;
 
+    // Complex Text Tasks (e.g., advanced reasoning): 'gemini-3-pro-preview'
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3-pro-preview",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -217,6 +204,7 @@ export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSe
       }
     });
 
+    // The GenerateContentResponse object features a text property
     const safeText = response.text ? response.text : '';
     const data = JSON.parse(cleanJson(safeText));
     return {
@@ -230,15 +218,15 @@ export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSe
 };
 
 export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[], count: number = 3, customPrompt?: string): Promise<Recipe[]> => {
-    if (!API_KEY) { notifyError("Falta API Key de Gemini"); return []; }
     try {
         const pantryList = pantry.map(p => p.name).join(", ");
         const dietString = user.dietary_preferences.filter(p => p !== 'none').join(", ");
         const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. 
         Dieta OBLIGATORIA: ${dietString}. Si es vegetariano, NADA de carne/pescado.`;
         
+        // Complex Text Tasks (e.g., advanced reasoning): 'gemini-3-pro-preview'
         const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
+            model: "gemini-3-pro-preview",
             contents: prompt,
             config: { 
               responseMimeType: "application/json",
@@ -246,6 +234,7 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
             }
         });
         
+        // The GenerateContentResponse object features a text property
         const safeText = response.text ? response.text : '';
         const data = JSON.parse(cleanJson(safeText));
         
@@ -268,8 +257,8 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
 };
 
 export const extractItemsFromTicket = async (base64Image: string): Promise<any[]> => {
-  if (!API_KEY) { notifyError("Falta API Key para escanear"); return []; }
   try {
+    // Basic Text Tasks (e.g., extraction): 'gemini-3-flash-preview'
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: {
@@ -296,6 +285,7 @@ export const extractItemsFromTicket = async (base64Image: string): Promise<any[]
       }
     });
     
+    // The GenerateContentResponse object features a text property
     const safeText = response.text ? response.text : '';
     const items = JSON.parse(cleanJson(safeText));
     return Array.isArray(items) ? items : [];
