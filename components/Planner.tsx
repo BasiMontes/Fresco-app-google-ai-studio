@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MealSlot, Recipe, MealCategory, PantryItem, UserProfile, ShoppingItem } from '../types';
 import { Plus, X, Loader2, PackageCheck, ShoppingCart, ChevronLeft, ChevronRight, BrainCircuit, ChefHat, Trash2, Sunrise, Sun, Moon, Share2, Check, Calendar, Sparkles } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks } from 'date-fns';
@@ -111,13 +111,23 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   const days = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i)), [currentWeekStart]);
 
+  // Sincronizar selección de días al cambiar la semana en el calendario
+  useEffect(() => {
+    if (showPlanWizard) {
+        setSelectedWizardDays(days.map(d => format(d, 'yyyy-MM-dd')));
+    }
+  }, [currentWeekStart]);
+
   const executeSmartPlan = async () => {
     if (selectedWizardDays.length === 0 || selectedWizardTypes.length === 0) return;
     
     setIsGenerating(true);
     try {
         const result = await generateSmartMenu(user, pantry, selectedWizardDays, selectedWizardTypes, recipes);
-        if (result.plan) onAIPlanGenerated(result.plan, result.newRecipes);
+        if (result.plan) {
+            onAIPlanGenerated(result.plan, result.newRecipes);
+            triggerDialog({ title: 'Plan Generado', message: `Hemos organizado ${result.plan.length} comidas para ti.`, type: 'success' });
+        }
         setShowPlanWizard(false);
     } catch (e) {
         triggerDialog({ title: 'Error', message: 'No se pudo generar el menú. Revisa tu conexión.', type: 'alert' });
@@ -282,7 +292,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     <div className="space-y-6">
                         <div className="space-y-3">
                             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600 flex items-center gap-2"><Calendar className="w-3 h-3" /> ¿Qué días planificamos?</h4>
-                            <div className="flex justify-between gap-1">
+                            <div className="flex justify-between gap-1 overflow-x-auto no-scrollbar pb-2">
                                 {days.map(d => {
                                     const dateStr = format(d, 'yyyy-MM-dd');
                                     const isSelected = selectedWizardDays.includes(dateStr);
@@ -290,7 +300,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                         <button 
                                             key={dateStr}
                                             onClick={() => toggleWizardDay(dateStr)}
-                                            className={`flex-1 flex flex-col items-center py-3 rounded-xl border-2 transition-all ${isSelected ? 'bg-teal-900 border-teal-900 text-white shadow-md' : 'bg-white border-gray-100 text-gray-400'}`}
+                                            className={`min-w-[50px] flex-1 flex flex-col items-center py-3 rounded-xl border-2 transition-all ${isSelected ? 'bg-teal-900 border-teal-900 text-white shadow-md' : 'bg-white border-gray-100 text-gray-400'}`}
                                         >
                                             <span className="text-[8px] font-black uppercase">{format(d, 'EEE', { locale: es })}</span>
                                             <span className="text-sm font-black">{format(d, 'd')}</span>
@@ -302,17 +312,17 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
                         <div className="space-y-3">
                             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 flex items-center gap-2"><Sunrise className="w-3 h-3" /> ¿Qué comidas incluimos?</h4>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap md:flex-nowrap gap-2">
                                 {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map(type => {
                                     const isSelected = selectedWizardTypes.includes(type);
                                     return (
                                         <button 
                                             key={type}
                                             onClick={() => toggleWizardType(type)}
-                                            className={`flex-1 py-4 rounded-2xl border-2 flex items-center justify-center gap-2 transition-all ${isSelected ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-gray-100 text-gray-400'}`}
+                                            className={`flex-1 py-4 px-2 rounded-2xl border-2 flex items-center justify-center gap-2 transition-all ${isSelected ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-gray-100 text-gray-400'}`}
                                         >
                                             {type === 'breakfast' ? <Sunrise className="w-4 h-4" /> : type === 'lunch' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                                            <span className="text-[10px] font-black uppercase tracking-widest">{type === 'breakfast' ? 'Desayuno' : type === 'lunch' ? 'Comida' : 'Cena'}</span>
+                                            <span className="text-[9px] font-black uppercase tracking-widest">{type === 'breakfast' ? 'Desayuno' : type === 'lunch' ? 'Comida' : 'Cena'}</span>
                                             {isSelected && <Check className="w-3 h-3" />}
                                         </button>
                                     );
@@ -373,7 +383,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
             userProfile={user}
             onClose={() => setSelectedRecipe(null)} 
             onRemoveFromPlan={() => {
-                const slot = plan.find(p => p.recipeId === selectedRecipe.id && isSameDay(new Date(p.date), days.find(d => format(d, 'yyyy-MM-dd') === p.date) || new Date()));
+                const slot = plan.find(p => p.recipeId === selectedRecipe.id);
                 if (slot) {
                     onUpdateSlot(slot.date, slot.type, undefined);
                     setSelectedRecipe(null);

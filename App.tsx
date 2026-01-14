@@ -163,7 +163,6 @@ const App: React.FC = () => {
     const uid = session.user.id;
     const email = session.user.email;
     
-    // Limpieza preventiva para evitar flashes de datos de otra cuenta
     setMealPlan([]); setPantry([]); setShoppingList([]);
     setUserId(uid);
     setUserEmail(email);
@@ -178,7 +177,7 @@ const App: React.FC = () => {
             history_savings: profile.history_savings || [] 
         });
         await loadUserData(uid);
-        setActiveTab('dashboard'); // Redirección explícita a Home
+        setActiveTab('dashboard');
         setView('app');
       } else {
         setView('onboarding');
@@ -284,10 +283,21 @@ const App: React.FC = () => {
                       setMealPlan(p => p.filter(x => !(x.date === d && x.type === t)));
                       db.deleteMealSlotDB(userId!, d, t);
                     }
-                }} onAIPlanGenerated={(p, r) => { setRecipes(x => [...x, ...r]); setMealPlan(p); }} 
+                }} onAIPlanGenerated={(newSlots, newRecipes) => { 
+                     // Persistencia del Plan Mágico
+                     if (newRecipes && newRecipes.length > 0) {
+                         setRecipes(x => [...x, ...newRecipes]);
+                         db.saveRecipesBulkDB(userId!, newRecipes);
+                     }
+                     setMealPlan(prev => {
+                         const filtered = prev.filter(ex => !newSlots.some(ns => ns.date === ex.date && ns.type === ex.type));
+                         return [...filtered, ...newSlots];
+                     });
+                     newSlots.forEach(slot => db.updateMealSlotDB(userId!, slot));
+                }} 
                    onClear={() => { 
                        setMealPlan([]); 
-                       db.clearMealPlanDB(userId!); // FIX: Llamada correcta para borrar calendario
+                       db.clearMealPlanDB(userId!); 
                    }} 
                    onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} />}
                 {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={(id, delta) => setPantry(p => p.map(x => x.id === id ? {...x, quantity: x.quantity + delta} : x))} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} />}

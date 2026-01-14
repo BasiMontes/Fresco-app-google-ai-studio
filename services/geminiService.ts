@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory } from "../types";
-import { FALLBACK_RECIPES, STATIC_RECIPES } from "../constants";
+import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory, DietPreference } from "../types";
+import { cleanName } from "./unitService";
 
 const notifyError = (message: string) => {
     if (typeof window !== 'undefined') {
@@ -19,126 +19,80 @@ const cleanJson = (text: string): string => {
     return clean.trim();
 };
 
-const RECIPE_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    title: { type: Type.STRING },
-    description: { type: Type.STRING },
-    meal_category: { type: Type.STRING },
-    cuisine_type: { type: Type.STRING },
-    difficulty: { type: Type.STRING },
-    prep_time: { type: Type.INTEGER },
-    calories: { type: Type.INTEGER },
-    ingredients: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          name: { type: Type.STRING },
-          quantity: { type: Type.NUMBER },
-          unit: { type: Type.STRING },
-          category: { type: Type.STRING }
-        },
-        required: ["name", "quantity", "unit"]
-      }
-    },
-    instructions: { type: Type.ARRAY, items: { type: Type.STRING } }
-  }
+/**
+ * Función local para calcular qué porcentaje de ingredientes de una receta están en la despensa.
+ */
+const calculatePantryScore = (recipe: Recipe, pantry: PantryItem[]): number => {
+    if (!recipe.ingredients || recipe.ingredients.length === 0) return 0;
+    let matches = 0;
+    recipe.ingredients.forEach(ing => {
+        const name = cleanName(ing.name);
+        const inPantry = pantry.some(p => cleanName(p.name).includes(name) || name.includes(cleanName(p.name)));
+        if (inPantry) matches++;
+    });
+    return matches / recipe.ingredients.length;
 };
 
-const validateRecipe = (r: any): any => {
-    return {
-        ...r,
-        ingredients: Array.isArray(r.ingredients) ? r.ingredients : [],
-        instructions: Array.isArray(r.instructions) ? r.instructions : ["Mezclar ingredientes y cocinar."],
-        prep_time: typeof r.prep_time === 'number' ? r.prep_time : 15,
-        dietary_tags: Array.isArray(r.dietary_tags) ? r.dietary_tags : []
-    };
-};
-
-const filterRecipesByDiet = (recipes: Recipe[], preferences: string[]) => {
-    if (!preferences || preferences.length === 0) return recipes;
-    const effectivePrefs = preferences.filter(p => p !== 'none');
-    if (effectivePrefs.length === 0) return recipes; 
+/**
+ * Valida si una receta cumple con las preferencias dietéticas del usuario.
+ */
+const satisfiesDiet = (recipe: Recipe, preferences: DietPreference[]): boolean => {
+    if (!preferences || preferences.length === 0 || preferences.includes('none')) return true;
     
-    return recipes.filter(r => {
-        const tags = r.dietary_tags || [];
-        if (effectivePrefs.includes('vegan') && !tags.includes('vegan')) return false;
-        if (effectivePrefs.includes('vegetarian') && !tags.includes('vegetarian') && !tags.includes('vegan')) return false;
-        return true;
+    return preferences.every(pref => {
+        if (pref === 'vegetarian') return recipe.dietary_tags.includes('vegetarian') || recipe.dietary_tags.includes('vegan');
+        return recipe.dietary_tags.includes(pref);
     });
 };
 
-const EMERGENCY_RECIPE: Recipe = {
-    id: 'emergency-pasta',
-    title: "Pasta Rápida con lo que tengas",
-    description: "Receta comodín para cuando la despensa está vacía.",
-    meal_category: "lunch",
-    cuisine_type: "fast",
-    difficulty: "easy",
-    prep_time: 15,
-    servings: 1,
-    ingredients: [{name: 'pasta', quantity: 100, unit: 'g', category: 'grains'}, {name: 'aceite', quantity: 10, unit: 'ml', category: 'pantry'}],
-    instructions: ["Cocer pasta", "Añadir aceite y especias al gusto"],
-    dietary_tags: ["vegetarian", "vegan"],
-    image_url: "https://images.unsplash.com/photo-1598866594230-a7c12756260f?auto=format&fit=crop&q=80"
-};
-
+/**
+ * PLANIFICADOR LOCAL (SIN IA)
+ * Utiliza el pool de recetas disponibles para llenar el calendario de forma inteligente.
+ */
 export const generateSmartMenu = async (
     user: UserProfile,
     pantry: PantryItem[],
     targetDates: string[], 
-    targetTypes: string[],
+    targetTypes: MealCategory[],
     availableRecipes: Recipe[]
 ): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    
+    // Simulamos un pequeño retraso para mantener la sensación de "asistente trabajando"
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     const plan: MealSlot[] = [];
-    const rawSources = [...availableRecipes, ...STATIC_RECIPES, EMERGENCY_RECIPE];
-    const uniqueRecipesMap = new Map<string, Recipe>();
-    
-    rawSources.forEach(r => {
-        const key = r.title.toLowerCase().trim();
-        if (!uniqueRecipesMap.has(key)) {
-            uniqueRecipesMap.set(key, r);
-        }
-    });
-    
-    const uniqueSources = Array.from(uniqueRecipesMap.values());
-    let validRecipes = filterRecipesByDiet(uniqueSources, user.dietary_preferences);
+    const usedRecipeIds = new Set<string>();
 
-    if (validRecipes.length === 0) {
-        validRecipes = uniqueSources;
-    }
-
-    const breakfasts = validRecipes.filter(r => r.meal_category === 'breakfast');
-    const mainMeals = validRecipes.filter(r => r.meal_category === 'lunch' || r.meal_category === 'dinner');
-
-    const safeBreakfastPool = breakfasts.length > 0 ? breakfasts : [EMERGENCY_RECIPE];
-    const safeMainPool = mainMeals.length > 0 ? mainMeals : [EMERGENCY_RECIPE];
-
-    safeBreakfastPool.sort(() => 0.5 - Math.random());
-    safeMainPool.sort(() => 0.5 - Math.random());
-
-    let mealIndex = 0;
-    let bfIndex = 0;
-    
-    targetDates.forEach((date) => {
+    targetDates.forEach(date => {
         targetTypes.forEach(type => {
-            let selectedRecipe: Recipe;
+            // 1. Filtrar por categoría de comida (breakfast vs lunch/dinner pool)
+            let pool = availableRecipes.filter(r => {
+                if (type === 'breakfast') return r.meal_category === 'breakfast';
+                return r.meal_category === 'lunch' || r.meal_category === 'dinner';
+            });
 
-            if (type === 'breakfast') {
-                selectedRecipe = safeBreakfastPool[bfIndex % safeBreakfastPool.length];
-                bfIndex++;
-            } else {
-                selectedRecipe = safeMainPool[mealIndex % safeMainPool.length];
-                mealIndex++;
-            }
+            // 2. Filtrar por dieta (Si el pool queda vacío, intentamos relajar la dieta por seguridad)
+            let filteredPool = pool.filter(r => satisfiesDiet(r, user.dietary_preferences));
+            if (filteredPool.length === 0) filteredPool = pool; // Fallback total si la dieta es muy restrictiva
 
-            if (selectedRecipe) {
+            if (filteredPool.length === 0) return;
+
+            // 3. Calcular puntuación por despensa y penalizar repetidos en la misma semana
+            const scoredPool = filteredPool.map(r => ({
+                recipe: r,
+                score: calculatePantryScore(r, pantry) - (usedRecipeIds.has(r.id) ? 0.8 : 0)
+            }));
+
+            // 4. Ordenar por puntuación y coger uno de los mejores aleatoriamente (variedad)
+            scoredPool.sort((a, b) => b.score - a.score);
+            const topChoices = scoredPool.slice(0, Math.min(5, scoredPool.length));
+            
+            if (topChoices.length > 0) {
+                const selected = topChoices[Math.floor(Math.random() * topChoices.length)].recipe;
+                usedRecipeIds.add(selected.id);
                 plan.push({
                     date,
-                    type: type as MealCategory,
-                    recipeId: selectedRecipe.id,
+                    type,
+                    recipeId: selected.id,
                     servings: user.household_size,
                     isCooked: false
                 });
@@ -151,6 +105,7 @@ export const generateSmartMenu = async (
 
 export const generateWeeklyPlanAI = generateSmartMenu;
 
+// Mantener el resto de funciones con IA para tareas donde sí es necesaria (Batch Cooking complejo o Visión)
 export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSession> => {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -203,14 +158,42 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
         const pantryList = pantry.map(p => p.name).join(", ");
         const dietString = user.dietary_preferences.filter(p => p !== 'none').join(", ");
         const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. 
-        Dieta OBLIGATORIA: ${dietString}. Si es vegetariano, NADA de carne/pescado.`;
+        Dieta OBLIGATORIA: ${dietString}.`;
         
         const response = await ai.models.generateContent({
             model: "gemini-3-pro-preview",
             contents: prompt,
             config: { 
               responseMimeType: "application/json",
-              responseSchema: { type: Type.ARRAY, items: RECIPE_SCHEMA }
+              responseSchema: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    title: { type: Type.STRING },
+                    description: { type: Type.STRING },
+                    meal_category: { type: Type.STRING },
+                    cuisine_type: { type: Type.STRING },
+                    difficulty: { type: Type.STRING },
+                    prep_time: { type: Type.INTEGER },
+                    calories: { type: Type.INTEGER },
+                    ingredients: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          name: { type: Type.STRING },
+                          quantity: { type: Type.NUMBER },
+                          unit: { type: Type.STRING },
+                          category: { type: Type.STRING }
+                        },
+                        required: ["name", "quantity", "unit"]
+                      }
+                    },
+                    instructions: { type: Type.ARRAY, items: { type: Type.STRING } }
+                  }
+                }
+              }
             }
         });
         
@@ -220,9 +203,8 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
         if (!Array.isArray(data)) return [];
 
         return data.map((raw: any, i: number) => {
-            const r = validateRecipe(raw);
             return {
-                ...r,
+                ...raw,
                 id: `gen-rec-${Date.now()}-${i}`,
                 servings: user.household_size,
                 dietary_tags: user.dietary_preferences.filter(p => p !== 'none'),
