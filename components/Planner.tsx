@@ -48,34 +48,44 @@ const PlannerCell = React.memo(({
             onClick={onClick}
             className={`flex-1 relative rounded-2xl border transition-all cursor-pointer overflow-hidden flex flex-col group/cell ${
                 isSpecial ? 'bg-gray-50 border-gray-100' :
-                recipe ? (isCooked ? 'bg-green-50/30 border-green-200' : 'bg-white border-gray-100 hover:border-teal-300 hover:shadow-lg') :
+                recipe ? (isCooked ? 'bg-green-50/40 border-green-200' : 'bg-white border-gray-100 hover:border-teal-400 hover:shadow-xl') :
                 'bg-gray-50/50 border-dashed border-gray-200 hover:bg-white hover:border-teal-200'
             }`}
         >
             {recipe ? (
                 <>
+                    {/* Fondo con imagen y gradiente profesional */}
                     <div className="absolute inset-0 z-0">
-                        <img src={recipe.image_url} className="w-full h-full object-cover opacity-10 grayscale hover:grayscale-0 transition-all duration-700" alt="" />
-                        <div className={`absolute inset-0 ${isCooked ? 'bg-green-50/80' : 'bg-gradient-to-b from-white via-white/95 to-white/60'}`} />
+                        <img 
+                            src={recipe.image_url} 
+                            className={`w-full h-full object-cover transition-all duration-700 ${isCooked ? 'opacity-10 grayscale' : 'opacity-30 group-hover/cell:opacity-40 grayscale-[0.5] group-hover/cell:grayscale-0 scale-105 group-hover/cell:scale-100'}`} 
+                            alt="" 
+                        />
+                        <div className={`absolute inset-0 ${
+                            isCooked 
+                            ? 'bg-gradient-to-br from-green-50/90 via-green-50/80 to-white/40' 
+                            : 'bg-gradient-to-br from-white/95 via-white/70 to-transparent'
+                        }`} />
                     </div>
 
+                    {/* Contenido sobre la imagen */}
                     <div className="relative z-10 p-3 h-full flex flex-col justify-between">
-                        <h4 className={`font-bold text-xs text-teal-900 leading-tight line-clamp-2 md:line-clamp-3 ${isCooked ? 'line-through opacity-50' : ''}`}>
+                        <h4 className={`font-black text-[11px] md:text-xs text-teal-900 leading-tight line-clamp-2 md:line-clamp-3 drop-shadow-sm ${isCooked ? 'line-through opacity-40' : ''}`}>
                             {recipe.title}
                         </h4>
                         
-                        <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center justify-between mt-auto">
                             {isCooked ? (
-                                <span className="text-[8px] font-black uppercase text-green-600 bg-green-100 px-1.5 py-0.5 rounded">Hecho</span>
+                                <span className="text-[8px] font-black uppercase text-green-700 bg-green-200/50 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm">Hecho</span>
                             ) : (
                                 <div className="flex gap-1">
                                     {missingCount > 0 ? (
-                                        <span className="flex items-center gap-1 text-[8px] font-black text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
-                                            <ShoppingCart className="w-2.5 h-2.5" /> {missingCount}
+                                        <span className="flex items-center gap-1 text-[8px] font-black text-orange-600 bg-orange-100/80 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm border border-orange-200/50">
+                                            <ShoppingCart className="w-2.5 h-2.5" /> Falta {missingCount}
                                         </span>
                                     ) : (
-                                        <span className="flex items-center gap-1 text-[8px] font-black text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
-                                            <PackageCheck className="w-2.5 h-2.5" /> Todo
+                                        <span className="flex items-center gap-1 text-[8px] font-black text-teal-700 bg-teal-100/80 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm border border-teal-200/50">
+                                            <PackageCheck className="w-2.5 h-2.5" /> Todo listo
                                         </span>
                                     )}
                                 </div>
