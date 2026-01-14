@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { supabase } from '../lib/supabase';
 import { Logo } from './Logo';
-import { ArrowRight, Mail, Lock, User, AlertCircle, Loader2, Check, Send } from 'lucide-react';
+import { ArrowRight, Mail, Lock, User, AlertCircle, Loader2, Check, Send, WifiOff } from 'lucide-react';
 import { LegalModal } from './LegalModal';
 
 interface AuthPageProps {
@@ -13,12 +13,21 @@ interface AuthPageProps {
 
 const translateAuthError = (error: any): string => {
     const msg = (error?.message || '').toLowerCase();
-    if (error?.status === 401 || msg.includes('jwt') || msg.includes('api key')) {
-        return 'Error 401: API Key inválida o expirada.';
+    
+    // Detección de errores de red o configuración
+    if (msg.includes('fetch') || msg.includes('network') || msg.includes('load failed')) {
+        return 'Error de conexión: No se puede contactar con el servidor. Revisa tu conexión o configuración.';
     }
+    
+    if (error?.status === 401 || msg.includes('jwt') || msg.includes('api key')) {
+        return 'Error 401: Sesión no autorizada o configuración expirada.';
+    }
+    
     if (msg.includes('invalid login credentials')) return 'Email o contraseña incorrectos.';
     if (msg.includes('user already registered')) return 'Este email ya está registrado.';
-    return error?.message || 'Ocurrió un error desconocido.';
+    if (msg.includes('email not confirmed')) return 'Por favor, confirma tu email antes de entrar.';
+    
+    return error?.message || 'Ocurrió un error inesperado al intentar entrar.';
 };
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
@@ -56,6 +65,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         } else if (isLogin) {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
+            // La sesión se maneja en el listener de App.tsx
         } else {
             if (!acceptedTerms) throw new Error('Debes aceptar las condiciones legales.');
             const { data, error } = await supabase.auth.signUp({
@@ -77,7 +87,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     }
   };
 
-  // Lógica de habilitación del botón
   const isFormValid = isLogin 
     ? (email.trim() !== '' && password.trim() !== '')
     : isRecovery 
@@ -103,7 +112,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     <div className="h-screen w-full flex bg-[#f8f9fa] overflow-hidden font-sans">
       {showLegalModal && <LegalModal type={showLegalModal} onClose={() => setShowLegalModal(null)} />}
 
-      {/* LEFT PANEL - BRANDING */}
       <div className="hidden lg:flex lg:w-1/2 lg:shrink-0 bg-[#013b33] h-full flex-col justify-center px-20 relative text-white">
         <div className="absolute top-12 left-12">
             <Logo variant="inverted" />
@@ -120,7 +128,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         </div>
       </div>
 
-      {/* RIGHT PANEL - FORM */}
       <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-6 relative">
         <div className="w-full max-w-[450px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col h-auto min-h-[600px]">
             
@@ -197,7 +204,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
                 <div className="mt-auto space-y-4">
                     {error && (
-                        <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 p-3 rounded-xl animate-fade-in">
+                        <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 p-3 rounded-xl animate-fade-in border border-red-100">
                             <AlertCircle className="w-4 h-4 flex-shrink-0" />
                             <span>{error}</span>
                         </div>

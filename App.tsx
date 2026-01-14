@@ -3,15 +3,15 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { UserProfile, Recipe, MealSlot, PantryItem, MealCategory, ShoppingItem } from './types';
 import { Onboarding } from './components/Onboarding';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { supabase } from './lib/supabase';
+import { supabase, isConfigured } from './lib/supabase';
 import * as db from './services/dbService';
 import { subtractIngredient, cleanName } from './services/unitService';
 import { AuthPage } from './components/AuthPage';
 import { initSyncListener } from './services/syncService';
 import { STATIC_RECIPES } from './constants';
-import { Dialog, DialogOptions } from './components/Dialog';
+import { Dialog, DialogOptions, triggerDialog } from './components/Dialog';
 import { Logo } from './components/Logo';
-import { Home, Calendar, ShoppingBag, BookOpen, Package, User, RefreshCw } from 'lucide-react';
+import { Home, Calendar, ShoppingBag, BookOpen, Package, User, RefreshCw, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 const Dashboard = React.lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -21,7 +21,7 @@ const ShoppingList = React.lazy(() => import('./components/ShoppingList').then(m
 const Pantry = React.lazy(() => import('./components/Pantry').then(module => ({ default: module.Pantry })));
 const Profile = React.lazy(() => import('./components/Profile').then(module => ({ default: module.Profile })));
 
-type ViewState = 'loading' | 'auth' | 'onboarding' | 'app';
+type ViewState = 'loading' | 'auth' | 'onboarding' | 'app' | 'error-config';
 
 const PageLoader = ({ message = "Abriendo cocina..." }: { message?: string }) => (
   <div className="h-screen w-full flex flex-col items-center justify-center bg-[#FDFDFD]">
@@ -63,16 +63,20 @@ const App: React.FC = () => {
   }, [toast]);
 
   const loadUserData = async (uid: string) => {
-    const [p, r, m, s] = await Promise.all([
-      db.fetchPantry(uid), 
-      db.fetchRecipes(uid), 
-      db.fetchMealPlan(uid), 
-      db.fetchShoppingList(uid)
-    ]);
-    setPantry(p || []); 
-    setRecipes(r?.length < 5 ? [...(r || []), ...STATIC_RECIPES.slice(0, 50)] : (r || [])); 
-    setMealPlan(m || []); 
-    setShoppingList(s || []);
+    try {
+        const [p, r, m, s] = await Promise.all([
+          db.fetchPantry(uid), 
+          db.fetchRecipes(uid), 
+          db.fetchMealPlan(uid), 
+          db.fetchShoppingList(uid)
+        ]);
+        setPantry(p || []); 
+        setRecipes(r?.length < 5 ? [...(r || []), ...STATIC_RECIPES.slice(0, 50)] : (r || [])); 
+        setMealPlan(m || []); 
+        setShoppingList(s || []);
+    } catch (e) {
+        console.error("Error cargando datos:", e);
+    }
   };
 
   const handleOnboardingComplete = async (profile: UserProfile) => {
@@ -80,7 +84,6 @@ const App: React.FC = () => {
     const updatedUser = { ...profile, onboarding_completed: true };
     setUser(updatedUser);
     
-    // Guardar en DB el flag de completado - CRÍTICO PARA NO REPETIR
     await supabase.from('profiles').upsert({ 
       id: userId, 
       ...profile, 
@@ -93,37 +96,55 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!isConfigured) {
+        setView('error-config');
+        return;
+    }
+
     initSyncListener();
+    
+    // Verificación inicial de sesión
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+            handleSessionChange(session);
+        } else {
+            setView('auth');
+        }
+    });
+
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         setView('auth'); setUser(null); setUserId(null);
         return;
       }
-      
-      const uid = session.user.id;
-      setUserId(uid);
-
-      try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', uid)
-          .single();
-
-        if (profile && profile.onboarding_completed) {
-          setUser({ ...profile, name: profile.full_name || profile.name });
-          await loadUserData(uid);
-          setView('app');
-        } else {
-          // Si el perfil no existe o no está completado -> Onboarding
-          setView('onboarding');
-        }
-      } catch (e) {
-        setView('onboarding');
-      }
+      handleSessionChange(session);
     });
+
     return () => authListener.subscription.unsubscribe();
   }, []);
+
+  const handleSessionChange = async (session: any) => {
+    const uid = session.user.id;
+    setUserId(uid);
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', uid)
+        .single();
+
+      if (profile && profile.onboarding_completed) {
+        setUser({ ...profile, name: profile.full_name || profile.name });
+        await loadUserData(uid);
+        setView('app');
+      } else {
+        setView('onboarding');
+      }
+    } catch (e) {
+      setView('onboarding');
+    }
+  };
 
   const handleCookFinish = async (usedIngredients: { name: string, quantity: number, unit?: string }[], recipeId?: string) => {
       if (!userId) return;
@@ -153,6 +174,16 @@ const App: React.FC = () => {
       }
       setToast({ msg: "Inventario actualizado", type: 'success' });
   };
+
+  if (view === 'error-config') {
+      return (
+          <div className="h-screen w-full flex flex-col items-center justify-center p-8 bg-red-50 text-center">
+              <AlertCircle className="w-16 h-16 text-red-600 mb-4" />
+              <h1 className="text-2xl font-black text-red-900 mb-2">Error de Configuración</h1>
+              <p className="text-red-700 max-w-md">No se han detectado las claves de Supabase. Si eres el administrador, asegúrate de configurar las variables de entorno correctamente en el panel de control.</p>
+          </div>
+      );
+  }
 
   if (view === 'loading') return <PageLoader />;
 

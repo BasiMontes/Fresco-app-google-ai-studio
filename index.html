@@ -12,11 +12,12 @@
 
     <!-- Compatibilidad process.env para navegador (Requerido por SDKs de servidor en cliente) -->
     <script>
-      window.process = { 
-        env: { 
-          NODE_ENV: 'production',
-          API_KEY: '' // El valor real se inyectará automáticamente por el entorno
-        } 
+      // Aseguramos que process.env exista sin destruir lo que el entorno pueda inyectar
+      window.process = window.process || {};
+      window.process.env = { 
+        ...window.process.env,
+        NODE_ENV: 'production',
+        // Las claves reales se inyectan dinámicamente por el sistema de despliegue
       };
     </script>
 
