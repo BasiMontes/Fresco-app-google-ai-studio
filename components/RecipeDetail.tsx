@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Recipe, PantryItem, ShoppingItem, UserProfile, MealCategory } from '../types';
-import { X, Clock, ChefHat, PlayCircle, ShoppingCart, CheckCircle, Minus, Plus, RefreshCw, Trash2, Sunrise, Sun, Moon } from 'lucide-react';
+import { X, Clock, ChefHat, PlayCircle, ShoppingCart, CheckCircle, Minus, Plus, RefreshCw, Trash2, Sunrise, Sun, Moon, AlertTriangle } from 'lucide-react';
 import { CookMode } from './CookMode';
 import { SmartImage } from './SmartImage';
 import { SPANISH_PRICES } from '../constants';
@@ -116,9 +116,14 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                     </div>
 
                     <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 flex flex-col">
-                        <div className="flex items-center gap-2 mb-4">
-                            <ShoppingCart className="w-4 h-4 text-orange-500" />
-                            <h3 className="font-black text-sm text-teal-900 uppercase tracking-widest">Ingredientes</h3>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <ShoppingCart className="w-4 h-4 text-orange-500" />
+                                <h3 className="font-black text-sm text-teal-900 uppercase tracking-widest">Ingredientes</h3>
+                            </div>
+                            {missingItems.length > 0 && (
+                                <span className="text-[10px] font-black bg-orange-100 text-orange-600 px-2 py-1 rounded-lg animate-pulse">Faltan {missingItems.length}</span>
+                            )}
                         </div>
                         
                         <div className="space-y-3 flex-1 overflow-y-auto max-h-[30vh] pr-2 no-scrollbar">
@@ -126,23 +131,36 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                                 const stock = checkItemStock(ing.name, ing.quantity);
                                 const hasEnough = stock && stock.quantity >= ing.quantity;
                                 return (
-                                    <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-gray-50 last:border-none">
+                                    <div key={i} className={`flex justify-between items-center text-xs p-2 rounded-xl border transition-all ${hasEnough ? 'border-transparent' : 'bg-orange-50/50 border-orange-100/50'}`}>
                                         <div className="flex items-center gap-2">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${hasEnough ? 'bg-teal-500' : 'bg-gray-200'}`} />
-                                            <span className={`capitalize font-bold ${hasEnough ? 'text-teal-900' : 'text-gray-400'}`}>{ing.name}</span>
+                                            {hasEnough ? (
+                                                <div className="w-4 h-4 rounded-full bg-teal-500 flex items-center justify-center text-white">
+                                                    <CheckCircle className="w-3 h-3" />
+                                                </div>
+                                            ) : (
+                                                <div className="w-4 h-4 rounded-full bg-orange-200 flex items-center justify-center text-orange-700">
+                                                    <AlertTriangle className="w-3 h-3" />
+                                                </div>
+                                            )}
+                                            <span className={`capitalize font-bold ${hasEnough ? 'text-teal-900' : 'text-orange-900'}`}>{ing.name}</span>
                                         </div>
-                                        <span className="font-black text-teal-600 tabular-nums">
-                                            {Number.isInteger(ing.quantity) ? ing.quantity : ing.quantity.toFixed(1)} {ing.unit}
-                                        </span>
+                                        <div className="text-right">
+                                            <span className={`font-black tabular-nums block ${hasEnough ? 'text-teal-600' : 'text-orange-600'}`}>
+                                                {Number.isInteger(ing.quantity) ? ing.quantity : ing.quantity.toFixed(1)} {ing.unit}
+                                            </span>
+                                            {!hasEnough && (
+                                                <span className="text-[8px] font-black uppercase text-orange-400">Sin stock</span>
+                                            )}
+                                        </div>
                                     </div>
                                 );
                             })}
                         </div>
 
                         {missingItems.length > 0 && onAddToShoppingList && (
-                            <button onClick={handleBuyMissing} disabled={isAddedToList} className="w-full mt-6 py-3 bg-teal-50 text-teal-700 rounded-xl font-black text-[10px] uppercase tracking-widest border border-teal-100 flex items-center justify-center gap-2 hover:bg-teal-100 transition-all">
+                            <button onClick={handleBuyMissing} disabled={isAddedToList} className="w-full mt-6 py-3 bg-orange-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 hover:bg-orange-600 transition-all">
                                 {isAddedToList ? <CheckCircle className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
-                                {isAddedToList ? 'Añadido' : `Comprar Faltantes (${missingItems.length})`}
+                                {isAddedToList ? 'Añadido a la lista' : `Comprar Faltantes (${missingItems.length})`}
                             </button>
                         )}
                     </div>

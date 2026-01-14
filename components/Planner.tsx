@@ -100,7 +100,7 @@ const PlannerCell = React.memo(({
 });
 
 export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, onUpdateSlot, onAIPlanGenerated, onClear, onCookFinish, onAddToShoppingList, isOnline = true }) => {
-  const [showPicker, setShowPicker] = useState<{ date: string, type: MealCategory } | null>(null);
+  const [showPicker, setShowPicker] = useState<{ date: string, type: MealCategory, autoOpen?: boolean } | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPlanWizard, setShowPlanWizard] = useState(false);
@@ -312,7 +312,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                             className={`flex-1 py-4 rounded-2xl border-2 flex items-center justify-center gap-2 transition-all ${isSelected ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-gray-100 text-gray-400'}`}
                                         >
                                             {type === 'breakfast' ? <Sunrise className="w-4 h-4" /> : type === 'lunch' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                                            <span className="text-[10px] font-black uppercase tracking-widest">{type === 'breakfast' ? 'Des' : type === 'lunch' ? 'Com' : 'Cen'}</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{type === 'breakfast' ? 'Desayuno' : type === 'lunch' ? 'Comida' : 'Cena'}</span>
                                             {isSelected && <Check className="w-3 h-3" />}
                                         </button>
                                     );
@@ -352,7 +352,11 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <div><span className="font-bold text-gray-900 block">Sobras</span><span className="text-xs text-gray-400">Reciclaje de stock</span></div>
                       </button>
                       {filteredRecipesForPicker.map(r => (
-                          <button key={r.id} onClick={() => { onUpdateSlot(showPicker.date, showPicker.type, r.id); setShowPicker(null); }} className="flex gap-3 p-3 rounded-2xl bg-white border border-gray-100 hover:border-teal-500 transition-all text-left group">
+                          <button key={r.id} onClick={() => { 
+                              onUpdateSlot(showPicker.date, showPicker.type, r.id); 
+                              if (showPicker.autoOpen) setSelectedRecipe(r);
+                              setShowPicker(null); 
+                          }} className="flex gap-3 p-3 rounded-2xl bg-white border border-gray-100 hover:border-teal-500 transition-all text-left group">
                               <img src={r.image_url} className="w-16 h-16 rounded-xl object-cover bg-gray-200" alt="" />
                               <div className="flex-1 min-w-0"><p className="font-bold text-gray-900 text-sm truncate">{r.title}</p></div>
                           </button>
@@ -379,7 +383,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 const slot = plan.find(p => p.recipeId === selectedRecipe.id);
                 if (slot) {
                     setSelectedRecipe(null);
-                    setShowPicker({ date: slot.date, type: slot.type });
+                    setShowPicker({ date: slot.date, type: slot.type, autoOpen: true });
                 }
             }}
             onCookFinish={(used) => onCookFinish && onCookFinish(used, selectedRecipe.id)}
