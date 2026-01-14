@@ -239,7 +239,7 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="h-screen w-screen bg-[#FDFDFD] flex flex-col md:flex-row font-sans overflow-hidden">
+      <div className="h-screen w-screen bg-[#FDFDFD] flex flex-col md:flex-row font-sans overflow-hidden fixed inset-0">
         {toast && (
           <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-2xl shadow-2xl bg-teal-900 text-white font-bold animate-slide-up">
             {toast.msg}
@@ -251,7 +251,7 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={handleOnboardingComplete} /> :
          <>
-          <aside className="hidden md:flex flex-col w-64 bg-teal-900 text-white h-full z-50 flex-shrink-0">
+          <aside className="hidden md:flex flex-col w-64 bg-teal-900 text-white h-full z-50 flex-shrink-0 overflow-hidden">
             <div className="p-8"><Logo variant="inverted" /></div>
             <nav className="flex-1 px-4 space-y-2 mt-4 overflow-hidden">
                 {[
@@ -271,9 +271,10 @@ const App: React.FC = () => {
           </aside>
 
           <main className="flex-1 h-full overflow-hidden flex flex-col relative bg-[#FDFDFD]">
-            <div className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 h-full overflow-hidden">
+            {/* Contenedor con Scroll habilitado para el contenido principal */}
+            <div className={`flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 h-full ${activeTab === 'planner' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-auto'} no-scrollbar overscroll-none`}>
                 <Suspense fallback={<PageLoader message="Cargando vista..." />}>
-                <div className="h-full w-full overflow-hidden">
+                <div className="h-full w-full">
                     {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
                     {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={(d, t, rid) => {
                         if (rid) {
