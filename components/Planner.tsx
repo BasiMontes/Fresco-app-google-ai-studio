@@ -46,48 +46,45 @@ const PlannerCell = React.memo(({
     return (
         <div 
             onClick={onClick}
-            className={`flex-1 relative rounded-[2rem] border transition-all cursor-pointer overflow-hidden flex flex-col group/cell ${
+            className={`flex-1 relative rounded-2xl border transition-all cursor-pointer overflow-hidden flex flex-col group/cell ${
                 isSpecial ? 'bg-gray-50 border-gray-100' :
-                recipe ? (isCooked ? 'bg-green-50/40 border-green-200' : 'bg-white border-gray-100 hover:border-teal-500 hover:shadow-xl hover:-translate-y-0.5') :
+                recipe ? (isCooked ? 'bg-green-50/40 border-green-200' : 'bg-white border-gray-100 hover:border-teal-400 hover:shadow-xl') :
                 'bg-gray-50/50 border-dashed border-gray-200 hover:bg-white hover:border-teal-200'
             }`}
         >
             {recipe ? (
                 <>
-                    {/* Fondo con imagen: Zoom término medio (1.25x) y gradiente profesional para legibilidad */}
-                    <div className="absolute inset-0 z-0 overflow-hidden">
+                    {/* Fondo con imagen y gradiente profesional original */}
+                    <div className="absolute inset-0 z-0">
                         <img 
                             src={recipe.image_url} 
-                            className={`w-full h-full object-cover transition-all duration-1000 ${
-                                isCooked ? 'opacity-5 grayscale scale-110' : 'opacity-30 scale-125 group-hover/cell:scale-150 group-hover/cell:opacity-40'
-                            }`} 
+                            className={`w-full h-full object-cover transition-all duration-700 ${isCooked ? 'opacity-10 grayscale' : 'opacity-30 group-hover/cell:opacity-40 grayscale-[0.5] group-hover/cell:grayscale-0 scale-105 group-hover/cell:scale-100'}`} 
                             alt="" 
                         />
-                        {/* Gradiente multicapa: Asegura que el texto oscuro resalte sobre el fondo claro */}
-                        <div className={`absolute inset-0 transition-opacity duration-700 ${
+                        <div className={`absolute inset-0 ${
                             isCooked 
-                            ? 'bg-green-50/80' 
-                            : 'bg-gradient-to-br from-white/95 via-white/60 to-transparent'
+                            ? 'bg-gradient-to-br from-green-50/90 via-green-50/80 to-white/40' 
+                            : 'bg-gradient-to-br from-white/95 via-white/70 to-transparent'
                         }`} />
                     </div>
 
                     {/* Contenido sobre la imagen */}
-                    <div className="relative z-10 p-4 h-full flex flex-col justify-between">
-                        <h4 className={`font-black text-xs md:text-sm text-teal-900 leading-tight line-clamp-2 md:line-clamp-3 drop-shadow-[0_1px_2px_rgba(255,255,255,1)] ${isCooked ? 'line-through opacity-40' : ''}`}>
+                    <div className="relative z-10 p-3 h-full flex flex-col justify-between">
+                        <h4 className={`font-black text-[11px] md:text-xs text-teal-900 leading-tight line-clamp-2 md:line-clamp-3 drop-shadow-sm ${isCooked ? 'line-through opacity-40' : ''}`}>
                             {recipe.title}
                         </h4>
                         
                         <div className="flex items-center justify-between mt-auto">
                             {isCooked ? (
-                                <span className="text-[8px] font-black uppercase text-green-700 bg-green-200/60 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm border border-green-300/30">Hecho</span>
+                                <span className="text-[8px] font-black uppercase text-green-700 bg-green-200/50 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm">Hecho</span>
                             ) : (
                                 <div className="flex gap-1">
                                     {missingCount > 0 ? (
-                                        <span className="flex items-center gap-1 text-[8px] font-black text-orange-600 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm border border-orange-200/50">
-                                            <ShoppingCart className="w-2.5 h-2.5" /> Faltan {missingCount}
+                                        <span className="flex items-center gap-1 text-[8px] font-black text-orange-600 bg-orange-100/80 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm border border-orange-200/50">
+                                            <ShoppingCart className="w-2.5 h-2.5" /> Falta {missingCount}
                                         </span>
                                     ) : (
-                                        <span className="flex items-center gap-1 text-[8px] font-black text-teal-700 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm border border-teal-200/50">
+                                        <span className="flex items-center gap-1 text-[8px] font-black text-teal-700 bg-teal-100/80 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm border border-teal-200/50">
                                             <PackageCheck className="w-2.5 h-2.5" /> Todo listo
                                         </span>
                                     )}
@@ -282,15 +279,15 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           const isToday = isSameDay(day, new Date());
           const dateStr = format(day, 'yyyy-MM-dd');
           return (
-            <div key={day.toString()} className="min-w-[80vw] md:min-w-0 flex-1 flex flex-col gap-3">
-                <div className={`flex items-center justify-between px-5 py-4 rounded-[2rem] border transition-all ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-lg' : 'bg-white text-gray-500 border-gray-100 shadow-sm'}`}>
+            <div key={day.toString()} className="min-w-[80vw] md:min-w-0 flex-1 flex flex-col gap-2">
+                <div className={`flex items-center justify-between px-4 py-3 rounded-2xl border transition-all ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-md' : 'bg-white text-gray-500 border-gray-100'}`}>
                     <div className="flex flex-col">
                         <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">{format(day, 'EEE', { locale: es })}</span>
-                        <span className="text-2xl font-black leading-none">{format(day, 'd', { locale: es })}</span>
+                        <span className="text-xl font-black leading-none">{format(day, 'd', { locale: es })}</span>
                     </div>
                 </div>
 
-                <div className="flex-1 flex flex-col gap-3 min-h-0">
+                <div className="flex-1 flex flex-col gap-2 min-h-0">
                     {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                         const slot = getSlot(day, type);
                         const recipe = recipes.find(r => r.id === slot?.recipeId);
