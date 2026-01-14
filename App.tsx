@@ -24,7 +24,6 @@ import { Home, Calendar, ShoppingBag, BookOpen, Package, User, Sparkles, AlertOc
 import { format } from 'date-fns';
 
 type ViewState = 'auth' | 'onboarding' | 'app';
-const DEMO_USER_ID = 'demo-user-id';
 
 const PageLoader = ({ message = "Cargando Fresco...", showReload = false }: { message?: string, showReload?: boolean }) => (
   <div className="h-full w-full flex flex-col items-center justify-center p-10 min-h-screen bg-[#FDFDFD]">
@@ -44,12 +43,9 @@ const App: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [initialRecipeId, setInitialRecipeId] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null);
-  
-  // Dialog State
   const [dialogOptions, setDialogOptions] = useState<DialogOptions | null>(null);
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -75,45 +71,17 @@ const App: React.FC = () => {
       }
   }, [toast]);
 
-  const handleCookFinish = async (usedIngredients: { name: string, quantity: number, unit?: string }[], recipeId?: string) => {
-      if (!userId) return;
-      let updatedPantry = [...pantry];
-      usedIngredients.forEach(used => {
-          const usedName = cleanName(used.name);
-          const pantryIndex = updatedPantry.findIndex(p => {
-              const pName = cleanName(p.name);
-              return pName === usedName || pName.includes(usedName) || usedName.includes(pName);
-          });
-          if (pantryIndex >= 0) {
-              const item = updatedPantry[pantryIndex];
-              const result = subtractIngredient(item.quantity, item.unit, used.quantity, used.unit || 'uds');
-              if (result) {
-                  const newItem = { ...item, quantity: result.quantity, unit: result.unit };
-                  if (newItem.quantity <= 0.05) {
-                      updatedPantry.splice(pantryIndex, 1);
-                      db.deletePantryItemDB(item.id);
-                  } else {
-                      updatedPantry[pantryIndex] = newItem;
-                      db.updatePantryItemDB(userId, newItem);
-                  }
-              }
-          }
-      });
-      setPantry(updatedPantry);
-      if (recipeId) {
-          const today = format(new Date(), 'yyyy-MM-dd');
-          let slotIndex = mealPlan.findIndex(p => p.date === today && p.recipeId === recipeId && !p.isCooked);
-          if (slotIndex >= 0) {
-              const updatedSlot = { ...mealPlan[slotIndex], isCooked: true };
-              setMealPlan(prev => {
-                  const newPlan = [...prev];
-                  newPlan[slotIndex] = updatedSlot;
-                  return newPlan;
-              });
-              db.updateMealSlotDB(userId, updatedSlot);
-          }
-      }
-      setToast({ msg: "Stock actualizado", type: 'success' });
+  const loadUserData = async (uid: string) => {
+    const [p, r, m, s] = await Promise.all([
+      db.fetchPantry(uid), 
+      db.fetchRecipes(uid), 
+      db.fetchMealPlan(uid), 
+      db.fetchShoppingList(uid)
+    ]);
+    setPantry(p); 
+    setRecipes(r.length < 5 ? [...r, ...STATIC_RECIPES.slice(0, 50)] : r); 
+    setMealPlan(m); 
+    setShoppingList(s);
   };
 
   const handleOnboardingComplete = async (profile: UserProfile) => {
@@ -137,21 +105,23 @@ const App: React.FC = () => {
     initSyncListener();
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_OUT') {
-            setView('auth');
-            setUser(null); setUserId(null); setIsLoaded(true);
+            setView('auth'); setUser(null); setUserId(null); setIsLoaded(true);
             return;
         }
         if (session?.user) {
+            setUserId(session.user.id);
             const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
             if (profile) {
-                setUser({ ...profile, name: profile.full_name, onboarding_completed: profile.onboarding_completed });
-                setUserId(session.user.id);
+                setUser({ ...profile, name: profile.full_name, onboarding_completed: !!profile.onboarding_completed });
                 if (profile.onboarding_completed) {
-                    const [p, r, m, s] = await Promise.all([db.fetchPantry(session.user.id), db.fetchRecipes(session.user.id), db.fetchMealPlan(session.user.id), db.fetchShoppingList(session.user.id)]);
-                    setPantry(p); setRecipes(r.length < 5 ? [...r, ...STATIC_RECIPES.slice(0, 50)] : r); setMealPlan(m); setShoppingList(s);
+                    await loadUserData(session.user.id);
                     setView('app');
-                } else setView('onboarding');
-            } else setView('onboarding');
+                } else {
+                    setView('onboarding');
+                }
+            } else {
+                setView('onboarding');
+            }
             setIsLoaded(true);
         } else {
             setView('auth'); setIsLoaded(true);
@@ -212,9 +182,16 @@ const App: React.FC = () => {
                       setMealPlan(p => p.filter(x => !(x.date === d && x.type === t)));
                       db.deleteMealSlotDB(userId!, d, t);
                     }
-                }} onAIPlanGenerated={(p, r) => { setRecipes(x => [...x, ...r]); setMealPlan(p); }} onClear={() => setMealPlan([])} onCookFinish={handleCookFinish} onAddToShoppingList={setShoppingList} isOnline={isOnline} />}
+                }} onAIPlanGenerated={(p, r) => { setRecipes(x => [...x, ...r]); setMealPlan(p); }} onClear={() => setMealPlan([])} isOnline={isOnline} />}
                 {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={(id, delta) => setPantry(p => p.map(x => x.id === id ? {...x, quantity: x.quantity + delta} : x))} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} isOnline={isOnline} />}
-                {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={(r, s, d, t) => {}} onCookFinish={handleCookFinish} onAddToShoppingList={() => {}} isOnline={isOnline} initialRecipeId={initialRecipeId} />}
+                {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={(rid, serv, date, type) => {
+                     if (date && type) {
+                        const ns = { date, type, recipeId: rid.id, servings: serv, isCooked: false };
+                        setMealPlan(p => [...p.filter(x => !(x.date === date && x.type === type)), ns]);
+                        db.updateMealSlotDB(userId!, ns);
+                        setToast({ msg: "Añadido al calendario", type: 'success' });
+                     }
+                }} isOnline={isOnline} />}
                 {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={s => setShoppingList(x => [...x, ...s])} onUpdateShoppingItem={s => setShoppingList(x => x.map(y => y.id === s.id ? s : y))} onRemoveShoppingItem={id => setShoppingList(x => x.filter(y => y.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
                 {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={() => {}} />}
                 </Suspense>
