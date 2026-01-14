@@ -1,7 +1,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { MealSlot, Recipe, MealCategory, PantryItem, UserProfile, ShoppingItem } from '../types';
-import { Plus, X, Loader2, PackageCheck, ShoppingCart, ChevronLeft, ChevronRight, Utensils, BrainCircuit, Users2, ChefHat, CalendarDays, Sparkles, Trash2, Sunrise, Sun, Moon, Share2 } from 'lucide-react';
+// Added missing Sparkles icon to the imports
+import { Plus, X, Loader2, PackageCheck, ShoppingCart, ChevronLeft, ChevronRight, BrainCircuit, ChefHat, Trash2, Sunrise, Sun, Moon, Share2, Check, Calendar, Sparkles } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { generateSmartMenu } from '../services/geminiService';
@@ -103,16 +104,23 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   const [showPicker, setShowPicker] = useState<{ date: string, type: MealCategory } | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showPlanWizard, setShowPlanWizard] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+  
+  // Asistente Mágico State
+  const [selectedWizardDays, setSelectedWizardDays] = useState<string[]>([]);
+  const [selectedWizardTypes, setSelectedWizardTypes] = useState<MealCategory[]>(['lunch', 'dinner']);
 
   const days = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i)), [currentWeekStart]);
 
   const executeSmartPlan = async () => {
+    if (selectedWizardDays.length === 0 || selectedWizardTypes.length === 0) return;
+    
     setIsGenerating(true);
     try {
-        const allDays = days.map(d => format(d, 'yyyy-MM-dd'));
-        const result = await generateSmartMenu(user, pantry, allDays, ['breakfast', 'lunch', 'dinner'], recipes);
+        const result = await generateSmartMenu(user, pantry, selectedWizardDays, selectedWizardTypes, recipes);
         if (result.plan) onAIPlanGenerated(result.plan, result.newRecipes);
+        setShowPlanWizard(false);
     } catch (e) {
         triggerDialog({ title: 'Error', message: 'No se pudo generar el menú. Revisa tu conexión.', type: 'alert' });
     } finally {
@@ -179,6 +187,14 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
     return recipes.filter(r => r.meal_category === showPicker.type);
   }, [recipes, showPicker]);
 
+  const toggleWizardDay = (dateStr: string) => {
+    setSelectedWizardDays(prev => prev.includes(dateStr) ? prev.filter(d => d !== dateStr) : [...prev, dateStr]);
+  };
+
+  const toggleWizardType = (type: MealCategory) => {
+    setSelectedWizardTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
+  };
+
   return (
     <div className="h-[calc(100vh-80px)] w-full flex flex-col animate-fade-in overflow-hidden">
       <header className="flex-shrink-0 px-6 py-4 flex justify-between items-center bg-white/50 backdrop-blur-sm z-10">
@@ -201,8 +217,14 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 type: 'confirm', 
                 onConfirm: onClear 
             })} className="p-3 bg-white text-red-500 rounded-xl hover:bg-red-50 transition-all border border-gray-100 shadow-sm"><Trash2 className="w-4 h-4" /></button>
-            <button onClick={executeSmartPlan} disabled={isGenerating} className="flex items-center gap-2 bg-teal-900 text-white px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-teal-800 transition-all shadow-lg active:scale-95">
-                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <BrainCircuit className="w-4 h-4 text-orange-400" />}
+            <button 
+                onClick={() => {
+                    setSelectedWizardDays(days.map(d => format(d, 'yyyy-MM-dd')));
+                    setShowPlanWizard(true);
+                }} 
+                className="flex items-center gap-2 bg-teal-900 text-white px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-teal-800 transition-all shadow-lg active:scale-95"
+            >
+                <BrainCircuit className="w-4 h-4 text-orange-400" />
                 <span className="hidden md:inline">Plan Mágico</span>
             </button>
         </div>
@@ -245,12 +267,79 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         })}
       </div>
 
+      {/* Magic Plan Wizard */}
+      {showPlanWizard && (
+          <div className="fixed inset-0 z-[5000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
+              <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden flex flex-col gap-8">
+                    <button onClick={() => setShowPlanWizard(false)} className="absolute top-6 right-6 p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><X className="w-4 h-4 text-gray-400" /></button>
+                    
+                    <div className="text-center">
+                        <div className="w-20 h-20 bg-orange-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-orange-500 shadow-sm border border-orange-100 animate-bounce-subtle">
+                            <BrainCircuit className="w-10 h-10" />
+                        </div>
+                        <h2 className="text-3xl font-black text-teal-900 leading-tight mb-2">Asistente Mágico</h2>
+                        <p className="text-gray-500 font-medium text-sm">La IA llenará los huecos vacíos con las mejores recetas según tu despensa y preferencias.</p>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="space-y-3">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600 flex items-center gap-2"><Calendar className="w-3 h-3" /> ¿Qué días planificamos?</h4>
+                            <div className="flex justify-between gap-1">
+                                {days.map(d => {
+                                    const dateStr = format(d, 'yyyy-MM-dd');
+                                    const isSelected = selectedWizardDays.includes(dateStr);
+                                    return (
+                                        <button 
+                                            key={dateStr}
+                                            onClick={() => toggleWizardDay(dateStr)}
+                                            className={`flex-1 flex flex-col items-center py-3 rounded-xl border-2 transition-all ${isSelected ? 'bg-teal-900 border-teal-900 text-white shadow-md' : 'bg-white border-gray-100 text-gray-400'}`}
+                                        >
+                                            <span className="text-[8px] font-black uppercase">{format(d, 'EEE', { locale: es })}</span>
+                                            <span className="text-sm font-black">{format(d, 'd')}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 flex items-center gap-2"><Sunrise className="w-3 h-3" /> ¿Qué comidas incluimos?</h4>
+                            <div className="flex gap-2">
+                                {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map(type => {
+                                    const isSelected = selectedWizardTypes.includes(type);
+                                    return (
+                                        <button 
+                                            key={type}
+                                            onClick={() => toggleWizardType(type)}
+                                            className={`flex-1 py-4 rounded-2xl border-2 flex items-center justify-center gap-2 transition-all ${isSelected ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-gray-100 text-gray-400'}`}
+                                        >
+                                            {type === 'breakfast' ? <Sunrise className="w-4 h-4" /> : type === 'lunch' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                                            <span className="text-[10px] font-black uppercase tracking-widest">{type === 'breakfast' ? 'Des' : type === 'lunch' ? 'Com' : 'Cen'}</span>
+                                            {isSelected && <Check className="w-3 h-3" />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={executeSmartPlan}
+                        disabled={isGenerating || selectedWizardDays.length === 0 || selectedWizardTypes.length === 0}
+                        className="w-full py-5 bg-teal-900 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-xl hover:bg-teal-800 disabled:bg-gray-200 disabled:text-gray-400 active:scale-95 transition-all flex items-center justify-center gap-3"
+                    >
+                        {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Sparkles className="w-5 h-5 text-orange-400" /> Generar Plan Mágico</>}
+                    </button>
+              </div>
+          </div>
+      )}
+
       {showPicker && (
           <div className="fixed inset-0 z-[5000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowPicker(null)}>
               <div className="bg-white w-full max-w-2xl h-[80vh] rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
                   <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                       <div>
-                          <h3 className="text-xl font-black text-teal-900 capitalize">Elegir {showPicker.type}</h3>
+                          <h3 className="text-xl font-black text-teal-900 capitalize">Elegir {showPicker.type === 'breakfast' ? 'Desayuno' : showPicker.type === 'lunch' ? 'Comida' : 'Cena'}</h3>
                           <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{format(new Date(showPicker.date), 'EEEE d MMMM', { locale: es })}</p>
                       </div>
                       <button onClick={() => setShowPicker(null)} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-6 h-6 text-gray-400"/></button>

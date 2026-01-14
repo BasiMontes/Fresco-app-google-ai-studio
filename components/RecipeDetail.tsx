@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Recipe, PantryItem, ShoppingItem, UserProfile, MealCategory } from '../types';
-import { X, Clock, ChefHat, Check, ArrowLeft, PlayCircle, ShoppingCart, Calendar, CheckCircle, Minus, Plus, ListFilter, Users, RefreshCw, Trash2, Sunrise, Sun, Moon } from 'lucide-react';
+import { X, Clock, ChefHat, PlayCircle, ShoppingCart, CheckCircle, Minus, Plus, RefreshCw, Trash2, Sunrise, Sun, Moon } from 'lucide-react';
 import { CookMode } from './CookMode';
 import { SmartImage } from './SmartImage';
 import { SPANISH_PRICES } from '../constants';
@@ -20,11 +20,12 @@ interface RecipeDetailProps {
   onChangeSlot?: () => void;
 }
 
-export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, userProfile, initialMode = 'view', onClose, onAddToPlan, onCookFinish, onAddToShoppingList, onRemoveFromPlan, onChangeSlot }) => {
+export const RecipeDetail: React.FC<RecipeDetailProps> = ({ 
+  recipe, pantry, userProfile, initialMode = 'view', 
+  onClose, onAddToPlan, onCookFinish, onAddToShoppingList, 
+  onRemoveFromPlan, onChangeSlot 
+}) => {
   const [isCooking, setIsCooking] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ingredients' | 'steps'>(initialMode === 'plan' ? 'ingredients' : 'steps'); 
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]); 
-  
   const [showPlanningMode, setShowPlanningMode] = useState(initialMode === 'plan');
   const [planDate, setPlanDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [planType, setPlanType] = useState<MealCategory>(recipe.meal_category || 'lunch');
@@ -98,116 +99,139 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({ recipe, pantry, user
   }
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm animate-fade-in flex justify-center items-end md:items-center p-0 md:p-6" onClick={onClose}>
-        <div className="bg-[#FDFDFD] w-full h-[95vh] md:h-[85vh] md:max-w-5xl md:rounded-[2.5rem] overflow-hidden flex flex-col relative shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm animate-fade-in flex justify-center items-center p-4 md:p-6" onClick={onClose}>
+        <div className="bg-white w-full max-w-6xl max-h-[90vh] rounded-[2.5rem] overflow-hidden flex flex-col relative shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
             
-            {/* Header / Title */}
-            <div className="flex-shrink-0 p-6 md:p-8 flex justify-between items-start bg-white z-20">
-                <div className="flex-1 min-w-0">
-                    <h2 className="text-2xl md:text-3xl font-black text-teal-900 leading-tight truncate">{recipe.title}</h2>
-                    <div className="flex gap-4 mt-2">
-                        <div className="flex items-center gap-1.5 text-gray-400 font-bold text-[10px] uppercase tracking-widest">
-                            <Clock className="w-3.5 h-3.5" /> {dynamicPrepTime} min
-                        </div>
-                        <div className="flex items-center gap-1.5 text-gray-400 font-bold text-[10px] uppercase tracking-widest">
-                            <ChefHat className="w-3.5 h-3.5" /> {recipe.difficulty}
-                        </div>
-                    </div>
-                </div>
-                <div className="flex gap-2">
-                    {onRemoveFromPlan && (
-                        <button onClick={onRemoveFromPlan} className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all"><Trash2 className="w-5 h-5" /></button>
-                    )}
-                    {onChangeSlot && (
-                        <button onClick={onChangeSlot} className="p-3 bg-teal-50 text-teal-600 rounded-2xl hover:bg-teal-100 transition-all"><RefreshCw className="w-5 h-5" /></button>
-                    )}
-                    <button onClick={onClose} className="p-3 bg-gray-50 text-gray-400 rounded-2xl hover:bg-gray-100 transition-all"><X className="w-5 h-5" /></button>
-                </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-32 no-scrollbar">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Media & Ingredients */}
-                    <div className="space-y-6">
-                        <div className="aspect-video md:aspect-[4/3] rounded-[2rem] overflow-hidden shadow-md">
+            <div className="flex-1 overflow-y-auto no-scrollbar grid grid-cols-1 md:grid-cols-12">
+                
+                {/* Left Side: Image & Ingredients Card */}
+                <div className="md:col-span-5 p-6 md:p-8 flex flex-col gap-6 bg-gray-50/50">
+                    <div className="relative">
+                        <div className="aspect-video md:aspect-square rounded-[2rem] overflow-hidden shadow-xl border-4 border-white">
                             <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover" />
                         </div>
-
-                        <div className="bg-white rounded-[2rem] p-6 border border-gray-100">
-                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-black text-sm text-teal-900 uppercase tracking-widest">Ingredientes</h3>
-                                <div className="flex items-center gap-3 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
-                                    <button onClick={() => setDesiredServings(Math.max(1, desiredServings - 1))} className="text-gray-400"><Minus className="w-4 h-4" /></button>
-                                    <span className="font-black text-xs w-4 text-center">{desiredServings}</span>
-                                    <button onClick={() => setDesiredServings(desiredServings + 1)} className="text-gray-400"><Plus className="w-4 h-4" /></button>
-                                </div>
-                             </div>
-                             <div className="space-y-2">
-                                {scaledIngredients.map((ing, i) => {
-                                    const stock = checkItemStock(ing.name, ing.quantity);
-                                    const hasEnough = stock && stock.quantity >= ing.quantity;
-                                    return (
-                                        <div key={i} className="flex justify-between items-center text-xs py-1 border-b border-gray-50 last:border-none">
-                                            <span className={`capitalize font-bold ${hasEnough ? 'text-teal-900' : 'text-gray-400'}`}>{ing.name}</span>
-                                            <span className="font-black text-teal-600">{Number.isInteger(ing.quantity) ? ing.quantity : ing.quantity.toFixed(1)} {ing.unit}</span>
-                                        </div>
-                                    );
-                                })}
-                             </div>
-                             {missingItems.length > 0 && onAddToShoppingList && (
-                                <button onClick={handleBuyMissing} disabled={isAddedToList} className="w-full mt-4 py-3 bg-teal-50 text-teal-700 rounded-xl font-black text-[10px] uppercase tracking-widest border border-teal-100 flex items-center justify-center gap-2">
-                                    {isAddedToList ? <CheckCircle className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
-                                    {isAddedToList ? 'Añadido' : `Comprar Faltantes (${missingItems.length})`}
-                                </button>
-                             )}
+                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-teal-800 shadow-sm border border-white">
+                            {recipe.dietary_tags[0] || 'HEALTHY'}
                         </div>
                     </div>
 
-                    {/* Instructions */}
-                    <div className="space-y-4">
-                        <h3 className="font-black text-sm text-teal-900 uppercase tracking-widest mb-4">Instrucciones</h3>
-                        {recipe.instructions.map((step, i) => (
-                            <div key={i} className="flex gap-4 group">
-                                <span className="w-8 h-8 rounded-xl bg-teal-50 text-teal-900 flex items-center justify-center font-black text-xs flex-shrink-0 group-hover:bg-teal-900 group-hover:text-white transition-all">{i + 1}</span>
-                                <p className="text-sm font-medium text-gray-600 leading-relaxed pt-1.5">{step}</p>
+                    <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 flex flex-col">
+                        <div className="flex items-center gap-2 mb-4">
+                            <ShoppingCart className="w-4 h-4 text-orange-500" />
+                            <h3 className="font-black text-sm text-teal-900 uppercase tracking-widest">Ingredientes</h3>
+                        </div>
+                        
+                        <div className="space-y-3 flex-1">
+                            {scaledIngredients.map((ing, i) => {
+                                const stock = checkItemStock(ing.name, ing.quantity);
+                                const hasEnough = stock && stock.quantity >= ing.quantity;
+                                return (
+                                    <div key={i} className="flex justify-between items-center text-xs pb-2 border-b border-gray-50 last:border-none">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-1.5 h-1.5 rounded-full ${hasEnough ? 'bg-teal-500' : 'bg-gray-200'}`} />
+                                            <span className={`capitalize font-bold ${hasEnough ? 'text-teal-900' : 'text-gray-400'}`}>{ing.name}</span>
+                                        </div>
+                                        <span className="font-black text-teal-600 tabular-nums">
+                                            {Number.isInteger(ing.quantity) ? ing.quantity : ing.quantity.toFixed(1)} {ing.unit}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {missingItems.length > 0 && onAddToShoppingList && (
+                            <button onClick={handleBuyMissing} disabled={isAddedToList} className="w-full mt-6 py-3 bg-teal-50 text-teal-700 rounded-xl font-black text-[10px] uppercase tracking-widest border border-teal-100 flex items-center justify-center gap-2 hover:bg-teal-100 transition-all">
+                                {isAddedToList ? <CheckCircle className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+                                {isAddedToList ? 'Añadido' : `Comprar Faltantes (${missingItems.length})`}
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Servings Adjuster */}
+                    <div className="bg-teal-900 text-white rounded-2xl p-4 flex items-center justify-between shadow-lg">
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Raciones</span>
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => setDesiredServings(Math.max(1, desiredServings - 1))} className="p-1 hover:bg-white/10 rounded-lg"><Minus className="w-4 h-4" /></button>
+                            <span className="font-black text-xl w-6 text-center">{desiredServings}</span>
+                            <button onClick={() => setDesiredServings(desiredServings + 1)} className="p-1 hover:bg-white/10 rounded-lg"><Plus className="w-4 h-4" /></button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Side: Header & Instructions */}
+                <div className="md:col-span-7 p-6 md:p-10 flex flex-col">
+                    <div className="flex justify-between items-start gap-4 mb-8">
+                        <div className="flex-1">
+                            <h2 className="text-3xl md:text-4xl font-black text-teal-900 leading-tight mb-4">{recipe.title}</h2>
+                            <div className="flex gap-4">
+                                <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 text-gray-500 font-bold text-[10px] uppercase tracking-widest">
+                                    <Clock className="w-4 h-4 text-teal-600" /> {dynamicPrepTime} min
+                                </div>
+                                <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 text-gray-500 font-bold text-[10px] uppercase tracking-widest">
+                                    <ChefHat className="w-4 h-4 text-orange-500" /> {recipe.difficulty.toUpperCase()}
+                                </div>
                             </div>
-                        ))}
+                        </div>
+                        <div className="flex gap-2">
+                            {onRemoveFromPlan && (
+                                <button onClick={onRemoveFromPlan} className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all shadow-sm"><Trash2 className="w-5 h-5" /></button>
+                            )}
+                            {onChangeSlot && (
+                                <button onClick={onChangeSlot} className="p-3 bg-green-50 text-green-600 rounded-2xl hover:bg-green-100 transition-all shadow-sm"><RefreshCw className="w-5 h-5" /></button>
+                            )}
+                            <button onClick={onClose} className="p-3 bg-gray-50 text-gray-400 rounded-2xl hover:bg-gray-100 transition-all shadow-sm"><X className="w-5 h-5" /></button>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 space-y-6">
+                        <div className="flex items-center gap-2 border-b border-gray-100 pb-2 mb-4">
+                            <Sunrise className="w-4 h-4 text-teal-600" />
+                            <h3 className="font-black text-sm text-teal-900 uppercase tracking-widest">Pasos de Preparación</h3>
+                        </div>
+                        <div className="space-y-6 pr-4">
+                            {recipe.instructions.map((step, i) => (
+                                <div key={i} className="flex gap-6 group">
+                                    <span className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-900 flex items-center justify-center font-black text-sm flex-shrink-0 group-hover:bg-teal-900 group-hover:text-white transition-all shadow-sm border border-teal-100/50">{i + 1}</span>
+                                    <p className="text-base font-medium text-gray-600 leading-relaxed pt-1.5 flex-1">{step}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Footer Actions */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-md border-t border-gray-100 flex flex-col md:flex-row gap-3 z-30">
+            {/* Floating Action Bar */}
+            <div className="p-6 md:p-8 bg-white border-t border-gray-100 flex flex-col md:flex-row gap-4 items-center">
                 {showPlanningMode ? (
-                    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full animate-slide-up">
-                        <div className="flex-1 flex gap-2">
-                            <input type="date" value={planDate} onChange={e => setPlanDate(e.target.value)} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold" />
-                            <div className="flex bg-gray-100 p-1 rounded-xl">
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full animate-slide-up">
+                        <div className="flex-1 flex gap-3">
+                            <input type="date" value={planDate} onChange={e => setPlanDate(e.target.value)} className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-teal-500 outline-none" />
+                            <div className="flex bg-gray-100 p-1.5 rounded-2xl">
                                 {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map(cat => (
                                     <button 
                                         key={cat} 
                                         onClick={() => setPlanType(cat)}
-                                        className={`p-2 rounded-lg transition-all ${planType === cat ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-400'}`}
+                                        className={`p-3 rounded-xl transition-all ${planType === cat ? 'bg-white text-teal-900 shadow-md' : 'text-gray-400'}`}
                                     >
-                                        {cat === 'breakfast' ? <Sunrise className="w-4 h-4" /> : cat === 'lunch' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                                        {cat === 'breakfast' ? <Sunrise className="w-5 h-5" /> : cat === 'lunch' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => setShowPlanningMode(false)} className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-gray-400">Cancelar</button>
-                            <button onClick={() => { onAddToPlan?.(desiredServings, planDate, planType); onClose(); }} className="flex-1 md:flex-none px-10 py-4 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">Confirmar</button>
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowPlanningMode(false)} className="px-8 py-4 font-black text-xs uppercase tracking-widest text-gray-400 hover:text-gray-600">Cancelar</button>
+                            <button onClick={() => { onAddToPlan?.(desiredServings, planDate, planType); onClose(); }} className="px-12 py-4 bg-teal-900 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl hover:bg-teal-800 active:scale-95 transition-all">Confirmar Plan</button>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex gap-3 w-full">
+                    <div className="flex gap-4 w-full justify-end">
                         {onAddToPlan && (
-                            <button onClick={() => setShowPlanningMode(true)} className="flex-1 py-4 border-2 border-teal-900 text-teal-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-teal-50 transition-all">
+                            <button onClick={() => setShowPlanningMode(true)} className="px-8 py-4 border-2 border-teal-900 text-teal-900 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-teal-50 transition-all">
                                 Planificar
                             </button>
                         )}
-                        <button onClick={() => setIsCooking(true)} className="flex-[2] py-4 bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-orange-600 transition-all flex items-center justify-center gap-2">
-                            <PlayCircle className="w-5 h-5" /> Empezar a Cocinar
+                        <button onClick={() => setIsCooking(true)} className="flex-1 md:flex-none px-12 py-5 bg-orange-500 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all flex items-center justify-center gap-3 active:scale-95">
+                            <PlayCircle className="w-6 h-6" /> Empezar a Cocinar
                         </button>
                     </div>
                 )}
