@@ -116,23 +116,45 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
     if (showPlanWizard) {
         setSelectedWizardDays(days.map(d => format(d, 'yyyy-MM-dd')));
     }
-  }, [currentWeekStart]);
+  }, [currentWeekStart, showPlanWizard]);
 
   const executeSmartPlan = async () => {
     if (selectedWizardDays.length === 0 || selectedWizardTypes.length === 0) return;
     
-    setIsGenerating(true);
-    try {
-        const result = await generateSmartMenu(user, pantry, selectedWizardDays, selectedWizardTypes, recipes);
-        if (result.plan) {
-            onAIPlanGenerated(result.plan, result.newRecipes);
-            triggerDialog({ title: 'Plan Generado', message: `Hemos organizado ${result.plan.length} comidas para ti.`, type: 'success' });
+    // Escaneo de conflictos (recetas ya planificadas en los slots seleccionados)
+    const conflicts = selectedWizardDays.some(date => 
+        selectedWizardTypes.some(type => 
+            plan.some(p => p.date === date && p.type === type && p.recipeId)
+        )
+    );
+
+    const startProcessing = async () => {
+        setIsGenerating(true);
+        try {
+            const result = await generateSmartMenu(user, pantry, selectedWizardDays, selectedWizardTypes, recipes);
+            if (result.plan) {
+                onAIPlanGenerated(result.plan, result.newRecipes);
+                triggerDialog({ title: 'Plan Generado', message: `Hemos organizado ${result.plan.length} comidas para ti.`, type: 'success' });
+            }
+            setShowPlanWizard(false);
+        } catch (e) {
+            triggerDialog({ title: 'Error', message: 'No se pudo generar el menú. Revisa tu conexión.', type: 'alert' });
+        } finally {
+            setIsGenerating(false);
         }
-        setShowPlanWizard(false);
-    } catch (e) {
-        triggerDialog({ title: 'Error', message: 'No se pudo generar el menú. Revisa tu conexión.', type: 'alert' });
-    } finally {
-        setIsGenerating(false);
+    };
+
+    if (conflicts) {
+        triggerDialog({
+            title: 'Sobrescribir Plan',
+            message: 'Tienes recetas ya planificadas para estos días. Si continúas, se sustituirán por las nuevas propuestas.',
+            type: 'confirm',
+            confirmText: 'Sustituir',
+            cancelText: 'Cancelar',
+            onConfirm: startProcessing
+        });
+    } else {
+        startProcessing();
     }
   };
 
