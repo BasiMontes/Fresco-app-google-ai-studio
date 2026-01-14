@@ -207,7 +207,6 @@ export const updateMealSlotDB = async (userId: string, slot: MealSlot) => {
 };
 
 export const deleteMealSlotDB = async (userId: string, date: string, type: string) => {
-    // FIX: Match estricto sobre clave compuesta para evitar persistencia de slots fantasmas
     const { error } = await supabase
         .from('meal_plans')
         .delete()
@@ -216,6 +215,16 @@ export const deleteMealSlotDB = async (userId: string, date: string, type: strin
         .eq('type', type);
         
     if (error) console.error('Error deleting slot:', error);
+};
+
+// NUEVA: Borrar todo el planificador de un usuario
+export const clearMealPlanDB = async (userId: string) => {
+    const { error } = await supabase
+        .from('meal_plans')
+        .delete()
+        .eq('user_id', userId);
+        
+    if (error) console.error('Error clearing all meal slots:', error);
 };
 
 export const forceRepopulateRecipes = async (userId: string) => {

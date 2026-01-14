@@ -58,7 +58,6 @@ const App: React.FC = () => {
 
   useEffect(() => { localStorage.setItem('fresco_favorites', JSON.stringify(favoriteIds)); }, [favoriteIds]);
 
-  // Detector de carga bloqueada (Anti-White Screen)
   useEffect(() => {
       if (view === 'loading') {
           const timer = setTimeout(() => {
@@ -114,6 +113,7 @@ const App: React.FC = () => {
         
         setUser({ ...profile, onboarding_completed: true, total_savings: 0, meals_cooked: 0, time_saved_mins: 0, history_savings: [] });
         await loadUserData(userId);
+        setActiveTab('dashboard');
         setView('app');
     } catch (err: any) {
         triggerDialog({ 
@@ -147,6 +147,7 @@ const App: React.FC = () => {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         setView('auth'); setUser(null); setUserId(null); setUserEmail(undefined);
+        setMealPlan([]); setPantry([]); setShoppingList([]);
         return;
       }
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
@@ -161,6 +162,9 @@ const App: React.FC = () => {
     if (!session?.user) return;
     const uid = session.user.id;
     const email = session.user.email;
+    
+    // Limpieza preventiva para evitar flashes de datos de otra cuenta
+    setMealPlan([]); setPantry([]); setShoppingList([]);
     setUserId(uid);
     setUserEmail(email);
 
@@ -174,6 +178,7 @@ const App: React.FC = () => {
             history_savings: profile.history_savings || [] 
         });
         await loadUserData(uid);
+        setActiveTab('dashboard'); // Redirección explícita a Home
         setView('app');
       } else {
         setView('onboarding');
@@ -276,11 +281,15 @@ const App: React.FC = () => {
                       setMealPlan(p => [...p.filter(x => !(x.date === d && x.type === t)), ns]);
                       db.updateMealSlotDB(userId!, ns);
                     } else {
-                      // LIMPIEZA EXPLÍCITA: Primero localmente, luego DB
                       setMealPlan(p => p.filter(x => !(x.date === d && x.type === t)));
                       db.deleteMealSlotDB(userId!, d, t);
                     }
-                }} onAIPlanGenerated={(p, r) => { setRecipes(x => [...x, ...r]); setMealPlan(p); }} onClear={() => { setMealPlan([]); db.deleteRecipeDB(userId!); }} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} />}
+                }} onAIPlanGenerated={(p, r) => { setRecipes(x => [...x, ...r]); setMealPlan(p); }} 
+                   onClear={() => { 
+                       setMealPlan([]); 
+                       db.clearMealPlanDB(userId!); // FIX: Llamada correcta para borrar calendario
+                   }} 
+                   onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} />}
                 {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={(id, delta) => setPantry(p => p.map(x => x.id === id ? {...x, quantity: x.quantity + delta} : x))} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} />}
                 {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={(rid, serv, date, type) => {
                      if (date && type) {
