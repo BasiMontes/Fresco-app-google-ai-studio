@@ -77,6 +77,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     }
   };
 
+  // Lógica de habilitación del botón
+  const isFormValid = isLogin 
+    ? (email.trim() !== '' && password.trim() !== '')
+    : isRecovery 
+        ? email.trim() !== '' 
+        : (name.trim() !== '' && email.trim() !== '' && password.trim() !== '' && acceptedTerms);
+
   if (verificationSent) {
       return (
           <div className="h-screen w-full flex items-center justify-center bg-[#f8f9fa] p-6 animate-fade-in font-sans overflow-hidden">
@@ -115,15 +122,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
       {/* RIGHT PANEL - FORM */}
       <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-6 relative">
-        {/* CARD WITH FIXED HEIGHT (650px) TO PREVENT LAYOUT SHIFTS */}
-        <div className="w-full max-w-[450px] h-[650px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col">
+        <div className="w-full max-w-[450px] bg-white p-10 md:p-14 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col h-auto min-h-[600px]">
             
-            {/* Logo on Card (Centered) */}
             <div className="flex justify-center mb-6 flex-shrink-0">
                  <Logo align="center" className="scale-110" />
             </div>
 
-            {/* Tabs (Segmented Control) */}
             <div className="flex p-1 bg-gray-50 rounded-xl mb-6 border border-gray-100 flex-shrink-0">
                 <button 
                     onClick={() => { setIsLogin(true); setError(''); }}
@@ -143,55 +147,55 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 </button>
             </div>
 
-            <form onSubmit={handleAuth} className="flex-1 flex flex-col justify-between">
-                <div className="space-y-4">
+            <form onSubmit={handleAuth} className="flex-1 flex flex-col">
+                <div className="space-y-4 mb-8">
                     {!isLogin && !isRecovery && (
                         <div className="space-y-1.5 animate-fade-in">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Nombre Completo</label>
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nombre Completo</label>
                             <div className="relative">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                 <input type="text" required placeholder="Tu nombre" value={name} onChange={(e) => setName(e.target.value)} 
-                                    className="w-full pl-10 pr-4 py-3 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
+                                    className="w-full pl-10 pr-4 py-3 bg-gray-50/50 border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#013b33]/10 focus:border-[#013b33] transition-all placeholder-gray-300" 
                                 />
                             </div>
                         </div>
                     )}
                     
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Correo Electrónico</label>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
                         <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                             <input type="email" required placeholder="hola@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} 
-                                className="w-full pl-10 pr-4 py-3 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50/50 border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#013b33]/10 focus:border-[#013b33] transition-all placeholder-gray-300" 
                             />
                         </div>
                     </div>
 
                     {!isRecovery && (
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Contraseña</label>
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Contraseña</label>
                             <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                 <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} 
-                                    className="w-full pl-10 pr-4 py-3 bg-[#F9FAFB] border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#013b33] transition-all placeholder-gray-400" 
+                                    className="w-full pl-10 pr-4 py-3 bg-gray-50/50 border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#013b33]/10 focus:border-[#013b33] transition-all placeholder-gray-300" 
                                 />
                             </div>
                         </div>
                     )}
 
                     {!isLogin && !isRecovery && (
-                        <div className="flex items-start gap-3 pt-2 px-1">
-                            <input type="checkbox" id="terms" required checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)}
-                                className="mt-0.5 w-3.5 h-3.5 text-[#013b33] rounded border-gray-300 focus:ring-[#013b33] cursor-pointer"
-                            />
-                            <label htmlFor="terms" className="text-[10px] text-gray-500 font-medium leading-relaxed cursor-pointer select-none">
-                                Al crear una cuenta, aceptas nuestros <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={() => setShowLegalModal('terms')}>Términos de Servicio</button> y nuestra <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={() => setShowLegalModal('privacy')}>Política de Privacidad</button>.
+                        <div className="flex items-start gap-3 pt-2 px-1 group cursor-pointer" onClick={() => setAcceptedTerms(!acceptedTerms)}>
+                            <div className={`mt-0.5 w-6 h-6 flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${acceptedTerms ? 'bg-[#013b33] border-[#013b33]' : 'bg-white border-gray-200 group-hover:border-gray-300'}`}>
+                                {acceptedTerms && <Check className="w-4 h-4 text-white stroke-[3.5px]" />}
+                            </div>
+                            <label className="text-[10px] text-gray-400 font-medium leading-relaxed select-none">
+                                Al crear una cuenta, aceptas nuestros <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={(e) => { e.stopPropagation(); setShowLegalModal('terms'); }}>Términos de Servicio</button> y nuestra <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={(e) => { e.stopPropagation(); setShowLegalModal('privacy'); }}>Política de Privacidad</button>.
                             </label>
                         </div>
                     )}
                 </div>
 
-                <div className="space-y-4 pt-4">
+                <div className="mt-auto space-y-4">
                     {error && (
                         <div className="flex items-start gap-3 text-red-600 font-medium text-xs bg-red-50 p-3 rounded-xl animate-fade-in">
                             <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -206,27 +210,33 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                         </div>
                     )}
 
-                    <button type="submit" disabled={loading}
-                        className="w-full bg-[#013b33] text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-[#012e28] transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
+                    <button 
+                        type="submit" 
+                        disabled={loading || !isFormValid}
+                        className={`w-full font-black py-5 rounded-2xl shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-xs uppercase tracking-[0.2em] border-2 ${
+                            isFormValid
+                            ? 'bg-[#013b33] text-white border-[#013b33] hover:bg-[#012e28]' 
+                            : 'bg-white text-[#013b33] border-[#013b33] cursor-not-allowed opacity-60'
+                        }`}
                     >
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                             <>
                                 {isRecovery ? 'Enviar enlace' : (isLogin ? 'Entrar' : 'Crear cuenta')}
-                                {!loading && <ArrowRight className="w-4 h-4" />}
+                                {!loading && <ArrowRight className="w-4 h-4 ml-1" />}
                             </>
                         )}
                     </button>
 
                     {isLogin && !isRecovery && (
                         <div className="text-center">
-                            <button type="button" onClick={() => setIsRecovery(true)} className="text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-[#013b33] transition-colors">
+                            <button type="button" onClick={() => setIsRecovery(true)} className="text-[10px] font-bold uppercase tracking-wider text-gray-300 hover:text-[#013b33] transition-colors">
                                 ¿Olvidaste tu contraseña?
                             </button>
                         </div>
                     )}
 
                     {isRecovery && (
-                        <button type="button" onClick={() => setIsRecovery(false)} className="w-full text-center text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-[#013b33]">
+                        <button type="button" onClick={() => setIsRecovery(false)} className="w-full text-center text-[10px] font-bold uppercase tracking-wider text-gray-300 hover:text-[#013b33]">
                             Cancelar
                         </button>
                     )}
