@@ -31,6 +31,10 @@ const CATEGORIES_OPTIONS = [
     { id: 'other', label: 'Otros', emoji: '🛍️' },
 ];
 
+const UNITS_OPTIONS = [
+    'uds', 'g', 'kg', 'ml', 'l', 'paquete', 'bote', 'lonchas', 'ración', 'pizca'
+];
+
 export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, onAdd, onUpdateQuantity, onAddMany, onEdit, onWaste, onCook, isOnline = true }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -41,7 +45,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   const [newItem, setNewItem] = useState({ 
     name: '', 
     quantity: 1, 
-    unit: 'unidades', 
+    unit: 'uds', 
     category: 'pantry',
     daysToExpire: 7
   });
@@ -82,13 +86,13 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
     onAdd({
       id: `manual-${Date.now()}`,
       name: newItem.name.trim(),
-      quantity: Math.max(0, newItem.quantity), // Seguridad: No negativos
+      quantity: Math.max(0, newItem.quantity),
       unit: newItem.unit,
       category: newItem.category,
       added_at: new Date().toISOString(),
       expires_at: expiryDate.toISOString()
     });
-    setNewItem({ name: '', quantity: 1, unit: 'unidades', category: 'pantry', daysToExpire: 7 });
+    setNewItem({ name: '', quantity: 1, unit: 'uds', category: 'pantry', daysToExpire: 7 });
     setManualOverride({ category: false, unit: false });
     setShowAddModal(false);
   };
@@ -104,7 +108,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   const getSmartStep = (unit: string) => {
       const u = (unit || '').toLowerCase().trim();
       if (u === 'g' || u === 'ml') return 50; 
-      if (u === 'kg' || u === 'l') return 0.25;
+      if (u === 'kg' || u === 'l') return 0.1;
       return 1;
   };
 
@@ -134,63 +138,60 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   }, [filteredItems]);
 
   const handleQtyChange = (id: string, current: number, delta: number) => {
-      // Bloqueo estricto de negativos
       if (current + delta < 0) return;
       onUpdateQuantity(id, delta);
   };
 
   return (
-    <div className="space-y-10 animate-fade-in pb-48 px-1 md:px-0">
+    <div className="space-y-8 animate-fade-in pb-48 px-1 md:px-0 max-w-screen-2xl mx-auto">
       
-      {/* Header Profesional */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-1">
-            <h1 className="text-4xl font-black text-teal-950 tracking-tight flex items-center gap-3">
-                <Package className="w-10 h-10 text-teal-600" /> Despensa
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="space-y-0.5">
+            <h1 className="text-3xl font-black text-teal-950 tracking-tight flex items-center gap-3">
+                <Package className="w-8 h-8 text-teal-600" /> Despensa
             </h1>
-            <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.3em] pl-1">Inventario en tiempo real</p>
+            <p className="text-gray-400 font-bold uppercase text-[9px] tracking-[0.2em] pl-1 opacity-60">Control de stock inteligente</p>
         </div>
         
-        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-            <div className="relative group min-w-[280px]">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4 group-focus-within:text-teal-600 transition-colors" />
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+            <div className="relative group min-w-[240px]">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 w-3.5 h-3.5 group-focus-within:text-teal-600 transition-colors" />
                 <input 
                     type="text" 
-                    placeholder="Buscar producto..." 
+                    placeholder="Buscar en el inventario..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-100 rounded-2xl font-bold text-teal-900 text-sm shadow-sm focus:outline-none focus:border-teal-500 focus:shadow-xl transition-all placeholder-gray-300"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-100 rounded-xl font-bold text-teal-900 text-xs shadow-sm focus:outline-none focus:border-teal-500 focus:shadow-md transition-all placeholder-gray-300"
                 />
             </div>
             <div className="flex gap-2">
                 <button 
                     onClick={() => { if(isOnline) setShowScanner(true); }}
                     disabled={!isOnline}
-                    className={`flex-1 md:flex-none px-6 py-3.5 rounded-2xl flex items-center justify-center gap-3 font-black text-[11px] uppercase tracking-widest shadow-lg transition-all ${isOnline ? 'bg-orange-500 text-white hover:bg-orange-600 active:scale-95' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                    className={`px-5 py-2.5 rounded-xl flex items-center justify-center gap-2.5 font-black text-[10px] uppercase tracking-widest shadow-sm transition-all ${isOnline ? 'bg-orange-500 text-white hover:bg-orange-600 active:scale-95' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                 >
-                    {isOnline ? <><Camera className="w-5 h-5" /> Escanear</> : <WifiOff className="w-5 h-5" />}
+                    {isOnline ? <><Camera className="w-4 h-4" /> Escanear</> : <WifiOff className="w-4 h-4" />}
                 </button>
                 <button 
                     onClick={() => setShowAddModal(true)} 
-                    className="px-6 py-3.5 bg-teal-900 text-white rounded-2xl flex items-center justify-center gap-3 shadow-lg hover:bg-teal-800 active:scale-95 transition-all font-black text-[11px] uppercase tracking-widest"
+                    className="px-5 py-2.5 bg-teal-900 text-white rounded-xl flex items-center justify-center gap-2.5 shadow-sm hover:bg-teal-800 active:scale-95 transition-all font-black text-[10px] uppercase tracking-widest"
                 >
-                    <Plus className="w-5 h-5" /> Nuevo
+                    <Plus className="w-4 h-4" /> Nuevo
                 </button>
             </div>
         </div>
       </header>
 
-      {/* Filtros de Estado */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
           {['all', 'expired', 'critical', 'fresh'].map(f => {
               const isActive = activeFilter === f;
-              const labels = { all: 'Todo', expired: 'Caducado', critical: 'Crítico', fresh: 'Óptimo' };
+              const labels = { all: 'Todo', expired: 'Caducado', critical: 'Próximo', fresh: 'Vigente' };
               return (
                   <button 
                     key={f}
                     onClick={() => setActiveFilter(f as any)}
-                    className={`px-5 py-2.5 rounded-full border-2 font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${
-                        isActive ? 'bg-teal-900 border-teal-900 text-white shadow-md' : 'bg-white border-gray-100 text-gray-400 hover:border-teal-200 hover:text-teal-900'
+                    className={`px-4 py-1.5 rounded-full border-2 font-black text-[9px] uppercase tracking-widest transition-all whitespace-nowrap ${
+                        isActive ? 'bg-teal-900 border-teal-900 text-white shadow-sm' : 'bg-white border-gray-100 text-gray-400 hover:border-teal-200 hover:text-teal-900'
                     }`}
                   >
                       {(labels as any)[f]}
@@ -199,36 +200,35 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
           })}
       </div>
 
-      {/* Grid de Contenido */}
       {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-[50vh] text-center px-12 border-4 border-dashed border-gray-100 rounded-[4rem] bg-gray-50/30">
-          <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-xl flex items-center justify-center mb-8 animate-float">
-            <Package className="w-12 h-12 text-teal-200" />
+        <div className="flex flex-col items-center justify-center h-[40vh] text-center px-12 border-2 border-dashed border-gray-100 rounded-[2.5rem] bg-gray-50/20">
+          <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center mb-6 animate-float">
+            <Package className="w-8 h-8 text-teal-200" />
           </div>
-          <h2 className="text-3xl font-black text-teal-950 mb-3">Tu despensa está vacía</h2>
-          <p className="text-gray-400 text-sm font-medium max-w-sm mx-auto mb-10 leading-relaxed">
-            Organiza tu cocina hoy mismo. Escanea tu ticket de compra o añade productos manualmente para empezar.
+          <h2 className="text-xl font-black text-teal-950 mb-2">Tu despensa está vacía</h2>
+          <p className="text-gray-400 text-xs font-medium max-w-xs mx-auto mb-8 leading-relaxed">
+            Escanea un ticket o añade productos para empezar a ahorrar tiempo y dinero.
           </p>
           <button 
             onClick={() => setShowAddModal(true)} 
-            className="px-10 py-5 bg-teal-900 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all flex items-center gap-3"
+            className="px-8 py-3.5 bg-teal-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all"
           >
-            <PlusIcon className="w-5 h-5" /> Añadir Primer Producto
+            Añadir Producto
           </button>
         </div>
       ) : (
-        <div className="space-y-16">
+        <div className="space-y-12">
             {Object.keys(groupedItems).sort().map(cat => (
-                <div key={cat} className="space-y-6">
-                    <div className="flex items-center gap-4 px-2">
-                        <span className="text-3xl">{CATEGORIES_OPTIONS.find(c => c.id === cat)?.emoji}</span>
-                        <h3 className="text-sm font-black uppercase tracking-[0.4em] text-teal-800/40">
+                <div key={cat} className="space-y-4">
+                    <div className="flex items-center gap-3 px-1">
+                        <span className="text-xl">{CATEGORIES_OPTIONS.find(c => c.id === cat)?.emoji}</span>
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-800/50">
                             {CATEGORIES_OPTIONS.find(c => c.id === cat)?.label || cat}
                         </h3>
-                        <div className="flex-1 h-px bg-gray-100" />
+                        <div className="flex-1 h-[1px] bg-gray-100" />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
                         {groupedItems[cat].map(item => {
                             const status = getExpiryStatus(item);
                             const step = getSmartStep(item.unit);
@@ -237,46 +237,46 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                             return (
                                 <div 
                                     key={item.id}
-                                    className="bg-white rounded-[2.5rem] border border-gray-100 p-6 relative group transition-all duration-500 hover:shadow-2xl hover:shadow-teal-900/5 hover:-translate-y-1"
+                                    className="bg-white rounded-2xl border border-gray-100 p-4 relative group transition-all duration-300 hover:shadow-xl hover:border-teal-100"
                                 >
-                                    <div className="flex flex-col h-full gap-5">
-                                        <div className="flex justify-between items-start gap-4">
+                                    <div className="flex flex-col h-full gap-3">
+                                        <div className="flex justify-between items-start gap-2">
                                             <div className="flex-1 min-w-0">
-                                                <h4 className="font-black text-teal-950 text-lg truncate capitalize leading-tight mb-1">
+                                                <h4 className="font-bold text-teal-950 text-sm truncate capitalize leading-tight mb-0.5">
                                                     {item.name}
                                                 </h4>
                                                 {status && (
-                                                    <div className={`flex items-center gap-1.5 ${status.text} text-[9px] font-black uppercase tracking-widest`}>
-                                                        <Clock className="w-3 h-3" /> {status.label}
+                                                    <div className={`flex items-center gap-1 ${status.text} text-[8px] font-black uppercase tracking-widest`}>
+                                                        <Clock className="w-2.5 h-2.5" /> {status.label}
                                                     </div>
                                                 )}
                                             </div>
                                             <button 
                                                 onClick={() => setItemToEdit(item)}
-                                                className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-300 hover:bg-teal-50 hover:text-teal-600 transition-all opacity-0 group-hover:opacity-100"
+                                                className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center text-gray-300 hover:bg-teal-900 hover:text-white transition-all opacity-0 group-hover:opacity-100"
                                             >
-                                                <Pencil className="w-4 h-4" />
+                                                <Pencil className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
 
-                                        <div className="mt-auto bg-gray-50/80 rounded-[1.75rem] p-2 flex items-center justify-between border border-transparent hover:border-teal-100 transition-all">
+                                        <div className="mt-auto bg-gray-50/50 rounded-xl p-1.5 flex items-center justify-between border border-transparent group-hover:bg-teal-50/30 transition-all">
                                             <button 
                                                 onClick={() => handleQtyChange(item.id, item.quantity, -step)}
                                                 disabled={displayQty <= 0}
-                                                className="w-12 h-12 flex items-center justify-center text-gray-400 bg-white rounded-2xl shadow-sm hover:text-red-500 hover:shadow-md active:scale-90 transition-all disabled:opacity-30"
-                                            ><Minus className="w-5 h-5" /></button>
+                                                className="w-8 h-8 flex items-center justify-center text-gray-400 bg-white rounded-lg shadow-sm hover:text-red-500 hover:shadow active:scale-90 transition-all disabled:opacity-20"
+                                            ><Minus className="w-4 h-4" /></button>
                                             
-                                            <div className="text-center flex flex-col items-center">
-                                                <span className="text-xl font-black text-teal-950 tabular-nums leading-none">
+                                            <div className="text-center flex flex-col items-center px-1">
+                                                <span className="text-sm font-black text-teal-950 tabular-nums leading-none">
                                                     {Number.isInteger(displayQty) ? displayQty : displayQty.toFixed(1)}
                                                 </span>
-                                                <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest mt-1">{item.unit}</span>
+                                                <span className="text-[8px] font-black uppercase text-gray-400 tracking-tighter mt-0.5">{item.unit}</span>
                                             </div>
 
                                             <button 
                                                 onClick={() => handleQtyChange(item.id, item.quantity, step)}
-                                                className="w-12 h-12 flex items-center justify-center text-gray-400 bg-white rounded-2xl shadow-sm hover:text-teal-600 hover:shadow-md active:scale-90 transition-all"
-                                            ><PlusIcon className="w-5 h-5" /></button>
+                                                className="w-8 h-8 flex items-center justify-center text-gray-400 bg-white rounded-lg shadow-sm hover:text-teal-600 hover:shadow active:scale-90 transition-all"
+                                            ><PlusIcon className="w-4 h-4" /></button>
                                         </div>
                                     </div>
                                 </div>
@@ -288,40 +288,50 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
         </div>
       )}
 
-      {/* Modal Añadir */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[5000] bg-teal-950/40 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
-            <div className="w-full max-w-sm bg-white rounded-[3rem] p-10 shadow-2xl relative">
-                <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><X className="w-4 h-4 text-gray-400" /></button>
-                <h2 className="text-2xl font-black text-teal-950 mb-8 flex items-center gap-3">
-                    <Plus className="w-6 h-6 text-teal-600" /> Nuevo Producto
+        <div className="fixed inset-0 z-[5000] bg-teal-950/20 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in">
+            <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-2xl relative">
+                <button onClick={() => setShowAddModal(false)} className="absolute top-6 right-6 p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><X className="w-4 h-4 text-gray-400" /></button>
+                <h2 className="text-xl font-black text-teal-950 mb-6 flex items-center gap-2">
+                    <Plus className="w-5 h-5 text-teal-600" /> Nuevo Producto
                 </h2>
                 
-                <form onSubmit={handleManualAdd} className="space-y-6">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Nombre</label>
-                        <input autoFocus type="text" placeholder="Ej. Tomates Cherry" className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-teal-900 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} />
+                <form onSubmit={handleManualAdd} className="space-y-4">
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Nombre</label>
+                        <input autoFocus type="text" placeholder="Ej. Tomates Cherry" className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 transition-all" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} />
                     </div>
                     
-                    <div className="flex gap-4">
-                        <div className="flex-1 space-y-1.5">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Cant.</label>
-                            <input type="number" step="0.1" min="0" className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-teal-900 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value)})} />
+                    <div className="flex gap-3">
+                        <div className="flex-[0.6] space-y-1">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Cantidad</label>
+                            <input type="number" step="0.1" min="0" className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500" value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value)})} />
                         </div>
-                        <div className="flex-1 space-y-1.5">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Unidad</label>
-                            <input type="text" className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-teal-900 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" value={newItem.unit} onChange={e => { setNewItem({...newItem, unit: e.target.value}); setManualOverride(prev => ({...prev, unit: true})); }} />
+                        <div className="flex-1 space-y-1">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Unidad</label>
+                            <select 
+                                className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer appearance-none bg-no-repeat bg-[right_1rem_center]" 
+                                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundSize: '1em' }}
+                                value={newItem.unit} 
+                                onChange={e => { setNewItem({...newItem, unit: e.target.value}); setManualOverride(prev => ({...prev, unit: true})); }}
+                            >
+                                {UNITS_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
+                            </select>
                         </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Categoría</label>
-                        <select className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-teal-900 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 appearance-none cursor-pointer" value={newItem.category} onChange={e => { setNewItem({...newItem, category: e.target.value}); setManualOverride(prev => ({...prev, category: true})); }}>
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Categoría</label>
+                        <select 
+                            className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer appearance-none" 
+                            value={newItem.category} 
+                            onChange={e => { setNewItem({...newItem, category: e.target.value}); setManualOverride(prev => ({...prev, category: true})); }}
+                        >
                             {CATEGORIES_OPTIONS.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
                         </select>
                     </div>
 
-                    <button type="submit" className="w-full py-5 bg-teal-900 text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-xl active:scale-95 transition-all mt-4 hover:bg-teal-800">Guardar Producto</button>
+                    <button type="submit" className="w-full py-4 bg-teal-900 text-white rounded-xl font-black uppercase tracking-[0.1em] text-[10px] shadow-lg active:scale-95 transition-all mt-2 hover:bg-teal-800">Añadir a Despensa</button>
                 </form>
             </div>
         </div>
@@ -337,30 +347,35 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
           />
       )}
 
-      {/* Modal Editar */}
       {itemToEdit && (
-        <div className="fixed inset-0 z-[5000] bg-teal-950/40 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
-            <div className="w-full max-w-sm bg-white rounded-[3rem] p-10 shadow-2xl relative">
-                <button onClick={() => setItemToEdit(null)} className="absolute top-8 right-8 p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><X className="w-4 h-4 text-gray-400" /></button>
-                <h3 className="text-2xl font-black text-teal-950 mb-8">Editar Producto</h3>
-                <form onSubmit={(e) => { e.preventDefault(); onEdit(itemToEdit); setItemToEdit(null); }} className="space-y-5">
+        <div className="fixed inset-0 z-[5000] bg-teal-950/20 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in">
+            <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-2xl relative">
+                <button onClick={() => setItemToEdit(null)} className="absolute top-6 right-6 p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><X className="w-4 h-4 text-gray-400" /></button>
+                <h3 className="text-xl font-black text-teal-900 mb-6">Editar Producto</h3>
+                <form onSubmit={(e) => { e.preventDefault(); onEdit(itemToEdit); setItemToEdit(null); }} className="space-y-4">
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-gray-400">Nombre</label>
-                        <input className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-sm" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} />
+                        <label className="text-[9px] font-black uppercase text-gray-400">Nombre</label>
+                        <input className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:ring-1 focus:ring-teal-500 outline-none" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} />
                     </div>
-                    <div className="flex gap-4">
-                        <div className="flex-1 space-y-1">
-                            <label className="text-[10px] font-black uppercase text-gray-400">Cant.</label>
-                            <input type="number" step="0.1" min="0" className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-sm" value={itemToEdit.quantity} onChange={e => setItemToEdit({...itemToEdit, quantity: parseFloat(e.target.value)})} />
+                    <div className="flex gap-3">
+                        <div className="flex-[0.6] space-y-1">
+                            <label className="text-[9px] font-black uppercase text-gray-400">Cantidad</label>
+                            <input type="number" step="0.1" min="0" className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:ring-1 focus:ring-teal-500 outline-none" value={itemToEdit.quantity} onChange={e => setItemToEdit({...itemToEdit, quantity: parseFloat(e.target.value)})} />
                         </div>
                         <div className="flex-1 space-y-1">
-                            <label className="text-[10px] font-black uppercase text-gray-400">Unidad</label>
-                            <input className="w-full p-4 bg-gray-50 rounded-2xl font-bold text-sm" value={itemToEdit.unit} onChange={e => setItemToEdit({...itemToEdit, unit: e.target.value})} />
+                            <label className="text-[9px] font-black uppercase text-gray-400">Unidad</label>
+                            <select 
+                                className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:ring-1 focus:ring-teal-500 outline-none cursor-pointer appearance-none" 
+                                value={itemToEdit.unit} 
+                                onChange={e => setItemToEdit({...itemToEdit, unit: e.target.value})}
+                            >
+                                {UNITS_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
+                            </select>
                         </div>
                     </div>
-                    <div className="flex gap-3 pt-4">
-                        <button type="button" onClick={() => onRemove(itemToEdit.id)} className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"><Trash2 className="w-5 h-5" /></button>
-                        <button type="submit" className="flex-1 py-4 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-teal-800 transition-all">Guardar Cambios</button>
+                    <div className="flex gap-2 pt-4">
+                        <button type="button" onClick={() => onRemove(itemToEdit.id)} className="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"><Trash2 className="w-4 h-4" /></button>
+                        <button type="submit" className="flex-1 py-3 bg-teal-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md hover:bg-teal-800 transition-all">Guardar Cambios</button>
                     </div>
                 </form>
             </div>
