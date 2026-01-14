@@ -83,8 +83,6 @@ const App: React.FC = () => {
   const handleOnboardingComplete = async (profile: UserProfile) => {
     if (!userId) return;
     
-    // IMPORTANTE: Según la captura del usuario, la tabla solo tiene estas columnas.
-    // Si enviamos más (como total_savings), la DB rechazará la petición.
     const dbProfile = {
       id: userId,
       email: userEmail || profile.email,
@@ -93,41 +91,28 @@ const App: React.FC = () => {
     };
 
     try {
-        // Usamos upsert para actualizar el registro existente (que tiene onboarding_completed: false)
         const { error } = await supabase.from('profiles').upsert(dbProfile);
+        if (error) throw error;
         
-        if (error) {
-            console.error("Error Supabase Onboarding:", error);
-            throw error;
-        }
-        
-        // Actualizamos estado local y pasamos a la App
         setUser({ ...profile, onboarding_completed: true, total_savings: 0, meals_cooked: 0, time_saved_mins: 0, history_savings: [] });
         await loadUserData(userId);
         setView('app');
     } catch (err: any) {
-        console.error("Error crítico al guardar onboarding:", err);
         triggerDialog({ 
             title: 'Error al guardar', 
-            message: `No pudimos completar tu perfil: ${err.message || 'Error de base de datos'}. Revisa tus políticas RLS en Supabase.`, 
+            message: `No pudimos completar tu perfil: ${err.message || 'Error de base de datos'}.`, 
             type: 'alert' 
         });
     }
   };
 
   useEffect(() => {
-    // A diferencia de antes, permitimos cargar aunque no esté configurado para mostrar el error visualmente
     initSyncListener();
-    
     const checkSession = async () => {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            await handleSessionChange(session);
-        } else {
-            setView('auth');
-        }
+        if (session) await handleSessionChange(session);
+        else setView('auth');
     };
-
     checkSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -139,7 +124,6 @@ const App: React.FC = () => {
         await handleSessionChange(session);
       }
     });
-
     return () => authListener.subscription.unsubscribe();
   }, []);
 
@@ -150,12 +134,7 @@ const App: React.FC = () => {
     setUserEmail(email);
 
     try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', uid)
-        .maybeSingle(); // maybeSingle evita errores si el registro no existe aún
-
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
       if (profile && profile.onboarding_completed) {
         setUser({ 
             ...profile, 
@@ -166,11 +145,9 @@ const App: React.FC = () => {
         await loadUserData(uid);
         setView('app');
       } else {
-        // Si no hay perfil o no está completado -> Onboarding
         setView('onboarding');
       }
     } catch (e) {
-      console.error("Error verificando perfil:", e);
       setView('onboarding');
     }
   };
@@ -204,13 +181,12 @@ const App: React.FC = () => {
       setToast({ msg: "Inventario actualizado", type: 'success' });
   };
 
-  // Pantalla de error si las claves faltan en producción
   if (view === 'error-config' || (!isConfigured && view !== 'loading' && view !== 'auth')) {
       return (
           <div className="h-screen w-full flex flex-col items-center justify-center p-8 bg-red-50 text-center font-sans">
               <AlertCircle className="w-16 h-16 text-red-600 mb-4" />
               <h1 className="text-2xl font-black text-red-900 mb-2">Error de Configuración</h1>
-              <p className="text-red-700 max-w-md mb-6">No se han detectado las claves de Supabase. Añade VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en tus variables de entorno de Vercel.</p>
+              <p className="text-red-700 max-w-md mb-6">Faltan las claves de Supabase.</p>
               <button onClick={() => window.location.reload()} className="px-6 py-3 bg-red-600 text-white rounded-xl font-bold">Reintentar</button>
           </div>
       );
@@ -273,7 +249,7 @@ const App: React.FC = () => {
                         db.updateMealSlotDB(userId!, ns);
                         setToast({ msg: "Planificado", type: 'success' });
                      }
-                }} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} />}
+                }} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
                 {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={s => setShoppingList(x => [...x, ...s])} onUpdateShoppingItem={s => setShoppingList(x => x.map(y => y.id === s.id ? s : y))} onRemoveShoppingItem={id => setShoppingList(x => x.filter(y => y.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
                 {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={() => {}} />}
                 </Suspense>
