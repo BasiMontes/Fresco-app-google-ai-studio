@@ -84,6 +84,47 @@ const App: React.FC = () => {
     setShoppingList(s);
   };
 
+  const handleCookFinish = async (usedIngredients: { name: string, quantity: number, unit?: string }[], recipeId?: string) => {
+      if (!userId) return;
+      let updatedPantry = [...pantry];
+      usedIngredients.forEach(used => {
+          const usedName = cleanName(used.name);
+          const pantryIndex = updatedPantry.findIndex(p => {
+              const pName = cleanName(p.name);
+              return pName === usedName || pName.includes(usedName) || usedName.includes(pName);
+          });
+          if (pantryIndex >= 0) {
+              const item = updatedPantry[pantryIndex];
+              const result = subtractIngredient(item.quantity, item.unit, used.quantity, used.unit || 'uds');
+              if (result) {
+                  const newItem = { ...item, quantity: result.quantity, unit: result.unit };
+                  if (newItem.quantity <= 0.05) {
+                      updatedPantry.splice(pantryIndex, 1);
+                      db.deletePantryItemDB(item.id);
+                  } else {
+                      updatedPantry[pantryIndex] = newItem;
+                      db.updatePantryItemDB(userId, newItem);
+                  }
+              }
+          }
+      });
+      setPantry(updatedPantry);
+      if (recipeId) {
+          const today = format(new Date(), 'yyyy-MM-dd');
+          let slotIndex = mealPlan.findIndex(p => p.date === today && p.recipeId === recipeId && !p.isCooked);
+          if (slotIndex >= 0) {
+              const updatedSlot = { ...mealPlan[slotIndex], isCooked: true };
+              setMealPlan(prev => {
+                  const newPlan = [...prev];
+                  newPlan[slotIndex] = updatedSlot;
+                  return newPlan;
+              });
+              db.updateMealSlotDB(userId, updatedSlot);
+          }
+      }
+      setToast({ msg: "Stock actualizado", type: 'success' });
+  };
+
   const handleOnboardingComplete = async (profile: UserProfile) => {
       if (!userId) return;
       const updatedUser: UserProfile = { ...profile, onboarding_completed: true };
@@ -182,7 +223,7 @@ const App: React.FC = () => {
                       setMealPlan(p => p.filter(x => !(x.date === d && x.type === t)));
                       db.deleteMealSlotDB(userId!, d, t);
                     }
-                }} onAIPlanGenerated={(p, r) => { setRecipes(x => [...x, ...r]); setMealPlan(p); }} onClear={() => setMealPlan([])} isOnline={isOnline} />}
+                }} onAIPlanGenerated={(p, r) => { setRecipes(x => [...x, ...r]); setMealPlan(p); }} onClear={() => setMealPlan([])} onCookFinish={handleCookFinish} onAddToShoppingList={setShoppingList} isOnline={isOnline} />}
                 {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={(id, delta) => setPantry(p => p.map(x => x.id === id ? {...x, quantity: x.quantity + delta} : x))} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} isOnline={isOnline} />}
                 {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={(rid, serv, date, type) => {
                      if (date && type) {
@@ -191,7 +232,7 @@ const App: React.FC = () => {
                         db.updateMealSlotDB(userId!, ns);
                         setToast({ msg: "Añadido al calendario", type: 'success' });
                      }
-                }} isOnline={isOnline} />}
+                }} onCookFinish={handleCookFinish} onAddToShoppingList={setShoppingList} isOnline={isOnline} />}
                 {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={s => setShoppingList(x => [...x, ...s])} onUpdateShoppingItem={s => setShoppingList(x => x.map(y => y.id === s.id ? s : y))} onRemoveShoppingItem={id => setShoppingList(x => x.filter(y => y.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
                 {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={() => {}} />}
                 </Suspense>
