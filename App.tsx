@@ -428,7 +428,7 @@ const App: React.FC = () => {
       const updatedUser: UserProfile = { ...profile, onboarding_completed: true };
       setUser(updatedUser);
 
-      // Usar STATIC_RECIPES completas para el seed inicial
+      // Usar STATIC_RECIPES completas para el seed inicial (200 recetas)
       const seedRecipes = STATIC_RECIPES.map(r => ({
           ...r,
           id: `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -492,7 +492,6 @@ const App: React.FC = () => {
         setIsLoaded(false);
         try {
             const appUser: UserProfile = {
-                // FIXED: Use profile name OR fallback to 'Usuario'
                 name: profileData.full_name || 'Usuario',
                 dietary_preferences: profileData.dietary_preferences || [],
                 favorite_cuisines: profileData.favorite_cuisines || [],
@@ -517,23 +516,18 @@ const App: React.FC = () => {
 
                 let finalRecipes = fetchedRecipes;
                 
-                // AUTO-SEEDING UPGRADE: Si hay menos de 300 recetas (antes era 50), inyectamos el pack masivo
-                if (fetchedRecipes.length < 300) {
-                     setToast({ msg: "Actualizando biblioteca de recetas...", type: 'info' });
-                     console.log("Detectadas pocas recetas (<300). Inyectando paquete estático masivo...");
+                // MEJORA: Solo inyectamos si la cuenta es realmente baja (ej. < 5)
+                // para evitar inyectar de nuevo si el usuario ha borrado recetas a propósito.
+                if (fetchedRecipes.length < 5) {
+                     setToast({ msg: "Actualizando biblioteca...", type: 'info' });
                      const seedRecipes = STATIC_RECIPES.map(r => ({
                         ...r,
                         id: `static-boost-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                         user_id: uid
                     }));
-                    // Combinamos las existentes con las nuevas (filtrando duplicados por título si es necesario, pero IDs aleatorios evitan colisión técnica)
-                    // Para evitar duplicados lógicos, podríamos filtrar, pero por simplicidad y rendimiento asumimos que si hay <50, necesitamos más.
                     finalRecipes = [...fetchedRecipes, ...seedRecipes];
-                    
-                    // Guardar en background sin bloquear UI
                     db.saveRecipesBulkDB(uid, seedRecipes).then(() => {
-                        console.log("Recetas inyectadas en DB");
-                        setToast({ msg: "¡Biblioteca actualizada!", type: 'success' });
+                        setToast({ msg: "¡200 recetas listas!", type: 'success' });
                     }).catch(e => console.error("Error boosting recipes", e));
                 }
                 
@@ -554,9 +548,7 @@ const App: React.FC = () => {
         }
     };
 
-    // AUTH STATE LISTENER (ROBUST FREEZE FIX)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-        // Explicit Sign Out
         if (event === 'SIGNED_OUT') {
             setView('auth');
             setUser(null);
@@ -569,39 +561,29 @@ const App: React.FC = () => {
             return;
         }
 
-        // Handle Session (Signed In, Initial, Token Refresh)
         if (session?.user) {
-            // Check for SIGNED_IN or INITIAL_SESSION to trigger load
             if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
                 try {
                     const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
                     if (profile) {
-                        // FIX: Ensure we use name from metadata if profile name is missing
                         const metaName = session.user.user_metadata?.full_name;
                         if (!profile.full_name && metaName) {
                             profile.full_name = metaName;
-                            // Optionally update DB lazily
                             supabase.from('profiles').update({ full_name: metaName }).eq('id', session.user.id).then(() => {});
                         }
                         await initData(session.user.id, profile);
                     } else {
-                        // Profile missing, maybe redirect to onboarding or assume defaults
-                        const metaName = session.user.user_metadata?.full_name || 'Usuario';
-                        const tempProfile = { full_name: metaName, onboarding_completed: false };
-                        // Treat as new/incomplete
                         setView('onboarding');
                         setIsLoaded(true);
                     }
                 } catch (e) {
                     console.error("Auth init error:", e);
-                    setIsLoaded(true); // Prevent infinite loading
+                    setIsLoaded(true);
                 }
             } else if (event === 'TOKEN_REFRESHED') {
-                // Just ensure we are loaded
                 if (!isLoaded) setIsLoaded(true);
             }
         } else {
-            // No session found
             if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') {
                setView('auth');
                setIsLoaded(true);
@@ -620,7 +602,7 @@ const App: React.FC = () => {
 
   const handleStartBatch = async () => {
       if (!isOnline) {
-          setToast({ msg: "Batch Cooking requiere internet para la IA.", type: 'error' });
+          setToast({ msg: "Batch Cooking requiere internet.", type: 'error' });
           return;
       }
       const today = format(new Date(), 'yyyy-MM-dd');
@@ -630,11 +612,11 @@ const App: React.FC = () => {
           .filter(Boolean) as Recipe[];
 
       if (upcomingRecipes.length < 2) {
-          alert("Añade al menos 2 recetas a tu plan semanal para usar Batch Cooking.");
+          alert("Añade al menos 2 recetas a tu plan para usar Batch Cooking.");
           return;
       }
 
-      setToast({ msg: "Generando sesión eficiente...", type: 'success' });
+      setToast({ msg: "Generando sesión...", type: 'success' });
       const session = await generateBatchCookingAI(upcomingRecipes.slice(0, 3));
       setBatchRecipes(upcomingRecipes.slice(0, 3));
       setActiveBatchSession(session);
@@ -691,7 +673,6 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={handleOnboardingComplete} /> :
          <>
-          {/* SIDEBAR */}
           <aside className="hidden md:flex flex-col w-64 bg-teal-900 text-white fixed h-full z-50 shadow-2xl">
             <div className="p-8">
                 <Logo variant="inverted" />
@@ -728,10 +709,9 @@ const App: React.FC = () => {
             </div>
           </aside>
 
-          {/* MAIN CONTENT AREA */}
           <main className="flex-1 md:ml-64 min-h-screen bg-[#FDFDFD] w-full pb-32 md:pb-0">
             <div className="max-w-7xl mx-auto p-4 md:p-8 h-full">
-                <Suspense fallback={<PageLoader message="Cargando módulo..." />}>
+                <Suspense fallback={<PageLoader message="Cargando..." />}>
                 {activeTab === 'dashboard' && user && <Dashboard 
                     user={user} 
                     pantry={pantry} 
@@ -800,14 +780,13 @@ const App: React.FC = () => {
                     }} 
                     onReset={() => {
                         if(userId) {
-                            alert("Para borrar la cuenta completamente contacta con soporte.");
+                            alert("Para borrar la cuenta contacta con soporte.");
                         }
                     }} />}
                 </Suspense>
             </div>
           </main>
           
-           {/* Mobile Nav */}
            <nav className="md:hidden fixed bottom-6 left-4 right-4 z-[800] bg-teal-800/95 backdrop-blur-3xl p-1.5 rounded-3xl shadow-2xl flex gap-1 safe-pb">
               {[
                 {id:'dashboard', icon:Home}, 

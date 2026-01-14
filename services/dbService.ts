@@ -31,7 +31,6 @@ export const addPantryItemDB = async (userId: string, item: PantryItem) => {
     if (error) console.error('Error adding pantry item:', error);
 };
 
-// OPTIMIZACIÓN: Inserción masiva
 export const addPantryItemsBulkDB = async (userId: string, items: PantryItem[]) => {
     const records = items.map(item => ({
         id: item.id,
@@ -134,36 +133,38 @@ export const saveRecipeDB = async (userId: string, recipe: Recipe) => {
     if (error) console.error('Error saving recipe:', error);
 };
 
-// OPTIMIZACIÓN: Inserción masiva de recetas con CHUNKING
 export const saveRecipesBulkDB = async (userId: string, recipes: Recipe[]) => {
-    const BATCH_SIZE = 50; // Supabase tiene límites de payload, insertamos de 50 en 50
+    const BATCH_SIZE = 50; 
     
-    const records = recipes.map(recipe => ({
-        id: recipe.id,
-        user_id: userId,
-        title: recipe.title,
-        description: recipe.description,
-        meal_category: recipe.meal_category,
-        cuisine_type: recipe.cuisine_type,
-        difficulty: recipe.difficulty,
-        prep_time: recipe.prep_time,
-        servings: recipe.servings,
-        calories: recipe.calories,
-        image_url: recipe.image_url,
-        ingredients: recipe.ingredients, // Supabase client auto-stringifies arrays/objects for jsonb columns usually, but explicit is safer if configured otherwise. Assuming standard setup handled by client.
-        instructions: recipe.instructions,
-        dietary_tags: recipe.dietary_tags
-    }));
+    // Filtro previo para no re-insertar por título si ya existen
+    const existing = await fetchRecipes(userId);
+    const existingTitles = new Set(existing.map(e => e.title.toLowerCase()));
+
+    const records = recipes
+        .filter(r => !existingTitles.has(r.title.toLowerCase()))
+        .map(recipe => ({
+            id: recipe.id,
+            user_id: userId,
+            title: recipe.title,
+            description: recipe.description,
+            meal_category: recipe.meal_category,
+            cuisine_type: recipe.cuisine_type,
+            difficulty: recipe.difficulty,
+            prep_time: recipe.prep_time,
+            servings: recipe.servings,
+            calories: recipe.calories,
+            image_url: recipe.image_url,
+            ingredients: recipe.ingredients,
+            instructions: recipe.instructions,
+            dietary_tags: recipe.dietary_tags
+        }));
+
+    if (records.length === 0) return;
 
     for (let i = 0; i < records.length; i += BATCH_SIZE) {
         const chunk = records.slice(i, i + BATCH_SIZE);
         const { error } = await supabase.from('recipes').upsert(chunk);
-        
-        if (error) {
-            console.error(`Error bulk saving recipes batch ${i}-${i+BATCH_SIZE}:`, error);
-        } else {
-            console.log(`Saved batch ${i/BATCH_SIZE + 1}`);
-        }
+        if (error) console.error(`Error chunk ${i}:`, error);
     }
 };
 
@@ -214,11 +215,8 @@ export const deleteMealSlotDB = async (userId: string, date: string, type: strin
     if (error) console.error('Error deleting slot:', error);
 };
 
-// --- UTILS ---
 export const forceRepopulateRecipes = async (userId: string) => {
-    // Delete existing
     await deleteRecipeDB(userId);
-    // Re-seed estático usando bulk insert para velocidad
     const newRecipes = STATIC_RECIPES.map(r => ({
         ...r,
         id: `static-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
