@@ -10,15 +10,11 @@
     <link rel="icon" type="image/png" href="input_file_0.png" />
     <meta name="theme-color" content="#013b33" />
 
-    <!-- Compatibilidad process.env para navegador (Requerido por SDKs de servidor en cliente) -->
+    <!-- Compatibilidad process.env para navegador -->
     <script>
-      // Aseguramos que process.env exista sin destruir lo que el entorno pueda inyectar
+      // Aseguramos que existan los objetos necesarios antes de que carguen los módulos
       window.process = window.process || {};
-      window.process.env = { 
-        ...window.process.env,
-        NODE_ENV: 'production',
-        // Las claves reales se inyectan dinámicamente por el sistema de despliegue
-      };
+      window.process.env = window.process.env || {};
     </script>
 
     <!-- Tailwind CSS -->
