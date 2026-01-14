@@ -46,48 +46,48 @@ const PlannerCell = React.memo(({
     return (
         <div 
             onClick={onClick}
-            className={`flex-1 relative rounded-[2rem] border transition-all cursor-pointer overflow-hidden flex flex-col group/cell ${
+            className={`flex-1 relative rounded-[1.5rem] border transition-all cursor-pointer overflow-hidden flex flex-col group/cell ${
                 isSpecial ? 'bg-gray-50 border-gray-100' :
-                recipe ? (isCooked ? 'bg-green-50/40 border-green-200' : 'bg-white border-gray-100 hover:border-teal-400 hover:shadow-2xl hover:-translate-y-0.5') :
+                recipe ? (isCooked ? 'bg-green-50/40 border-green-200' : 'bg-white border-gray-100 hover:border-teal-400 hover:shadow-lg hover:-translate-y-0.5') :
                 'bg-gray-50/50 border-dashed border-gray-200 hover:bg-white hover:border-teal-200'
             }`}
         >
             {recipe ? (
                 <>
-                    {/* Fondo con imagen y zoom aumentado significativamente */}
+                    {/* Fondo con imagen: Zoom estático (sin hover) y opacidad controlada */}
                     <div className="absolute inset-0 z-0 overflow-hidden">
                         <img 
                             src={recipe.image_url} 
-                            className={`w-full h-full object-cover transition-all duration-1000 ${isCooked ? 'opacity-10 grayscale scale-[1.5]' : 'opacity-40 grayscale-[0.2] group-hover/cell:grayscale-0 scale-[1.4] group-hover/cell:scale-[1.6]'}`} 
+                            className={`w-full h-full object-cover transition-opacity duration-700 ${isCooked ? 'opacity-5 grayscale scale-110' : 'opacity-30 scale-125'}`} 
                             alt="" 
                         />
                         <div className={`absolute inset-0 ${
                             isCooked 
                             ? 'bg-gradient-to-br from-green-50/95 via-green-50/80 to-white/40' 
-                            : 'bg-gradient-to-br from-white/95 via-white/60 to-transparent'
+                            : 'bg-gradient-to-br from-white/95 via-white/40 to-transparent'
                         }`} />
                     </div>
 
-                    {/* Contenido sobre la imagen */}
-                    <div className="relative z-10 p-4 h-full flex flex-col justify-between">
-                        <h4 className={`font-black text-xs md:text-sm text-teal-900 leading-tight line-clamp-2 md:line-clamp-3 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] ${isCooked ? 'line-through opacity-40' : ''}`}>
+                    {/* Contenido: Texto más pequeño y badge compacto */}
+                    <div className="relative z-10 p-3 h-full flex flex-col justify-between">
+                        <h4 className={`font-black text-[10px] md:text-[11px] text-teal-900 leading-tight line-clamp-2 md:line-clamp-3 drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)] ${isCooked ? 'line-through opacity-40' : ''}`}>
                             {recipe.title}
                         </h4>
                         
-                        <div className="flex items-center justify-center mt-auto">
+                        <div className="flex items-center justify-start mt-auto">
                             {isCooked ? (
-                                <span className="text-[8px] font-black uppercase text-green-700 bg-green-200/50 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm border border-green-300/30">Hecho</span>
+                                <span className="text-[7px] font-black uppercase text-green-700 bg-green-200/50 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm">Hecho</span>
                             ) : (
                                 <div className="flex items-center">
                                     {missingCount > 0 ? (
-                                        <div className="flex items-center gap-2 px-3 py-2 bg-orange-500 text-white rounded-2xl shadow-lg shadow-orange-500/30 transform group-hover/cell:scale-105 transition-transform border border-white/20">
-                                            <ShoppingCart className="w-3.5 h-3.5 stroke-[2.5px]" />
-                                            <span className="text-[11px] font-black leading-none">{missingCount}</span>
+                                        <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-500 text-white rounded-lg shadow-md border border-white/10">
+                                            <ShoppingCart className="w-2.5 h-2.5 stroke-[3px]" />
+                                            <span className="text-[10px] font-black leading-none">{missingCount}</span>
                                         </div>
                                     ) : (
-                                        <div className="flex items-center gap-2 px-3 py-2 bg-teal-600 text-white rounded-2xl shadow-lg shadow-teal-600/20 transform group-hover/cell:scale-105 transition-transform border border-white/20">
-                                            <PackageCheck className="w-3.5 h-3.5 stroke-[2.5px]" />
-                                            <Check className="w-3 h-3 stroke-[3px]" />
+                                        <div className="flex items-center gap-1 px-2 py-1 bg-teal-600 text-white rounded-lg shadow-md border border-white/10">
+                                            <PackageCheck className="w-2.5 h-2.5 stroke-[3px]" />
+                                            <Check className="w-2.5 h-2.5 stroke-[4px]" />
                                         </div>
                                     )}
                                 </div>
@@ -97,14 +97,14 @@ const PlannerCell = React.memo(({
                 </>
             ) : isSpecial ? (
                 <div className="flex-1 flex flex-col items-center justify-center gap-1 opacity-40">
-                    <Sunrise className="w-4 h-4 text-teal-600" />
-                    <span className="text-[8px] font-black uppercase tracking-widest text-gray-500">
+                    <Sunrise className="w-3 h-3 text-teal-600" />
+                    <span className="text-[7px] font-black uppercase tracking-widest text-gray-500">
                         {slot?.recipeId === SLOT_LEFTOVERS ? 'Sobras' : 'Fuera'}
                     </span>
                 </div>
             ) : (
                 <div className="flex-1 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                    <Plus className="w-6 h-6 text-teal-300" />
+                    <Plus className="w-5 h-5 text-teal-300" />
                 </div>
             )}
         </div>
