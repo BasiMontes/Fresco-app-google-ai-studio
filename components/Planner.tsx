@@ -48,48 +48,48 @@ const PlannerCell = React.memo(({
             onClick={onClick}
             className={`flex-1 relative rounded-[2rem] border transition-all cursor-pointer overflow-hidden flex flex-col group/cell ${
                 isSpecial ? 'bg-gray-50 border-gray-100' :
-                recipe ? (isCooked ? 'bg-green-50/40 border-green-200' : 'bg-white border-gray-100 hover:border-teal-500 hover:shadow-2xl hover:-translate-y-0.5') :
+                recipe ? (isCooked ? 'bg-green-50/40 border-green-200' : 'bg-white border-gray-100 hover:border-teal-500 hover:shadow-xl hover:-translate-y-0.5') :
                 'bg-gray-50/50 border-dashed border-gray-200 hover:bg-white hover:border-teal-200'
             }`}
         >
             {recipe ? (
                 <>
-                    {/* Fondo con imagen con MUCHO ZOOM y gradiente profesional */}
+                    {/* Fondo con imagen: Zoom término medio (1.25x) y gradiente profesional para legibilidad */}
                     <div className="absolute inset-0 z-0 overflow-hidden">
                         <img 
                             src={recipe.image_url} 
-                            className={`w-full h-full object-cover transition-all duration-[1.5s] ${
-                                isCooked ? 'opacity-10 grayscale scale-[1.8]' : 'opacity-40 scale-[1.6] group-hover/cell:scale-[1.8] group-hover/cell:opacity-60'
+                            className={`w-full h-full object-cover transition-all duration-1000 ${
+                                isCooked ? 'opacity-5 grayscale scale-110' : 'opacity-30 scale-125 group-hover/cell:scale-150 group-hover/cell:opacity-40'
                             }`} 
                             alt="" 
                         />
-                        {/* Gradiente sutil para no "blanquear" demasiado pero mantener legibilidad */}
+                        {/* Gradiente multicapa: Asegura que el texto oscuro resalte sobre el fondo claro */}
                         <div className={`absolute inset-0 transition-opacity duration-700 ${
                             isCooked 
                             ? 'bg-green-50/80' 
-                            : 'bg-gradient-to-br from-white/95 via-white/40 to-transparent'
+                            : 'bg-gradient-to-br from-white/95 via-white/60 to-transparent'
                         }`} />
                     </div>
 
                     {/* Contenido sobre la imagen */}
-                    <div className="relative z-10 p-5 h-full flex flex-col justify-between">
-                        <h4 className={`font-black text-[15px] md:text-sm text-teal-900 leading-[1.2] line-clamp-3 drop-shadow-[0_1px_2px_rgba(255,255,255,1)] ${isCooked ? 'line-through opacity-40' : ''}`}>
+                    <div className="relative z-10 p-4 h-full flex flex-col justify-between">
+                        <h4 className={`font-black text-xs md:text-sm text-teal-900 leading-tight line-clamp-2 md:line-clamp-3 drop-shadow-[0_1px_2px_rgba(255,255,255,1)] ${isCooked ? 'line-through opacity-40' : ''}`}>
                             {recipe.title}
                         </h4>
                         
-                        <div className="flex items-center justify-center mt-auto pt-2">
+                        <div className="flex items-center justify-between mt-auto">
                             {isCooked ? (
-                                <span className="text-[9px] font-black uppercase text-green-700 bg-green-200/80 backdrop-blur-md px-3 py-1 rounded-2xl shadow-sm border border-green-300/30">Hecho</span>
+                                <span className="text-[8px] font-black uppercase text-green-700 bg-green-200/60 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm border border-green-300/30">Hecho</span>
                             ) : (
-                                <div className="w-full">
+                                <div className="flex gap-1">
                                     {missingCount > 0 ? (
-                                        <div className="flex items-center gap-2 text-[10px] font-black text-orange-600 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-lg border border-orange-200 w-full justify-center transform group-hover/cell:scale-105 transition-transform">
-                                            <ShoppingCart className="w-3.5 h-3.5" /> Faltan {missingCount}
-                                        </div>
+                                        <span className="flex items-center gap-1 text-[8px] font-black text-orange-600 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm border border-orange-200/50">
+                                            <ShoppingCart className="w-2.5 h-2.5" /> Faltan {missingCount}
+                                        </span>
                                     ) : (
-                                        <div className="flex items-center gap-2 text-[10px] font-black text-teal-700 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-lg border border-teal-200 w-full justify-center transform group-hover/cell:scale-105 transition-transform">
-                                            <PackageCheck className="w-3.5 h-3.5" /> Listo
-                                        </div>
+                                        <span className="flex items-center gap-1 text-[8px] font-black text-teal-700 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded shadow-sm border border-teal-200/50">
+                                            <PackageCheck className="w-2.5 h-2.5" /> Todo listo
+                                        </span>
                                     )}
                                 </div>
                             )}
@@ -105,7 +105,7 @@ const PlannerCell = React.memo(({
                 </div>
             ) : (
                 <div className="flex-1 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                    <Plus className="w-6 h-6 text-teal-300" />
+                    <Plus className="w-5 h-5 text-teal-300" />
                 </div>
             )}
         </div>
