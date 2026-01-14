@@ -72,16 +72,21 @@ const App: React.FC = () => {
   }, [toast]);
 
   const loadUserData = async (uid: string) => {
-    const [p, r, m, s] = await Promise.all([
-      db.fetchPantry(uid), 
-      db.fetchRecipes(uid), 
-      db.fetchMealPlan(uid), 
-      db.fetchShoppingList(uid)
-    ]);
-    setPantry(p); 
-    setRecipes(r.length < 5 ? [...r, ...STATIC_RECIPES.slice(0, 50)] : r); 
-    setMealPlan(m); 
-    setShoppingList(s);
+    try {
+        const [p, r, m, s] = await Promise.all([
+          db.fetchPantry(uid), 
+          db.fetchRecipes(uid), 
+          db.fetchMealPlan(uid), 
+          db.fetchShoppingList(uid)
+        ]);
+        setPantry(p || []); 
+        setRecipes(r?.length < 5 ? [...(r || []), ...STATIC_RECIPES.slice(0, 50)] : (r || [])); 
+        setMealPlan(m || []); 
+        setShoppingList(s || []);
+    } catch (e) {
+        console.error("Error cargando datos de usuario:", e);
+        setRecipes(STATIC_RECIPES.slice(0, 50));
+    }
   };
 
   const handleCookFinish = async (usedIngredients: { name: string, quantity: number, unit?: string }[], recipeId?: string) => {
@@ -145,33 +150,41 @@ const App: React.FC = () => {
   useEffect(() => {
     initSyncListener();
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_OUT') {
-            setView('auth'); setUser(null); setUserId(null); setIsLoaded(true);
-            return;
-        }
-        if (session?.user) {
-            setUserId(session.user.id);
-            const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-            if (profile) {
-                setUser({ ...profile, name: profile.full_name, onboarding_completed: !!profile.onboarding_completed });
-                if (profile.onboarding_completed) {
-                    await loadUserData(session.user.id);
-                    setView('app');
+        try {
+            if (event === 'SIGNED_OUT') {
+                setView('auth'); setUser(null); setUserId(null); setIsLoaded(true);
+                return;
+            }
+            if (session?.user) {
+                setUserId(session.user.id);
+                const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                
+                if (profile) {
+                    setUser({ ...profile, name: profile.full_name, onboarding_completed: !!profile.onboarding_completed });
+                    if (profile.onboarding_completed) {
+                        await loadUserData(session.user.id);
+                        setView('app');
+                    } else {
+                        setView('onboarding');
+                    }
                 } else {
+                    // Si no hay perfil pero hay sesión, mandar a onboarding
                     setView('onboarding');
                 }
             } else {
-                setView('onboarding');
+                setView('auth');
             }
+        } catch (e) {
+            console.error("Critical Auth Error:", e);
+            setView('auth');
+        } finally {
             setIsLoaded(true);
-        } else {
-            setView('auth'); setIsLoaded(true);
         }
     });
     return () => authListener.subscription.unsubscribe();
   }, []);
 
-  if (!isLoaded) return <PageLoader />;
+  if (!isLoaded) return <PageLoader message="Preparando tu cocina..." showReload={true} />;
 
   return (
     <ErrorBoundary>
@@ -223,7 +236,7 @@ const App: React.FC = () => {
                       setMealPlan(p => p.filter(x => !(x.date === d && x.type === t)));
                       db.deleteMealSlotDB(userId!, d, t);
                     }
-                }} onAIPlanGenerated={(p, r) => { setRecipes(x => [...x, ...r]); setMealPlan(p); }} onClear={() => setMealPlan([])} onCookFinish={handleCookFinish} onAddToShoppingList={setShoppingList} isOnline={isOnline} />}
+                }} onAIPlanGenerated={(p, r) => { setRecipes(x => [...x, ...r]); setMealPlan(p); }} onClear={() => setMealPlan([])} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} isOnline={isOnline} />}
                 {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={(id, delta) => setPantry(p => p.map(x => x.id === id ? {...x, quantity: x.quantity + delta} : x))} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} isOnline={isOnline} />}
                 {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={(rid, serv, date, type) => {
                      if (date && type) {
@@ -232,7 +245,7 @@ const App: React.FC = () => {
                         db.updateMealSlotDB(userId!, ns);
                         setToast({ msg: "Añadido al calendario", type: 'success' });
                      }
-                }} onCookFinish={handleCookFinish} onAddToShoppingList={setShoppingList} isOnline={isOnline} />}
+                }} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} isOnline={isOnline} />}
                 {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={s => setShoppingList(x => [...x, ...s])} onUpdateShoppingItem={s => setShoppingList(x => x.map(y => y.id === s.id ? s : y))} onRemoveShoppingItem={id => setShoppingList(x => x.filter(y => y.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
                 {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={() => {}} />}
                 </Suspense>

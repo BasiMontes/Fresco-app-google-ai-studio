@@ -121,7 +121,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                             <h3 className="font-black text-sm text-teal-900 uppercase tracking-widest">Ingredientes</h3>
                         </div>
                         
-                        <div className="space-y-3 flex-1">
+                        <div className="space-y-3 flex-1 overflow-y-auto max-h-[30vh] pr-2 no-scrollbar">
                             {scaledIngredients.map((ing, i) => {
                                 const stock = checkItemStock(ing.name, ing.quantity);
                                 const hasEnough = stock && stock.quantity >= ing.quantity;
@@ -174,10 +174,10 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                         </div>
                         <div className="flex gap-2">
                             {onRemoveFromPlan && (
-                                <button onClick={onRemoveFromPlan} className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all shadow-sm"><Trash2 className="w-5 h-5" /></button>
+                                <button onClick={onRemoveFromPlan} title="Quitar del plan" className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all shadow-sm"><Trash2 className="w-5 h-5" /></button>
                             )}
                             {onChangeSlot && (
-                                <button onClick={onChangeSlot} className="p-3 bg-green-50 text-green-600 rounded-2xl hover:bg-green-100 transition-all shadow-sm"><RefreshCw className="w-5 h-5" /></button>
+                                <button onClick={onChangeSlot} title="Cambiar plato" className="p-3 bg-green-50 text-green-600 rounded-2xl hover:bg-green-100 transition-all shadow-sm"><RefreshCw className="w-5 h-5" /></button>
                             )}
                             <button onClick={onClose} className="p-3 bg-gray-50 text-gray-400 rounded-2xl hover:bg-gray-100 transition-all shadow-sm"><X className="w-5 h-5" /></button>
                         </div>
@@ -188,7 +188,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                             <Sunrise className="w-4 h-4 text-teal-600" />
                             <h3 className="font-black text-sm text-teal-900 uppercase tracking-widest">Pasos de Preparación</h3>
                         </div>
-                        <div className="space-y-6 pr-4">
+                        <div className="space-y-6 pr-4 overflow-y-auto no-scrollbar">
                             {recipe.instructions.map((step, i) => (
                                 <div key={i} className="flex gap-6 group">
                                     <span className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-900 flex items-center justify-center font-black text-sm flex-shrink-0 group-hover:bg-teal-900 group-hover:text-white transition-all shadow-sm border border-teal-100/50">{i + 1}</span>
@@ -226,7 +226,7 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                 ) : (
                     <div className="flex gap-4 w-full justify-end">
                         {onAddToPlan && (
-                            <button onClick={() => setShowPlanningMode(true)} className="px-8 py-4 border-2 border-teal-900 text-teal-900 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-teal-50 transition-all">
+                            <button onClick={() => setShowPlanningMode(true)} className="flex-1 md:flex-none px-8 py-4 border-2 border-teal-900 text-teal-900 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-teal-50 transition-all">
                                 Planificar
                             </button>
                         )}

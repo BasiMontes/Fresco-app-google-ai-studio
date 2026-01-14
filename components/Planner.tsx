@@ -1,7 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { MealSlot, Recipe, MealCategory, PantryItem, UserProfile, ShoppingItem } from '../types';
-// Added missing Sparkles icon to the imports
 import { Plus, X, Loader2, PackageCheck, ShoppingCart, ChevronLeft, ChevronRight, BrainCircuit, ChefHat, Trash2, Sunrise, Sun, Moon, Share2, Check, Calendar, Sparkles } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -107,7 +106,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   const [showPlanWizard, setShowPlanWizard] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   
-  // Asistente Mágico State
   const [selectedWizardDays, setSelectedWizardDays] = useState<string[]>([]);
   const [selectedWizardTypes, setSelectedWizardTypes] = useState<MealCategory[]>(['lunch', 'dinner']);
 
@@ -207,7 +205,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 </div>
                 <button onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400"><ChevronRight className="w-4 h-4" /></button>
             </div>
-            <button onClick={shareWeeklyPlan} className="p-3 bg-white text-teal-600 rounded-xl hover:bg-teal-50 transition-all border border-gray-100 shadow-sm"><Share2 className="w-4 h-4" /></button>
+            <button onClick={shareWeeklyPlan} title="Compartir Menú" className="p-3 bg-white text-teal-600 rounded-xl hover:bg-teal-50 transition-all border border-gray-100 shadow-sm"><Share2 className="w-4 h-4" /></button>
         </div>
 
         <div className="flex gap-2">
@@ -216,7 +214,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 message: '¿Estás seguro de que quieres limpiar toda la semana?', 
                 type: 'confirm', 
                 onConfirm: onClear 
-            })} className="p-3 bg-white text-red-500 rounded-xl hover:bg-red-50 transition-all border border-gray-100 shadow-sm"><Trash2 className="w-4 h-4" /></button>
+            })} title="Limpiar Calendario" className="p-3 bg-white text-red-500 rounded-xl hover:bg-red-50 transition-all border border-gray-100 shadow-sm"><Trash2 className="w-4 h-4" /></button>
             <button 
                 onClick={() => {
                     setSelectedWizardDays(days.map(d => format(d, 'yyyy-MM-dd')));
@@ -368,6 +366,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         <RecipeDetail 
             recipe={selectedRecipe} 
             pantry={pantry}
+            userProfile={user}
             onClose={() => setSelectedRecipe(null)} 
             onRemoveFromPlan={() => {
                 const slot = plan.find(p => p.recipeId === selectedRecipe.id && isSameDay(new Date(p.date), days.find(d => format(d, 'yyyy-MM-dd') === p.date) || new Date()));
