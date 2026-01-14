@@ -230,9 +230,9 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
       <div className="flex-1 min-h-0 px-2 md:px-6 pb-20 md:pb-6 overflow-x-auto md:overflow-hidden flex gap-3">
         <div className="hidden md:flex flex-col gap-2 pt-14 w-12 text-center">
-            <div className="flex-1 flex flex-col items-center justify-center text-teal-600/30 font-black text-[10px] uppercase tracking-widest [writing-mode:vertical-lr] rotate-180">Desayuno</div>
-            <div className="flex-1 flex flex-col items-center justify-center text-orange-600/30 font-black text-[10px] uppercase tracking-widest [writing-mode:vertical-lr] rotate-180">Comida</div>
-            <div className="flex-1 flex flex-col items-center justify-center text-teal-600/30 font-black text-[10px] uppercase tracking-widest [writing-mode:vertical-lr] rotate-180">Cena</div>
+            <div className="flex-1 flex flex-col items-center justify-center text-teal-600/30 font-black text-[11px] uppercase tracking-widest [writing-mode:vertical-lr] rotate-180">Desayuno</div>
+            <div className="flex-1 flex flex-col items-center justify-center text-orange-600/30 font-black text-[11px] uppercase tracking-widest [writing-mode:vertical-lr] rotate-180">Comida</div>
+            <div className="flex-1 flex flex-col items-center justify-center text-teal-600/30 font-black text-[11px] uppercase tracking-widest [writing-mode:vertical-lr] rotate-180">Cena</div>
         </div>
 
         {days.map((day) => {
