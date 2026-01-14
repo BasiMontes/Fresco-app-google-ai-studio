@@ -11,7 +11,7 @@ import { initSyncListener } from './services/syncService';
 import { STATIC_RECIPES } from './constants';
 import { Dialog, DialogOptions, triggerDialog } from './components/Dialog';
 import { Logo } from './components/Logo';
-import { Home, Calendar, ShoppingBag, BookOpen, Package, User, RefreshCw, AlertCircle } from 'lucide-react';
+import { Home, Calendar, ShoppingBag, BookOpen, Package, User, RefreshCw, AlertCircle, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 
 const Dashboard = React.lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -21,13 +21,21 @@ const ShoppingList = React.lazy(() => import('./components/ShoppingList').then(m
 const Pantry = React.lazy(() => import('./components/Pantry').then(module => ({ default: module.Pantry })));
 const Profile = React.lazy(() => import('./components/Profile').then(module => ({ default: module.Profile })));
 
-type ViewState = 'loading' | 'auth' | 'onboarding' | 'app' | 'error-config';
+type ViewState = 'loading' | 'auth' | 'onboarding' | 'app' | 'error-config' | 'stuck';
 
-const PageLoader = ({ message = "Abriendo cocina..." }: { message?: string }) => (
-  <div className="h-screen w-full flex flex-col items-center justify-center bg-[#FDFDFD]">
+const PageLoader = ({ message = "Abriendo cocina...", onReset }: { message?: string, onReset?: () => void }) => (
+  <div className="h-screen w-full flex flex-col items-center justify-center bg-[#FDFDFD] p-6 text-center">
     <div className="w-12 h-12 border-4 border-teal-100 border-t-teal-600 rounded-full animate-spin mb-4" />
     <Logo className="animate-pulse scale-90" />
     <p className="text-teal-800 font-black uppercase tracking-widest text-[10px] mt-4">{message}</p>
+    {onReset && (
+        <button 
+            onClick={onReset}
+            className="mt-12 flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-500 rounded-xl font-bold text-xs hover:bg-gray-200 transition-all animate-fade-in"
+        >
+            <RotateCcw className="w-4 h-4" /> ¿Tardando mucho? Forzar Reinicio
+        </button>
+    )}
   </div>
 );
 
@@ -49,6 +57,16 @@ const App: React.FC = () => {
   });
 
   useEffect(() => { localStorage.setItem('fresco_favorites', JSON.stringify(favoriteIds)); }, [favoriteIds]);
+
+  // Detector de carga bloqueada (Anti-White Screen)
+  useEffect(() => {
+      if (view === 'loading') {
+          const timer = setTimeout(() => {
+              if (view === 'loading') setView('stuck');
+          }, 6000);
+          return () => clearTimeout(timer);
+      }
+  }, [view]);
 
   useEffect(() => {
     const handleDialog = (e: any) => setDialogOptions(e.detail);
@@ -107,12 +125,23 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!isConfigured) {
+        setView('error-config');
+        return;
+    }
+
     initSyncListener();
+    
     const checkSession = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) await handleSessionChange(session);
-        else setView('auth');
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) await handleSessionChange(session);
+            else setView('auth');
+        } catch (e) {
+            setView('auth');
+        }
     };
+
     checkSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -124,10 +153,12 @@ const App: React.FC = () => {
         await handleSessionChange(session);
       }
     });
+
     return () => authListener.subscription.unsubscribe();
   }, []);
 
   const handleSessionChange = async (session: any) => {
+    if (!session?.user) return;
     const uid = session.user.id;
     const email = session.user.email;
     setUserId(uid);
@@ -181,17 +212,25 @@ const App: React.FC = () => {
       setToast({ msg: "Inventario actualizado", type: 'success' });
   };
 
-  if (view === 'error-config' || (!isConfigured && view !== 'loading' && view !== 'auth')) {
+  const handleForceReset = async () => {
+      await supabase.auth.signOut();
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.reload();
+  };
+
+  if (view === 'error-config') {
       return (
           <div className="h-screen w-full flex flex-col items-center justify-center p-8 bg-red-50 text-center font-sans">
               <AlertCircle className="w-16 h-16 text-red-600 mb-4" />
               <h1 className="text-2xl font-black text-red-900 mb-2">Error de Configuración</h1>
-              <p className="text-red-700 max-w-md mb-6">Faltan las claves de Supabase.</p>
-              <button onClick={() => window.location.reload()} className="px-6 py-3 bg-red-600 text-white rounded-xl font-bold">Reintentar</button>
+              <p className="text-red-700 max-w-md mb-6">No se han detectado las claves de Supabase.</p>
+              <button onClick={handleForceReset} className="px-6 py-3 bg-red-600 text-white rounded-xl font-bold">Limpiar y Reintentar</button>
           </div>
       );
   }
 
+  if (view === 'stuck') return <PageLoader message="La cocina está tardando más de lo habitual..." onReset={handleForceReset} />;
   if (view === 'loading') return <PageLoader />;
 
   return (
@@ -237,10 +276,11 @@ const App: React.FC = () => {
                       setMealPlan(p => [...p.filter(x => !(x.date === d && x.type === t)), ns]);
                       db.updateMealSlotDB(userId!, ns);
                     } else {
+                      // LIMPIEZA EXPLÍCITA: Primero localmente, luego DB
                       setMealPlan(p => p.filter(x => !(x.date === d && x.type === t)));
                       db.deleteMealSlotDB(userId!, d, t);
                     }
-                }} onAIPlanGenerated={(p, r) => { setRecipes(x => [...x, ...r]); setMealPlan(p); }} onClear={() => setMealPlan([])} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} />}
+                }} onAIPlanGenerated={(p, r) => { setRecipes(x => [...x, ...r]); setMealPlan(p); }} onClear={() => { setMealPlan([]); db.deleteRecipeDB(userId!); }} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} />}
                 {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={(id, delta) => setPantry(p => p.map(x => x.id === id ? {...x, quantity: x.quantity + delta} : x))} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} />}
                 {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={(rid, serv, date, type) => {
                      if (date && type) {
@@ -251,7 +291,7 @@ const App: React.FC = () => {
                      }
                 }} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
                 {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={s => setShoppingList(x => [...x, ...s])} onUpdateShoppingItem={s => setShoppingList(x => x.map(y => y.id === s.id ? s : y))} onRemoveShoppingItem={id => setShoppingList(x => x.filter(y => y.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
-                {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={() => {}} />}
+                {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} />}
                 </Suspense>
             </div>
           </main>

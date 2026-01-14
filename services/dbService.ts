@@ -207,10 +207,13 @@ export const updateMealSlotDB = async (userId: string, slot: MealSlot) => {
 };
 
 export const deleteMealSlotDB = async (userId: string, date: string, type: string) => {
+    // FIX: Match estricto sobre clave compuesta para evitar persistencia de slots fantasmas
     const { error } = await supabase
         .from('meal_plans')
         .delete()
-        .match({ user_id: userId, date, type });
+        .eq('user_id', userId)
+        .eq('date', date)
+        .eq('type', type);
         
     if (error) console.error('Error deleting slot:', error);
 };
