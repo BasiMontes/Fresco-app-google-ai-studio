@@ -46,7 +46,7 @@ const PlannerCell = React.memo(({
     return (
         <div 
             onClick={onClick}
-            className={`flex-1 relative rounded-2xl border transition-all cursor-pointer overflow-hidden flex flex-col group/cell ${
+            className={`flex-1 relative rounded-[2rem] border transition-all cursor-pointer overflow-hidden flex flex-col group/cell ${
                 isSpecial ? 'bg-gray-50 border-gray-100' :
                 recipe ? (isCooked ? 'bg-green-50/40 border-green-200' : 'bg-white border-gray-100 hover:border-teal-500 hover:shadow-2xl hover:-translate-y-0.5') :
                 'bg-gray-50/50 border-dashed border-gray-200 hover:bg-white hover:border-teal-200'
@@ -54,41 +54,42 @@ const PlannerCell = React.memo(({
         >
             {recipe ? (
                 <>
-                    {/* Fondo con imagen y gradiente mejorado */}
+                    {/* Fondo con imagen con MUCHO ZOOM y gradiente profesional */}
                     <div className="absolute inset-0 z-0 overflow-hidden">
                         <img 
                             src={recipe.image_url} 
-                            className={`w-full h-full object-cover transition-all duration-1000 ${isCooked ? 'opacity-5 grayscale' : 'opacity-25 group-hover/cell:opacity-45 group-hover/cell:scale-110'}`} 
+                            className={`w-full h-full object-cover transition-all duration-[1.5s] ${
+                                isCooked ? 'opacity-10 grayscale scale-[1.8]' : 'opacity-40 scale-[1.6] group-hover/cell:scale-[1.8] group-hover/cell:opacity-60'
+                            }`} 
                             alt="" 
                         />
-                        {/* Gradiente multicapa para profundidad y legibilidad */}
+                        {/* Gradiente sutil para no "blanquear" demasiado pero mantener legibilidad */}
                         <div className={`absolute inset-0 transition-opacity duration-700 ${
                             isCooked 
                             ? 'bg-green-50/80' 
-                            : 'bg-gradient-to-br from-white via-white/60 to-white/10'
+                            : 'bg-gradient-to-br from-white/95 via-white/40 to-transparent'
                         }`} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent opacity-60" />
                     </div>
 
                     {/* Contenido sobre la imagen */}
-                    <div className="relative z-10 p-3.5 h-full flex flex-col justify-between">
-                        <h4 className={`font-black text-[11px] md:text-xs text-teal-900 leading-tight line-clamp-2 md:line-clamp-3 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] ${isCooked ? 'line-through opacity-40' : ''}`}>
+                    <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+                        <h4 className={`font-black text-[15px] md:text-sm text-teal-900 leading-[1.2] line-clamp-3 drop-shadow-[0_1px_2px_rgba(255,255,255,1)] ${isCooked ? 'line-through opacity-40' : ''}`}>
                             {recipe.title}
                         </h4>
                         
-                        <div className="flex items-center justify-between mt-auto pt-2">
+                        <div className="flex items-center justify-center mt-auto pt-2">
                             {isCooked ? (
-                                <span className="text-[8px] font-black uppercase text-green-700 bg-green-200/60 backdrop-blur-md px-2 py-0.5 rounded-lg shadow-sm border border-green-300/30">Hecho</span>
+                                <span className="text-[9px] font-black uppercase text-green-700 bg-green-200/80 backdrop-blur-md px-3 py-1 rounded-2xl shadow-sm border border-green-300/30">Hecho</span>
                             ) : (
-                                <div className="flex gap-1 w-full">
+                                <div className="w-full">
                                     {missingCount > 0 ? (
-                                        <span className="flex items-center gap-1 text-[8px] font-black text-orange-600 bg-white/80 backdrop-blur-md px-2 py-1 rounded-lg shadow-sm border border-orange-100 flex-1 justify-center">
-                                            <ShoppingCart className="w-2.5 h-2.5" /> Faltan {missingCount}
-                                        </span>
+                                        <div className="flex items-center gap-2 text-[10px] font-black text-orange-600 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-lg border border-orange-200 w-full justify-center transform group-hover/cell:scale-105 transition-transform">
+                                            <ShoppingCart className="w-3.5 h-3.5" /> Faltan {missingCount}
+                                        </div>
                                     ) : (
-                                        <span className="flex items-center gap-1 text-[8px] font-black text-teal-700 bg-white/80 backdrop-blur-md px-2 py-1 rounded-lg shadow-sm border border-teal-100 flex-1 justify-center">
-                                            <PackageCheck className="w-2.5 h-2.5" /> Listo
-                                        </span>
+                                        <div className="flex items-center gap-2 text-[10px] font-black text-teal-700 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-lg border border-teal-200 w-full justify-center transform group-hover/cell:scale-105 transition-transform">
+                                            <PackageCheck className="w-3.5 h-3.5" /> Listo
+                                        </div>
                                     )}
                                 </div>
                             )}
@@ -104,7 +105,7 @@ const PlannerCell = React.memo(({
                 </div>
             ) : (
                 <div className="flex-1 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                    <Plus className="w-5 h-5 text-teal-300" />
+                    <Plus className="w-6 h-6 text-teal-300" />
                 </div>
             )}
         </div>
@@ -123,7 +124,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   const days = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i)), [currentWeekStart]);
 
-  // Sincronizar selección de días al cambiar la semana en el calendario
   useEffect(() => {
     if (showPlanWizard) {
         setSelectedWizardDays(days.map(d => format(d, 'yyyy-MM-dd')));
@@ -133,7 +133,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   const executeSmartPlan = async () => {
     if (selectedWizardDays.length === 0 || selectedWizardTypes.length === 0) return;
     
-    // Escaneo de conflictos (recetas ya planificadas en los slots seleccionados)
     const conflicts = selectedWizardDays.some(date => 
         selectedWizardTypes.some(type => 
             plan.some(p => p.date === date && p.type === type && p.recipeId)
@@ -233,7 +232,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
     setSelectedWizardDays(prev => prev.includes(dateStr) ? prev.filter(d => d !== dateStr) : [...prev, dateStr]);
   };
 
-  // Fix: use 'type' correctly and define 't' within filter to avoid undefined variables
   const toggleWizardType = (type: MealCategory) => {
     setSelectedWizardTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
   };
@@ -284,15 +282,15 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           const isToday = isSameDay(day, new Date());
           const dateStr = format(day, 'yyyy-MM-dd');
           return (
-            <div key={day.toString()} className="min-w-[80vw] md:min-w-0 flex-1 flex flex-col gap-2">
-                <div className={`flex items-center justify-between px-4 py-3 rounded-2xl border transition-all ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-md' : 'bg-white text-gray-500 border-gray-100'}`}>
+            <div key={day.toString()} className="min-w-[80vw] md:min-w-0 flex-1 flex flex-col gap-3">
+                <div className={`flex items-center justify-between px-5 py-4 rounded-[2rem] border transition-all ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-lg' : 'bg-white text-gray-500 border-gray-100 shadow-sm'}`}>
                     <div className="flex flex-col">
                         <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">{format(day, 'EEE', { locale: es })}</span>
-                        <span className="text-xl font-black leading-none">{format(day, 'd', { locale: es })}</span>
+                        <span className="text-2xl font-black leading-none">{format(day, 'd', { locale: es })}</span>
                     </div>
                 </div>
 
-                <div className="flex-1 flex flex-col gap-2 min-h-0">
+                <div className="flex-1 flex flex-col gap-3 min-h-0">
                     {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                         const slot = getSlot(day, type);
                         const recipe = recipes.find(r => r.id === slot?.recipeId);
