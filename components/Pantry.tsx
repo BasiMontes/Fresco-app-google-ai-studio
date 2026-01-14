@@ -142,6 +142,9 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       onUpdateQuantity(id, delta);
   };
 
+  // Icono SVG para los selectores
+  const selectChevron = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`;
+
   return (
     <div className="space-y-8 animate-fade-in pb-48 px-1 md:px-0 max-w-screen-2xl mx-auto">
       
@@ -311,7 +314,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                             <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Unidad</label>
                             <select 
                                 className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer appearance-none bg-no-repeat bg-[right_1rem_center]" 
-                                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundSize: '1em' }}
+                                style={{ backgroundImage: selectChevron, backgroundSize: '1em' }}
                                 value={newItem.unit} 
                                 onChange={e => { setNewItem({...newItem, unit: e.target.value}); setManualOverride(prev => ({...prev, unit: true})); }}
                             >
@@ -323,7 +326,8 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                     <div className="space-y-1">
                         <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 ml-1">Categoría</label>
                         <select 
-                            className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer appearance-none" 
+                            className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer appearance-none bg-no-repeat bg-[right_1rem_center]" 
+                            style={{ backgroundImage: selectChevron, backgroundSize: '1em' }}
                             value={newItem.category} 
                             onChange={e => { setNewItem({...newItem, category: e.target.value}); setManualOverride(prev => ({...prev, category: true})); }}
                         >
@@ -365,7 +369,8 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                         <div className="flex-1 space-y-1">
                             <label className="text-[9px] font-black uppercase text-gray-400">Unidad</label>
                             <select 
-                                className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:ring-1 focus:ring-teal-500 outline-none cursor-pointer appearance-none" 
+                                className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-teal-900 text-sm focus:ring-1 focus:ring-teal-500 outline-none cursor-pointer appearance-none bg-no-repeat bg-[right_1rem_center]" 
+                                style={{ backgroundImage: selectChevron, backgroundSize: '1em' }}
                                 value={itemToEdit.unit} 
                                 onChange={e => setItemToEdit({...itemToEdit, unit: e.target.value})}
                             >
@@ -374,7 +379,9 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                         </div>
                     </div>
                     <div className="flex gap-2 pt-4">
-                        <button type="button" onClick={() => onRemove(itemToEdit.id)} className="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"><Trash2 className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => { onRemove(itemToEdit.id); setItemToEdit(null); }} className="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                            <Trash2 className="w-4 h-4" />
+                        </button>
                         <button type="submit" className="flex-1 py-3 bg-teal-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md hover:bg-teal-800 transition-all">Guardar Cambios</button>
                     </div>
                 </form>
