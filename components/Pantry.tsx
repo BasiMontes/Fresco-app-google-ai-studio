@@ -92,11 +92,43 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   };
 
   const getExpiryStatus = (item: PantryItem) => {
-    if (!item.expires_at) return { type: 'fresh', label: 'Sin fecha', color: 'bg-gray-400', text: 'text-gray-400' };
+    if (!item.expires_at) return { 
+        type: 'none', 
+        label: '', 
+        bg: 'bg-white', 
+        border: 'border-gray-100', 
+        dot: 'bg-gray-200', 
+        text: 'text-gray-400' 
+    };
+    
     const days = differenceInDays(new Date(item.expires_at), new Date());
-    if (isPast(new Date(item.expires_at)) && days < 0) return { type: 'expired', label: 'Caducado', color: 'bg-red-500', text: 'text-red-600' };
-    if (days <= 3) return { type: 'critical', label: `En ${days <= 0 ? 'hoy' : days + 'd'}`, color: 'bg-orange-500', text: 'text-orange-600' };
-    return { type: 'fresh', label: 'Vigente', color: 'bg-green-500', text: 'text-green-600' };
+    
+    if (isPast(new Date(item.expires_at)) && days < 0) return { 
+        type: 'expired', 
+        label: 'Caducado', 
+        bg: 'bg-red-50/70', 
+        border: 'border-red-200', 
+        dot: 'bg-red-500', 
+        text: 'text-red-700' 
+    };
+    
+    if (days <= 3) return { 
+        type: 'critical', 
+        label: days <= 0 ? 'Hoy' : `${days}d`, 
+        bg: 'bg-orange-50/70', 
+        border: 'border-orange-200', 
+        dot: 'bg-orange-500', 
+        text: 'text-orange-700' 
+    };
+    
+    return { 
+        type: 'fresh', 
+        label: '', 
+        bg: 'bg-green-50/40', 
+        border: 'border-green-100', 
+        dot: 'bg-green-500', 
+        text: 'text-green-700' 
+    };
   };
 
   const handleDeleteAttempt = (item: PantryItem) => {
@@ -217,21 +249,23 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                             const step = (item.unit === 'kg' || item.unit === 'l') ? 0.1 : 1;
 
                             return (
-                                <div key={item.id} className="bg-white rounded-xl border border-gray-100 p-3 flex flex-col gap-2 hover:shadow-md transition-all group">
+                                <div key={item.id} className={`${status.bg} rounded-xl border ${status.border} p-3 flex flex-col gap-2 hover:shadow-md transition-all group relative`}>
                                     <div className="flex justify-between items-start gap-1">
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="font-bold text-teal-950 text-[11px] truncate capitalize leading-tight">{item.name}</h4>
-                                            <div className="flex items-center gap-1 mt-0.5">
-                                                <div className={`w-1.5 h-1.5 rounded-full ${status.color}`} />
-                                                <span className={`text-[7px] font-black uppercase tracking-widest ${status.text}`}>{status.label}</span>
-                                            </div>
+                                            <h4 className={`font-bold ${status.type === 'expired' ? 'text-red-900' : 'text-teal-950'} text-[11px] truncate capitalize leading-tight`}>{item.name}</h4>
+                                            {status.label && (
+                                                <div className="flex items-center gap-1 mt-0.5">
+                                                    <div className={`w-1 h-1 rounded-full ${status.dot}`} />
+                                                    <span className={`text-[7px] font-black uppercase tracking-widest ${status.text}`}>{status.label}</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        <button onClick={() => setItemToEdit(item)} className="p-1.5 bg-gray-50 rounded-lg text-gray-300 hover:bg-teal-900 hover:text-white transition-all">
+                                        <button onClick={() => setItemToEdit(item)} className="p-1.5 bg-white/40 rounded-lg text-gray-400 hover:bg-teal-900 hover:text-white transition-all shadow-sm">
                                             <Pencil className="w-2.5 h-2.5" />
                                         </button>
                                     </div>
 
-                                    <div className="bg-gray-50/50 rounded-lg p-1 flex items-center justify-between mt-1">
+                                    <div className="bg-white/50 rounded-lg p-1 flex items-center justify-between mt-1">
                                         <button onClick={() => handleQtyChange(item, -step)} className="w-6 h-6 flex items-center justify-center text-gray-400 bg-white rounded-md shadow-sm hover:text-red-500 active:scale-90"><Minus className="w-3 h-3" /></button>
                                         <div className="text-center flex flex-col items-center">
                                             <span className="text-[11px] font-black text-teal-900 leading-none">{item.quantity % 1 === 0 ? item.quantity : item.quantity.toFixed(1)}</span>
