@@ -3,9 +3,6 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory } from "../types";
 import { FALLBACK_RECIPES, STATIC_RECIPES } from "../constants";
 
-// Always use const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const notifyError = (message: string) => {
     if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('fresco-toast', { detail: { type: 'error', message } }));
@@ -68,13 +65,10 @@ const filterRecipesByDiet = (recipes: Recipe[], preferences: string[]) => {
         const tags = r.dietary_tags || [];
         if (effectivePrefs.includes('vegan') && !tags.includes('vegan')) return false;
         if (effectivePrefs.includes('vegetarian') && !tags.includes('vegetarian') && !tags.includes('vegan')) return false;
-        // Para otras dietas, somos menos estrictos para evitar devolver array vacío si no hay recetas etiquetadas
-        // if (effectivePrefs.includes('keto') && !tags.includes('keto')) return false;
         return true;
     });
 };
 
-// RECETA DE EMERGENCIA (Para evitar huecos vacíos si falla todo)
 const EMERGENCY_RECIPE: Recipe = {
     id: 'emergency-pasta',
     title: "Pasta Rápida con lo que tengas",
@@ -90,7 +84,6 @@ const EMERGENCY_RECIPE: Recipe = {
     image_url: "https://images.unsplash.com/photo-1598866594230-a7c12756260f?auto=format&fit=crop&q=80"
 };
 
-// NUEVO: Algoritmo de Planificación Inteligente (Blindado)
 export const generateSmartMenu = async (
     user: UserProfile,
     pantry: PantryItem[],
@@ -100,9 +93,6 @@ export const generateSmartMenu = async (
 ): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
     
     const plan: MealSlot[] = [];
-    
-    // 1. Unificar Fuentes y Eliminar Duplicados (Por ID y Título)
-    // Combinamos las recetas del usuario con las estáticas para tener el pool máximo
     const rawSources = [...availableRecipes, ...STATIC_RECIPES, EMERGENCY_RECIPE];
     const uniqueRecipesMap = new Map<string, Recipe>();
     
@@ -116,30 +106,22 @@ export const generateSmartMenu = async (
     const uniqueSources = Array.from(uniqueRecipesMap.values());
     let validRecipes = filterRecipesByDiet(uniqueSources, user.dietary_preferences);
 
-    // SAFETY NET: Si el filtro de dieta es demasiado estricto y devuelve 0,
-    // volvemos a usar todas las recetas (mejor sugerir algo con carne a un vegetariano que dejar el plan vacío y roto)
     if (validRecipes.length === 0) {
-        console.warn("Filtro de dieta demasiado estricto, usando pool completo.");
         validRecipes = uniqueSources;
     }
 
-    // 2. Separar por categorías
     const breakfasts = validRecipes.filter(r => r.meal_category === 'breakfast');
     const mainMeals = validRecipes.filter(r => r.meal_category === 'lunch' || r.meal_category === 'dinner');
 
-    // 3. Pools de selección garantizados
-    // Si no hay desayunos, usamos la receta de emergencia o cualquier cosa
     const safeBreakfastPool = breakfasts.length > 0 ? breakfasts : [EMERGENCY_RECIPE];
     const safeMainPool = mainMeals.length > 0 ? mainMeals : [EMERGENCY_RECIPE];
 
-    // Barajar pools para variedad
     safeBreakfastPool.sort(() => 0.5 - Math.random());
     safeMainPool.sort(() => 0.5 - Math.random());
 
     let mealIndex = 0;
     let bfIndex = 0;
     
-    // 4. Bucle de generación robusto
     targetDates.forEach((date) => {
         targetTypes.forEach(type => {
             let selectedRecipe: Recipe;
@@ -148,7 +130,6 @@ export const generateSmartMenu = async (
                 selectedRecipe = safeBreakfastPool[bfIndex % safeBreakfastPool.length];
                 bfIndex++;
             } else {
-                // Alternar almuerzo/cena
                 selectedRecipe = safeMainPool[mealIndex % safeMainPool.length];
                 mealIndex++;
             }
@@ -172,10 +153,10 @@ export const generateWeeklyPlanAI = generateSmartMenu;
 
 export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSession> => {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const recipeTitles = recipes.map(r => r.title).join(", ");
     const prompt = `Plan de Batch Cooking optimizado para: ${recipeTitles}. JSON output.`;
 
-    // Complex Text Tasks (e.g., advanced reasoning): 'gemini-3-pro-preview'
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
       contents: prompt,
@@ -204,7 +185,6 @@ export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSe
       }
     });
 
-    // The GenerateContentResponse object features a text property
     const safeText = response.text ? response.text : '';
     const data = JSON.parse(cleanJson(safeText));
     return {
@@ -219,12 +199,12 @@ export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSe
 
 export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[], count: number = 3, customPrompt?: string): Promise<Recipe[]> => {
     try {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const pantryList = pantry.map(p => p.name).join(", ");
         const dietString = user.dietary_preferences.filter(p => p !== 'none').join(", ");
         const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. 
         Dieta OBLIGATORIA: ${dietString}. Si es vegetariano, NADA de carne/pescado.`;
         
-        // Complex Text Tasks (e.g., advanced reasoning): 'gemini-3-pro-preview'
         const response = await ai.models.generateContent({
             model: "gemini-3-pro-preview",
             contents: prompt,
@@ -234,7 +214,6 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
             }
         });
         
-        // The GenerateContentResponse object features a text property
         const safeText = response.text ? response.text : '';
         const data = JSON.parse(cleanJson(safeText));
         
@@ -258,7 +237,7 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
 
 export const extractItemsFromTicket = async (base64Image: string): Promise<any[]> => {
   try {
-    // Basic Text Tasks (e.g., extraction): 'gemini-3-flash-preview'
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: {
@@ -285,7 +264,6 @@ export const extractItemsFromTicket = async (base64Image: string): Promise<any[]
       }
     });
     
-    // The GenerateContentResponse object features a text property
     const safeText = response.text ? response.text : '';
     const items = JSON.parse(cleanJson(safeText));
     return Array.isArray(items) ? items : [];

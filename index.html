@@ -10,9 +10,14 @@
     <link rel="icon" type="image/png" href="input_file_0.png" />
     <meta name="theme-color" content="#013b33" />
 
-    <!-- Compatibilidad process.env para navegador (Gemini SDK) -->
+    <!-- Compatibilidad process.env para navegador (Requerido por SDKs de servidor en cliente) -->
     <script>
-      window.process = window.process || { env: { NODE_ENV: 'production' } };
+      window.process = { 
+        env: { 
+          NODE_ENV: 'production',
+          API_KEY: '' // El valor real se inyectará automáticamente por el entorno
+        } 
+      };
     </script>
 
     <!-- Tailwind CSS -->
