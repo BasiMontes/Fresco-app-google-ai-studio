@@ -225,7 +225,7 @@ const App: React.FC = () => {
 
   if (view === 'error-config') {
       return (
-          <div className="h-screen w-full flex flex-col items-center justify-center p-8 bg-red-50 text-center font-sans">
+          <div className="h-screen w-full flex flex-col items-center justify-center p-8 bg-red-50 text-center font-sans overflow-hidden">
               <AlertCircle className="w-16 h-16 text-red-600 mb-4" />
               <h1 className="text-2xl font-black text-red-900 mb-2">Error de Configuración</h1>
               <p className="text-red-700 max-w-md mb-6">No se han detectado las claves de Supabase.</p>
@@ -239,7 +239,7 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[#FDFDFD] flex flex-col md:flex-row font-sans overflow-x-hidden">
+      <div className="h-screen w-screen bg-[#FDFDFD] flex flex-col md:flex-row font-sans overflow-hidden">
         {toast && (
           <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-2xl shadow-2xl bg-teal-900 text-white font-bold animate-slide-up">
             {toast.msg}
@@ -251,9 +251,9 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={handleOnboardingComplete} /> :
          <>
-          <aside className="hidden md:flex flex-col w-64 bg-teal-900 text-white fixed h-full z-50">
+          <aside className="hidden md:flex flex-col w-64 bg-teal-900 text-white h-full z-50 flex-shrink-0">
             <div className="p-8"><Logo variant="inverted" /></div>
-            <nav className="flex-1 px-4 space-y-2 mt-4">
+            <nav className="flex-1 px-4 space-y-2 mt-4 overflow-hidden">
                 {[
                   {id:'dashboard', icon:Home, label:'Home'},
                   {id:'planner', icon:Calendar, label:'Calendario'}, 
@@ -270,47 +270,48 @@ const App: React.FC = () => {
             </nav>
           </aside>
 
-          <main className="flex-1 md:ml-64 min-h-screen pb-32 md:pb-0">
-            <div className="max-w-7xl mx-auto p-4 md:p-8 h-full">
+          <main className="flex-1 h-full overflow-hidden flex flex-col relative bg-[#FDFDFD]">
+            <div className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 h-full overflow-hidden">
                 <Suspense fallback={<PageLoader message="Cargando vista..." />}>
-                {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
-                {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={(d, t, rid) => {
-                    if (rid) {
-                      const ns = { date: d, type: t, recipeId: rid, servings: user.household_size, isCooked: false };
-                      setMealPlan(p => [...p.filter(x => !(x.date === d && x.type === t)), ns]);
-                      db.updateMealSlotDB(userId!, ns);
-                    } else {
-                      setMealPlan(p => p.filter(x => !(x.date === d && x.type === t)));
-                      db.deleteMealSlotDB(userId!, d, t);
-                    }
-                }} onAIPlanGenerated={(newSlots, newRecipes) => { 
-                     // Persistencia del Plan Mágico
-                     if (newRecipes && newRecipes.length > 0) {
-                         setRecipes(x => [...x, ...newRecipes]);
-                         db.saveRecipesBulkDB(userId!, newRecipes);
-                     }
-                     setMealPlan(prev => {
-                         const filtered = prev.filter(ex => !newSlots.some(ns => ns.date === ex.date && ns.type === ex.type));
-                         return [...filtered, ...newSlots];
-                     });
-                     newSlots.forEach(slot => db.updateMealSlotDB(userId!, slot));
-                }} 
-                   onClear={() => { 
-                       setMealPlan([]); 
-                       db.clearMealPlanDB(userId!); 
-                   }} 
-                   onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} />}
-                {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={(id, delta) => setPantry(p => p.map(x => x.id === id ? {...x, quantity: x.quantity + delta} : x))} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} />}
-                {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={(rid, serv, date, type) => {
-                     if (date && type) {
-                        const ns = { date, type, recipeId: rid.id, servings: serv, isCooked: false };
-                        setMealPlan(p => [...p.filter(x => !(x.date === date && x.type === type)), ns]);
+                <div className="h-full w-full overflow-hidden">
+                    {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
+                    {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={(d, t, rid) => {
+                        if (rid) {
+                        const ns = { date: d, type: t, recipeId: rid, servings: user.household_size, isCooked: false };
+                        setMealPlan(p => [...p.filter(x => !(x.date === d && x.type === t)), ns]);
                         db.updateMealSlotDB(userId!, ns);
-                        setToast({ msg: "Planificado", type: 'success' });
-                     }
-                }} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
-                {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={s => setShoppingList(x => [...x, ...s])} onUpdateShoppingItem={s => setShoppingList(x => x.map(y => y.id === s.id ? s : y))} onRemoveShoppingItem={id => setShoppingList(x => x.filter(y => y.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
-                {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} />}
+                        } else {
+                        setMealPlan(p => p.filter(x => !(x.date === d && x.type === t)));
+                        db.deleteMealSlotDB(userId!, d, t);
+                        }
+                    }} onAIPlanGenerated={(newSlots, newRecipes) => { 
+                        if (newRecipes && newRecipes.length > 0) {
+                            setRecipes(x => [...x, ...newRecipes]);
+                            db.saveRecipesBulkDB(userId!, newRecipes);
+                        }
+                        setMealPlan(prev => {
+                            const filtered = prev.filter(ex => !newSlots.some(ns => ns.date === ex.date && ns.type === ex.type));
+                            return [...filtered, ...newSlots];
+                        });
+                        newSlots.forEach(slot => db.updateMealSlotDB(userId!, slot));
+                    }} 
+                    onClear={() => { 
+                        setMealPlan([]); 
+                        db.clearMealPlanDB(userId!); 
+                    }} 
+                    onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} />}
+                    {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={(id, delta) => setPantry(p => p.map(x => x.id === id ? {...x, quantity: x.quantity + delta} : x))} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} />}
+                    {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={(rid, serv, date, type) => {
+                        if (date && type) {
+                            const ns = { date, type, recipeId: rid.id, servings: serv, isCooked: false };
+                            setMealPlan(p => [...p.filter(x => !(x.date === date && x.type === type)), ns]);
+                            db.updateMealSlotDB(userId!, ns);
+                            setToast({ msg: "Planificado", type: 'success' });
+                        }
+                    }} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
+                    {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={s => setShoppingList(x => [...x, ...s])} onUpdateShoppingItem={s => setShoppingList(x => x.map(y => y.id === s.id ? s : y))} onRemoveShoppingItem={id => setShoppingList(x => x.filter(y => y.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
+                    {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} />}
+                </div>
                 </Suspense>
             </div>
           </main>

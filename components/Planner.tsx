@@ -68,26 +68,26 @@ const PlannerCell = React.memo(({
                         }`} />
                     </div>
 
-                    {/* Contenido: Tipografía compacta y badge minimalista */}
+                    {/* Contenido: Tipografía súper compacta y badge minúsculo */}
                     <div className="relative z-10 p-2.5 h-full flex flex-col justify-between">
-                        <h4 className={`font-black text-[10px] md:text-[11px] text-teal-950 leading-tight line-clamp-2 md:line-clamp-3 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] ${isCooked ? 'line-through opacity-40' : ''}`}>
+                        <h4 className={`font-black text-[9px] md:text-[10px] text-teal-950 leading-tight line-clamp-2 md:line-clamp-3 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] ${isCooked ? 'line-through opacity-40' : ''}`}>
                             {recipe.title}
                         </h4>
                         
                         <div className="flex items-center justify-start mt-auto">
                             {isCooked ? (
-                                <span className="text-[7px] font-black uppercase text-green-700 bg-green-200/50 backdrop-blur-sm px-2 py-0.5 rounded-lg">Hecho</span>
+                                <span className="text-[6px] font-black uppercase text-green-700 bg-green-200/50 backdrop-blur-sm px-1.5 py-0.5 rounded-md">OK</span>
                             ) : (
                                 <div className="flex items-center">
                                     {missingCount > 0 ? (
                                         <div className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-500 text-white rounded-md shadow-sm border border-white/10">
                                             <ShoppingCart className="w-2.5 h-2.5 stroke-[3px]" />
-                                            <span className="text-[9px] font-black leading-none">{missingCount}</span>
+                                            <span className="text-[8px] font-black leading-none">{missingCount}</span>
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-1 px-1.5 py-0.5 bg-teal-600 text-white rounded-md shadow-sm border border-white/10">
                                             <PackageCheck className="w-2.5 h-2.5 stroke-[3px]" />
-                                            <Check className="w-2.5 h-2.5 stroke-[4px]" />
+                                            <Check className="w-2 h-2 stroke-[4px]" />
                                         </div>
                                     )}
                                 </div>
@@ -98,7 +98,7 @@ const PlannerCell = React.memo(({
             ) : isSpecial ? (
                 <div className="flex-1 flex flex-col items-center justify-center gap-1 opacity-30">
                     <Sunrise className="w-3 h-3 text-teal-600" />
-                    <span className="text-[7px] font-black uppercase tracking-widest text-gray-500">
+                    <span className="text-[6px] font-black uppercase tracking-widest text-gray-500">
                         {slot?.recipeId === SLOT_LEFTOVERS ? 'Sobras' : 'Fuera'}
                     </span>
                 </div>
@@ -236,18 +236,18 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   };
 
   return (
-    <div className="h-[calc(100vh-80px)] w-full flex flex-col animate-fade-in overflow-hidden">
-      <header className="flex-shrink-0 px-6 py-3 flex justify-between items-center bg-white/50 backdrop-blur-sm z-10">
-        <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-white px-2 py-1 rounded-xl shadow-sm border border-gray-100">
-                <button onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"><ChevronLeft className="w-4 h-4" /></button>
-                <div className="text-center w-28">
-                    <span className="block text-[8px] font-black uppercase text-gray-400 tracking-widest">Semana del</span>
+    <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden">
+      <header className="flex-shrink-0 px-4 py-2.5 flex justify-between items-center bg-white/50 backdrop-blur-sm z-10">
+        <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 bg-white px-1.5 py-1 rounded-xl shadow-sm border border-gray-100">
+                <button onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"><ChevronLeft className="w-3.5 h-3.5" /></button>
+                <div className="text-center w-24">
+                    <span className="block text-[7px] font-black uppercase text-gray-400 tracking-widest leading-none">Semana del</span>
                     <span className="block text-xs font-black text-teal-900 leading-none">{format(currentWeekStart, 'd MMM', { locale: es })}</span>
                 </div>
-                <button onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"><ChevronRight className="w-4 h-4" /></button>
+                <button onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400"><ChevronRight className="w-3.5 h-3.5" /></button>
             </div>
-            <button onClick={shareWeeklyPlan} title="Compartir Menú" className="p-2.5 bg-white text-teal-600 rounded-xl hover:bg-teal-50 transition-all border border-gray-100 shadow-sm"><Share2 className="w-4 h-4" /></button>
+            <button onClick={shareWeeklyPlan} title="Compartir Menú" className="p-2 bg-white text-teal-600 rounded-xl hover:bg-teal-50 transition-all border border-gray-100 shadow-sm"><Share2 className="w-3.5 h-3.5" /></button>
         </div>
 
         <div className="flex gap-2">
@@ -256,40 +256,41 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 message: '¿Estás seguro de que quieres limpiar toda la semana?', 
                 type: 'confirm', 
                 onConfirm: onClear 
-            })} title="Limpiar Calendario" className="p-2.5 bg-white text-red-400 rounded-xl hover:bg-red-50 transition-all border border-gray-100 shadow-sm"><Trash2 className="w-4 h-4" /></button>
+            })} title="Limpiar Calendario" className="p-2 bg-white text-red-400 rounded-xl hover:bg-red-50 transition-all border border-gray-100 shadow-sm"><Trash2 className="w-3.5 h-3.5" /></button>
             <button 
                 onClick={() => {
                     setSelectedWizardDays(days.map(d => format(d, 'yyyy-MM-dd')));
                     setShowPlanWizard(true);
                 }} 
-                className="flex items-center gap-2 bg-teal-900 text-white px-4 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-teal-800 transition-all shadow-lg active:scale-95"
+                className="flex items-center gap-1.5 bg-teal-900 text-white px-3 py-2 rounded-xl font-black text-[8px] uppercase tracking-widest hover:bg-teal-800 transition-all shadow-lg active:scale-95"
             >
-                <BrainCircuit className="w-3.5 h-3.5 text-orange-400" />
+                <BrainCircuit className="w-3 h-3 text-orange-400" />
                 <span className="hidden md:inline">Plan Mágico</span>
             </button>
         </div>
       </header>
 
-      <div className="flex-1 min-h-0 px-2 md:px-6 pb-20 md:pb-6 overflow-x-auto md:overflow-hidden flex gap-3 md:gap-4">
-        <div className="hidden md:flex flex-col gap-3 pt-12 w-10 text-center">
-            <div className="flex-1 flex flex-col items-center justify-center text-teal-600/20 font-black text-[10px] uppercase tracking-[0.2em] [writing-mode:vertical-lr] rotate-180">Desayuno</div>
-            <div className="flex-1 flex flex-col items-center justify-center text-orange-600/20 font-black text-[10px] uppercase tracking-[0.2em] [writing-mode:vertical-lr] rotate-180">Comida</div>
-            <div className="flex-1 flex flex-col items-center justify-center text-teal-600/20 font-black text-[10px] uppercase tracking-[0.2em] [writing-mode:vertical-lr] rotate-180">Cena</div>
+      {/* Ensanchadas las columnas reduciendo el gap y aprovechando el ancho */}
+      <div className="flex-1 min-h-0 px-1 md:px-4 pb-20 md:pb-4 overflow-x-auto md:overflow-hidden flex gap-2 md:gap-3 no-scrollbar">
+        <div className="hidden md:flex flex-col gap-2 pt-10 w-8 text-center flex-shrink-0">
+            <div className="flex-1 flex flex-col items-center justify-center text-teal-600/10 font-black text-[9px] uppercase tracking-[0.2em] [writing-mode:vertical-lr] rotate-180">Desayuno</div>
+            <div className="flex-1 flex flex-col items-center justify-center text-orange-600/10 font-black text-[9px] uppercase tracking-[0.2em] [writing-mode:vertical-lr] rotate-180">Comida</div>
+            <div className="flex-1 flex flex-col items-center justify-center text-teal-600/10 font-black text-[9px] uppercase tracking-[0.2em] [writing-mode:vertical-lr] rotate-180">Cena</div>
         </div>
 
         {days.map((day) => {
           const isToday = isSameDay(day, new Date());
           const dateStr = format(day, 'yyyy-MM-dd');
           return (
-            <div key={day.toString()} className="min-w-[85vw] md:min-w-0 flex-1 flex flex-col gap-3">
-                <div className={`flex items-center justify-between px-3 py-2 rounded-2xl border transition-all ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-md' : 'bg-white text-gray-500 border-gray-100 shadow-sm'}`}>
-                    <div className="flex flex-col">
-                        <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-60 leading-none mb-0.5">{format(day, 'EEE', { locale: es })}</span>
-                        <span className="text-lg font-black leading-none">{format(day, 'd', { locale: es })}</span>
+            <div key={day.toString()} className="min-w-[88vw] md:min-w-0 flex-1 flex flex-col gap-2">
+                <div className={`flex items-center justify-between px-2 py-1.5 rounded-xl border transition-all ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-md' : 'bg-white text-gray-500 border-gray-100 shadow-sm'}`}>
+                    <div className="flex flex-col items-center w-full">
+                        <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-60 leading-none mb-0.5">{format(day, 'EEE', { locale: es })}</span>
+                        <span className="text-base font-black leading-none">{format(day, 'd', { locale: es })}</span>
                     </div>
                 </div>
 
-                <div className="flex-1 flex flex-col gap-2.5 min-h-0">
+                <div className="flex-1 flex flex-col gap-2 min-h-0">
                     {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                         const slot = getSlot(day, type);
                         const recipe = recipes.find(r => r.id === slot?.recipeId);
@@ -309,8 +310,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
       {/* Magic Plan Wizard */}
       {showPlanWizard && (
-          <div className="fixed inset-0 z-[5000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
-              <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden flex flex-col gap-8">
+          <div className="fixed inset-0 z-[5000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in" onClick={() => setShowPlanWizard(false)}>
+              <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden flex flex-col gap-8" onClick={e => e.stopPropagation()}>
                     <button onClick={() => setShowPlanWizard(false)} className="absolute top-6 right-6 p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"><X className="w-4 h-4 text-gray-400" /></button>
                     
                     <div className="text-center">
