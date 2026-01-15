@@ -40,29 +40,74 @@ export const EXPIRY_DAYS_BY_CATEGORY: Record<string, number> = {
     "dairy": 12,
     "meat": 4,
     "fish": 2,
-    "grains": 180,
+    "pasta": 365,
+    "legumes": 365,
+    "broths": 180,
+    "bakery": 5,
+    "frozen": 180,
     "spices": 365,
     "pantry": 180,
+    "drinks": 90,
     "other": 30
 };
 
 export const PREDICTIVE_CATEGORY_RULES: Record<string, { category: string, unit: string }> = {
+    // Lácteos
     "leche": { category: "dairy", unit: "l" },
     "huevo": { category: "dairy", unit: "uds" },
     "queso": { category: "dairy", unit: "g" },
     "yogur": { category: "dairy", unit: "uds" },
+    "mantequilla": { category: "dairy", unit: "g" },
+    // Carnes
     "pollo": { category: "meat", unit: "g" },
     "ternera": { category: "meat", unit: "g" },
     "cerdo": { category: "meat", unit: "g" },
+    "pavo": { category: "meat", unit: "g" },
+    // Pescados
     "salmon": { category: "fish", unit: "g" },
+    "atun": { category: "fish", unit: "uds" },
+    "merluza": { category: "fish", unit: "g" },
+    // Verduras
     "tomate": { category: "vegetables", unit: "uds" },
     "cebolla": { category: "vegetables", unit: "uds" },
     "ajo": { category: "vegetables", unit: "dientes" },
     "patata": { category: "vegetables", unit: "kg" },
-    "arroz": { category: "grains", unit: "g" },
-    "pasta": { category: "grains", unit: "g" },
+    "lechuga": { category: "vegetables", unit: "uds" },
+    // Pasta y Arroz
+    "arroz": { category: "pasta", unit: "g" },
+    "pasta": { category: "pasta", unit: "g" },
+    "macarron": { category: "pasta", unit: "g" },
+    "espagueti": { category: "pasta", unit: "g" },
+    "tallarin": { category: "pasta", unit: "g" },
+    "cuscus": { category: "pasta", unit: "g" },
+    "quinoa": { category: "pasta", unit: "g" },
+    // Legumbres
+    "lenteja": { category: "legumes", unit: "g" },
+    "garbanzo": { category: "legumes", unit: "g" },
+    "alubia": { category: "legumes", unit: "g" },
+    "faba": { category: "legumes", unit: "g" },
+    "judion": { category: "legumes", unit: "g" },
+    // Caldos
+    "caldo": { category: "broths", unit: "l" },
+    "sopa": { category: "broths", unit: "uds" },
+    "crema": { category: "broths", unit: "uds" },
+    "gazpacho": { category: "broths", unit: "l" },
+    // Panadería
+    "pan": { category: "bakery", unit: "uds" },
+    "bollo": { category: "bakery", unit: "uds" },
+    "barra": { category: "bakery", unit: "uds" },
+    // Bebidas
+    "agua": { category: "drinks", unit: "l" },
+    "zumo": { category: "drinks", unit: "l" },
+    "vino": { category: "drinks", unit: "l" },
+    "cerveza": { category: "drinks", unit: "l" },
+    "refresco": { category: "drinks", unit: "l" },
+    // Despensa
     "aceite": { category: "pantry", unit: "l" },
-    "pan": { category: "grains", unit: "uds" }
+    "vinagre": { category: "pantry", unit: "l" },
+    "harina": { category: "pantry", unit: "g" },
+    "azucar": { category: "pantry", unit: "g" },
+    "sal": { category: "spices", unit: "g" }
 };
 
 export const MOCK_USER: UserProfile = {
@@ -117,16 +162,16 @@ function generateMassiveLogicalRecipes(): Recipe[] {
         { n: 'Tofu', c: 'meat', t: ['vegan', 'vegetarian'] },
         { n: 'Ternera', c: 'meat', t: ['keto'] },
         { n: 'Gambas', c: 'fish', t: ['healthy'] },
-        { n: 'Lentejas', c: 'pantry', t: ['vegan', 'vegetarian', 'healthy'] },
+        { n: 'Lentejas', c: 'legumes', t: ['vegan', 'vegetarian', 'healthy'] },
         { n: 'Atún', c: 'fish', t: ['healthy'] },
-        { n: 'Garbanzos', c: 'pantry', t: ['vegan', 'vegetarian'] }
+        { n: 'Garbanzos', c: 'legumes', t: ['vegan', 'vegetarian'] }
     ];
 
     const bases = [
-        { n: 'Arroz', c: 'grains', cui: 'asian' },
-        { n: 'Pasta', c: 'grains', cui: 'italian' },
-        { n: 'Quinoa', c: 'grains', cui: 'healthy' },
-        { n: 'Cuscús', c: 'grains', cui: 'mediterranean' },
+        { n: 'Arroz', c: 'pasta', cui: 'asian' },
+        { n: 'Pasta', c: 'pasta', cui: 'italian' },
+        { n: 'Quinoa', c: 'pasta', cui: 'healthy' },
+        { n: 'Cuscús', c: 'pasta', cui: 'mediterranean' },
         { n: 'Ensalada', c: 'vegetables', cui: 'healthy' },
         { n: 'Patatas Asadas', c: 'vegetables', cui: 'spanish' }
     ];

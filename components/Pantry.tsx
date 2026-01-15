@@ -22,12 +22,17 @@ interface PantryProps {
 const CATEGORIES_OPTIONS = [
     { id: 'vegetables', label: 'Verduras', emoji: '🥦' },
     { id: 'fruits', label: 'Frutas', emoji: '🍎' },
-    { id: 'dairy', label: 'Lácteos', emoji: '🧀' },
-    { id: 'meat', label: 'Carne', emoji: '🥩' },
-    { id: 'fish', label: 'Pescado', emoji: '🐟' },
-    { id: 'grains', label: 'Cereales', emoji: '🥖' },
+    { id: 'dairy', label: 'Lácteos y Huevos', emoji: '🧀' },
+    { id: 'meat', label: 'Carnes', emoji: '🥩' },
+    { id: 'fish', label: 'Pescados', emoji: '🐟' },
+    { id: 'pasta', label: 'Pasta y Arroz', emoji: '🍝' },
+    { id: 'legumes', label: 'Legumbres', emoji: '🫘' },
+    { id: 'broths', label: 'Caldos y Sopas', emoji: '🥣' },
+    { id: 'bakery', label: 'Panadería', emoji: '🥖' },
+    { id: 'frozen', label: 'Congelados', emoji: '❄️' },
     { id: 'pantry', label: 'Despensa', emoji: '🥫' },
     { id: 'spices', label: 'Especias', emoji: '🧂' },
+    { id: 'drinks', label: 'Bebidas', emoji: '🥤' },
     { id: 'other', label: 'Otros', emoji: '🛍️' },
 ];
 

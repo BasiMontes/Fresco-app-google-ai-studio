@@ -40,11 +40,16 @@ const UNIT_EQUIVALENCES: Record<string, { weight: number, unit: string }> = {
 const CATEGORY_LABELS: Record<string, { label: string, emoji: string, color: string }> = {
     "vegetables": { label: "Verdulería", emoji: "🥦", color: "text-green-700" },
     "fruits": { label: "Frutería", emoji: "🍎", color: "text-red-700" },
-    "dairy": { label: "Lácteos", emoji: "🧀", color: "text-yellow-700" },
+    "dairy": { label: "Lácteos y Huevos", emoji: "🧀", color: "text-yellow-700" },
     "meat": { label: "Carnicería", emoji: "🥩", color: "text-rose-700" },
     "fish": { label: "Pescadería", emoji: "🐟", color: "text-blue-700" },
-    "grains": { label: "Cereales", emoji: "🥖", color: "text-orange-700" },
+    "pasta": { label: "Pasta y Arroz", emoji: "🍝", color: "text-orange-700" },
+    "legumes": { label: "Legumbres", emoji: "🫘", color: "text-amber-800" },
+    "broths": { label: "Caldos y Sopas", emoji: "🥣", color: "text-orange-600" },
+    "bakery": { label: "Panadería", emoji: "🥖", color: "text-yellow-800" },
+    "frozen": { label: "Congelados", emoji: "❄️", color: "text-cyan-600" },
     "spices": { label: "Especias", emoji: "🧂", color: "text-gray-700" },
+    "drinks": { label: "Bebidas", emoji: "🥤", color: "text-blue-500" },
     "pantry": { label: "Despensa", emoji: "🥫", color: "text-slate-700" },
     "other": { label: "Varios", emoji: "🛍️", color: "text-purple-700" }
 };

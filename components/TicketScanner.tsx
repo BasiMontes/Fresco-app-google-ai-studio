@@ -16,21 +16,31 @@ const CATEGORY_MAP: Record<string, string> = {
     'lacteos': 'dairy', 'leche': 'dairy', 'quesos': 'dairy', 'huevos': 'dairy', 'yogures': 'dairy',
     'carne': 'meat', 'pollo': 'meat', 'aves': 'meat', 'embutidos': 'meat', 'cerdo': 'meat', 'vacuno': 'meat',
     'pescado': 'fish', 'marisco': 'fish', 'congelados': 'fish',
-    'cereales': 'grains', 'pan': 'grains', 'pasta': 'grains', 'arroz': 'grains', 'bolleria': 'grains', 'harinas': 'grains',
-    'despensa': 'pantry', 'conservas': 'pantry', 'salsas': 'pantry', 'aceites': 'pantry', 'legumbres': 'pantry',
+    'pasta': 'pasta', 'arroz': 'pasta', 'macarrones': 'pasta', 'espaguetis': 'pasta',
+    'legumbres': 'legumes', 'lentejas': 'legumes', 'garbanzos': 'legumes', 'alubias': 'legumes',
+    'caldos': 'broths', 'sopas': 'broths', 'cremas': 'broths',
+    'panederia': 'bakery', 'pan': 'bakery', 'bolleria': 'bakery',
+    'bebidas': 'drinks', 'agua': 'drinks', 'refrescos': 'drinks', 'vino': 'drinks', 'zumo': 'drinks',
+    'congelado': 'frozen', 'hielo': 'frozen',
+    'despensa': 'pantry', 'conservas': 'pantry', 'salsas': 'pantry', 'aceites': 'pantry',
     'especias': 'spices', 'condimentos': 'spices', 'sal': 'spices',
-    'bebidas': 'other', 'limpieza': 'other', 'hogar': 'other', 'higiene': 'other', 'otros': 'other'
+    'limpieza': 'other', 'hogar': 'other', 'higiene': 'other', 'otros': 'other'
 };
 
 const CATEGORIES_OPTIONS = [
     { id: 'vegetables', label: 'Verduras', emoji: '🥦' },
     { id: 'fruits', label: 'Frutas', emoji: '🍎' },
-    { id: 'dairy', label: 'Lácteos', emoji: '🧀' },
-    { id: 'meat', label: 'Carne', emoji: '🥩' },
-    { id: 'fish', label: 'Pescado', emoji: '🐟' },
-    { id: 'grains', label: 'Cereales', emoji: '🥖' },
+    { id: 'dairy', label: 'Lácteos y Huevos', emoji: '🧀' },
+    { id: 'meat', label: 'Carnes', emoji: '🥩' },
+    { id: 'fish', label: 'Pescados', emoji: '🐟' },
+    { id: 'pasta', label: 'Pasta y Arroz', emoji: '🍝' },
+    { id: 'legumes', label: 'Legumbres', emoji: '🫘' },
+    { id: 'broths', label: 'Caldos y Sopas', emoji: '🥣' },
+    { id: 'bakery', label: 'Panadería', emoji: '🥖' },
+    { id: 'frozen', label: 'Congelados', emoji: '❄️' },
     { id: 'pantry', label: 'Despensa', emoji: '🥫' },
     { id: 'spices', label: 'Especias', emoji: '🧂' },
+    { id: 'drinks', label: 'Bebidas', emoji: '🥤' },
     { id: 'other', label: 'Otros', emoji: '🛍️' },
 ];
 
@@ -115,7 +125,6 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             const sanitized = items.map((item: any) => ({
                 ...item,
                 category: sanitizeCategory(String(item.category || '')),
-                // Default expiry logic: based on category but mutable
                 daysToExpire: EXPIRY_DAYS_BY_CATEGORY[sanitizeCategory(String(item.category || ''))] || 14
             }));
             setDetectedItems(sanitized);
@@ -256,7 +265,6 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                                             setDetectedItems(newItems);
                                         }}
                                     />
-                                    {/* FIX 2: Selector nativo de Categoría Estilizado */}
                                     <div className="relative mt-2 inline-block">
                                         <select 
                                             value={item.category}
