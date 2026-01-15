@@ -271,7 +271,6 @@ const App: React.FC = () => {
           </aside>
 
           <main className="flex-1 h-full overflow-hidden flex flex-col relative bg-[#FDFDFD]">
-            {/* Contenedor con Scroll habilitado para el contenido principal */}
             <div className={`flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 h-full ${activeTab === 'planner' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-auto'} no-scrollbar overscroll-none`}>
                 <Suspense fallback={<PageLoader message="Cargando vista..." />}>
                 <div className="h-full w-full">
@@ -301,7 +300,38 @@ const App: React.FC = () => {
                         db.clearMealPlanDB(userId!); 
                     }} 
                     onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} />}
-                    {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={(id, delta) => setPantry(p => p.map(x => x.id === id ? {...x, quantity: x.quantity + delta} : x))} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} />}
+                    
+                    {activeTab === 'pantry' && <Pantry 
+                        items={pantry} 
+                        onRemove={id => {
+                            setPantry(p => p.filter(x => x.id !== id));
+                            db.deletePantryItemDB(id);
+                        }} 
+                        onAdd={i => {
+                            setPantry(p => [...p, i]);
+                            if (userId) db.addPantryItemDB(userId, i);
+                        }} 
+                        onUpdateQuantity={(id, delta) => {
+                            setPantry(prev => {
+                                const item = prev.find(x => x.id === id);
+                                if (item && userId) {
+                                    const updated = { ...item, quantity: item.quantity + delta };
+                                    db.updatePantryItemDB(userId, updated);
+                                    return prev.map(x => x.id === id ? updated : x);
+                                }
+                                return prev;
+                            });
+                        }} 
+                        onAddMany={items => {
+                            setPantry(p => [...p, ...items]);
+                            if (userId) db.addPantryItemsBulkDB(userId, items);
+                        }} 
+                        onEdit={i => {
+                            setPantry(p => p.map(x => x.id === i.id ? i : x));
+                            if (userId) db.updatePantryItemDB(userId, i);
+                        }} 
+                    />}
+
                     {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={(rid, serv, date, type) => {
                         if (date && type) {
                             const ns = { date, type, recipeId: rid.id, servings: serv, isCooked: false };
@@ -310,7 +340,33 @@ const App: React.FC = () => {
                             setToast({ msg: "Planificado", type: 'success' });
                         }
                     }} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
-                    {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={s => setShoppingList(x => [...x, ...s])} onUpdateShoppingItem={s => setShoppingList(x => x.map(y => y.id === s.id ? s : y))} onRemoveShoppingItem={id => setShoppingList(x => x.filter(y => y.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
+                    
+                    {activeTab === 'shopping' && user && <ShoppingList 
+                        plan={mealPlan} 
+                        recipes={recipes} 
+                        pantry={pantry} 
+                        user={user} 
+                        dbItems={shoppingList} 
+                        onAddShoppingItem={s => {
+                            setShoppingList(x => [...x, ...s]);
+                            if (userId) s.forEach(item => db.addShoppingItemDB(userId, item));
+                        }} 
+                        onUpdateShoppingItem={s => {
+                            setShoppingList(x => x.map(y => y.id === s.id ? s : y));
+                            if (userId) db.updateShoppingItemDB(userId, s);
+                        }} 
+                        onRemoveShoppingItem={id => {
+                            setShoppingList(x => x.filter(y => y.id !== id));
+                            db.deleteShoppingItemDB(id);
+                        }} 
+                        onFinishShopping={items => {
+                            setPantry(p => [...p, ...items]);
+                            if (userId) db.addPantryItemsBulkDB(userId, items);
+                        }} 
+                        onOpenRecipe={() => {}} 
+                        onSyncServings={() => {}} 
+                    />}
+                    
                     {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} />}
                 </div>
                 </Suspense>
