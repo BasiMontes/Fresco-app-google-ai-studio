@@ -115,14 +115,21 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
         text: 'text-red-700' 
     };
     
-    if (days <= 3) return { 
-        type: 'critical', 
-        label: days === 0 ? 'Hoy' : `${days}d`, 
-        bg: 'bg-orange-50/70', 
-        border: 'border-orange-200', 
-        dot: 'bg-orange-500', 
-        text: 'text-orange-700' 
-    };
+    if (days <= 3) {
+        let labelText = '';
+        if (days === 0) labelText = 'Caduca hoy';
+        else if (days === 1) labelText = 'Caduca mañana';
+        else labelText = `En ${days} días`;
+
+        return { 
+            type: 'critical', 
+            label: labelText, 
+            bg: 'bg-orange-50/70', 
+            border: 'border-orange-200', 
+            dot: 'bg-orange-500', 
+            text: 'text-orange-700' 
+        };
+    }
     
     return { 
         type: 'fresh', 
@@ -259,7 +266,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                             {status.label && (
                                                 <div className="flex items-center gap-1 mt-0.5">
                                                     <div className={`w-1 h-1 rounded-full ${status.dot}`} />
-                                                    <span className={`text-[7px] font-black uppercase tracking-widest ${status.text}`}>{status.label}</span>
+                                                    <span className={`text-[7px] font-black uppercase tracking-wide ${status.text}`}>{status.label}</span>
                                                 </div>
                                             )}
                                         </div>
