@@ -6,15 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Fresco - Tu cocina inteligente</title>
     
-    <!-- Assets -->
+    <!-- Assets & PWA -->
     <link rel="icon" type="image/png" href="input_file_0.png" />
+    <link rel="apple-touch-icon" href="input_file_0.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#013b33" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <!-- Compatibilidad process.env para navegador -->
     <script>
-      // Aseguramos que existan los objetos necesarios antes de que carguen los módulos
       window.process = window.process || {};
       window.process.env = window.process.env || {};
     </script>
@@ -65,7 +66,6 @@
         background-color: #f8f9fa; 
         -webkit-tap-highlight-color: transparent;
         font-family: system-ui, -apple-system, sans-serif;
-        /* Bloqueo de scroll global y rebote */
         overflow: hidden;
         height: 100vh;
         width: 100vw;

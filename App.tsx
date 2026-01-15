@@ -190,17 +190,17 @@ const App: React.FC = () => {
   const handleCookFinish = async (usedIngredients: { name: string, quantity: number, unit?: string }[], recipeId?: string) => {
       if (!userId) return;
       let updatedPantry = [...pantry];
-      usedIngredients.forEach(used => {
+      for (const used of usedIngredients) {
           const usedName = cleanName(used.name);
           const idx = updatedPantry.findIndex(p => cleanName(p.name).includes(usedName));
           if (idx >= 0) {
               const res = subtractIngredient(updatedPantry[idx].quantity, updatedPantry[idx].unit, used.quantity, used.unit || 'uds');
               if (res) {
                 updatedPantry[idx] = { ...updatedPantry[idx], quantity: res.quantity };
-                db.updatePantryItemDB(userId, updatedPantry[idx]);
+                await db.updatePantryItemDB(userId, updatedPantry[idx]);
               }
           }
-      });
+      }
       setPantry(updatedPantry);
       if (recipeId) {
         const today = format(new Date(), 'yyyy-MM-dd');
@@ -210,7 +210,7 @@ const App: React.FC = () => {
           const newPlan = [...mealPlan];
           newPlan[slotIdx] = updated;
           setMealPlan(newPlan);
-          db.updateMealSlotDB(userId, updated);
+          await db.updateMealSlotDB(userId, updated);
         }
       }
       setToast({ msg: "Inventario actualizado", type: 'success' });
@@ -275,68 +275,67 @@ const App: React.FC = () => {
                 <Suspense fallback={<PageLoader message="Cargando vista..." />}>
                 <div className="h-full w-full">
                     {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
-                    {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={(d, t, rid) => {
+                    {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={async (d, t, rid) => {
                         if (rid) {
                         const ns = { date: d, type: t, recipeId: rid, servings: user.household_size, isCooked: false };
                         setMealPlan(p => [...p.filter(x => !(x.date === d && x.type === t)), ns]);
-                        db.updateMealSlotDB(userId!, ns);
+                        await db.updateMealSlotDB(userId!, ns);
                         } else {
                         setMealPlan(p => p.filter(x => !(x.date === d && x.type === t)));
-                        db.deleteMealSlotDB(userId!, d, t);
+                        await db.deleteMealSlotDB(userId!, d, t);
                         }
-                    }} onAIPlanGenerated={(newSlots, newRecipes) => { 
+                    }} onAIPlanGenerated={async (newSlots, newRecipes) => { 
                         if (newRecipes && newRecipes.length > 0) {
                             setRecipes(x => [...x, ...newRecipes]);
-                            db.saveRecipesBulkDB(userId!, newRecipes);
+                            await db.saveRecipesBulkDB(userId!, newRecipes);
                         }
                         setMealPlan(prev => {
                             const filtered = prev.filter(ex => !newSlots.some(ns => ns.date === ex.date && ns.type === ex.type));
                             return [...filtered, ...newSlots];
                         });
-                        newSlots.forEach(slot => db.updateMealSlotDB(userId!, slot));
+                        for (const slot of newSlots) {
+                           await db.updateMealSlotDB(userId!, slot);
+                        }
                     }} 
-                    onClear={() => { 
+                    onClear={async () => { 
                         setMealPlan([]); 
-                        db.clearMealPlanDB(userId!); 
+                        await db.clearMealPlanDB(userId!); 
                     }} 
                     onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} />}
                     
                     {activeTab === 'pantry' && <Pantry 
                         items={pantry} 
-                        onRemove={id => {
+                        onRemove={async id => {
                             setPantry(p => p.filter(x => x.id !== id));
-                            db.deletePantryItemDB(id);
+                            await db.deletePantryItemDB(id);
                         }} 
-                        onAdd={i => {
+                        onAdd={async i => {
                             setPantry(p => [...p, i]);
-                            if (userId) db.addPantryItemDB(userId, i);
+                            if (userId) await db.addPantryItemDB(userId, i);
                         }} 
-                        onUpdateQuantity={(id, delta) => {
-                            setPantry(prev => {
-                                const item = prev.find(x => x.id === id);
-                                if (item && userId) {
-                                    const updated = { ...item, quantity: item.quantity + delta };
-                                    db.updatePantryItemDB(userId, updated);
-                                    return prev.map(x => x.id === id ? updated : x);
-                                }
-                                return prev;
-                            });
+                        onUpdateQuantity={async (id, delta) => {
+                            const item = pantry.find(x => x.id === id);
+                            if (item && userId) {
+                                const updated = { ...item, quantity: item.quantity + delta };
+                                setPantry(prev => prev.map(x => x.id === id ? updated : x));
+                                await db.updatePantryItemDB(userId, updated);
+                            }
                         }} 
-                        onAddMany={items => {
+                        onAddMany={async items => {
                             setPantry(p => [...p, ...items]);
-                            if (userId) db.addPantryItemsBulkDB(userId, items);
+                            if (userId) await db.addPantryItemsBulkDB(userId, items);
                         }} 
-                        onEdit={i => {
+                        onEdit={async i => {
                             setPantry(p => p.map(x => x.id === i.id ? i : x));
-                            if (userId) db.updatePantryItemDB(userId, i);
+                            if (userId) await db.updatePantryItemDB(userId, i);
                         }} 
                     />}
 
-                    {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={(rid, serv, date, type) => {
+                    {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={async (rid, serv, date, type) => {
                         if (date && type) {
                             const ns = { date, type, recipeId: rid.id, servings: serv, isCooked: false };
                             setMealPlan(p => [...p.filter(x => !(x.date === date && x.type === type)), ns]);
-                            db.updateMealSlotDB(userId!, ns);
+                            await db.updateMealSlotDB(userId!, ns);
                             setToast({ msg: "Planificado", type: 'success' });
                         }
                     }} onCookFinish={handleCookFinish} onAddToShoppingList={(items) => { setShoppingList(prev => [...prev, ...items]); setActiveTab('shopping'); }} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
@@ -347,21 +346,25 @@ const App: React.FC = () => {
                         pantry={pantry} 
                         user={user} 
                         dbItems={shoppingList} 
-                        onAddShoppingItem={s => {
+                        onAddShoppingItem={async s => {
                             setShoppingList(x => [...x, ...s]);
-                            if (userId) s.forEach(item => db.addShoppingItemDB(userId, item));
+                            if (userId) {
+                              for (const item of s) {
+                                await db.addShoppingItemDB(userId, item);
+                              }
+                            }
                         }} 
-                        onUpdateShoppingItem={s => {
+                        onUpdateShoppingItem={async s => {
                             setShoppingList(x => x.map(y => y.id === s.id ? s : y));
-                            if (userId) db.updateShoppingItemDB(userId, s);
+                            if (userId) await db.updateShoppingItemDB(userId, s);
                         }} 
-                        onRemoveShoppingItem={id => {
+                        onRemoveShoppingItem={async id => {
                             setShoppingList(x => x.filter(y => y.id !== id));
-                            db.deleteShoppingItemDB(id);
+                            await db.deleteShoppingItemDB(id);
                         }} 
-                        onFinishShopping={items => {
+                        onFinishShopping={async items => {
                             setPantry(p => [...p, ...items]);
-                            if (userId) db.addPantryItemsBulkDB(userId, items);
+                            if (userId) await db.addPantryItemsBulkDB(userId, items);
                         }} 
                         onOpenRecipe={() => {}} 
                         onSyncServings={() => {}} 
