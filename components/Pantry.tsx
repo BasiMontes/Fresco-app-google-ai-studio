@@ -38,7 +38,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
   const [showScanner, setShowScanner] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [itemToEdit, setItemToEdit] = useState<PantryItem | null>(null);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'expired' | 'critical' | 'fresh'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'expired' | 'priority' | 'fresh'>('all');
 
   const [newItem, setNewItem] = useState({ 
     name: '', 
@@ -101,7 +101,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
         text: 'text-gray-400' 
     };
     
-    // Usamos startOfDay para comparar solo la fecha, ignorando la hora
     const today = startOfDay(new Date());
     const expiry = startOfDay(new Date(item.expires_at));
     const days = differenceInDays(expiry, today);
@@ -122,7 +121,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
         else labelText = `En ${days} días`;
 
         return { 
-            type: 'critical', 
+            type: 'priority', 
             label: labelText, 
             bg: 'bg-orange-50/70', 
             border: 'border-orange-200', 
@@ -221,9 +220,9 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       </header>
 
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          {['all', 'expired', 'critical', 'fresh'].map(f => {
+          {['all', 'expired', 'priority', 'fresh'].map(f => {
               const isActive = activeFilter === f;
-              const labels = { all: 'Todo', expired: 'Caducado', critical: 'Crítico', fresh: 'Óptimo' };
+              const labels = { all: 'Todo', expired: 'Caducado', priority: 'Prioridad', fresh: 'Óptimo' };
               return (
                   <button key={f} onClick={() => setActiveFilter(f as any)}
                     className={`px-3 py-1 rounded-full border font-black text-[8px] uppercase tracking-widest transition-all ${
