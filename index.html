@@ -14,6 +14,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+    <!-- Satoshi Font -->
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap" rel="stylesheet">
+
     <!-- Compatibilidad process.env para navegador -->
     <script>
       window.process = window.process || {};
@@ -27,7 +30,7 @@
         theme: {
           extend: {
             fontFamily: {
-              sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+              sans: ['Satoshi', 'system-ui', '-apple-system', 'sans-serif'],
             },
             colors: {
               teal: { 50: '#f0fdf4', 100: '#dcfce7', 600: '#16a34a', 700: '#15803d', 800: '#064e3b', 900: '#013b33' },
@@ -65,7 +68,7 @@
       body { 
         background-color: #f8f9fa; 
         -webkit-tap-highlight-color: transparent;
-        font-family: system-ui, -apple-system, sans-serif;
+        font-family: 'Satoshi', sans-serif;
         overflow: hidden;
         height: 100vh;
         width: 100vw;
@@ -77,6 +80,12 @@
         width: 100%;
         overflow: hidden;
       }
+      /* Sistema de tipografía global Fresco */
+      .fresco-h1 { font-size: 2.25rem; font-weight: 900; line-height: 1.1; letter-spacing: -0.02em; }
+      .fresco-h2 { font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+      .fresco-label { font-size: 0.625rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: #94a3b8; }
+      .fresco-body { font-size: 0.875rem; font-weight: 500; line-height: 1.5; color: #475569; }
+      
       .no-scrollbar::-webkit-scrollbar { display: none; } 
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       @keyframes slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
