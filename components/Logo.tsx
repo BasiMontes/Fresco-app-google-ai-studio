@@ -13,8 +13,7 @@ export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'default',
 
   return (
     <div className={`flex items-center gap-3 ${justify} ${className} select-none group`}>
-      <div className="relative transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
-        {/* Recuperamos el logo original del usuario */}
+      <div className="relative transition-transform duration-500 group-hover:rotate-12 group-hover:scale-105">
         <img 
           src="input_file_0.png" 
           alt="Fresco Logo" 
