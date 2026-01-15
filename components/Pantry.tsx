@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PantryItem } from '../types';
 import { Package, Plus, Trash2, Calendar, X, Clock, Minus, Plus as PlusIcon, Camera, Pencil, WifiOff, Search, AlertCircle, CalendarDays, History } from 'lucide-react';
-import { format, differenceInDays, isPast, addDays } from 'date-fns';
+import { format, differenceInDays, startOfDay, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TicketScanner } from './TicketScanner';
 import { PREDICTIVE_CATEGORY_RULES } from '../constants';
@@ -101,9 +101,12 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
         text: 'text-gray-400' 
     };
     
-    const days = differenceInDays(new Date(item.expires_at), new Date());
+    // Usamos startOfDay para comparar solo la fecha, ignorando la hora
+    const today = startOfDay(new Date());
+    const expiry = startOfDay(new Date(item.expires_at));
+    const days = differenceInDays(expiry, today);
     
-    if (isPast(new Date(item.expires_at)) && days < 0) return { 
+    if (days < 0) return { 
         type: 'expired', 
         label: 'Caducado', 
         bg: 'bg-red-50/70', 
@@ -114,7 +117,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
     
     if (days <= 3) return { 
         type: 'critical', 
-        label: days <= 0 ? 'Hoy' : `${days}d`, 
+        label: days === 0 ? 'Hoy' : `${days}d`, 
         bg: 'bg-orange-50/70', 
         border: 'border-orange-200', 
         dot: 'bg-orange-500', 
