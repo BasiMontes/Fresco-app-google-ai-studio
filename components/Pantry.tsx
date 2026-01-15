@@ -106,27 +106,27 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
     if (isPast(new Date(item.expires_at)) && days < 0) return { 
         type: 'expired', 
         label: 'Caducado', 
-        bg: 'bg-red-50/70', 
+        bg: 'bg-red-100', 
         border: 'border-red-200', 
-        dot: 'bg-red-500', 
+        dot: 'bg-red-600', 
         text: 'text-red-700' 
     };
     
     if (days <= 3) return { 
         type: 'critical', 
         label: days <= 0 ? 'Hoy' : `${days}d`, 
-        bg: 'bg-orange-50/70', 
+        bg: 'bg-orange-100', 
         border: 'border-orange-200', 
-        dot: 'bg-orange-500', 
+        dot: 'bg-orange-600', 
         text: 'text-orange-700' 
     };
     
     return { 
         type: 'fresh', 
         label: '', 
-        bg: 'bg-green-50/40', 
-        border: 'border-green-100', 
-        dot: 'bg-green-500', 
+        bg: 'bg-green-100', 
+        border: 'border-green-200', 
+        dot: 'bg-green-600', 
         text: 'text-green-700' 
     };
   };
@@ -260,16 +260,16 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                                                 </div>
                                             )}
                                         </div>
-                                        <button onClick={() => setItemToEdit(item)} className="p-1.5 bg-white/40 rounded-lg text-gray-400 hover:bg-teal-900 hover:text-white transition-all shadow-sm">
+                                        <button onClick={() => setItemToEdit(item)} className="p-1.5 bg-white/60 rounded-lg text-gray-400 hover:bg-teal-900 hover:text-white transition-all shadow-sm">
                                             <Pencil className="w-2.5 h-2.5" />
                                         </button>
                                     </div>
 
-                                    <div className="bg-white/50 rounded-lg p-1 flex items-center justify-between mt-1">
+                                    <div className="bg-white/70 rounded-lg p-1 flex items-center justify-between mt-1">
                                         <button onClick={() => handleQtyChange(item, -step)} className="w-6 h-6 flex items-center justify-center text-gray-400 bg-white rounded-md shadow-sm hover:text-red-500 active:scale-90"><Minus className="w-3 h-3" /></button>
-                                        <div className="text-center flex flex-col items-center">
+                                        <div className="text-center flex items-baseline gap-1 px-2">
                                             <span className="text-[11px] font-black text-teal-900 leading-none">{item.quantity % 1 === 0 ? item.quantity : item.quantity.toFixed(1)}</span>
-                                            <span className="text-[6px] font-black uppercase text-gray-400 tracking-tighter">{item.unit}</span>
+                                            <span className="text-[7px] font-black uppercase text-gray-500 tracking-tighter">{item.unit}</span>
                                         </div>
                                         <button onClick={() => handleQtyChange(item, step)} className="w-6 h-6 flex items-center justify-center text-gray-400 bg-white rounded-md shadow-sm hover:text-teal-600 active:scale-90"><PlusIcon className="w-3 h-3" /></button>
                                     </div>
@@ -330,7 +330,14 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       {itemToEdit && (
         <div className="fixed inset-0 z-[5000] bg-teal-900/10 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
             <div className="w-full max-w-sm bg-white rounded-2xl p-6 shadow-2xl relative">
-                <button onClick={() => setItemToEdit(null)} className="absolute top-4 right-4 p-2 text-gray-400"><X className="w-4 h-4" /></button>
+                <div className="absolute top-4 right-4 flex gap-1">
+                    <button type="button" onClick={() => handleDeleteAttempt(itemToEdit)} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors">
+                        <Trash2 className="w-5 h-5" />
+                    </button>
+                    <button type="button" onClick={() => setItemToEdit(null)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
                 <h3 className="text-lg font-black text-teal-900 mb-5">Detalle del Producto</h3>
                 <form onSubmit={(e) => { e.preventDefault(); onEdit(itemToEdit); setItemToEdit(null); }} className="space-y-4">
                     <div className="space-y-1">
@@ -366,11 +373,8 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                         </div>
                     </div>
 
-                    <div className="flex gap-2 pt-4">
-                        <button type="button" onClick={() => handleDeleteAttempt(itemToEdit)} className="w-10 h-10 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
-                            <Trash2 className="w-4 h-4" />
-                        </button>
-                        <button type="submit" className="flex-1 py-3 bg-teal-900 text-white rounded-lg font-black text-[9px] uppercase tracking-widest shadow-md hover:bg-teal-800">Actualizar Stock</button>
+                    <div className="pt-4">
+                        <button type="submit" className="w-full py-3 bg-teal-900 text-white rounded-lg font-black text-[9px] uppercase tracking-widest shadow-md hover:bg-teal-800 transition-all active:scale-95">Actualizar Stock</button>
                     </div>
                 </form>
             </div>
