@@ -20,14 +20,14 @@ interface PantryProps {
 }
 
 const CATEGORIES_OPTIONS = [
-    { id: 'vegetables', label: 'Verduras', emoji: '🥦', color: 'bg-green-50/50' },
-    { id: 'fruits', label: 'Frutas', emoji: '🍎', color: 'bg-red-50/50' },
-    { id: 'dairy', label: 'Lácteos', emoji: '🧀', color: 'bg-yellow-50/50' },
-    { id: 'meat', label: 'Carnes', emoji: '🥩', color: 'bg-rose-50/50' },
-    { id: 'fish', label: 'Pescados', emoji: '🐟', color: 'bg-blue-50/50' },
-    { id: 'pasta', label: 'Pasta y Arroz', emoji: '🍝', color: 'bg-orange-50/50' },
-    { id: 'pantry', label: 'Despensa', emoji: '🥫', color: 'bg-gray-50/50' },
-    { id: 'other', label: 'Otros', emoji: '🛍️', color: 'bg-purple-50/50' },
+    { id: 'vegetables', label: 'Verduras', emoji: '🥦', color: 'bg-green-50' },
+    { id: 'fruits', label: 'Frutas', emoji: '🍎', color: 'bg-red-50' },
+    { id: 'dairy', label: 'Lácteos', emoji: '🧀', color: 'bg-yellow-50' },
+    { id: 'meat', label: 'Carnes', emoji: '🥩', color: 'bg-rose-50' },
+    { id: 'fish', label: 'Pescados', emoji: '🐟', color: 'bg-blue-50' },
+    { id: 'pasta', label: 'Pasta y Arroz', emoji: '🍝', color: 'bg-orange-50' },
+    { id: 'pantry', label: 'Despensa', emoji: '🥫', color: 'bg-gray-50' },
+    { id: 'other', label: 'Otros', emoji: '🛍️', color: 'bg-purple-50' },
 ];
 
 const UNITS_OPTIONS = ['uds', 'g', 'kg', 'ml', 'l', 'paquete', 'bote', 'lonchas', 'ración', 'pizca'];
@@ -55,7 +55,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
     const days = differenceInDays(expiry, today);
     if (days < 0) return { type: 'expired', label: 'CADUCADO', dot: 'bg-red-500', text: 'text-red-600', progressColor: 'bg-red-500' };
     if (days <= 3) {
-        let labelText = days === 0 ? 'HOY' : days === 1 ? 'MAÑANA' : `EN ${days} DÍAS`;
+        let labelText = days === 0 ? 'CADUCA HOY' : `EN ${days} DÍAS`;
         return { type: 'priority', label: labelText, dot: 'bg-orange-500', text: 'text-orange-600', progressColor: 'bg-orange-500' };
     }
     return { type: 'fresh', label: 'ÓPTIMO', dot: 'bg-green-500', text: 'text-green-600', progressColor: 'bg-teal-500' };
@@ -101,27 +101,27 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                 />
             </div>
             <div className="flex gap-2">
-                <button onClick={() => isOnline && setShowScanner(true)} className="flex-1 sm:flex-none px-6 py-4 bg-orange-500 text-white rounded-[1.5rem] flex items-center justify-center gap-3 fresco-label !text-white shadow-xl shadow-orange-500/10 active:scale-95 transition-all">
-                    <Camera className="w-5 h-5" /> Escanear
+                <button onClick={() => isOnline && setShowScanner(true)} className="flex-1 sm:flex-none px-7 py-4 bg-orange-500 text-white rounded-[1.5rem] flex items-center justify-center gap-3 fresco-label !text-white shadow-xl shadow-orange-500/20 active:scale-95 transition-all">
+                    <Camera className="w-5 h-5" /> ESCANEAR
                 </button>
-                <button onClick={() => setShowAddModal(true)} className="flex-1 sm:flex-none px-6 py-4 bg-teal-900 text-white rounded-[1.5rem] flex items-center justify-center gap-3 fresco-label !text-white shadow-xl shadow-teal-900/10 active:scale-95 transition-all">
-                    <Plus className="w-5 h-5" /> Añadir
+                <button onClick={() => setShowAddModal(true)} className="flex-1 sm:flex-none px-7 py-4 bg-teal-900 text-white rounded-[1.5rem] flex items-center justify-center gap-3 fresco-label !text-white shadow-xl shadow-teal-900/20 active:scale-95 transition-all">
+                    <Plus className="w-5 h-5" /> AÑADIR
                 </button>
             </div>
         </div>
       </header>
 
-      {/* Tabs & View Modes */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-b border-gray-100 pb-8">
-          <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto pb-1">
+      {/* Tabs / Filters */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex gap-3 overflow-x-auto no-scrollbar w-full md:w-auto pb-1">
               {[
-                { id: 'all', label: 'Todo el Stock' },
-                { id: 'expired', label: 'Caducados' },
-                { id: 'priority', label: 'Prioritarios' },
-                { id: 'fresh', label: 'En buen estado' }
+                { id: 'all', label: 'TODO EL STOCK' },
+                { id: 'expired', label: 'CADUCADOS' },
+                { id: 'priority', label: 'PRIORITARIOS' },
+                { id: 'fresh', label: 'EN BUEN ESTADO' }
               ].map(f => (
                   <button key={f.id} onClick={() => setActiveFilter(f.id as any)}
-                    className={`px-6 py-3 rounded-full fresco-label transition-all border whitespace-nowrap ${activeFilter === f.id ? 'bg-teal-900 border-teal-900 !text-white shadow-lg' : 'bg-white border-gray-100 !text-gray-400 hover:bg-gray-50'}`}
+                    className={`px-8 py-3.5 rounded-full fresco-label transition-all border-2 whitespace-nowrap ${activeFilter === f.id ? 'bg-teal-900 border-teal-900 !text-white shadow-lg' : 'bg-white border-gray-50 !text-gray-400 hover:border-teal-100'}`}
                   >
                       {f.label}
                   </button>
@@ -129,11 +129,11 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
           </div>
           
           <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-                <div className="flex bg-gray-100 p-1.5 rounded-[1.25rem]">
-                    <button onClick={() => setViewMode('grid')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-400'}`}>
+                <div className="flex bg-gray-100/50 p-1.5 rounded-[1.25rem] border border-gray-100">
+                    <button onClick={() => setViewMode('grid')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-teal-900 shadow-sm border border-gray-100' : 'text-gray-400'}`}>
                         <LayoutGrid className="w-4 h-4" />
                     </button>
-                    <button onClick={() => setViewMode('list')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white text-teal-900 shadow-sm' : 'text-gray-400'}`}>
+                    <button onClick={() => setViewMode('list')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white text-teal-900 shadow-sm border border-gray-100' : 'text-gray-400'}`}>
                         <List className="w-4 h-4" />
                     </button>
                 </div>
@@ -143,9 +143,9 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       {/* Main Content Grid */}
       <div className="space-y-16">
           {Object.keys(groupedItems).length === 0 ? (
-              <div className="py-24 text-center flex flex-col items-center opacity-40">
+              <div className="py-32 text-center flex flex-col items-center opacity-30">
                   <div className="w-24 h-24 bg-gray-50 rounded-[2.5rem] flex items-center justify-center mb-6 text-gray-200"><Package size={48} /></div>
-                  <p className="fresco-h2 text-gray-400">Sin productos a la vista</p>
+                  <p className="fresco-h2 text-gray-400">Despensa vacía</p>
                   <button onClick={() => { setSearchTerm(''); setActiveFilter('all'); }} className="mt-4 fresco-label !text-teal-600 hover:underline">Limpiar filtros</button>
               </div>
           ) : (
@@ -153,144 +153,114 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                 const catInfo = CATEGORIES_OPTIONS.find(c => c.id === cat) || CATEGORIES_OPTIONS[7];
                 return (
                     <div key={cat} className="space-y-10">
-                        <div className="flex items-center gap-4">
-                            <div className={`w-14 h-14 ${catInfo.color} rounded-[1.5rem] flex items-center justify-center text-3xl shadow-sm border border-white/50`}>
+                        <div className="flex items-center gap-5">
+                            <div className={`w-14 h-14 ${catInfo.color} rounded-[1.5rem] flex items-center justify-center text-3xl shadow-sm border border-white`}>
                                 {catInfo.emoji}
                             </div>
                             <div>
-                                <h3 className="fresco-h2 !text-2xl text-teal-950 capitalize">{catInfo.label}</h3>
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">{groupedItems[cat].length} productos almacenados</p>
+                                <h3 className="fresco-h2 !text-3xl text-teal-950 capitalize">{catInfo.label}</h3>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">{groupedItems[cat].length} PRODUCTOS ALMACENADOS</p>
                             </div>
                             <div className="flex-1 h-px bg-gray-100" />
                         </div>
 
-                        {viewMode === 'grid' ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                {groupedItems[cat].map(item => {
-                                    const status = getExpiryStatus(item);
+                        <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10" : "space-y-4"}>
+                            {groupedItems[cat].map(item => {
+                                const status = getExpiryStatus(item);
+                                if (viewMode === 'grid') {
                                     return (
-                                        <div key={item.id} className="bg-white rounded-[2.5rem] border border-gray-100 p-8 flex flex-col shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all group relative overflow-hidden">
-                                            {/* Top Status & Actions */}
-                                            <div className="flex justify-between items-start gap-4 mb-6">
-                                                <div className="w-24 h-24 rounded-[2rem] bg-gray-50 overflow-hidden flex-shrink-0 border-2 border-white shadow-inner">
+                                        <div key={item.id} className="bg-white rounded-[2.5rem] border border-gray-100 p-8 flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgb(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-500 group relative">
+                                            
+                                            {/* Header: Photo and Status */}
+                                            <div className="flex justify-between items-start gap-5 mb-10">
+                                                <div className="w-28 h-28 rounded-[2rem] bg-gray-50 overflow-hidden flex-shrink-0 border-4 border-white shadow-inner">
                                                     <SmartImage 
                                                         src={`https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300&sig=${item.id}`} 
                                                         alt={item.name} 
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                                                     />
                                                 </div>
-                                                <div className="flex-1 min-w-0 pt-2">
-                                                    <div className="flex items-center gap-1.5 mb-1">
-                                                        <div className={`w-2 h-2 rounded-full ${status.dot}`} />
-                                                        <span className={`fresco-label !text-[10px] !tracking-widest ${status.text}`}>{status.label || 'ESTADO ÓPTIMO'}</span>
+                                                <div className="flex-1 min-w-0 pt-3 text-right">
+                                                    <div className="flex items-center justify-end gap-2 mb-2">
+                                                        <span className={`fresco-label !text-[10px] !tracking-widest ${status.text}`}>{status.label || 'ÓPTIMO'}</span>
+                                                        <div className={`w-3 h-3 rounded-full ${status.dot} shadow-sm`} />
                                                     </div>
-                                                    <h4 className="fresco-h3 text-teal-950 truncate capitalize leading-tight" title={item.name}>{item.name}</h4>
-                                                    <p className="text-[9px] font-black uppercase tracking-widest text-gray-300 mt-1.5">Fresco Original.</p>
+                                                    <h4 className="fresco-h2 !text-2xl text-teal-950 truncate capitalize leading-tight" title={item.name}>{item.name}</h4>
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 mt-2">FRESCO ORIGINAL.</p>
                                                 </div>
                                             </div>
 
-                                            {/* Stock Indicator */}
-                                            <div className="mb-8 space-y-2.5 px-1">
+                                            {/* Stock Indicator: Progress Bar Styled */}
+                                            <div className="mb-10 space-y-4">
                                                 <div className="flex justify-between items-end">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nivel de Stock</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">STOCK</span>
                                                     <span className="text-[11px] font-black text-teal-900">{Math.min(100, Math.floor(item.quantity * 25))}%</span>
                                                 </div>
-                                                <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden p-0.5">
+                                                <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden p-0.5 shadow-inner">
                                                     <div className={`h-full rounded-full transition-all duration-1000 ${status.progressColor}`} style={{ width: `${Math.min(100, item.quantity * 25)}%` }} />
                                                 </div>
                                             </div>
 
-                                            {/* Quantity Pill Controls */}
-                                            <div className="mt-auto flex items-center justify-between gap-4">
-                                                <div className="bg-gray-50/80 rounded-[1.5rem] p-1.5 flex items-center justify-between flex-1 border border-gray-100/50 shadow-inner">
-                                                    <button onClick={() => onUpdateQuantity(item.id, -1)} className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-400 hover:text-red-500 active:scale-90 transition-all font-black text-2xl">-</button>
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="text-xl font-black text-teal-950 leading-none">{item.quantity}</span>
-                                                        <span className="fresco-label !text-[9px] !text-gray-400 mt-1.5">{item.unit}</span>
+                                            {/* Bottom: Pill Controls */}
+                                            <div className="mt-auto flex items-center justify-between gap-5">
+                                                <div className="bg-gray-50/80 rounded-[2rem] p-2 flex items-center justify-between flex-1 border border-gray-100 shadow-inner">
+                                                    <button onClick={() => onUpdateQuantity(item.id, -1)} className="w-14 h-14 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-400 hover:text-red-500 hover:shadow-md active:scale-90 transition-all font-black text-3xl">-</button>
+                                                    <div className="flex flex-col items-center px-4">
+                                                        <span className="text-2xl font-black text-teal-950 leading-none">{item.quantity}</span>
+                                                        <span className="fresco-label !text-[10px] !text-gray-400 mt-2">{item.unit.toUpperCase()}</span>
                                                     </div>
-                                                    <button onClick={() => onUpdateQuantity(item.id, 1)} className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-400 hover:text-teal-600 active:scale-90 transition-all font-black text-2xl">+</button>
+                                                    <button onClick={() => onUpdateQuantity(item.id, 1)} className="w-14 h-14 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-400 hover:text-teal-600 hover:shadow-md active:scale-90 transition-all font-black text-3xl">+</button>
                                                 </div>
-                                                <button onClick={() => setItemToEdit(item)} className="p-4 bg-white border border-gray-100 rounded-[1.5rem] text-gray-300 hover:text-teal-900 hover:shadow-lg transition-all group-hover:border-teal-100">
-                                                    <Pencil className="w-5 h-5" />
+                                                <button onClick={() => setItemToEdit(item)} className="w-16 h-16 bg-white border-2 border-gray-50 rounded-[1.75rem] flex items-center justify-center text-gray-200 hover:text-teal-900 hover:shadow-xl hover:border-teal-50 transition-all group/edit">
+                                                    <Pencil className="w-6 h-6 group-hover/edit:scale-110 transition-transform" />
                                                 </button>
                                             </div>
                                         </div>
                                     );
-                                })}
-                            </div>
-                        ) : (
-                            <div className="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden shadow-sm">
-                                <table className="w-full border-collapse">
-                                    <thead>
-                                        <tr className="text-left fresco-label !text-gray-400 border-b border-gray-50">
-                                            <th className="px-10 py-6 font-black">Producto</th>
-                                            <th className="px-6 py-6 font-black hidden md:table-cell">Estado Visual</th>
-                                            <th className="px-6 py-6 font-black hidden lg:table-cell">Vencimiento</th>
-                                            <th className="px-10 py-6 font-black text-right">Existencias</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-50">
-                                        {groupedItems[cat].map((item) => {
-                                            const status = getExpiryStatus(item);
-                                            return (
-                                                <tr key={item.id} className="group hover:bg-gray-50/50 transition-colors cursor-pointer" onClick={() => setItemToEdit(item)}>
-                                                    <td className="px-10 py-6">
-                                                        <div className="flex items-center gap-5">
-                                                            <div className="w-14 h-14 rounded-2xl bg-gray-50 overflow-hidden flex-shrink-0 shadow-sm">
-                                                                <SmartImage src={`https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=200&sig=${item.id}`} className="w-full h-full object-cover" />
-                                                            </div>
-                                                            <div>
-                                                                <span className="font-black text-teal-950 text-lg block capitalize leading-none mb-1.5">{item.name}</span>
-                                                                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{catInfo.label} • Almacenado</span>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-6 hidden md:table-cell">
-                                                        <div className="w-40">
-                                                            <div className="flex justify-between text-[10px] font-black uppercase mb-2 text-gray-300 tracking-widest">
-                                                                <span>Nivel</span>
-                                                                <span>{Math.min(100, Math.floor(item.quantity * 25))}%</span>
-                                                            </div>
-                                                            <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                                                                <div className={`h-full rounded-full transition-all duration-1000 ${status.progressColor}`} style={{ width: `${Math.min(100, item.quantity * 25)}%` }} />
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-6 hidden lg:table-cell">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`w-2.5 h-2.5 rounded-full ${status.dot}`} />
-                                                            <span className={`text-sm font-black tracking-tight ${status.type === 'expired' || status.type === 'priority' ? 'text-orange-600' : 'text-teal-700'}`}>
-                                                                {status.label || (item.expires_at ? format(new Date(item.expires_at), 'dd MMM yyyy', { locale: es }) : '--')}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-10 py-6" onClick={e => e.stopPropagation()}>
-                                                        <div className="flex items-center justify-end gap-8">
-                                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
-                                                                <button onClick={() => onUpdateQuantity(item.id, -1)} className="w-10 h-10 flex items-center justify-center rounded-xl border-2 border-gray-100 bg-white text-gray-400 hover:text-red-500 shadow-sm transition-all">-</button>
-                                                                <button onClick={() => onUpdateQuantity(item.id, 1)} className="w-10 h-10 flex items-center justify-center rounded-xl border-2 border-gray-100 bg-white text-gray-400 hover:text-teal-600 shadow-sm transition-all">+</button>
-                                                            </div>
-                                                            <div className="text-right min-w-[5ch]">
-                                                                <span className="text-2xl font-black text-teal-950 tabular-nums leading-none">{item.quantity}</span>
-                                                                <span className="fresco-label !text-[10px] !text-gray-300 ml-2">{item.unit}</span>
-                                                            </div>
-                                                            <ChevronRight className="w-6 h-6 text-gray-200 group-hover:text-teal-900 group-hover:translate-x-1 transition-all" />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                                } else {
+                                    {/* List View - Also Refined */}
+                                    return (
+                                        <div key={item.id} onClick={() => setItemToEdit(item)} className="bg-white rounded-[2rem] p-6 flex items-center justify-between border border-gray-50 shadow-sm hover:shadow-md transition-all cursor-pointer group">
+                                            <div className="flex items-center gap-6">
+                                                <div className="w-16 h-16 rounded-2xl bg-gray-50 overflow-hidden shadow-inner">
+                                                    <SmartImage src={`https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=150&sig=${item.id}`} className="w-full h-full object-cover" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="fresco-h2 !text-xl text-teal-950 capitalize">{item.name}</h4>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <div className={`w-2 h-2 rounded-full ${status.dot}`} />
+                                                        <span className={`fresco-label !text-[8px] ${status.text}`}>{status.label || 'ESTADO ÓPTIMO'}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-8">
+                                                <div className="hidden md:block w-32">
+                                                    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                                        <div className={`h-full ${status.progressColor}`} style={{ width: `${Math.min(100, item.quantity * 25)}%` }} />
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center bg-gray-50 rounded-2xl p-1.5">
+                                                    <button onClick={e => { e.stopPropagation(); onUpdateQuantity(item.id, -1); }} className="w-10 h-10 bg-white rounded-xl shadow-sm text-gray-400 hover:text-red-500 font-black text-xl">-</button>
+                                                    <div className="px-5 text-center min-w-[70px]">
+                                                        <span className="font-black text-teal-950 text-lg">{item.quantity}</span>
+                                                        <span className="text-[10px] font-bold text-gray-300 ml-2 uppercase">{item.unit}</span>
+                                                    </div>
+                                                    <button onClick={e => { e.stopPropagation(); onUpdateQuantity(item.id, 1); }} className="w-10 h-10 bg-white rounded-xl shadow-sm text-gray-400 hover:text-teal-600 font-black text-xl">+</button>
+                                                </div>
+                                                <ChevronRight className="w-6 h-6 text-gray-200 group-hover:text-teal-900 transition-all" />
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                            })}
+                        </div>
                     </div>
                 );
             })
           )}
       </div>
       
-      {/* Premium Add Modal */}
+      {/* Premium Modals */}
       {showAddModal && (
         <div className="fixed inset-0 z-[5000] bg-teal-950/20 backdrop-blur-2xl flex items-center justify-center p-4">
             <div className="w-full max-w-sm bg-white rounded-[3rem] p-12 shadow-2xl relative animate-slide-up">
@@ -301,28 +271,27 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                 <h2 className="fresco-h1 !text-4xl text-teal-950 mb-10">Nuevo Producto</h2>
                 <div className="space-y-8">
                     <div className="space-y-3">
-                        <label className="fresco-label ml-1">¿Qué vamos a guardar?</label>
+                        <label className="fresco-label ml-1">NOMBRE DEL PRODUCTO</label>
                         <input autoFocus className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none focus:ring-4 focus:ring-teal-500/10 transition-all border-2 border-transparent focus:border-teal-100 placeholder-gray-300" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} placeholder="Ej. Tomate Cherry" />
                     </div>
                     <div className="flex gap-4">
                         <div className="flex-1 space-y-3">
-                            <label className="fresco-label ml-1">Cantidad</label>
+                            <label className="fresco-label ml-1">CANTIDAD</label>
                             <input type="number" className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none focus:ring-4 focus:ring-teal-500/10 border-2 border-transparent focus:border-teal-100" value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value)})} />
                         </div>
                         <div className="flex-1 space-y-3">
-                            <label className="fresco-label ml-1">Unidad</label>
+                            <label className="fresco-label ml-1">UNIDAD</label>
                             <select className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none appearance-none bg-no-repeat bg-[right_1.5rem_center] border-2 border-transparent focus:border-teal-100" style={{ backgroundImage: selectChevron, backgroundSize: '0.8em' }} value={newItem.unit} onChange={e => setNewItem({...newItem, unit: e.target.value})}>
                                 {UNITS_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
                             </select>
                         </div>
                     </div>
-                    <button onClick={() => { onAdd({...newItem, id: Date.now().toString(), added_at: new Date().toISOString()}); setShowAddModal(false); }} className="w-full py-6 bg-teal-900 text-white rounded-[1.5rem] fresco-label !text-white shadow-2xl shadow-teal-900/20 mt-6 active:scale-[0.98] transition-all">Añadir a Despensa</button>
+                    <button onClick={() => { onAdd({...newItem, id: Date.now().toString(), added_at: new Date().toISOString()}); setShowAddModal(false); }} className="w-full py-6 bg-teal-900 text-white rounded-[1.5rem] fresco-label !text-white shadow-2xl shadow-teal-900/20 mt-6 active:scale-[0.98] transition-all">AÑADIR A DESPENSA</button>
                 </div>
             </div>
         </div>
       )}
 
-      {/* Premium Edit Modal */}
       {itemToEdit && (
         <div className="fixed inset-0 z-[5000] bg-teal-950/20 backdrop-blur-2xl flex items-center justify-center p-4">
             <div className="w-full max-w-sm bg-white rounded-[3rem] p-12 shadow-2xl relative animate-slide-up">
@@ -336,22 +305,22 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
                 <h2 className="fresco-h1 !text-4xl text-teal-950 mb-10">Editar Stock</h2>
                 <div className="space-y-8">
                     <div className="space-y-3">
-                        <label className="fresco-label ml-1">Nombre</label>
+                        <label className="fresco-label ml-1">NOMBRE</label>
                         <input className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none border-2 border-transparent focus:border-teal-100" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} />
                     </div>
                     <div className="flex gap-4">
                         <div className="flex-1 space-y-3">
-                            <label className="fresco-label ml-1">Cantidad</label>
+                            <label className="fresco-label ml-1">CANTIDAD</label>
                             <input type="number" className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none border-2 border-transparent focus:border-teal-100" value={itemToEdit.quantity} onChange={e => setItemToEdit({...itemToEdit, quantity: parseFloat(e.target.value)})} />
                         </div>
                         <div className="flex-1 space-y-3">
-                            <label className="fresco-label ml-1">Unidad</label>
+                            <label className="fresco-label ml-1">UNIDAD</label>
                             <select className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none appearance-none bg-no-repeat bg-[right_1.5rem_center] border-2 border-transparent focus:border-teal-100" style={{ backgroundImage: selectChevron, backgroundSize: '0.8em' }} value={itemToEdit.unit} onChange={e => setItemToEdit({...itemToEdit, unit: e.target.value})}>
                                 {UNITS_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
                             </select>
                         </div>
                     </div>
-                    <button onClick={() => { onEdit(itemToEdit); setItemToEdit(null); }} className="w-full py-6 bg-teal-900 text-white rounded-[1.5rem] fresco-label !text-white shadow-2xl shadow-teal-900/20 mt-6 active:scale-[0.98] transition-all">Actualizar Información</button>
+                    <button onClick={() => { onEdit(itemToEdit); setItemToEdit(null); }} className="w-full py-6 bg-teal-900 text-white rounded-[1.5rem] fresco-label !text-white shadow-2xl shadow-teal-900/20 mt-6 active:scale-[0.98] transition-all">ACTUALIZAR INFORMACIÓN</button>
                 </div>
             </div>
         </div>
