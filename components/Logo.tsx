@@ -27,7 +27,7 @@ export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'default',
           fill={iconColor}
         />
       </svg>
-      <span className={`font-black text-3xl tracking-tighter leading-none ${baseColor}`}>
+      <span className={`font-black text-3xl tracking-[-0.05em] leading-none ${baseColor}`}>
         Fresco<span className="text-orange-500">.</span>
       </span>
     </div>
