@@ -29,8 +29,6 @@ const CATEGORIES_OPTIONS = [
     { id: 'pantry', label: 'PANTRY', emoji: '🥫', color: 'bg-[#F2F4F7] text-[#616161]' },
 ];
 
-const UNITS_OPTIONS = ['UNITS', 'LITERS', 'PACKS', 'GRAMS', 'KILOS', 'KG'];
-
 export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdateQuantity, onAddMany, onEdit, isOnline = true }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -39,18 +37,17 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
   const [visibleLimit, setVisibleLimit] = useState(ITEMS_PER_PAGE);
 
   const getExpiryStatus = (item: PantryItem) => {
-    if (!item.expires_at) return { type: 'none', label: 'Fresko', color: 'text-[#147A74]', icon: Clock };
+    if (!item.expires_at) return { type: 'none', label: 'Fresco', color: 'text-[#548481]', icon: Clock };
     const today = startOfDay(new Date());
     const expiry = startOfDay(new Date(item.expires_at));
     const days = differenceInDays(expiry, today);
     
-    if (days < 0) return { type: 'expired', label: 'CADUCADO', color: 'text-[#FF4D4D]', icon: AlertTriangle };
-    if (days === 0) return { type: 'priority', label: 'Expires Today', color: 'text-[#FF4D4D]', icon: AlertTriangle };
+    if (days < 0) return { type: 'expired', label: 'Expires Today', color: 'text-[#E74C3C]', icon: AlertTriangle };
+    if (days === 0) return { type: 'priority', label: 'Expires Today', color: 'text-[#E74C3C]', icon: AlertTriangle };
     if (days <= 3) return { type: 'priority', label: `Expires in ${days} days`, color: 'text-[#E67E22]', icon: Clock };
     
-    // Formato Ene 11 / Dic 12
     const formattedDate = format(expiry, "MMM d", { locale: es }).replace(/^\w/, (c) => c.toUpperCase());
-    return { type: 'fresh', label: `Expires ${formattedDate}`, color: 'text-[#147A74]', icon: Clock };
+    return { type: 'fresh', label: `Expires ${formattedDate}`, color: 'text-[#548481]', icon: Clock };
   };
 
   const filteredItems = useMemo(() => {
@@ -64,42 +61,38 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
   const visibleItems = useMemo(() => filteredItems.slice(0, visibleLimit), [filteredItems, visibleLimit]);
 
-  const selectChevron = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`;
-
   return (
-    <div className="space-y-12 animate-fade-in pb-48 w-full max-w-full px-4 md:px-12 bg-[#FCFCFC] h-full overflow-y-auto no-scrollbar">
+    <div className="space-y-6 animate-fade-in pb-48 w-full max-w-full px-4 md:px-8 bg-[#FCFCFC] h-full overflow-y-auto no-scrollbar">
       
-      {/* Header Estilizado */}
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 pt-12">
+      {/* Header Compacto */}
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-8">
         <div>
-            <h1 className="text-[#013b33] text-[4rem] font-black tracking-[-0.06em] leading-[0.85] mb-2">Mi Stock</h1>
-            <p className="text-gray-300 font-black uppercase text-[10px] tracking-[0.4em]">Inventario de alta fidelidad</p>
+            <h1 className="text-[#013b33] text-[2.4rem] font-black tracking-[-0.04em] leading-tight">Despensa</h1>
+            <p className="text-gray-300 font-black uppercase text-[8px] tracking-[0.3em]">Stock Inteligente</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-            <div className="relative group sm:w-80">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-200 w-5 h-5" />
-                <input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setVisibleLimit(ITEMS_PER_PAGE); }}
-                    className="w-full pl-16 pr-6 py-5 bg-white border border-gray-100 rounded-[2.5rem] text-sm font-bold text-[#013b33] focus:outline-none shadow-sm transition-all"
+        <div className="flex gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-200 w-4 h-4" />
+                <input type="text" placeholder="Buscar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-bold text-[#013b33] focus:outline-none shadow-sm"
                 />
             </div>
-            <div className="flex gap-3">
-                <button onClick={() => setShowScanner(true)} className="flex-1 sm:flex-none px-10 py-5 bg-orange-500 text-white rounded-[2.5rem] flex items-center justify-center gap-3 font-black text-[10px] uppercase tracking-widest shadow-xl shadow-orange-500/10 active:scale-95 transition-all">
-                    <Camera className="w-5 h-5" /> Escanear
-                </button>
-                <button onClick={() => setShowAddModal(true)} className="flex-1 sm:flex-none px-10 py-5 bg-[#013b33] text-white rounded-[2.5rem] flex items-center justify-center gap-3 font-black text-[10px] uppercase tracking-widest shadow-xl shadow-[#013b33]/10 active:scale-95 transition-all">
-                    <Plus className="w-5 h-5" /> Añadir
-                </button>
-            </div>
+            <button onClick={() => setShowScanner(true)} className="p-3 bg-orange-500 text-white rounded-2xl shadow-lg shadow-orange-500/10 active:scale-95 transition-all">
+                <Camera className="w-5 h-5" />
+            </button>
+            <button onClick={() => setShowAddModal(true)} className="p-3 bg-[#013b33] text-white rounded-2xl shadow-lg active:scale-95 transition-all">
+                <Plus className="w-5 h-5" />
+            </button>
         </div>
       </header>
 
-      {/* Grid de Productos (Exactamente como en las capturas) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
+      {/* Grid de Productos (Compacto - Píxel Perfect) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {visibleItems.length === 0 ? (
-              <div className="col-span-full py-40 text-center opacity-10 flex flex-col items-center">
-                  <Package size={100} className="mb-4" />
-                  <p className="fresco-h1">Vacío</p>
+              <div className="col-span-full py-20 text-center opacity-10 flex flex-col items-center">
+                  <Package size={60} className="mb-4" />
+                  <p className="font-black text-xl">Vacio</p>
               </div>
           ) : (
             visibleItems.map(item => {
@@ -109,61 +102,63 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                 const StatusIcon = status.icon;
 
                 return (
-                    <div key={item.id} className="bg-white rounded-[4rem] shadow-[0_20px_60px_rgba(0,0,0,0.02)] hover:shadow-[0_40px_100px_rgba(0,0,0,0.06)] transition-all duration-700 flex flex-col h-[480px] border border-gray-50/50 group animate-fade-in p-10">
+                    <div key={item.id} className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_45px_rgba(0,0,0,0.05)] transition-all duration-500 flex flex-col h-[280px] border border-gray-50/50 group animate-fade-in relative">
                         
-                        {/* Titulo: Satoshi Black, masivo */}
-                        <div className="flex justify-between items-start mb-10 min-h-[5rem]">
-                            <h3 className="text-[2.2rem] text-[#013b33] font-black leading-[0.95] tracking-tight line-clamp-2 pr-6 capitalize">
+                        {/* Title Row */}
+                        <div className="flex justify-between items-start px-6 pt-6 pb-2">
+                            <h3 className="text-[1.1rem] text-[#013b33] font-black leading-tight line-clamp-2 pr-4">
                                 {item.name}
                             </h3>
-                            <button onClick={() => setItemToEdit(item)} className="p-2 text-gray-100 hover:text-[#013b33] transition-colors flex-shrink-0">
-                                <MoreVertical className="w-7 h-7" />
+                            <button onClick={() => setItemToEdit(item)} className="p-1 flex-shrink-0 text-gray-100 hover:text-[#013b33]">
+                                <MoreVertical className="w-4 h-4" />
                             </button>
                         </div>
 
-                        {/* Bloque Central: Círculo y Datos */}
-                        <div className="flex items-center gap-8 flex-1">
-                            <div className="w-28 h-28 rounded-full bg-[#F2F4F7] shadow-[inset_0_4px_12px_rgba(0,0,0,0.03)] border-4 border-white flex items-center justify-center text-5xl flex-shrink-0 group-hover:scale-105 transition-transform duration-500">
+                        {/* Content Body: Avatar and Text aligned */}
+                        <div className="px-6 flex items-center gap-4 flex-1">
+                            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-sm border-2 border-white ${catInfo.id === 'dairy' ? 'bg-[#E3F2FD]' : catInfo.id === 'fruits' ? 'bg-[#F1F8E9]' : catInfo.id === 'vegetables' ? 'bg-[#E8F5E9]' : 'bg-[#F2F4F7]'}`}>
                                 {catInfo.emoji}
                             </div>
-                            <div className="flex flex-col gap-1.5 min-w-0">
-                                <div className={`flex items-center gap-2 font-black text-[15px] tracking-tight ${status.color}`}>
-                                    <StatusIcon className="w-4 h-4 stroke-[3px]" />
+                            <div className="flex flex-col gap-0.5">
+                                <div className={`flex items-center gap-1.5 font-bold text-[10px] ${status.color}`}>
+                                    <StatusIcon className="w-3.5 h-3.5" />
                                     <span>{status.label}</span>
                                 </div>
-                                <div className="text-[#9DB2AF] font-black text-[9px] tracking-[0.4em] uppercase truncate">
+                                <div className="text-[#9DB2AF] font-black text-[8px] tracking-[0.15em] uppercase truncate">
                                     {catInfo.label}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Cápsula inferior (Pill) - Fidelidad 1:1 */}
-                        <div className={`mt-auto rounded-[3.5rem] p-2 flex items-center justify-between border-2 transition-all duration-500 ${isLowStock ? 'bg-[#FFF5F5] border-[#FFEBEB]' : 'bg-[#F9FAFB] border-[#F2F4F7]'}`}>
-                            {/* Botón Minus - Círculo Blanco */}
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.id, -1); }} 
-                                className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-md text-gray-300 hover:text-red-500 active:scale-90 transition-all font-black text-3xl"
-                            >
-                                <Minus className="w-6 h-6 stroke-[3px]" />
-                            </button>
-                            
-                            {/* Cantidad y Unidad central */}
-                            <div className="flex flex-col items-center flex-1 px-4">
-                                <span className={`text-[2.8rem] font-black leading-none tracking-tighter ${isLowStock ? 'text-[#FF4D4D]' : 'text-[#013b33]'}`}>
-                                    {item.quantity}
-                                </span>
-                                <span className={`text-[9px] font-black mt-1 tracking-[0.15em] ${isLowStock ? 'text-[#FF4D4D]' : 'text-[#9DB2AF]'}`}>
-                                    {isLowStock ? 'LOW STOCK' : (item.unit || 'UNITS').toUpperCase()}
-                                </span>
+                        {/* Bottom Pill - Exact Copy from screenshot */}
+                        <div className="px-5 pb-5 mt-auto">
+                            <div className={`rounded-full p-1 flex items-center justify-between border-2 transition-all duration-500 ${isLowStock || status.type === 'expired' ? 'bg-[#FFF5F5] border-[#FFEBEB]' : 'bg-[#F9FAFB] border-[#F2F4F7]'}`}>
+                                {/* Minus Button */}
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.id, -1); }} 
+                                    className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm text-gray-300 hover:text-red-500 active:scale-90 transition-all font-bold"
+                                >
+                                    <Minus className="w-4 h-4" />
+                                </button>
+                                
+                                {/* Qty & Unit */}
+                                <div className="flex flex-col items-center flex-1">
+                                    <span className={`text-[1.6rem] font-black leading-none ${isLowStock || status.type === 'expired' ? 'text-[#E74C3C]' : 'text-[#013b33]'}`}>
+                                        {item.quantity}
+                                    </span>
+                                    <span className={`text-[7px] font-black mt-0.5 tracking-[0.1em] ${isLowStock || status.type === 'expired' ? 'text-[#E74C3C]' : 'text-[#9DB2AF]'}`}>
+                                        {isLowStock ? 'LOW STOCK' : (item.unit || 'UNITS').toUpperCase()}
+                                    </span>
+                                </div>
+                                
+                                {/* Plus Button */}
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.id, 1); }} 
+                                    className={`w-10 h-10 flex items-center justify-center text-white rounded-full shadow-lg active:scale-90 transition-all ${isLowStock || status.type === 'expired' ? 'bg-[#E74C3C]' : 'bg-[#147A74]'}`}
+                                >
+                                    <Plus className="w-5 h-5 stroke-[3px]" />
+                                </button>
                             </div>
-                            
-                            {/* Botón Plus - Círculo Verde o Rojo */}
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.id, 1); }} 
-                                className={`w-16 h-16 flex items-center justify-center text-white rounded-full shadow-lg active:scale-90 transition-all ${isLowStock ? 'bg-[#FF4D4D]' : 'bg-[#147A74]'}`}
-                            >
-                                <Plus className="w-8 h-8 stroke-[4px]" />
-                            </button>
                         </div>
                     </div>
                 );
@@ -171,55 +166,47 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
           )}
       </div>
 
-      {/* Paginación Capsular */}
+      {/* Pagination */}
       {visibleLimit < filteredItems.length && (
-          <div className="flex justify-center pt-16">
+          <div className="flex justify-center pt-8">
               <button 
                 onClick={() => setVisibleLimit(prev => prev + ITEMS_PER_PAGE)}
-                className="group flex items-center gap-8 px-14 py-6 bg-white border border-gray-100 rounded-[3rem] shadow-xl hover:shadow-2xl transition-all"
+                className="group flex items-center gap-4 px-8 py-4 bg-white border border-gray-100 rounded-2xl shadow-md hover:shadow-lg transition-all"
               >
-                  <div className="flex flex-col text-left">
-                      <span className="text-[#013b33] font-black text-[14px] mb-1 uppercase tracking-widest">Ver más Stock</span>
-                      <span className="text-[10px] font-bold text-gray-200">Total {filteredItems.length} productos</span>
+                  <div className="text-left">
+                      <span className="text-[#013b33] font-black text-[10px] mb-0.5 block uppercase tracking-wider">Cargar más</span>
+                      <span className="text-[8px] font-bold text-gray-200">Total {filteredItems.length}</span>
                   </div>
-                  <div className="w-14 h-14 bg-[#013b33] rounded-[1.8rem] flex items-center justify-center text-white group-hover:rotate-180 transition-transform duration-1000 shadow-xl">
-                      <ChevronDown className="w-7 h-7" />
-                  </div>
+                  <ChevronDown className="w-4 h-4 text-teal-900 group-hover:translate-y-0.5 transition-transform" />
               </button>
           </div>
       )}
       
-      {/* Modal - Estilo Coherente */}
+      {/* Modals */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[5000] bg-[#013b33]/20 backdrop-blur-3xl flex items-center justify-center p-4">
-            <div className="w-full max-w-sm bg-white rounded-[4rem] p-12 shadow-2xl relative animate-slide-up">
-                <button onClick={() => setShowAddModal(false)} className="absolute top-10 right-10 p-2 text-gray-200 hover:text-black transition-colors"><X className="w-8 h-8" /></button>
-                <h2 className="text-[#013b33] text-4xl font-black mb-10 tracking-tighter">Añadir Stock</h2>
-                <div className="space-y-8">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] ml-1">NOMBRE</label>
-                        <input autoFocus className="w-full px-7 py-6 bg-[#F9FAFB] rounded-[2.5rem] font-black text-xl text-[#013b33] outline-none border-2 border-transparent focus:border-[#013b33]/10 transition-all" onChange={e => setSearchTerm(e.target.value)} placeholder="Ej. Tomates" />
-                    </div>
-                    <button onClick={() => setShowAddModal(false)} className="w-full py-6 bg-[#013b33] text-white rounded-[2.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all">Añadir ahora</button>
+        <div className="fixed inset-0 z-[5000] bg-[#013b33]/10 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="w-full max-w-xs bg-white rounded-[2.5rem] p-8 shadow-2xl relative animate-slide-up">
+                <button onClick={() => setShowAddModal(false)} className="absolute top-6 right-6 p-2 text-gray-200 hover:text-black transition-colors"><X className="w-5 h-5" /></button>
+                <h2 className="text-[#013b33] text-2xl font-black mb-6">Añadir</h2>
+                <div className="space-y-4">
+                    <input autoFocus className="w-full px-5 py-3 bg-gray-50 rounded-xl font-bold text-sm outline-none" placeholder="Nombre..." onChange={e => setSearchTerm(e.target.value)} />
+                    <button onClick={() => setShowAddModal(false)} className="w-full py-4 bg-[#013b33] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-xl">Añadir Stock</button>
                 </div>
             </div>
         </div>
       )}
 
       {itemToEdit && (
-        <div className="fixed inset-0 z-[5000] bg-[#013b33]/20 backdrop-blur-3xl flex items-center justify-center p-4">
-            <div className="w-full max-w-sm bg-white rounded-[4rem] p-12 shadow-2xl relative animate-slide-up">
-                <div className="absolute top-10 right-10 flex gap-4">
-                    <button onClick={() => { triggerDialog({ title: '¿Borrar producto?', message: 'Se perderá de tu stock.', type: 'confirm', onConfirm: () => { onRemove(itemToEdit.id); setItemToEdit(null); } }); }} className="p-2 text-red-200 hover:text-red-500 transition-colors"><Trash2 className="w-6 h-6" /></button>
-                    <button onClick={() => setItemToEdit(null)} className="p-2 text-gray-200 hover:text-black transition-colors"><X className="w-8 h-8" /></button>
+        <div className="fixed inset-0 z-[5000] bg-[#013b33]/10 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="w-full max-w-xs bg-white rounded-[2.5rem] p-8 shadow-2xl relative animate-slide-up">
+                <div className="absolute top-6 right-6 flex gap-2">
+                    <button onClick={() => { triggerDialog({ title: '¿Borrar?', message: 'Se perderá el stock.', type: 'confirm', onConfirm: () => { onRemove(itemToEdit.id); setItemToEdit(null); } }); }} className="p-2 text-red-200 hover:text-red-500"><Trash2 className="w-5 h-5" /></button>
+                    <button onClick={() => setItemToEdit(null)} className="p-2 text-gray-200"><X className="w-5 h-5" /></button>
                 </div>
-                <h2 className="text-[#013b33] text-4xl font-black mb-10 tracking-tighter">Editar</h2>
-                <div className="space-y-8">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] ml-1">NOMBRE</label>
-                        <input className="w-full px-7 py-6 bg-[#F9FAFB] rounded-[2.5rem] font-black text-xl text-[#013b33] outline-none" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} />
-                    </div>
-                    <button onClick={() => { onEdit(itemToEdit); setItemToEdit(null); }} className="w-full py-6 bg-[#013b33] text-white rounded-[2.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all">Guardar Cambios</button>
+                <h2 className="text-[#013b33] text-2xl font-black mb-6">Editar</h2>
+                <div className="space-y-4">
+                    <input className="w-full px-5 py-3 bg-gray-50 rounded-xl font-bold text-sm outline-none" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} />
+                    <button onClick={() => { onEdit(itemToEdit); setItemToEdit(null); }} className="w-full py-4 bg-[#013b33] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-xl">Guardar</button>
                 </div>
             </div>
         </div>
