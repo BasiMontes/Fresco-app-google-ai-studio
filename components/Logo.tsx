@@ -15,8 +15,8 @@ export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'default',
   return (
     <div className={`flex items-center gap-3 ${justify} ${className} select-none`}>
       <svg 
-        width="36" 
-        height="36" 
+        width="38" 
+        height="38" 
         viewBox="0 0 256 256" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
