@@ -1,16 +1,15 @@
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PantryItem } from '../types';
-import { Package, Plus, Trash2, Calendar, X, Clock, Minus, Plus as PlusIcon, Camera, Pencil, WifiOff, Search, AlertCircle, CalendarDays, History, MoreHorizontal } from 'lucide-react';
-import { format, differenceInDays, startOfDay, addDays } from 'date-fns';
+import { Package, Plus, Trash2, X, Camera, Pencil, Search, LayoutGrid, List, ChevronRight, MoreVertical, Clock, AlertTriangle, ChevronDown, Sparkles } from 'lucide-react';
+import { differenceInDays, startOfDay, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TicketScanner } from './TicketScanner';
-import { PREDICTIVE_CATEGORY_RULES } from '../constants';
 import { triggerDialog } from './Dialog';
+import { SmartImage } from './SmartImage';
 
 interface PantryProps {
   items: PantryItem[];
-  highlightId?: string | null; 
   onRemove: (id: string) => void;
   onAdd: (item: PantryItem) => void;
   onUpdateQuantity: (id: string, delta: number) => void;
@@ -19,51 +18,52 @@ interface PantryProps {
   isOnline?: boolean;
 }
 
+const ITEMS_PER_PAGE = 12;
+
 const CATEGORIES_OPTIONS = [
-    { id: 'vegetables', label: 'Verduras', emoji: '🥦' },
-    { id: 'fruits', label: 'Frutas', emoji: '🍎' },
-    { id: 'dairy', label: 'Lácteos y Huevos', emoji: '🧀' },
-    { id: 'meat', label: 'Carnes', emoji: '🥩' },
-    { id: 'fish', label: 'Pescados', emoji: '🐟' },
-    { id: 'pasta', label: 'Pasta y Arroz', emoji: '🍝' },
-    { id: 'legumes', label: 'Legumbres', emoji: '🫘' },
-    { id: 'broths', label: 'Caldos y Sopas', emoji: '🥣' },
-    { id: 'bakery', label: 'Panadería', emoji: '🥖' },
-    { id: 'frozen', label: 'Congelados', emoji: '❄️' },
-    { id: 'pantry', label: 'Despensa', emoji: '🥫' },
-    { id: 'spices', label: 'Especias', emoji: '🧂' },
-    { id: 'drinks', label: 'Bebidas', emoji: '🥤' },
-    { id: 'other', label: 'Otros', emoji: '🛍️' },
+    { id: 'vegetables', label: 'VEGETABLES', emoji: '🥦', color: 'bg-green-100 text-green-700' },
+    { id: 'fruits', label: 'FRUITS', emoji: '🍎', color: 'bg-red-100 text-red-700' },
+    { id: 'dairy', label: 'DAIRY & EGGS', emoji: '🧀', color: 'bg-blue-100 text-blue-700' },
+    { id: 'meat', label: 'MEAT', emoji: '🥩', color: 'bg-rose-100 text-rose-700' },
+    { id: 'beverages', label: 'BEVERAGES', emoji: '🥤', color: 'bg-orange-100 text-orange-700' },
+    { id: 'bakery', label: 'BAKERY', emoji: '🥐', color: 'bg-amber-100 text-amber-700' },
+    { id: 'pantry', label: 'PANTRY', emoji: '🥫', color: 'bg-gray-100 text-gray-700' },
 ];
 
-const UNITS_OPTIONS = ['uds', 'g', 'kg', 'ml', 'l', 'paquete', 'bote', 'lonchas', 'ración', 'pizca'];
+const UNITS_OPTIONS = ['UNITS', 'PACKS', 'LITERS', 'LOAF', 'GRAMS', 'KILOS'];
 
-export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, onAdd, onUpdateQuantity, onAddMany, onEdit, isOnline = true }) => {
+export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdateQuantity, onAddMany, onEdit, isOnline = true }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [itemToEdit, setItemToEdit] = useState<PantryItem | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'expired' | 'priority' | 'fresh'>('all');
+  const [visibleLimit, setVisibleLimit] = useState(ITEMS_PER_PAGE);
 
   const [newItem, setNewItem] = useState({ 
     name: '', 
     quantity: 1, 
-    unit: 'uds', 
+    unit: 'UNITS', 
     category: 'pantry',
     daysToExpire: 7
   });
   
   const getExpiryStatus = (item: PantryItem) => {
-    if (!item.expires_at) return { type: 'none', label: '', bg: 'bg-white', border: 'border-gray-100', dot: 'bg-gray-200', text: 'text-gray-400' };
+    if (!item.expires_at) return { type: 'none', label: 'FRESH', icon: Clock, color: 'text-teal-600' };
     const today = startOfDay(new Date());
     const expiry = startOfDay(new Date(item.expires_at));
     const days = differenceInDays(expiry, today);
-    if (days < 0) return { type: 'expired', label: 'Caducado', bg: 'bg-red-50/40', border: 'border-red-100', dot: 'bg-red-500', text: 'text-red-700' };
-    if (days <= 3) {
-        let labelText = days === 0 ? 'Caduca hoy' : days === 1 ? 'Mañana' : `En ${days} días`;
-        return { type: 'priority', label: labelText, bg: 'bg-orange-50/40', border: 'border-orange-100', dot: 'bg-orange-500', text: 'text-orange-700' };
-    }
-    return { type: 'fresh', label: '', bg: 'bg-white', border: 'border-gray-100', dot: 'bg-green-500', text: 'text-green-700' };
+    
+    if (days < 0) return { type: 'expired', label: 'EXPIRED', icon: AlertTriangle, color: 'text-red-600' };
+    if (days === 0) return { type: 'priority', label: 'Expires Today', icon: AlertTriangle, color: 'text-red-600' };
+    if (days <= 3) return { type: 'priority', label: `Expires in ${days} days`, icon: Clock, color: 'text-orange-500' };
+    
+    return { 
+        type: 'fresh', 
+        label: `Expires ${format(expiry, 'MMM d', { locale: es })}`, 
+        icon: Clock, 
+        color: 'text-teal-600' 
+    };
   };
 
   const filteredItems = useMemo(() => {
@@ -76,171 +76,218 @@ export const Pantry: React.FC<PantryProps> = ({ items, highlightId, onRemove, on
       return result;
   }, [items, activeFilter, searchTerm]);
 
+  // Aplicar límite de visibilidad a los items filtrados antes de agrupar
+  const visibleItems = useMemo(() => {
+      return filteredItems.slice(0, visibleLimit);
+  }, [filteredItems, visibleLimit]);
+
   const groupedItems = useMemo(() => {
       const grouped: Record<string, PantryItem[]> = {};
-      filteredItems.forEach(item => {
+      visibleItems.forEach(item => {
           const cat = item.category || 'other';
           if (!grouped[cat]) grouped[cat] = [];
           grouped[cat].push(item);
       });
       return grouped;
-  }, [filteredItems]);
+  }, [visibleItems]);
 
   const selectChevron = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`;
 
   return (
-    <div className="space-y-12 animate-fade-in pb-48 max-w-7xl mx-auto px-4">
+    <div className="space-y-12 animate-fade-in pb-48 max-w-7xl mx-auto px-6 md:px-10">
       
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+      {/* Search & Actions */}
+      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 pt-8">
         <div>
-            <h1 className="fresco-h1 text-teal-900">Despensa</h1>
-            <p className="fresco-body mt-2">Control de existencias sincronizado.</p>
+            <h1 className="fresco-h1 text-teal-950 !text-5xl">Despensa</h1>
+            <p className="fresco-body mt-2 !text-lg">Tu cocina inteligente, bajo control.</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <div className="relative group flex-1 sm:w-64">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4 group-focus-within:text-teal-600 transition-colors" />
-                <input type="text" placeholder="Filtrar por nombre..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-teal-950 focus:outline-none focus:ring-4 focus:ring-teal-500/5 shadow-sm transition-all"
+        <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+            <div className="relative group flex-1 sm:w-72 lg:w-96">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5" />
+                <input type="text" placeholder="Buscar en mi stock..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setVisibleLimit(ITEMS_PER_PAGE); }}
+                    className="w-full pl-14 pr-6 py-5 bg-white border border-gray-100 rounded-[2rem] text-base font-bold text-teal-950 focus:outline-none focus:ring-4 focus:ring-teal-500/5 shadow-sm transition-all"
                 />
             </div>
-            <div className="flex gap-2">
-                <button onClick={() => isOnline && setShowScanner(true)} className="flex-1 sm:flex-none px-6 py-3.5 bg-orange-500 text-white rounded-2xl flex items-center justify-center gap-2 fresco-label !text-white shadow-xl shadow-orange-500/10 active:scale-95 transition-transform">
-                    <Camera className="w-4 h-4" /> Escanear
+            <div className="flex gap-3">
+                <button onClick={() => isOnline && setShowScanner(true)} className="flex-1 sm:flex-none px-8 py-5 bg-orange-500 text-white rounded-[1.75rem] flex items-center justify-center gap-3 fresco-label !text-white shadow-xl shadow-orange-500/20 active:scale-95 transition-all">
+                    <Camera className="w-5 h-5" /> ESCANEAR
                 </button>
-                <button onClick={() => setShowAddModal(true)} className="flex-1 sm:flex-none px-6 py-3.5 bg-teal-900 text-white rounded-2xl flex items-center justify-center gap-2 fresco-label !text-white shadow-xl shadow-teal-900/10 active:scale-95 transition-transform">
-                    <Plus className="w-4 h-4" /> Añadir
+                <button onClick={() => setShowAddModal(true)} className="flex-1 sm:flex-none px-8 py-5 bg-teal-900 text-white rounded-[1.75rem] flex items-center justify-center gap-3 fresco-label !text-white shadow-xl shadow-teal-900/20 active:scale-95 transition-all">
+                    <Plus className="w-5 h-5" /> AÑADIR
                 </button>
             </div>
         </div>
       </header>
 
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-          {['all', 'expired', 'priority', 'fresh'].map(f => (
-              <button key={f} onClick={() => setActiveFilter(f as any)}
-                className={`px-6 py-2.5 rounded-full fresco-label transition-all border whitespace-nowrap ${activeFilter === f ? 'bg-teal-900 border-teal-900 !text-white shadow-lg' : 'bg-white border-gray-100 !text-gray-400 hover:border-teal-200'}`}
+      {/* Tabs */}
+      <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+          {[{id:'all',l:'TODO EL STOCK'},{id:'expired',l:'CADUCADOS'},{id:'priority',l:'PRIORITARIOS'},{id:'fresh',l:'EN BUEN ESTADO'}].map(f => (
+              <button key={f.id} onClick={() => { setActiveFilter(f.id as any); setVisibleLimit(ITEMS_PER_PAGE); }}
+                className={`px-10 py-4 rounded-full fresco-label transition-all border-2 whitespace-nowrap ${activeFilter === f.id ? 'bg-teal-900 border-teal-900 !text-white shadow-xl' : 'bg-white border-gray-50 !text-gray-400 hover:border-teal-100'}`}
               >
-                  {f === 'all' ? 'Todo el stock' : f === 'expired' ? 'Caducados' : f === 'priority' ? 'Prioridad' : 'Óptimo'}
+                  {f.l}
               </button>
           ))}
       </div>
 
-      <div className="space-y-16">
-          {Object.keys(groupedItems).length === 0 ? (
-              <div className="py-20 text-center flex flex-col items-center opacity-20">
-                  <Package className="w-20 h-20 mb-4" />
-                  <p className="fresco-h2">Despensa vacía</p>
+      {/* Product Grid */}
+      <div className="space-y-20">
+          {filteredItems.length === 0 ? (
+              <div className="py-40 text-center opacity-30 flex flex-col items-center">
+                  <Package size={64} className="text-gray-200 mb-6" />
+                  <p className="fresco-h2 !text-3xl text-gray-400">Sin productos a la vista</p>
               </div>
           ) : (
-            Object.keys(groupedItems).sort().map(cat => (
-                <div key={cat} className="space-y-6">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white rounded-2xl border border-gray-50 flex items-center justify-center text-2xl shadow-sm">
-                            {CATEGORIES_OPTIONS.find(c => c.id === cat)?.emoji}
+            Object.keys(groupedItems).sort().map(cat => {
+                const catItems = groupedItems[cat];
+                const catInfo = CATEGORIES_OPTIONS.find(c => c.id === cat) || CATEGORIES_OPTIONS[6];
+                
+                return (
+                    <div key={cat} className="space-y-10">
+                        <div className="flex items-center gap-4">
+                            <span className="text-2xl">{catInfo.emoji}</span>
+                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-300">{catInfo.label}</h3>
+                            <div className="flex-1 h-px bg-gray-50" />
                         </div>
-                        <h3 className="fresco-h2 !text-lg text-teal-900/80">{CATEGORIES_OPTIONS.find(c => c.id === cat)?.label || cat}</h3>
-                        <div className="flex-1 h-px bg-gray-100" />
-                    </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                            {catItems.map(item => {
+                                const status = getExpiryStatus(item);
+                                const isLowStock = item.quantity <= 1;
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {groupedItems[cat].map(item => {
-                            const status = getExpiryStatus(item);
-                            return (
-                                <div key={item.id} className={`${status.bg} rounded-[2.5rem] border ${status.border} p-6 flex flex-col gap-6 hover:shadow-xl transition-all group relative overflow-hidden`}>
-                                    <div className="flex justify-between items-start gap-4">
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="fresco-h2 !text-base text-teal-950 truncate capitalize" title={item.name}>{item.name}</h4>
-                                            {status.label && (
-                                                <div className="flex items-center gap-2 mt-1.5">
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${status.dot} animate-pulse`} />
-                                                    <p className={`fresco-label !text-[9px] !tracking-widest ${status.text}`}>{status.label}</p>
+                                return (
+                                    <div key={item.id} className="bg-white rounded-[2.5rem] border border-gray-50 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_50px_rgb(0,0,0,0.04)] transition-all duration-500 group flex flex-col h-[380px] animate-fade-in">
+                                        
+                                        {/* Header: Title and Menu */}
+                                        <div className="flex justify-between items-start mb-6">
+                                            <h3 className="fresco-h2 !text-[1.35rem] text-teal-950 font-black leading-tight line-clamp-2 pr-4">{item.name}</h3>
+                                            <button onClick={() => setItemToEdit(item)} className="p-2 text-gray-300 hover:text-teal-950 transition-colors">
+                                                <MoreVertical className="w-5 h-5" />
+                                            </button>
+                                        </div>
+
+                                        {/* Middle: Icon and Status */}
+                                        <div className="flex-1 flex flex-col justify-center gap-6">
+                                            <div className="flex items-center gap-5">
+                                                <div className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-inner border border-white ${catInfo.color.split(' ')[0]} bg-opacity-50`}>
+                                                    {catInfo.emoji}
                                                 </div>
-                                            )}
+                                                <div className="space-y-1">
+                                                    <div className={`flex items-center gap-2 font-black text-sm tracking-tight ${status.color}`}>
+                                                        <status.icon className="w-4 h-4" />
+                                                        <span>{status.label}</span>
+                                                    </div>
+                                                    <div className="fresco-label !text-[10px] !font-black !text-gray-300 tracking-[0.2em]">
+                                                        FRESCO ORIGINAL.
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <button onClick={() => setItemToEdit(item)} className="p-2.5 bg-gray-50/80 rounded-xl text-gray-400 hover:text-teal-900 hover:bg-white transition-all shadow-sm">
-                                            <Pencil className="w-4 h-4" />
-                                        </button>
-                                    </div>
 
-                                    <div className="bg-gray-50/50 rounded-3xl p-3 flex items-center justify-between border border-white/40">
-                                        <button 
-                                            onClick={() => onUpdateQuantity(item.id, -1)} 
-                                            className="w-10 h-10 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-400 hover:text-red-500 hover:shadow-md active:scale-90 transition-all font-black text-xl"
-                                        >-</button>
-                                        
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-xl font-black text-teal-900 leading-none">{item.quantity}</span>
-                                            <span className="fresco-label !text-[8px] !text-gray-400 mt-1">{item.unit}</span>
+                                        {/* Bottom: Quantity Pill */}
+                                        <div className={`mt-auto rounded-[1.75rem] p-2 flex items-center justify-between border transition-colors ${isLowStock ? 'bg-red-50 border-red-100' : 'bg-gray-50/50 border-gray-100'}`}>
+                                            <button onClick={() => onUpdateQuantity(item.id, -1)} className={`w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-400 hover:text-red-500 active:scale-90 transition-all font-black text-2xl border border-gray-50`}>-</button>
+                                            
+                                            <div className="flex flex-col items-center">
+                                                <span className={`text-2xl font-black leading-none ${isLowStock ? 'text-red-600' : 'text-teal-950'}`}>{item.quantity}</span>
+                                                <span className={`fresco-label !text-[9px] !font-black mt-2 tracking-[0.1em] ${isLowStock ? 'text-red-400' : 'text-gray-300'}`}>
+                                                    {isLowStock ? 'LOW STOCK' : item.unit.toUpperCase()}
+                                                </span>
+                                            </div>
+                                            
+                                            <button onClick={() => onUpdateQuantity(item.id, 1)} className={`w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-400 hover:text-teal-600 active:scale-90 transition-all font-black text-2xl border border-gray-50`}>+</button>
                                         </div>
-                                        
-                                        <button 
-                                            onClick={() => onUpdateQuantity(item.id, 1)} 
-                                            className="w-10 h-10 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-400 hover:text-teal-600 hover:shadow-md active:scale-90 transition-all font-black text-xl"
-                                        >+</button>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
-            ))
+                );
+            })
           )}
       </div>
+
+      {/* Pagination: Load More Button */}
+      {visibleLimit < filteredItems.length && (
+          <div className="flex justify-center pt-8 animate-fade-in">
+              <button 
+                onClick={() => setVisibleLimit(prev => prev + ITEMS_PER_PAGE)}
+                className="group flex items-center gap-5 px-12 py-6 bg-white border border-gray-100 rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
+              >
+                  <div className="flex flex-col text-left">
+                      <span className="fresco-label !text-teal-900 !text-[11px] mb-1">Cargar más productos</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-300">Viendo {visibleLimit} de {filteredItems.length}</span>
+                  </div>
+                  <div className="w-12 h-12 bg-teal-900 rounded-2xl flex items-center justify-center text-white group-hover:rotate-180 transition-transform duration-700">
+                      <ChevronDown className="w-6 h-6" />
+                  </div>
+              </button>
+          </div>
+      )}
       
+      {/* Add Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[5000] bg-teal-900/10 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="w-full max-w-sm bg-white rounded-[3rem] p-10 shadow-2xl relative animate-slide-up">
-                <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 p-2 text-gray-300 hover:text-gray-900 transition-colors"><X className="w-6 h-6" /></button>
-                <h2 className="fresco-h2 text-teal-900 mb-8">Nuevo Producto</h2>
-                <div className="space-y-6">
-                    <div className="space-y-2">
-                        <label className="fresco-label ml-1">Nombre</label>
-                        <input autoFocus className="w-full px-5 py-4 bg-gray-50 rounded-[1.5rem] font-bold text-teal-900 outline-none focus:ring-2 focus:ring-teal-500 transition-shadow" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} placeholder="Ej. Leche de avena" />
+        <div className="fixed inset-0 z-[5000] bg-teal-950/20 backdrop-blur-3xl flex items-center justify-center p-4">
+            <div className="w-full max-w-sm bg-white rounded-[3.5rem] p-12 shadow-2xl relative animate-slide-up">
+                <button onClick={() => setShowAddModal(false)} className="absolute top-10 right-10 p-3 text-gray-300 hover:text-gray-900 transition-colors"><X className="w-8 h-8" /></button>
+                <div className="w-20 h-20 bg-teal-50 rounded-[2rem] flex items-center justify-center mb-10 text-teal-600 shadow-inner">
+                    <Plus className="w-10 h-10" />
+                </div>
+                <h2 className="fresco-h1 !text-4xl text-teal-950 mb-10">Nuevo Producto</h2>
+                <div className="space-y-8">
+                    <div className="space-y-3">
+                        <label className="fresco-label ml-1">NOMBRE</label>
+                        <input autoFocus className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none border-2 border-transparent focus:border-teal-100 placeholder-gray-300" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} placeholder="Ej. Tomate Cherry" />
                     </div>
                     <div className="flex gap-4">
-                        <div className="flex-1 space-y-2">
-                            <label className="fresco-label ml-1">Cantidad</label>
-                            <input type="number" className="w-full px-5 py-4 bg-gray-50 rounded-[1.5rem] font-bold text-teal-900 outline-none" value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value)})} />
+                        <div className="flex-1 space-y-3">
+                            <label className="fresco-label ml-1">CANTIDAD</label>
+                            <input type="number" className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none border-2 border-transparent focus:border-teal-100" value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value)})} />
                         </div>
-                        <div className="flex-1 space-y-2">
-                            <label className="fresco-label ml-1">Unidad</label>
-                            <select className="w-full px-5 py-4 bg-gray-50 rounded-[1.5rem] font-bold text-teal-900 outline-none appearance-none bg-no-repeat bg-[right_1.2rem_center]" style={{ backgroundImage: selectChevron, backgroundSize: '0.8em' }} value={newItem.unit} onChange={e => setNewItem({...newItem, unit: e.target.value})}>
+                        <div className="flex-1 space-y-3">
+                            <label className="fresco-label ml-1">UNIDAD</label>
+                            <select className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none appearance-none bg-no-repeat bg-[right_1.5rem_center] border-2 border-transparent focus:border-teal-100" style={{ backgroundImage: selectChevron, backgroundSize: '0.8em' }} value={newItem.unit} onChange={e => setNewItem({...newItem, unit: e.target.value})}>
                                 {UNITS_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
                             </select>
                         </div>
                     </div>
-                    <button onClick={() => { onAdd({...newItem, id: Date.now().toString(), added_at: new Date().toISOString()}); setShowAddModal(false); }} className="w-full py-5 bg-teal-900 text-white rounded-[1.5rem] fresco-label !text-white shadow-2xl shadow-teal-900/20 mt-4 active:scale-[0.98] transition-transform">Guardar en Despensa</button>
+                    <button onClick={() => { onAdd({...newItem, id: Date.now().toString(), added_at: new Date().toISOString()}); setShowAddModal(false); }} className="w-full py-6 bg-teal-900 text-white rounded-[1.75rem] fresco-label !text-white shadow-2xl shadow-teal-900/20 mt-6 active:scale-[0.98] transition-all">AÑADIR A MI STOCK</button>
                 </div>
             </div>
         </div>
       )}
 
       {itemToEdit && (
-        <div className="fixed inset-0 z-[5000] bg-teal-900/10 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="w-full max-w-sm bg-white rounded-[3rem] p-10 shadow-2xl relative animate-slide-up">
-                <div className="absolute top-8 right-8 flex gap-2">
-                    <button onClick={() => { triggerDialog({ title: '¿Eliminar stock?', message: 'Se quitará permanentemente.', type: 'confirm', onConfirm: () => { onRemove(itemToEdit.id); setItemToEdit(null); } }); }} className="p-2 text-red-300 hover:text-red-500 transition-colors"><Trash2 className="w-5 h-5" /></button>
-                    <button onClick={() => setItemToEdit(null)} className="p-2 text-gray-300 hover:text-gray-900 transition-colors"><X className="w-6 h-6" /></button>
+        <div className="fixed inset-0 z-[5000] bg-teal-950/20 backdrop-blur-3xl flex items-center justify-center p-4">
+            <div className="w-full max-w-sm bg-white rounded-[3.5rem] p-12 shadow-2xl relative animate-slide-up">
+                <div className="absolute top-10 right-10 flex gap-3">
+                    <button onClick={() => { triggerDialog({ title: '¿Eliminar producto?', message: 'Se borrará de forma permanente.', type: 'confirm', onConfirm: () => { onRemove(itemToEdit.id); setItemToEdit(null); } }); }} className="p-3 text-red-300 hover:text-red-500 transition-colors bg-red-50/0 hover:bg-red-50 rounded-2xl"><Trash2 className="w-6 h-6" /></button>
+                    <button onClick={() => setItemToEdit(null)} className="p-3 text-gray-300 hover:text-gray-950 transition-colors bg-gray-50/0 hover:bg-gray-50 rounded-2xl"><X className="w-6 h-6" /></button>
                 </div>
-                <h2 className="fresco-h2 text-teal-900 mb-8">Editar Item</h2>
-                <div className="space-y-6">
-                    <div className="space-y-2">
-                        <label className="fresco-label ml-1">Nombre</label>
-                        <input className="w-full px-5 py-4 bg-gray-50 rounded-[1.5rem] font-bold text-teal-900 outline-none" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} />
+                <div className="w-20 h-20 bg-orange-50 rounded-[2rem] flex items-center justify-center mb-10 text-orange-600 shadow-inner">
+                    <Pencil className="w-10 h-10" />
+                </div>
+                <h2 className="fresco-h1 !text-4xl text-teal-950 mb-10">Editar Item</h2>
+                <div className="space-y-8">
+                    <div className="space-y-3">
+                        <label className="fresco-label ml-1">NOMBRE</label>
+                        <input className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none border-2 border-transparent focus:border-teal-100" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} />
                     </div>
                     <div className="flex gap-4">
-                        <div className="flex-1 space-y-2">
-                            <label className="fresco-label ml-1">Cantidad</label>
-                            <input type="number" className="w-full px-5 py-4 bg-gray-50 rounded-[1.5rem] font-bold text-teal-900 outline-none" value={itemToEdit.quantity} onChange={e => setItemToEdit({...itemToEdit, quantity: parseFloat(e.target.value)})} />
+                        <div className="flex-1 space-y-3">
+                            <label className="fresco-label ml-1">CANTIDAD</label>
+                            <input type="number" className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none border-2 border-transparent focus:border-teal-100" value={itemToEdit.quantity} onChange={e => setItemToEdit({...itemToEdit, quantity: parseFloat(e.target.value)})} />
                         </div>
-                        <div className="flex-1 space-y-2">
-                            <label className="fresco-label ml-1">Unidad</label>
-                            <select className="w-full px-5 py-4 bg-gray-50 rounded-[1.5rem] font-bold text-teal-900 outline-none appearance-none bg-no-repeat bg-[right_1.2rem_center]" style={{ backgroundImage: selectChevron, backgroundSize: '0.8em' }} value={itemToEdit.unit} onChange={e => setItemToEdit({...itemToEdit, unit: e.target.value})}>
+                        <div className="flex-1 space-y-3">
+                            <label className="fresco-label ml-1">UNIDAD</label>
+                            <select className="w-full px-6 py-5 bg-gray-50 rounded-[1.5rem] font-bold text-teal-950 outline-none appearance-none bg-no-repeat bg-[right_1.5rem_center] border-2 border-transparent focus:border-teal-100" style={{ backgroundImage: selectChevron, backgroundSize: '0.8em' }} value={itemToEdit.unit} onChange={e => setItemToEdit({...itemToEdit, unit: e.target.value})}>
                                 {UNITS_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
                             </select>
                         </div>
                     </div>
-                    <button onClick={() => { onEdit(itemToEdit); setItemToEdit(null); }} className="w-full py-5 bg-teal-900 text-white rounded-[1.5rem] fresco-label !text-white shadow-2xl shadow-teal-900/20 mt-4 active:scale-[0.98] transition-transform">Actualizar Stock</button>
+                    <button onClick={() => { onEdit(itemToEdit); setItemToEdit(null); }} className="w-full py-6 bg-teal-900 text-white rounded-[1.75rem] fresco-label !text-white shadow-2xl shadow-teal-900/20 mt-6 active:scale-[0.98] transition-all">ACTUALIZAR STOCK</button>
                 </div>
             </div>
         </div>

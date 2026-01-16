@@ -21,6 +21,8 @@ interface RecipesProps {
   onToggleFavorite?: (id: string) => void;
 }
 
+const ITEMS_PER_PAGE = 16;
+
 const RecipeSkeleton = () => (
     <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex flex-col h-full min-h-[280px]">
         <div className="aspect-[3/2] w-full skeleton-bg relative" />
@@ -42,7 +44,7 @@ export const Recipes: React.FC<RecipesProps> = ({
   const [searchTerm, setSearchTerm] = useState(() => sessionStorage.getItem('recipes_search') || '');
   const [activeCategory, setActiveCategory] = useState<string>(() => sessionStorage.getItem('recipes_category') || 'all');
   const [showOnlyCookable, setShowOnlyCookable] = useState(() => sessionStorage.getItem('recipes_cookable') === 'true');
-  const [visibleCount, setVisibleCount] = useState(() => parseInt(sessionStorage.getItem('recipes_count') || '15')); 
+  const [visibleCount, setVisibleCount] = useState(() => parseInt(sessionStorage.getItem('recipes_count') || String(ITEMS_PER_PAGE))); 
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
@@ -144,7 +146,7 @@ export const Recipes: React.FC<RecipesProps> = ({
                   type="text"
                   placeholder="Buscar receta, ingrediente..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => { setSearchTerm(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
                   className="w-full pl-10 pr-4 py-3 md:py-2 rounded-full bg-white border border-gray-100 focus:border-teal-500 focus:outline-none text-sm md:text-xs shadow-sm focus:shadow-md transition-all font-bold placeholder-gray-300"
               />
           </div>
@@ -154,7 +156,7 @@ export const Recipes: React.FC<RecipesProps> = ({
                   {['all', 'breakfast', 'lunch', 'dinner'].map(cat => (
                       <button
                       key={cat}
-                      onClick={() => setActiveCategory(cat)}
+                      onClick={() => { setActiveCategory(cat); setVisibleCount(ITEMS_PER_PAGE); }}
                       className={`px-4 py-1.5 md:px-3 md:py-1 rounded-lg whitespace-nowrap capitalize font-black text-[10px] md:text-[9px] tracking-widest transition-all ${
                           activeCategory === cat 
                           ? 'bg-teal-900 text-white shadow-sm' 
@@ -167,7 +169,7 @@ export const Recipes: React.FC<RecipesProps> = ({
               </div>
               
               <button 
-                  onClick={() => setShowOnlyCookable(!showOnlyCookable)}
+                  onClick={() => { setShowOnlyCookable(!showOnlyCookable); setVisibleCount(ITEMS_PER_PAGE); }}
                   className={`px-4 py-2 md:py-1.5 rounded-xl font-black text-[10px] md:text-[9px] uppercase tracking-widest flex items-center gap-2 transition-all shadow-sm border ${
                       showOnlyCookable ? 'bg-orange-500 text-white border-orange-500 shadow-md' : 'bg-white text-gray-400 border-gray-100 hover:bg-teal-50 hover:text-teal-900'
                   }`}
@@ -190,7 +192,7 @@ export const Recipes: React.FC<RecipesProps> = ({
                 <div 
                     key={recipe.id} 
                     onClick={() => { setInitialMode('view'); setSelectedRecipe(recipe); }}
-                    className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative h-full min-h-[280px]"
+                    className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative h-full min-h-[280px] animate-fade-in"
                 >
                     {isHighMatch && (
                         <div className="absolute top-2 left-2 z-20 bg-green-500 text-white text-[9px] font-black px-2 py-1 rounded-full shadow-lg border border-white/20 flex items-center gap-1">
@@ -241,10 +243,20 @@ export const Recipes: React.FC<RecipesProps> = ({
           })}
       </div>
       
+      {/* Redesigned Load More Button */}
       {visibleCount < filteredRecipes.length && (
-          <div className="flex justify-center pb-10 pt-4">
-              <button onClick={() => setVisibleCount(prev => prev + 15)} className="bg-white text-teal-900 border border-gray-100 px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-sm hover:shadow-md transition-all flex items-center gap-2">
-                  Cargar más <ChevronDown className="w-3 h-3" />
+          <div className="flex justify-center pt-8 animate-fade-in">
+              <button 
+                onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
+                className="group flex items-center gap-5 px-10 py-5 bg-white border border-gray-100 rounded-[2rem] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
+              >
+                  <div className="flex flex-col text-left">
+                      <span className="fresco-label !text-teal-900 !text-[10px] mb-1">Cargar más inspiración</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-300">Explorado {visibleCount} de {filteredRecipes.length}</span>
+                  </div>
+                  <div className="w-10 h-10 bg-teal-900 rounded-2xl flex items-center justify-center text-white group-hover:rotate-180 transition-transform duration-700">
+                      <ChevronDown className="w-5 h-5" />
+                  </div>
               </button>
           </div>
       )}
