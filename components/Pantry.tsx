@@ -1,12 +1,11 @@
 
 import React, { useState, useMemo } from 'react';
 import { PantryItem } from '../types';
-import { Package, Plus, Trash2, X, Camera, Pencil, Search, LayoutGrid, List, ChevronRight, MoreVertical, Clock, AlertTriangle, ChevronDown, Sparkles } from 'lucide-react';
+import { Package, Plus, Trash2, X, Camera, Pencil, Search, MoreVertical, Clock, AlertTriangle, ChevronDown } from 'lucide-react';
 import { differenceInDays, startOfDay, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TicketScanner } from './TicketScanner';
 import { triggerDialog } from './Dialog';
-import { SmartImage } from './SmartImage';
 
 interface PantryProps {
   items: PantryItem[];
@@ -76,20 +75,9 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
       return result;
   }, [items, activeFilter, searchTerm]);
 
-  // Aplicar límite de visibilidad a los items filtrados antes de agrupar
   const visibleItems = useMemo(() => {
       return filteredItems.slice(0, visibleLimit);
   }, [filteredItems, visibleLimit]);
-
-  const groupedItems = useMemo(() => {
-      const grouped: Record<string, PantryItem[]> = {};
-      visibleItems.forEach(item => {
-          const cat = item.category || 'other';
-          if (!grouped[cat]) grouped[cat] = [];
-          grouped[cat].push(item);
-      });
-      return grouped;
-  }, [visibleItems]);
 
   const selectChevron = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`;
 
@@ -133,75 +121,59 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
       </div>
 
       {/* Product Grid */}
-      <div className="space-y-20">
-          {filteredItems.length === 0 ? (
-              <div className="py-40 text-center opacity-30 flex flex-col items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {visibleItems.length === 0 ? (
+              <div className="col-span-full py-40 text-center opacity-30 flex flex-col items-center">
                   <Package size={64} className="text-gray-200 mb-6" />
                   <p className="fresco-h2 !text-3xl text-gray-400">Sin productos a la vista</p>
               </div>
           ) : (
-            Object.keys(groupedItems).sort().map(cat => {
-                const catItems = groupedItems[cat];
-                const catInfo = CATEGORIES_OPTIONS.find(c => c.id === cat) || CATEGORIES_OPTIONS[6];
-                
+            visibleItems.map(item => {
+                const status = getExpiryStatus(item);
+                const catInfo = CATEGORIES_OPTIONS.find(c => c.id === item.category) || CATEGORIES_OPTIONS[6];
+                const isLowStock = item.quantity <= 1;
+
                 return (
-                    <div key={cat} className="space-y-10">
-                        <div className="flex items-center gap-4">
-                            <span className="text-2xl">{catInfo.emoji}</span>
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-300">{catInfo.label}</h3>
-                            <div className="flex-1 h-px bg-gray-50" />
-                        </div>
+                    <div key={item.id} className="bg-white rounded-[2rem] border border-gray-50 p-7 shadow-[0_4px_20px_rgb(0,0,0,0.01)] hover:shadow-[0_15px_40px_rgb(0,0,0,0.04)] transition-all duration-500 group flex flex-col h-[350px] animate-fade-in">
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                            {catItems.map(item => {
-                                const status = getExpiryStatus(item);
-                                const isLowStock = item.quantity <= 1;
+                        {/* Header: Title and Menu */}
+                        <div className="flex justify-between items-start mb-6">
+                            <h3 className="fresco-h2 !text-[1.25rem] text-teal-950 font-black leading-[1.1] line-clamp-2 pr-4">{item.name}</h3>
+                            <button onClick={() => setItemToEdit(item)} className="p-1.5 text-gray-200 hover:text-teal-950 transition-colors">
+                                <MoreVertical className="w-5 h-5 opacity-40" />
+                            </button>
+                        </div>
 
-                                return (
-                                    <div key={item.id} className="bg-white rounded-[2.5rem] border border-gray-50 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_50px_rgb(0,0,0,0.04)] transition-all duration-500 group flex flex-col h-[380px] animate-fade-in">
-                                        
-                                        {/* Header: Title and Menu */}
-                                        <div className="flex justify-between items-start mb-6">
-                                            <h3 className="fresco-h2 !text-[1.35rem] text-teal-950 font-black leading-tight line-clamp-2 pr-4">{item.name}</h3>
-                                            <button onClick={() => setItemToEdit(item)} className="p-2 text-gray-300 hover:text-teal-950 transition-colors">
-                                                <MoreVertical className="w-5 h-5" />
-                                            </button>
-                                        </div>
-
-                                        {/* Middle: Icon and Status */}
-                                        <div className="flex-1 flex flex-col justify-center gap-6">
-                                            <div className="flex items-center gap-5">
-                                                <div className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-inner border border-white ${catInfo.color.split(' ')[0]} bg-opacity-50`}>
-                                                    {catInfo.emoji}
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <div className={`flex items-center gap-2 font-black text-sm tracking-tight ${status.color}`}>
-                                                        <status.icon className="w-4 h-4" />
-                                                        <span>{status.label}</span>
-                                                    </div>
-                                                    <div className="fresco-label !text-[10px] !font-black !text-gray-300 tracking-[0.2em]">
-                                                        FRESCO ORIGINAL.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Bottom: Quantity Pill */}
-                                        <div className={`mt-auto rounded-[1.75rem] p-2 flex items-center justify-between border transition-colors ${isLowStock ? 'bg-red-50 border-red-100' : 'bg-gray-50/50 border-gray-100'}`}>
-                                            <button onClick={() => onUpdateQuantity(item.id, -1)} className={`w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-400 hover:text-red-500 active:scale-90 transition-all font-black text-2xl border border-gray-50`}>-</button>
-                                            
-                                            <div className="flex flex-col items-center">
-                                                <span className={`text-2xl font-black leading-none ${isLowStock ? 'text-red-600' : 'text-teal-950'}`}>{item.quantity}</span>
-                                                <span className={`fresco-label !text-[9px] !font-black mt-2 tracking-[0.1em] ${isLowStock ? 'text-red-400' : 'text-gray-300'}`}>
-                                                    {isLowStock ? 'LOW STOCK' : item.unit.toUpperCase()}
-                                                </span>
-                                            </div>
-                                            
-                                            <button onClick={() => onUpdateQuantity(item.id, 1)} className={`w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-400 hover:text-teal-600 active:scale-90 transition-all font-black text-2xl border border-gray-50`}>+</button>
-                                        </div>
+                        {/* Middle: Icon and Status */}
+                        <div className="flex-1 flex flex-col justify-center">
+                            <div className="flex items-center gap-5">
+                                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-inner border border-white/50 ${catInfo.color.split(' ')[0]} bg-opacity-30`}>
+                                    {catInfo.emoji}
+                                </div>
+                                <div className="space-y-1">
+                                    <div className={`flex items-center gap-2 font-black text-[13px] tracking-tight ${status.color}`}>
+                                        <status.icon className="w-4 h-4" />
+                                        <span>{status.label}</span>
                                     </div>
-                                );
-                            })}
+                                    <div className="fresco-label !text-[9px] !font-black !text-teal-900/30 tracking-[0.2em]">
+                                        {catInfo.label}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Bottom: Quantity Pill (Fiel a la referencia) */}
+                        <div className={`mt-auto rounded-[1.75rem] p-1.5 flex items-center justify-between border transition-colors ${isLowStock ? 'bg-red-50/50 border-red-100' : 'bg-gray-50/50 border-gray-100'}`}>
+                            <button onClick={() => onUpdateQuantity(item.id, -1)} className={`w-11 h-11 flex items-center justify-center bg-white rounded-full shadow-sm text-gray-400 hover:text-red-500 active:scale-90 transition-all font-bold text-xl border border-gray-50`}>-</button>
+                            
+                            <div className="flex flex-col items-center">
+                                <span className={`text-xl font-black leading-none ${isLowStock ? 'text-red-600' : 'text-teal-950'}`}>{item.quantity}</span>
+                                <span className={`fresco-label !text-[8px] !font-black mt-1.5 tracking-[0.1em] ${isLowStock ? 'text-red-400' : 'text-teal-800/30'}`}>
+                                    {isLowStock ? 'LOW STOCK' : item.unit.toUpperCase()}
+                                </span>
+                            </div>
+                            
+                            <button onClick={() => onUpdateQuantity(item.id, 1)} className={`w-11 h-11 flex items-center justify-center bg-teal-600 text-white rounded-full shadow-lg hover:bg-teal-700 active:scale-90 transition-all font-bold text-xl`}>+</button>
                         </div>
                     </div>
                 );
@@ -209,28 +181,28 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
           )}
       </div>
 
-      {/* Pagination: Load More Button */}
+      {/* Pagination */}
       {visibleLimit < filteredItems.length && (
           <div className="flex justify-center pt-8 animate-fade-in">
               <button 
                 onClick={() => setVisibleLimit(prev => prev + ITEMS_PER_PAGE)}
-                className="group flex items-center gap-5 px-12 py-6 bg-white border border-gray-100 rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
+                className="group flex items-center gap-5 px-10 py-5 bg-white border border-gray-100 rounded-[2rem] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
               >
                   <div className="flex flex-col text-left">
-                      <span className="fresco-label !text-teal-900 !text-[11px] mb-1">Cargar más productos</span>
+                      <span className="fresco-label !text-teal-900 !text-[10px] mb-1">Cargar más productos</span>
                       <span className="text-[10px] font-black uppercase tracking-widest text-gray-300">Viendo {visibleLimit} de {filteredItems.length}</span>
                   </div>
-                  <div className="w-12 h-12 bg-teal-900 rounded-2xl flex items-center justify-center text-white group-hover:rotate-180 transition-transform duration-700">
-                      <ChevronDown className="w-6 h-6" />
+                  <div className="w-10 h-10 bg-teal-900 rounded-2xl flex items-center justify-center text-white group-hover:rotate-180 transition-transform duration-700">
+                      <ChevronDown className="w-5 h-5" />
                   </div>
               </button>
           </div>
       )}
       
-      {/* Add Modal */}
+      {/* Modals */}
       {showAddModal && (
         <div className="fixed inset-0 z-[5000] bg-teal-950/20 backdrop-blur-3xl flex items-center justify-center p-4">
-            <div className="w-full max-w-sm bg-white rounded-[3.5rem] p-12 shadow-2xl relative animate-slide-up">
+            <div className="w-full max-w-sm bg-white rounded-[3rem] p-12 shadow-2xl relative animate-slide-up">
                 <button onClick={() => setShowAddModal(false)} className="absolute top-10 right-10 p-3 text-gray-300 hover:text-gray-900 transition-colors"><X className="w-8 h-8" /></button>
                 <div className="w-20 h-20 bg-teal-50 rounded-[2rem] flex items-center justify-center mb-10 text-teal-600 shadow-inner">
                     <Plus className="w-10 h-10" />
@@ -261,7 +233,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
       {itemToEdit && (
         <div className="fixed inset-0 z-[5000] bg-teal-950/20 backdrop-blur-3xl flex items-center justify-center p-4">
-            <div className="w-full max-w-sm bg-white rounded-[3.5rem] p-12 shadow-2xl relative animate-slide-up">
+            <div className="w-full max-w-sm bg-white rounded-[3rem] p-12 shadow-2xl relative animate-slide-up">
                 <div className="absolute top-10 right-10 flex gap-3">
                     <button onClick={() => { triggerDialog({ title: '¿Eliminar producto?', message: 'Se borrará de forma permanente.', type: 'confirm', onConfirm: () => { onRemove(itemToEdit.id); setItemToEdit(null); } }); }} className="p-3 text-red-300 hover:text-red-500 transition-colors bg-red-50/0 hover:bg-red-50 rounded-2xl"><Trash2 className="w-6 h-6" /></button>
                     <button onClick={() => setItemToEdit(null)} className="p-3 text-gray-300 hover:text-gray-950 transition-colors bg-gray-50/0 hover:bg-gray-50 rounded-2xl"><X className="w-6 h-6" /></button>
