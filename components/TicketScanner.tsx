@@ -34,9 +34,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadingMessages = [
-    "Escaneando...",
-    "Extrayendo datos...",
-    "Listando compra..."
+    "Escaneando con Flash...",
+    "Extrayendo productos...",
+    "Sincronizando inventario..."
   ];
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (step === 'processing') {
       interval = window.setInterval(() => {
         setLoadingStep(prev => (prev + 1) % loadingMessages.length);
-      }, 800);
+      }, 700);
     }
     return () => clearInterval(interval);
   }, [step]);
@@ -54,6 +54,14 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     setStep('processing');
     setLoadingStep(0);
     
+    // Time-out de seguridad: Si en 25 segundos no hay nada, abortamos
+    const timeout = setTimeout(() => {
+        if (step === 'processing') {
+            console.error("Fresco Vision: Timeout reached.");
+            setStep('error');
+        }
+    }, 25000);
+
     try {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -62,6 +70,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             const base64Data = base64.split(',')[1];
             
             const items = await extractItemsFromTicket(base64Data, file.type);
+            clearTimeout(timeout);
             
             if (items && items.length > 0) {
                 setDetectedItems(items.map((item: any) => ({
@@ -73,8 +82,12 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                 setStep('error');
             }
         };
-        reader.onerror = () => setStep('error');
+        reader.onerror = () => {
+            clearTimeout(timeout);
+            setStep('error');
+        };
     } catch (err) {
+        clearTimeout(timeout);
         setStep('error');
     }
   };
@@ -106,7 +119,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             </div>
             <div>
                 <h3 className="text-base font-black leading-none">Importar Compra</h3>
-                <p className="text-[8px] font-black uppercase tracking-widest text-teal-400 mt-1">Fresco Turbo Vision</p>
+                <p className="text-[8px] font-black uppercase tracking-widest text-teal-400 mt-1">Fresco Turbo Flash</p>
             </div>
         </div>
         <button onClick={onClose} className="p-2 bg-white/5 rounded-xl"><X className="w-5 h-5 text-gray-400" /></button>
@@ -117,7 +130,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
           <div className="flex-1 flex flex-col gap-8 justify-center animate-slide-up">
             <div className="text-center">
                 <h4 className="text-white text-3xl font-black mb-2">Sube tu ticket</h4>
-                <p className="text-teal-200/50 text-sm">Escaneado instantáneo con Gemini Flash Lite.</p>
+                <p className="text-teal-200/50 text-sm">Escaneado instantáneo optimizado para Mercadona.</p>
             </div>
 
             <div 
@@ -128,7 +141,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                     <Upload className="w-10 h-10 text-teal-400" />
                 </div>
                 <div className="space-y-2">
-                    <p className="text-white font-black text-xl">Selecciona Archivo</p>
+                    <p className="text-white font-black text-xl">Seleccionar Archivo</p>
                     <p className="text-teal-200/30 text-[10px] uppercase tracking-[0.2em] font-black">PDF O FOTO</p>
                 </div>
                 <input 
@@ -152,7 +165,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             </div>
             <div className="text-center space-y-2">
                 <h4 className="text-white text-2xl font-black">{loadingMessages[loadingStep]}</h4>
-                <p className="text-teal-200/40 font-black text-[9px] uppercase tracking-widest">Flash Lite Engine Active</p>
+                <p className="text-teal-200/40 font-black text-[9px] uppercase tracking-widest">Motor Turbo Flash (Baja Latencia)</p>
             </div>
           </div>
         )}
@@ -162,12 +175,15 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                 <div className="w-24 h-24 bg-red-500/10 rounded-[2.5rem] flex items-center justify-center mb-4">
                     <AlertCircle className="w-12 h-12 text-red-400" />
                 </div>
-                <h4 className="text-white text-2xl font-black">Error en la lectura</h4>
+                <div className="space-y-2">
+                    <h4 className="text-white text-2xl font-black">Algo salió mal</h4>
+                    <p className="text-teal-200/40 text-xs">Asegúrate de que la foto sea legible o intenta de nuevo.</p>
+                </div>
                 <button 
                     onClick={() => setStep('idle')}
                     className="w-full max-w-[240px] py-5 bg-white text-teal-900 rounded-[1.5rem] font-black text-xs uppercase shadow-xl flex items-center justify-center gap-3"
                 >
-                    <RefreshCw className="w-4 h-4" /> Reintentar
+                    <RefreshCw className="w-4 h-4" /> Reintentar Carga
                 </button>
              </div>
         )}

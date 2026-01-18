@@ -20,8 +20,9 @@ const cleanJson = (text: string): string => {
     return clean;
 };
 
-// MOTOR DE EXTRACCIÓN ULTRA-RÁPIDO
-const TICKET_PROMPT = "MERCADONA RECEIPT OCR: Extract [qty, name, unit, category] as JSON array. Ignore non-food. Categories: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.";
+// MOTOR DE EXTRACCIÓN ULTRA-TURBO
+// Optimizado para no requerir pensamiento profundo (ThinkingBudget: 0)
+const TICKET_PROMPT = "MERCADONA TICKET: List [qty, name, unit, category] as JSON array. Only food. Categories: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.";
 
 const TICKET_SCHEMA = {
   type: Type.ARRAY,
@@ -42,7 +43,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
   
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-flash-lite-latest", // El modelo más rápido disponible
+      model: "gemini-3-flash-preview", 
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
@@ -52,14 +53,15 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       config: { 
         responseMimeType: "application/json",
         responseSchema: TICKET_SCHEMA,
-        thinkingConfig: { thinkingBudget: 0 }, // Cero latencia de pensamiento
+        thinkingConfig: { thinkingBudget: 0 }, // DESACTIVADO TOTALMENTE PARA VELOCIDAD
         temperature: 0.1
       }
     });
     
-    return JSON.parse(cleanJson(response.text || '[]'));
+    const text = response.text || '[]';
+    return JSON.parse(cleanJson(text));
   } catch (error) {
-    console.error("Turbo Extraction Error:", error);
+    console.error("Fresco Vision Error:", error);
     return [];
   }
 };
@@ -90,8 +92,11 @@ export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSe
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Batch cooking plan for: ${recipes.map(r => r.title).join(", ")}. JSON.`,
-      config: { responseMimeType: "application/json" }
+      contents: `Batch cooking plan for: ${recipes.map(r => r.title).join(", ")}. JSON output.`,
+      config: { 
+        responseMimeType: "application/json",
+        thinkingConfig: { thinkingBudget: 0 }
+      }
     });
     return JSON.parse(cleanJson(response.text || '{"steps":[]}'));
   } catch (error) {
@@ -104,8 +109,11 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
-            contents: `Generate ${count} recipes with ingredients in: ${pantry.map(p => p.name).join(",")}. JSON array.`,
-            config: { responseMimeType: "application/json" }
+            contents: `Generate ${count} recipes with: ${pantry.map(p => p.name).join(",")}. JSON array.`,
+            config: { 
+              responseMimeType: "application/json",
+              thinkingConfig: { thinkingBudget: 0 }
+            }
         });
         const data = JSON.parse(cleanJson(response.text || '[]'));
         return data.map((r: any, i: number) => ({ ...r, id: `ai-${Date.now()}-${i}`, servings: user.household_size }));
@@ -118,9 +126,13 @@ export const extractItemsFromRawText = async (rawText: string): Promise<any[]> =
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-flash-lite-latest",
+      model: "gemini-3-flash-preview",
       contents: `${TICKET_PROMPT}\n\nTEXT:\n${rawText}`,
-      config: { responseMimeType: "application/json", responseSchema: TICKET_SCHEMA }
+      config: { 
+        responseMimeType: "application/json",
+        responseSchema: TICKET_SCHEMA,
+        thinkingConfig: { thinkingBudget: 0 }
+      }
     });
     return JSON.parse(cleanJson(response.text || '[]'));
   } catch (error) {
