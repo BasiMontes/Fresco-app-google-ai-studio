@@ -10,7 +10,9 @@ const notifyError = (message: string) => {
 };
 
 const cleanJson = (text: string): string => {
+    if (!text) return '[]';
     let clean = text.trim();
+    // Eliminar posibles bloques de código markdown
     clean = clean.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '');
     const start = clean.indexOf('[');
     const end = clean.lastIndexOf(']');
@@ -20,9 +22,8 @@ const cleanJson = (text: string): string => {
     return clean;
 };
 
-// MOTOR DE EXTRACCIÓN ULTRA-TURBO
-// Optimizado para no requerir pensamiento profundo (ThinkingBudget: 0)
-const TICKET_PROMPT = "MERCADONA TICKET: List [qty, name, unit, category] as JSON array. Only food. Categories: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.";
+// MOTOR TURBO FLASH: Optimizado para velocidad pura
+const TICKET_PROMPT = "MERCADONA_OCR: Extract [qty, name, unit, category] to JSON array. Categories: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.";
 
 const TICKET_SCHEMA = {
   type: Type.ARRAY,
@@ -39,6 +40,7 @@ const TICKET_SCHEMA = {
 };
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string = 'image/jpeg'): Promise<any[]> => {
+  // Inicializamos dentro de la función para asegurar el API_KEY más reciente
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   try {
@@ -53,15 +55,17 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       config: { 
         responseMimeType: "application/json",
         responseSchema: TICKET_SCHEMA,
-        thinkingConfig: { thinkingBudget: 0 }, // DESACTIVADO TOTALMENTE PARA VELOCIDAD
-        temperature: 0.1
+        thinkingConfig: { thinkingBudget: 0 }, // DESACTIVADO COMPLETAMENTE PARA VELOCIDAD
+        temperature: 0, // Determinismo máximo = más rapidez
+        topP: 0.1
       }
     });
     
-    const text = response.text || '[]';
-    return JSON.parse(cleanJson(text));
+    const rawText = response.text;
+    const jsonStr = cleanJson(rawText);
+    return JSON.parse(jsonStr);
   } catch (error) {
-    console.error("Fresco Vision Error:", error);
+    console.error("Fresco Turbo Vision Error:", error);
     return [];
   }
 };
@@ -73,9 +77,9 @@ export const generateSmartMenu = async (
     targetTypes: MealCategory[],
     availableRecipes: Recipe[]
 ): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
+    // Simulación rápida para el planificador
     await new Promise(resolve => setTimeout(resolve, 300));
     const plan: MealSlot[] = [];
-    const usedRecipeIds = new Set<string>();
     targetDates.forEach(date => {
         targetTypes.forEach(type => {
             let pool = availableRecipes.filter(r => r.meal_category === (type === 'breakfast' ? 'breakfast' : r.meal_category));

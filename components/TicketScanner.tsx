@@ -34,9 +34,10 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadingMessages = [
-    "Escaneando con Flash...",
+    "Escaneando ticket...",
+    "Procesando imagen...",
     "Extrayendo productos...",
-    "Sincronizando inventario..."
+    "Categorizando compra..."
   ];
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (step === 'processing') {
       interval = window.setInterval(() => {
         setLoadingStep(prev => (prev + 1) % loadingMessages.length);
-      }, 700);
+      }, 800);
     }
     return () => clearInterval(interval);
   }, [step]);
@@ -54,13 +55,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     setStep('processing');
     setLoadingStep(0);
     
-    // Time-out de seguridad: Si en 25 segundos no hay nada, abortamos
+    // Time-out de seguridad: 35 segundos para procesos pesados de visión
     const timeout = setTimeout(() => {
         if (step === 'processing') {
-            console.error("Fresco Vision: Timeout reached.");
+            console.warn("Fresco Vision: Timeout reached.");
             setStep('error');
         }
-    }, 25000);
+    }, 35000);
 
     try {
         const reader = new FileReader();
@@ -69,6 +70,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             const base64 = reader.result as string;
             const base64Data = base64.split(',')[1];
             
+            // LLAMADA TURBO
             const items = await extractItemsFromTicket(base64Data, file.type);
             clearTimeout(timeout);
             
@@ -119,7 +121,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             </div>
             <div>
                 <h3 className="text-base font-black leading-none">Importar Compra</h3>
-                <p className="text-[8px] font-black uppercase tracking-widest text-teal-400 mt-1">Fresco Turbo Flash</p>
+                <p className="text-[8px] font-black uppercase tracking-widest text-teal-400 mt-1">Fresco Vision Turbo</p>
             </div>
         </div>
         <button onClick={onClose} className="p-2 bg-white/5 rounded-xl"><X className="w-5 h-5 text-gray-400" /></button>
@@ -130,7 +132,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
           <div className="flex-1 flex flex-col gap-8 justify-center animate-slide-up">
             <div className="text-center">
                 <h4 className="text-white text-3xl font-black mb-2">Sube tu ticket</h4>
-                <p className="text-teal-200/50 text-sm">Escaneado instantáneo optimizado para Mercadona.</p>
+                <p className="text-teal-200/50 text-sm">Escaneado de alta velocidad para tickets de España.</p>
             </div>
 
             <div 
@@ -165,7 +167,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             </div>
             <div className="text-center space-y-2">
                 <h4 className="text-white text-2xl font-black">{loadingMessages[loadingStep]}</h4>
-                <p className="text-teal-200/40 font-black text-[9px] uppercase tracking-widest">Motor Turbo Flash (Baja Latencia)</p>
+                <p className="text-teal-200/40 font-black text-[9px] uppercase tracking-widest">Motor Flash (Baja Latencia)</p>
             </div>
           </div>
         )}
@@ -176,14 +178,14 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                     <AlertCircle className="w-12 h-12 text-red-400" />
                 </div>
                 <div className="space-y-2">
-                    <h4 className="text-white text-2xl font-black">Algo salió mal</h4>
-                    <p className="text-teal-200/40 text-xs">Asegúrate de que la foto sea legible o intenta de nuevo.</p>
+                    <h4 className="text-white text-2xl font-black">No pudimos leerlo</h4>
+                    <p className="text-teal-200/40 text-xs">La imagen puede ser muy grande o estar borrosa.</p>
                 </div>
                 <button 
                     onClick={() => setStep('idle')}
                     className="w-full max-w-[240px] py-5 bg-white text-teal-900 rounded-[1.5rem] font-black text-xs uppercase shadow-xl flex items-center justify-center gap-3"
                 >
-                    <RefreshCw className="w-4 h-4" /> Reintentar Carga
+                    <RefreshCw className="w-4 h-4" /> Reintentar
                 </button>
              </div>
         )}
