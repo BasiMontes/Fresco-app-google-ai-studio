@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { PantryItem } from '../types';
-import { Package, Plus, Trash2, X, Camera, Search, MoreVertical, Clock, AlertTriangle, ChevronDown, Minus, Calendar, Scale } from 'lucide-react';
+import { Package, Plus, Trash2, X, Camera, Search, MoreVertical, Clock, AlertTriangle, ChevronDown, Minus, Calendar, Scale, ArrowUpDown, CalendarClock, Check } from 'lucide-react';
 import { differenceInDays, startOfDay, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TicketScanner } from './TicketScanner';
@@ -29,19 +29,23 @@ const UNIT_OPTIONS = [
 ];
 
 const CATEGORIES_OPTIONS = [
-    { id: 'vegetables', label: 'VERDURAS', emoji: '🥦' },
-    { id: 'fruits', label: 'FRUTAS', emoji: '🍎' },
-    { id: 'dairy', label: 'LÁCTEOS', emoji: '🧀' },
-    { id: 'meat', label: 'CARNE', emoji: '🥩' },
-    { id: 'beverages', label: 'BEBIDAS', emoji: '🥤' },
-    { id: 'bakery', label: 'PANADERÍA', emoji: '🥐' },
-    { id: 'pantry', label: 'DESPENSA', emoji: '🥫' },
+    { id: 'all', label: 'All Categories', emoji: '🏠' },
+    { id: 'vegetables', label: 'Vegetables', emoji: '🥦' },
+    { id: 'dairy', label: 'Dairy & Eggs', emoji: '🧀' },
+    { id: 'beverages', label: 'Beverages', emoji: '🥤' },
+    { id: 'bakery', label: 'Bakery', emoji: '🥐' },
+    { id: 'meat', label: 'Meat & Seafood', emoji: '🥩' },
 ];
+
+type SortOption = 'name' | 'expiry' | 'quantity';
 
 export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdateQuantity, onAddMany, onEdit, isOnline = true }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [sortBy, setSortBy] = useState<SortOption>('name');
+  const [filterExpiring, setFilterExpiring] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<PantryItem | null>(null);
   const [visibleLimit, setVisibleLimit] = useState(ITEMS_PER_PAGE);
 
@@ -60,21 +64,51 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
   };
 
   const filteredItems = useMemo(() => {
-      let result = items;
+      let result = [...items];
+
+      // Filtro de Texto
       if (searchTerm) {
           const lower = searchTerm.toLowerCase();
           result = result.filter(item => item.name.toLowerCase().includes(lower));
       }
+
+      // Filtro de Categoría
+      if (selectedCategory !== 'all') {
+          result = result.filter(item => item.category === selectedCategory);
+      }
+
+      // Filtro de Caducidad Próxima
+      if (filterExpiring) {
+          const today = startOfDay(new Date());
+          result = result.filter(item => {
+              if (!item.expires_at) return false;
+              const days = differenceInDays(new Date(item.expires_at), today);
+              return days <= 5;
+          });
+      }
+
+      // Ordenación
+      result.sort((a, b) => {
+          if (sortBy === 'name') return a.name.localeCompare(b.name);
+          if (sortBy === 'expiry') {
+              if (!a.expires_at) return 1;
+              if (!b.expires_at) return -1;
+              return new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime();
+          }
+          if (sortBy === 'quantity') return b.quantity - a.quantity;
+          return 0;
+      });
+
       return result;
-  }, [items, searchTerm]);
+  }, [items, searchTerm, selectedCategory, sortBy, filterExpiring]);
 
   const visibleItems = useMemo(() => filteredItems.slice(0, visibleLimit), [filteredItems, visibleLimit]);
 
   return (
     <div className="animate-fade-in pb-48 w-full max-w-full px-4 md:px-8 bg-[#FCFCFC] h-full overflow-y-auto no-scrollbar">
       
-      {/* Header Estilizado */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-6 mb-8">
+      {/* Header Principal */}
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-6 mb-6">
         <div>
             <h1 className="text-[#013b33] text-[2rem] font-black tracking-[-0.05em] leading-[0.9]">Mi Stock</h1>
             <p className="text-gray-300 font-black uppercase text-[7px] tracking-[0.4em]">Gestión Inteligente</p>
@@ -96,24 +130,65 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
         </div>
       </header>
 
-      {/* Grid: 4 Columnas Máximo en Desktop */}
+      {/* 1. BARRA DE CATEGORÍAS (PILLS) */}
+      <div className="flex overflow-x-auto no-scrollbar gap-3 mb-6 pb-2 -mx-2 px-2">
+          {CATEGORIES_OPTIONS.map(cat => {
+              const isSelected = selectedCategory === cat.id;
+              return (
+                  <button
+                    key={cat.id}
+                    onClick={() => { setSelectedCategory(cat.id); setVisibleLimit(ITEMS_PER_PAGE); }}
+                    className={`px-5 py-2.5 rounded-full font-bold text-[11px] whitespace-nowrap transition-all duration-300 border ${
+                        isSelected 
+                        ? 'bg-[#e6f2f1] border-[#147A74] text-[#147A74] shadow-sm' 
+                        : 'bg-[#f4f7f6] border-transparent text-[#6e8a88] hover:bg-gray-100'
+                    }`}
+                  >
+                      {cat.label}
+                  </button>
+              );
+          })}
+      </div>
+
+      {/* 2. BARRA DE HERRAMIENTAS (SORT & EXPIRING) */}
+      <div className="flex items-center gap-6 mb-8 px-2">
+          <button 
+            onClick={() => setSortBy(prev => prev === 'name' ? 'expiry' : prev === 'expiry' ? 'quantity' : 'name')}
+            className="flex items-center gap-3 text-[#4a5f6b] hover:text-[#013b33] transition-colors group"
+          >
+              <ArrowUpDown className="w-4 h-4 text-[#4a5f6b] group-hover:scale-110 transition-transform" />
+              <span className="text-[12px] font-bold uppercase tracking-wider">
+                  Sort by: <span className="text-[#013b33] capitalize">{sortBy === 'expiry' ? 'Caducidad' : sortBy === 'quantity' ? 'Cantidad' : 'Nombre'}</span>
+              </span>
+          </button>
+
+          <button 
+            onClick={() => { setFilterExpiring(!filterExpiring); setVisibleLimit(ITEMS_PER_PAGE); }}
+            className={`flex items-center gap-3 transition-colors group ${filterExpiring ? 'text-[#147A74]' : 'text-[#4a5f6b] hover:text-[#013b33]'}`}
+          >
+              <CalendarClock className={`w-4 h-4 group-hover:scale-110 transition-transform ${filterExpiring ? 'text-[#147A74]' : 'text-[#4a5f6b]'}`} />
+              <span className="text-[12px] font-bold uppercase tracking-wider">Expiring soon</span>
+              {filterExpiring && <div className="w-1.5 h-1.5 rounded-full bg-[#147A74] animate-pulse" />}
+          </button>
+      </div>
+
+      {/* Grid de Productos */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {visibleItems.length === 0 ? (
               <div className="col-span-full py-20 text-center opacity-10 flex flex-col items-center">
                   <Package size={40} className="mb-2" />
-                  <p className="font-black text-sm uppercase tracking-widest">Sin productos</p>
+                  <p className="font-black text-sm uppercase tracking-widest">Sin resultados</p>
               </div>
           ) : (
             visibleItems.map(item => {
                 const status = getExpiryStatus(item);
-                const catInfo = CATEGORIES_OPTIONS.find(c => c.id === item.category) || CATEGORIES_OPTIONS[6];
+                const catInfo = CATEGORIES_OPTIONS.find(c => c.id === item.category) || CATEGORIES_OPTIONS[0];
                 const isLowStock = item.quantity <= 1;
                 const StatusIcon = status.icon;
 
                 return (
                     <div key={item.id} className="bg-white rounded-[2rem] shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.05)] transition-all duration-500 flex flex-col h-[215px] border border-gray-50 group animate-fade-in p-5 relative">
                         
-                        {/* Fila Título - Puntos en Verde Marca (#013b33) */}
                         <div className="flex justify-between items-start mb-2">
                             <h3 className="text-[1.1rem] text-[#013b33] font-black leading-[1.1] tracking-tight line-clamp-1 pr-2 capitalize">
                                 {item.name}
@@ -123,10 +198,9 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                             </button>
                         </div>
 
-                        {/* Bloque Central - Limpio sin "Pantry" */}
                         <div className="flex items-center gap-4 flex-1 min-h-0">
                             <div className="w-14 h-14 rounded-full bg-[#F2F4F7] shadow-inner border border-white flex items-center justify-center text-3xl flex-shrink-0 group-hover:scale-110 transition-transform duration-500">
-                                {catInfo.emoji}
+                                {catInfo.emoji || '📦'}
                             </div>
                             <div className="flex flex-col gap-0.5 min-w-0">
                                 <div className={`flex items-center gap-1.5 font-black text-[10px] tracking-tight ${status.color}`}>
@@ -136,7 +210,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                             </div>
                         </div>
 
-                        {/* Control de Cantidad Mini */}
                         <div className={`mt-2 rounded-[1.8rem] p-0.5 flex items-center justify-between border transition-all duration-500 ${isLowStock ? 'bg-[#FFF5F5] border-[#FFEBEB]' : 'bg-[#F9FAFB] border-[#F2F4F7]'}`}>
                             <button 
                                 onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.id, -1); }} 
@@ -167,7 +240,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
           )}
       </div>
 
-      {/* Botón Cargar Más */}
       {visibleLimit < filteredItems.length && (
           <div className="flex justify-center pt-10">
               <button 
@@ -180,12 +252,11 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
           </div>
       )}
       
-      {/* MODAL DE EDICIÓN: MATCH TOTAL CON CAPTURA */}
+      {/* Modal de Edición */}
       {itemToEdit && (
         <div className="fixed inset-0 z-[5000] bg-[#013b33]/20 backdrop-blur-xl flex items-center justify-center p-4">
             <div className="w-full max-w-[380px] bg-white rounded-[2.8rem] p-8 shadow-2xl relative animate-slide-up">
                 
-                {/* Header Modal */}
                 <div className="flex justify-between items-center mb-8">
                     <h2 className="text-[#013b33] text-[1.8rem] font-black tracking-tight">Editar Stock</h2>
                     <div className="flex gap-2">
@@ -205,7 +276,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                 </div>
 
                 <div className="space-y-6">
-                    {/* Nombre del Producto */}
                     <div className="space-y-2">
                         <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1">Nombre del producto</label>
                         <input 
@@ -215,7 +285,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                         />
                     </div>
 
-                    {/* Fila de Fechas: Compra y Caducidad */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1 flex items-center gap-1">
@@ -243,7 +312,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                         </div>
                     </div>
 
-                    {/* Unidad de Medida (Dropdown) */}
                     <div className="space-y-2">
                         <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1 flex items-center gap-1">
                             <Scale className="w-3 h-3" /> Unidad de medida
@@ -262,7 +330,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                         </div>
                     </div>
 
-                    {/* Botón Guardar */}
                     <button 
                         onClick={() => { onEdit(itemToEdit); setItemToEdit(null); }} 
                         className="w-full py-5 mt-4 bg-[#013b33] text-white rounded-[1.4rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#013b33]/10 active:scale-95 transition-all"
@@ -274,7 +341,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
         </div>
       )}
 
-      {/* Modal Añadir Simple */}
       {showAddModal && (
         <div className="fixed inset-0 z-[5000] bg-[#013b33]/10 backdrop-blur-lg flex items-center justify-center p-4">
             <div className="w-full max-w-[300px] bg-white rounded-[2.5rem] p-8 shadow-2xl relative animate-slide-up">
