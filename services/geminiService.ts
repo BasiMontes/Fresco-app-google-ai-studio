@@ -11,11 +11,8 @@ const notifyError = (message: string) => {
 
 const cleanJson = (text: string): string => {
     let clean = text.trim();
-    if (clean.startsWith('```json')) {
-        clean = clean.replace(/^```json/, '').replace(/```$/, '');
-    } else if (clean.startsWith('```')) {
-        clean = clean.replace(/^```/, '').replace(/```$/, '');
-    }
+    // Eliminar posibles bloques de código Markdown
+    clean = clean.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '');
     return clean.trim();
 };
 
@@ -46,7 +43,7 @@ const satisfiesDiet = (recipe: Recipe, preferences: DietPreference[]): boolean =
 };
 
 /**
- * PLANIFICADOR LOCAL (SIN IA)
+ * PLANIFICADOR LOCAL
  */
 export const generateSmartMenu = async (
     user: UserProfile,
@@ -105,6 +102,7 @@ export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSe
     const recipeTitles = recipes.map(r => r.title).join(", ");
     const prompt = `Plan de Batch Cooking optimizado para: ${recipeTitles}. JSON output.`;
 
+    // Complex text reasoning task: using gemini-3-pro-preview
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
       contents: prompt,
@@ -153,6 +151,7 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
         const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. 
         Dieta OBLIGATORIA: ${dietString}.`;
         
+        // Complex coding/reasoning task: using gemini-3-pro-preview
         const response = await ai.models.generateContent({
             model: "gemini-3-pro-preview",
             contents: prompt,
@@ -213,38 +212,53 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string = 'image/jpeg'): Promise<any[]> => {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    const prompt = `Analiza este ticket de Mercadona (u otro supermercado español). 
+    Extrae CADA producto comprado siguiendo exactamente este patrón:
+    - Busca líneas que empiecen por un número (cantidad).
+    - Identifica el nombre del producto (ej: "QUESO RALLADO PIZZA").
+    - Ignora bolsas de plástico, totales, IVA y datos de tarjeta.
+    - Limpia los nombres de códigos raros.
+    - Devuelve UN ARRAY JSON DE OBJETOS con este formato exacto: {"name": string, "quantity": number, "unit": string, "category": string}
+    - Para la categoría usa solo estas: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.
+    - Devuelve SOLO el JSON, sin texto adicional.`;
+
+    // Vision + Text extraction: using gemini-3-flash-preview
+    // Correct contents structure for multiple parts: { parts: [...] }
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: {
+      contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Actúa como un experto en tickets de supermercado españoles (como Mercadona, Carrefour o Lidl). Analiza la imagen o PDF adjunto. Extrae exclusivamente la lista de productos comprados. \n\nInstrucciones:\n1. Identifica la cantidad y el nombre de cada producto.\n2. Limpia los nombres: elimina códigos internos, 'OP:', '#' o abreviaturas crípticas si es posible.\n3. Ignora secciones de IVA, totales o datos bancarios.\n4. Devuelve un array JSON de objetos.\n\nEsquema: name (string), quantity (number), unit (string, ej: 'uds', 'kg', 'pack'), category (string, una de: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other)." }
-        ]
+          { text: prompt }
+        ] 
       },
       config: { 
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              name: { type: Type.STRING },
-              quantity: { type: Type.NUMBER },
-              unit: { type: Type.STRING },
-              category: { type: Type.STRING }
-            },
-            required: ["name", "quantity", "unit"]
-          }
-        }
+        responseMimeType: "application/json"
       }
     });
     
     const safeText = response.text ? response.text : '';
-    const items = JSON.parse(cleanJson(safeText));
-    return Array.isArray(items) ? items : [];
+    const cleanRaw = cleanJson(safeText);
+    
+    // Si la respuesta está vacía, lanzamos error
+    if (!cleanRaw) throw new Error("Respuesta vacía de IA");
+
+    let items = JSON.parse(cleanRaw);
+    
+    // Si es un objeto en lugar de array, lo envolvemos (safety check)
+    if (!Array.isArray(items) && items.items) items = items.items;
+    if (!Array.isArray(items)) items = [items];
+
+    // Limpieza de datos post-parsing (comas a puntos en cantidades)
+    return items.map((it: any) => ({
+        ...it,
+        quantity: parseFloat(String(it.quantity || "1").replace(',', '.')),
+        unit: it.unit || 'uds',
+        category: it.category || 'pantry'
+    }));
   } catch (error) {
-    console.error("Gemini Error:", error);
-    notifyError("Error leyendo el ticket. Prueba con una foto más clara.");
-    return [];
+    console.error("Gemini Extraction Error:", error);
+    return []; // Devolver vacío para que el componente maneje el estado de error
   }
 };

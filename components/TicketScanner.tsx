@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, X, Check, Loader2, Upload, Sparkles, Plus, Trash2, AlertCircle, CheckCircle2, RefreshCw, CalendarDays, FileText, ChevronDown } from 'lucide-react';
+import { Camera, X, Check, Loader2, Upload, Sparkles, Plus, Trash2, AlertCircle, CheckCircle2, RefreshCw, CalendarDays, FileText, ChevronDown, Info } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { EXPIRY_DAYS_BY_CATEGORY } from '../constants';
@@ -69,6 +69,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               setStep('error');
           }
       } catch (err) {
+          console.error("Scanner UI Error:", err);
           setStep('error');
       } finally {
           setLoading(false);
@@ -83,7 +84,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       return {
         id: `ticket-${Date.now()}-${i}`,
         name: item.name || 'Producto',
-        quantity: parseFloat(item.quantity) || 1,
+        quantity: parseFloat(String(item.quantity || "1").replace(',', '.')),
         unit: item.unit || 'uds',
         category: item.category || 'other',
         added_at: new Date().toISOString(),
@@ -103,7 +104,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             </div>
             <div>
                 <h3 className="text-base font-black leading-none">Fresco Vision</h3>
-                <p className="text-[8px] font-black uppercase tracking-widest text-teal-400 mt-1">Beta Scanner</p>
+                <p className="text-[8px] font-black uppercase tracking-widest text-teal-400 mt-1">Smart Extraction</p>
             </div>
         </div>
         <button onClick={onClose} className="p-2 bg-white/5 rounded-xl"><X className="w-5 h-5 text-gray-400" /></button>
@@ -147,19 +148,23 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             </div>
             <div className="text-center">
                 <h4 className="text-white text-xl font-black mb-1">Leyendo ticket...</h4>
-                <p className="text-teal-200/40 font-medium text-xs">Esto puede tardar unos segundos.</p>
+                <p className="text-teal-200/40 font-medium text-xs">Analizando productos de Mercadona.</p>
             </div>
           </div>
         )}
 
         {step === 'error' && (
-             <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center">
+             <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center animate-slide-up">
                 <div className="w-20 h-20 bg-red-500/10 rounded-[2rem] flex items-center justify-center mb-2">
                     <AlertCircle className="w-10 h-10 text-red-400" />
                 </div>
                 <div>
                     <h4 className="text-white text-xl font-black mb-2">Lectura fallida</h4>
-                    <p className="text-teal-200/40 font-medium text-xs max-w-[240px] mx-auto leading-relaxed">No logramos identificar los productos. Asegúrate de que el PDF sea de un supermercado soportado.</p>
+                    <p className="text-teal-200/40 font-medium text-xs max-w-[240px] mx-auto leading-relaxed">
+                        No hemos podido extraer los productos. Esto suele pasar con fotos movidas o PDFs protegidos. 
+                        <br/><br/>
+                        <span className="text-orange-400 font-black">TIP: Prueba a hacer una captura de pantalla del PDF.</span>
+                    </p>
                 </div>
                 <button 
                     onClick={() => setStep('capture')}
@@ -172,6 +177,11 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
 
         {step === 'review' && (
           <div className="space-y-4 animate-slide-up pb-32">
+             <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-2xl flex items-start gap-3 mb-2">
+                {/* Fix: Added missing Info icon import from lucide-react */}
+                <Info className="w-4 h-4 text-orange-400 mt-0.5" />
+                <p className="text-[10px] text-orange-100/70 font-medium leading-relaxed">Hemos identificado {detectedItems.length} productos. Revisa las cantidades antes de guardar.</p>
+             </div>
             <div className="space-y-3">
                 {detectedItems.map((item, i) => (
                     <div key={i} className="p-4 rounded-[1.6rem] bg-white shadow-xl flex flex-col gap-3">
