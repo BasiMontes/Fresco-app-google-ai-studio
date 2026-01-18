@@ -47,7 +47,6 @@ const satisfiesDiet = (recipe: Recipe, preferences: DietPreference[]): boolean =
 
 /**
  * PLANIFICADOR LOCAL (SIN IA)
- * Utiliza el pool de recetas disponibles para llenar el calendario de forma inteligente.
  */
 export const generateSmartMenu = async (
     user: UserProfile,
@@ -56,7 +55,6 @@ export const generateSmartMenu = async (
     targetTypes: MealCategory[],
     availableRecipes: Recipe[]
 ): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    // Simulamos un pequeño retraso para mantener la sensación de "asistente trabajando"
     await new Promise(resolve => setTimeout(resolve, 800));
 
     const plan: MealSlot[] = [];
@@ -64,25 +62,21 @@ export const generateSmartMenu = async (
 
     targetDates.forEach(date => {
         targetTypes.forEach(type => {
-            // 1. Filtrar por categoría de comida (breakfast vs lunch/dinner pool)
             let pool = availableRecipes.filter(r => {
                 if (type === 'breakfast') return r.meal_category === 'breakfast';
                 return r.meal_category === 'lunch' || r.meal_category === 'dinner';
             });
 
-            // 2. Filtrar por dieta (Si el pool queda vacío, intentamos relajar la dieta por seguridad)
             let filteredPool = pool.filter(r => satisfiesDiet(r, user.dietary_preferences));
-            if (filteredPool.length === 0) filteredPool = pool; // Fallback total si la dieta es muy restrictiva
+            if (filteredPool.length === 0) filteredPool = pool; 
 
             if (filteredPool.length === 0) return;
 
-            // 3. Calcular puntuación por despensa y penalizar repetidos en la misma semana
             const scoredPool = filteredPool.map(r => ({
                 recipe: r,
                 score: calculatePantryScore(r, pantry) - (usedRecipeIds.has(r.id) ? 0.8 : 0)
             }));
 
-            // 4. Ordenar por puntuación y coger uno de los mejores aleatoriamente (variedad)
             scoredPool.sort((a, b) => b.score - a.score);
             const topChoices = scoredPool.slice(0, Math.min(5, scoredPool.length));
             
@@ -105,7 +99,6 @@ export const generateSmartMenu = async (
 
 export const generateWeeklyPlanAI = generateSmartMenu;
 
-// Mantener el resto de funciones con IA para tareas donde sí es necesaria (Batch Cooking complejo o Visión)
 export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSession> => {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -225,7 +218,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: {
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Extrae productos del ticket en JSON. Simplifica nombres. Devuelve un array de objetos con: name, quantity, unit, category." }
+          { text: "Actúa como un experto en tickets de supermercado españoles (como Mercadona, Carrefour o Lidl). Analiza la imagen o PDF adjunto. Extrae exclusivamente la lista de productos comprados. \n\nInstrucciones:\n1. Identifica la cantidad y el nombre de cada producto.\n2. Limpia los nombres: elimina códigos internos, 'OP:', '#' o abreviaturas crípticas si es posible.\n3. Ignora secciones de IVA, totales o datos bancarios.\n4. Devuelve un array JSON de objetos.\n\nEsquema: name (string), quantity (number), unit (string, ej: 'uds', 'kg', 'pack'), category (string, una de: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other)." }
         ]
       },
       config: { 
@@ -250,7 +243,8 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     const items = JSON.parse(cleanJson(safeText));
     return Array.isArray(items) ? items : [];
   } catch (error) {
-    notifyError("Error leyendo el ticket.");
+    console.error("Gemini Error:", error);
+    notifyError("Error leyendo el ticket. Prueba con una foto más clara.");
     return [];
   }
 };
