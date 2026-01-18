@@ -11,13 +11,11 @@ const notifyError = (message: string) => {
 
 const cleanJson = (text: string): string => {
     let clean = text.trim();
+    // Eliminar posibles bloques de código Markdown
     clean = clean.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '');
     return clean.trim();
 };
 
-/**
- * Función local para calcular qué porcentaje de ingredientes de una receta están en la despensa.
- */
 const calculatePantryScore = (recipe: Recipe, pantry: PantryItem[]): number => {
     if (!recipe.ingredients || recipe.ingredients.length === 0) return 0;
     let matches = 0;
@@ -29,9 +27,6 @@ const calculatePantryScore = (recipe: Recipe, pantry: PantryItem[]): number => {
     return matches / recipe.ingredients.length;
 };
 
-/**
- * Valida si una receta cumple con las preferencias dietéticas del usuario.
- */
 const satisfiesDiet = (recipe: Recipe, preferences: DietPreference[]): boolean => {
     if (!preferences || preferences.length === 0 || preferences.includes('none')) return true;
     return preferences.every(pref => {
@@ -40,9 +35,6 @@ const satisfiesDiet = (recipe: Recipe, preferences: DietPreference[]): boolean =
     });
 };
 
-/**
- * PLANIFICADOR LOCAL
- */
 export const generateSmartMenu = async (
     user: UserProfile,
     pantry: PantryItem[],
@@ -126,15 +118,14 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
     }
 };
 
-// MOTOR DE EXTRACCIÓN MAESTRO PARA TICKETS ESPAÑOLES (MERCADONA FOCUS)
-const TICKET_PROMPT = `Analiza este ticket de supermercado (Mercadona).
-REGLAS CRÍTICAS:
-1. Ignora: BOLSA PLASTICO, IVA, TOTAL, TARJETA, TOTAL, FECHA, DIRECCIÓN. Solo queremos alimentos.
-2. Formato de línea típico: [CANTIDAD] [NOMBRE PRODUCTO] [PRECIO]. 
-   Ejemplo: "1 100% INTEGRAL FINO 1,40" -> Cantidad: 1, Nombre: "Pan 100% Integral Fino", Precio: 1.40.
-3. Extrae: Nombre limpio, cantidad numérica, unidad (casi siempre 'uds' en Mercadona a menos que sea peso) y categoría.
-4. Categorías permitidas: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.
-5. Devuelve un ARRAY JSON: [{"name": string, "quantity": number, "unit": string, "category": string}]`;
+// MOTOR DE EXTRACCIÓN MAESTRO
+const TICKET_PROMPT = `Analiza este ticket de supermercado y extrae CADA producto siguiendo estas reglas:
+1. Omite elementos no alimentarios: BOLSAS, IVA, TOTAL, DATOS BANCARIOS, DIRECCIONES.
+2. Identifica el nombre del producto (limpia códigos o precios que se cuelen en el nombre).
+3. Identifica la cantidad numérica y la unidad (uds, kg, l, g, ml, etc).
+4. Clasifica cada item en UNA de estas categorías: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.
+5. IMPORTANTE: En tickets de Mercadona, el primer número de la línea suele ser la cantidad.
+Devuelve un ARRAY JSON: [{"name": string, "quantity": number, "unit": string, "category": string}]`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string = 'image/jpeg'): Promise<any[]> => {
   try {
@@ -144,7 +135,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: `Extrae los productos de esta imagen de ticket. ${TICKET_PROMPT}` }
+          { text: TICKET_PROMPT }
         ] 
       },
       config: { responseMimeType: "application/json" }
@@ -153,7 +144,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     const items = JSON.parse(cleanJson(safeText));
     return Array.isArray(items) ? items : [];
   } catch (error) {
-    console.error("Gemini Vision Error:", error);
+    console.error("Gemini Extraction Error:", error);
     return [];
   }
 };
@@ -163,18 +154,12 @@ export const extractItemsFromRawText = async (rawText: string): Promise<any[]> =
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Procesa este texto copiado de un ticket digital:\n\n${rawText}\n\n${TICKET_PROMPT}`,
+      contents: `Procesa este texto de un ticket:\n\n${rawText}\n\n${TICKET_PROMPT}`,
       config: { responseMimeType: "application/json" }
     });
     const safeText = response.text ? response.text : '';
     const items = JSON.parse(cleanJson(safeText));
-    
-    // Limpieza post-proceso para asegurar tipos correctos
-    return Array.isArray(items) ? items.map(it => ({
-        ...it,
-        quantity: parseFloat(String(it.quantity || "1").replace(',', '.')),
-        name: String(it.name).replace(/\d+(\.\d+)?$/, '').trim() // Quitar precio del final si se coló
-    })) : [];
+    return Array.isArray(items) ? items : [];
   } catch (error) {
     console.error("Gemini Text Error:", error);
     return [];
