@@ -11,8 +11,15 @@ const notifyError = (message: string) => {
 
 const cleanJson = (text: string): string => {
     let clean = text.trim();
+    // Eliminar bloques de código markdown si aparecen
     clean = clean.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '');
-    return clean.trim();
+    // Buscar el primer '[' y el último ']' para extraer solo el array JSON
+    const start = clean.indexOf('[');
+    const end = clean.lastIndexOf(']');
+    if (start !== -1 && end !== -1) {
+        return clean.substring(start, end + 1);
+    }
+    return clean;
 };
 
 const calculatePantryScore = (recipe: Recipe, pantry: PantryItem[]): number => {
@@ -77,7 +84,7 @@ export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSe
     const recipeTitles = recipes.map(r => r.title).join(", ");
     const prompt = `Plan de Batch Cooking optimizado para: ${recipeTitles}. JSON output.`;
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview",
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: { responseMimeType: "application/json" }
     });
@@ -97,7 +104,7 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
         const dietString = user.dietary_preferences.filter(p => p !== 'none').join(", ");
         const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. Dieta OBLIGATORIA: ${dietString}.`;
         const response = await ai.models.generateContent({
-            model: "gemini-3-pro-preview",
+            model: "gemini-3-flash-preview",
             contents: prompt,
             config: { responseMimeType: "application/json" }
         });
@@ -118,29 +125,25 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
 };
 
 /**
- * MOTOR DE RAZONAMIENTO PROFUNDO (GEMINI 3 PRO + THINKING)
- * Optimizado específicamente para tickets de Mercadona
+ * MOTOR DE EXTRACCIÓN FLASH (VELOCIDAD MÁXIMA)
+ * Optimizado para tickets de Mercadona
  */
-const TICKET_PROMPT = `Analiza detenidamente este ticket de Mercadona. 
-Antes de extraer los datos, identifica las columnas: Cantidad, Descripción y Precio.
-
-REGLAS CRÍTICAS:
-1. MERCADONA PDF: La cantidad es el primer número de la línea. Si el producto va por peso (kg), la cantidad puede ser decimal (ej: 0,524).
-2. IGNORAR: No extraigas 'BOLSA PLASTICO', 'CÉNTIMOS', 'IVA', ni datos de pago. Solo comida.
-3. LIMPIEZA: Quita los precios de los nombres. Ej: 'QUESO DADOS 1,15' -> Nombre: 'Queso Dados', Cantidad: 1.
-4. CATEGORÍAS: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.
-
-Piensa paso a paso para no saltarte ningún producto alimentario.`;
+const TICKET_PROMPT = `Extract food products from this receipt.
+RULES:
+1. MERCADONA: The first number on the line is the quantity.
+2. IGNORE: Plastic bags, totals, IVAs, addresses, and payment data.
+3. CATEGORIES: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.
+Return ONLY a JSON array.`;
 
 const TICKET_SCHEMA = {
   type: Type.ARRAY,
   items: {
     type: Type.OBJECT,
     properties: {
-      name: { type: Type.STRING, description: "Nombre limpio" },
-      quantity: { type: Type.NUMBER, description: "Cantidad numérica (acepta decimales para peso)" },
-      unit: { type: Type.STRING, description: "Unidad (uds, kg, pack)" },
-      category: { type: Type.STRING, description: "Categoría lógica" }
+      name: { type: Type.STRING },
+      quantity: { type: Type.NUMBER },
+      unit: { type: Type.STRING },
+      category: { type: Type.STRING }
     },
     required: ["name", "quantity", "unit", "category"]
   }
@@ -150,9 +153,9 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   try {
-    // Usamos el modelo PRO con THINKING BUDGET para una precisión absoluta
+    // Usamos el modelo FLASH para velocidad instantánea
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview", 
+      model: "gemini-3-flash-preview", 
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
@@ -162,7 +165,6 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       config: { 
         responseMimeType: "application/json",
         responseSchema: TICKET_SCHEMA,
-        thinkingConfig: { thinkingBudget: 16000 }, // Damos capacidad de razonamiento
         temperature: 0.1
       }
     });
@@ -170,27 +172,8 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     const safeText = response.text || '[]';
     return JSON.parse(cleanJson(safeText));
   } catch (error) {
-    console.warn("Fallo en extracción Pro, intentando modo rescate Flash...");
-    try {
-        // Modo rescate con Flash sin Thinking (más rápido pero menos 'listo')
-        const responseFlash = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: { 
-                parts: [
-                    { inlineData: { mimeType, data: base64Data } }, 
-                    { text: "Extract food items from this receipt as JSON array." }
-                ] 
-            },
-            config: { 
-                responseMimeType: "application/json",
-                responseSchema: TICKET_SCHEMA
-            }
-        });
-        return JSON.parse(cleanJson(responseFlash.text || '[]'));
-    } catch (innerError) {
-        console.error("Fallo total en extracción:", innerError);
-        return [];
-    }
+    console.error("Extraction Error:", error);
+    return [];
   }
 };
 
@@ -198,12 +181,11 @@ export const extractItemsFromRawText = async (rawText: string): Promise<any[]> =
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview",
-      contents: `Extrae productos de este texto:\n\n${rawText}\n\n${TICKET_PROMPT}`,
+      model: "gemini-3-flash-preview",
+      contents: `${TICKET_PROMPT}\n\nTEXT:\n${rawText}`,
       config: { 
         responseMimeType: "application/json",
-        responseSchema: TICKET_SCHEMA,
-        thinkingConfig: { thinkingBudget: 4000 }
+        responseSchema: TICKET_SCHEMA
       }
     });
     return JSON.parse(cleanJson(response.text || '[]'));
