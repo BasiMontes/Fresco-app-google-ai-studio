@@ -11,7 +11,8 @@ const notifyError = (message: string) => {
 
 const cleanJson = (text: string): string => {
     let clean = text.trim();
-    clean = clean.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '');
+    // Eliminar posibles bloques de markdown si la IA los incluye a pesar de la configuración
+    clean = clean.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '');
     return clean.trim();
 };
 
@@ -117,24 +118,32 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
     }
 };
 
-// MOTOR DE EXTRACCIÓN GOLD PARA TICKETS DE ESPAÑA
-const TICKET_PROMPT = `Extrae todos los productos de alimentación de este ticket de Mercadona.
-REGLAS:
-1. Ignora líneas de 'BOLSA PLASTICO', 'IVA', 'TOTAL', o datos del comercio. Solo comida.
-2. Formato esperado: [Cantidad] [Nombre Producto] [Precio]. 
-   Ej: '1 QUESO DADOS 1,15' -> qty: 1, name: 'Queso Dados', category: 'dairy'.
-   Ej: '1 100% INTEGRAL FINO 1,40' -> qty: 1, name: 'Pan 100% Integral Fino', category: 'bakery'.
-3. Clasifica en: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.`;
+/**
+ * MOTOR DE EXTRACCIÓN AVANZADO (PRO)
+ * Optimizado para la estructura de Mercadona (PDF y Fotos)
+ */
+const TICKET_PROMPT = `Eres un experto en extracción de datos de recibos españoles. 
+Analiza este documento (PDF o imagen) y extrae todos los productos de alimentación.
+
+INSTRUCCIONES DE EXTRACCIÓN:
+1. MERCADONA DETECTOR: Identifica el formato de Mercadona. La cantidad es el primer dígito de la línea.
+   Ejemplo: "1 QUESO RALLADO 1,65" -> Cantidad: 1, Nombre: "Queso Rallado".
+2. FILTRO DE RUIDO: Ignora "BOLSA PLASTICO", importes de IVA, totales, direcciones, teléfonos, o datos de tarjeta bancaria.
+3. TRATAMIENTO DE NOMBRES: Si el nombre contiene porcentajes como "100% INTEGRAL", asegúrate de que el "1" inicial sea la cantidad y no parte del nombre si hay un espacio.
+4. CATEGORIZACIÓN: Asigna una categoría (vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other).
+5. PRECIO: Extrae el nombre limpio sin el precio al final.
+
+Devuelve SIEMPRE un array JSON válido.`;
 
 const TICKET_SCHEMA = {
   type: Type.ARRAY,
   items: {
     type: Type.OBJECT,
     properties: {
-      name: { type: Type.STRING, description: "Nombre limpio del producto" },
-      quantity: { type: Type.NUMBER, description: "Cantidad numérica" },
+      name: { type: Type.STRING, description: "Nombre descriptivo del producto de alimentación" },
+      quantity: { type: Type.NUMBER, description: "Cantidad comprada (número)" },
       unit: { type: Type.STRING, description: "Unidad (uds, kg, pack)" },
-      category: { type: Type.STRING, description: "Categoría del producto" }
+      category: { type: Type.STRING, description: "Categoría logística del producto" }
     },
     required: ["name", "quantity", "unit", "category"]
   }
@@ -142,9 +151,10 @@ const TICKET_SCHEMA = {
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string = 'image/jpeg'): Promise<any[]> => {
   try {
+    // CAMBIO CRÍTICO: Usamos el modelo Pro para asegurar la máxima capacidad de OCR y razonamiento
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview", 
+      model: "gemini-3-pro-preview", 
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
@@ -153,14 +163,32 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       },
       config: { 
         responseMimeType: "application/json",
-        responseSchema: TICKET_SCHEMA
+        responseSchema: TICKET_SCHEMA,
+        temperature: 0.1 // Reducimos creatividad para máxima precisión en datos
       }
     });
+    
     const safeText = response.text || '[]';
-    return JSON.parse(safeText);
+    const items = JSON.parse(cleanJson(safeText));
+    
+    // Si el modelo Pro devuelve un array vacío pero el ticket tiene texto, 
+    // es posible que la validación del esquema haya sido demasiado estricta.
+    return Array.isArray(items) ? items : [];
   } catch (error) {
-    console.error("Gemini Extraction Error:", error);
-    return [];
+    console.error("Gemini Pro Extraction Error:", error);
+    // Reintento silencioso con el modelo Flash si el Pro falla (por cuotas o límites)
+    try {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const responseFlash = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: { parts: [{ inlineData: { mimeType, data: base64Data } }, { text: TICKET_PROMPT }] },
+            config: { responseMimeType: "application/json", responseSchema: TICKET_SCHEMA }
+        });
+        const flashText = responseFlash.text || '[]';
+        return JSON.parse(cleanJson(flashText));
+    } catch (innerError) {
+        return [];
+    }
   }
 };
 
@@ -168,15 +196,15 @@ export const extractItemsFromRawText = async (rawText: string): Promise<any[]> =
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Analiza este texto de ticket:\n\n${rawText}\n\n${TICKET_PROMPT}`,
+      model: "gemini-3-pro-preview",
+      contents: `Procesa este texto de ticket y extrae los productos alimentarios:\n\n${rawText}\n\n${TICKET_PROMPT}`,
       config: { 
         responseMimeType: "application/json",
         responseSchema: TICKET_SCHEMA
       }
     });
     const safeText = response.text || '[]';
-    return JSON.parse(safeText);
+    return JSON.parse(cleanJson(safeText));
   } catch (error) {
     console.error("Gemini Text Error:", error);
     return [];
