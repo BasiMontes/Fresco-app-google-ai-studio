@@ -34,11 +34,12 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadingMessages = [
-    "Leyendo documento...",
-    "Identificando productos...",
-    "Filtrando bolsas y datos bancarios...",
-    "Categorizando tu compra...",
-    "Casi listo..."
+    "Iniciando Motor de Razonamiento...",
+    "Analizando estructura de Mercadona...",
+    "Pensando: Identificando productos...",
+    "Filtrando ruido (Bolsas, IVAs...)",
+    "Verificando integridad de datos...",
+    "Generando inventario final..."
   ];
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (step === 'processing') {
       interval = window.setInterval(() => {
         setLoadingStep(prev => (prev + 1) % loadingMessages.length);
-      }, 2500);
+      }, 3000);
     }
     return () => clearInterval(interval);
   }, [step]);
@@ -108,7 +109,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             </div>
             <div>
                 <h3 className="text-base font-black leading-none">Importar Compra</h3>
-                <p className="text-[8px] font-black uppercase tracking-widest text-teal-400 mt-1">Fresco Vision Gold</p>
+                <p className="text-[8px] font-black uppercase tracking-widest text-teal-400 mt-1">Fresco Deep Vision</p>
             </div>
         </div>
         <button onClick={onClose} className="p-2 bg-white/5 rounded-xl"><X className="w-5 h-5 text-gray-400" /></button>
@@ -120,7 +121,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
           <div className="flex-1 flex flex-col gap-8 justify-center animate-slide-up">
             <div className="text-center">
                 <h4 className="text-white text-3xl font-black mb-2">Sube tu ticket</h4>
-                <p className="text-teal-200/50 text-sm">Cualquier foto o PDF de Mercadona será leído con precisión.</p>
+                <p className="text-teal-200/50 text-sm">Escaneamos tu compra usando Inteligencia Artificial avanzada.</p>
             </div>
 
             <div 
@@ -131,8 +132,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                     <Upload className="w-10 h-10 text-teal-400" />
                 </div>
                 <div className="space-y-2">
-                    <p className="text-white font-black text-xl">Sube tu archivo</p>
-                    <p className="text-teal-200/30 text-[10px] uppercase tracking-[0.2em] font-black">PDF, JPEG o PNG</p>
+                    <p className="text-white font-black text-xl">Selecciona Archivo</p>
+                    <p className="text-teal-200/30 text-[10px] uppercase tracking-[0.2em] font-black">PDF DE MERCADONA O FOTO</p>
                 </div>
                 <input 
                     type="file" 
@@ -143,10 +144,10 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                 />
             </div>
 
-            <div className="bg-teal-900/50 p-6 rounded-[2rem] border border-teal-800 flex gap-4 items-center">
-                <Info className="w-5 h-5 text-teal-400 shrink-0" />
-                <p className="text-[11px] text-teal-100/60 leading-relaxed font-medium italic">
-                    "Fresco Vision Gold lee automáticamente las cantidades y categorías, ignorando bolsas y otros datos irrelevantes."
+            <div className="bg-orange-500/10 p-6 rounded-[2rem] border border-orange-500/20 flex gap-4 items-center">
+                <Sparkles className="w-5 h-5 text-orange-400 shrink-0" />
+                <p className="text-[11px] text-orange-100/70 leading-relaxed font-medium">
+                    "Fresco Deep Vision utiliza el modelo Gemini Pro para analizar la estructura de tu ticket con razonamiento paso a paso."
                 </p>
             </div>
           </div>
@@ -162,7 +163,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             </div>
             <div className="text-center space-y-2">
                 <h4 className="text-white text-2xl font-black transition-all duration-500">{loadingMessages[loadingStep]}</h4>
-                <p className="text-teal-200/40 font-black text-[9px] uppercase tracking-widest">Motor de Inteligencia Artificial Activo</p>
+                <p className="text-teal-200/40 font-black text-[9px] uppercase tracking-widest">Motor de Razonamiento Gemini 3 Pro</p>
             </div>
           </div>
         )}
@@ -173,16 +174,16 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                     <AlertCircle className="w-12 h-12 text-red-400" />
                 </div>
                 <div className="space-y-2">
-                    <h4 className="text-white text-2xl font-black">No pudimos leerlo</h4>
+                    <h4 className="text-white text-2xl font-black">Lectura interrumpida</h4>
                     <p className="text-teal-200/40 font-medium text-xs max-w-[280px] mx-auto leading-relaxed">
-                        Asegúrate de que el documento sea un ticket de supermercado y que el archivo no esté corrupto.
+                        No hemos podido extraer los datos. Asegúrate de que el documento no esté borroso y sea un ticket original.
                     </p>
                 </div>
                 <button 
                     onClick={() => setStep('idle')}
                     className="w-full max-w-[240px] py-5 bg-white text-teal-900 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all"
                 >
-                    <RefreshCw className="w-4 h-4" /> Intentar de nuevo
+                    <RefreshCw className="w-4 h-4" /> Reintentar
                 </button>
              </div>
         )}
@@ -194,8 +195,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                     <Check className="w-6 h-6 stroke-[3px]" />
                 </div>
                 <div>
-                    <h5 className="text-orange-500 font-black text-[10px] uppercase tracking-widest mb-1">Extracción Completada</h5>
-                    <p className="text-xs text-orange-100/70 font-medium leading-tight">Hemos encontrado {detectedItems.length} productos.</p>
+                    <h5 className="text-orange-500 font-black text-[10px] uppercase tracking-widest mb-1">Análisis Completado</h5>
+                    <p className="text-xs text-orange-100/70 font-medium leading-tight">Hemos encontrado {detectedItems.length} productos reales.</p>
                 </div>
              </div>
             
@@ -254,7 +255,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               <div className="flex gap-4 max-w-lg mx-auto">
                   <button onClick={() => setStep('idle')} className="flex-1 py-5 bg-white/10 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest border border-white/5 active:scale-95 transition-all">Cancelar</button>
                   <button onClick={handleSave} className="flex-[2] py-5 bg-orange-500 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all">
-                      <CheckCircle2 className="w-5 h-5" /> Confirmar Inventario
+                      <CheckCircle2 className="w-5 h-5" /> Importar Stock
                   </button>
               </div>
           </div>
