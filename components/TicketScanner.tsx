@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, X, Check, Loader2, Upload, Sparkles, Plus, Trash2, AlertCircle, CheckCircle2, RefreshCw, CalendarDays } from 'lucide-react';
+// Added ChevronDown to the lucide-react import list
+import { Camera, X, Check, Loader2, Upload, Sparkles, Plus, Trash2, AlertCircle, CheckCircle2, RefreshCw, CalendarDays, FileText, ChevronDown } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { EXPIRY_DAYS_BY_CATEGORY } from '../constants';
@@ -28,11 +29,11 @@ const CATEGORY_MAP: Record<string, string> = {
 };
 
 const CATEGORIES_OPTIONS = [
-    { id: 'vegetables', label: 'Verduras', emoji: '🥦' },
-    { id: 'fruits', label: 'Frutas', emoji: '🍎' },
+    { id: 'vegetables', label: 'Verduría', emoji: '🥦' },
+    { id: 'fruits', label: 'Frutería', emoji: '🍎' },
     { id: 'dairy', label: 'Lácteos y Huevos', emoji: '🧀' },
-    { id: 'meat', label: 'Carnes', emoji: '🥩' },
-    { id: 'fish', label: 'Pescados', emoji: '🐟' },
+    { id: 'meat', label: 'Carnicería', emoji: '🥩' },
+    { id: 'fish', label: 'Pescadería', emoji: '🐟' },
     { id: 'pasta', label: 'Pasta y Arroz', emoji: '🍝' },
     { id: 'legumes', label: 'Legumbres', emoji: '🫘' },
     { id: 'broths', label: 'Caldos y Sopas', emoji: '🥣' },
@@ -60,7 +61,7 @@ const compressImage = (file: File): Promise<string> => {
             URL.revokeObjectURL(url); 
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            const MAX_SIZE = 1024;
+            const MAX_SIZE = 1200; // Un poco más de resolución para leer tickets
             let width = img.width;
             let height = img.height;
             if (width > height && width > MAX_SIZE) {
@@ -74,12 +75,21 @@ const compressImage = (file: File): Promise<string> => {
             canvas.height = height;
             if (ctx) {
                 ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.7));
+                resolve(canvas.toDataURL('image/jpeg', 0.8));
             } else {
                 reject(new Error("Canvas context failed"));
             }
         };
         img.onerror = reject;
+    });
+};
+
+const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
     });
 };
 
@@ -101,26 +111,31 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       else onClose();
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setStep('processing');
       setLoading(true);
       try {
-          const compressedBase64 = await compressImage(file);
-          processTicket(compressedBase64);
+          if (file.type === 'application/pdf') {
+              const base64 = await fileToBase64(file);
+              await processTicket(base64, 'application/pdf');
+          } else {
+              const compressedBase64 = await compressImage(file);
+              await processTicket(compressedBase64, 'image/jpeg');
+          }
       } catch (err) {
-          console.error("Compression error", err);
+          console.error("Processing error", err);
           setStep('error');
           setLoading(false);
       }
     }
   };
 
-  const processTicket = async (base64: string) => {
+  const processTicket = async (base64: string, mimeType: string) => {
     const base64Data = base64.split(',')[1];
     try {
-        const items = await extractItemsFromTicket(base64Data);
+        const items = await extractItemsFromTicket(base64Data, mimeType);
         if (items && items.length > 0) {
             const sanitized = items.map((item: any) => ({
                 ...item,
@@ -148,7 +163,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       return {
         id: `ticket-${Date.now()}-${i}`,
         name: item.name || 'Producto desconocido',
-        quantity: item.quantity || 1,
+        quantity: parseFloat(item.quantity) || 1,
         unit: item.unit || 'unidad',
         category: item.category || 'other',
         added_at: new Date().toISOString(),
@@ -160,104 +175,111 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   };
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-teal-900/95 backdrop-blur-2xl flex flex-col animate-fade-in overflow-y-auto">
-      <div className="p-6 flex justify-between items-center text-white border-b border-white/10 sticky top-0 z-50 bg-teal-900/50 backdrop-blur-md">
+    <div className="fixed inset-0 z-[2000] bg-[#013b33] flex flex-col animate-fade-in overflow-hidden">
+      {/* Header Compacto */}
+      <div className="p-5 flex justify-between items-center text-white border-b border-white/5 bg-[#013b33] z-50">
         <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+            <div className="w-10 h-10 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/10">
                 <Sparkles className="w-6 h-6" />
             </div>
             <div>
-                <h3 className="text-xl font-black">Fresco Vision</h3>
-                <p className="text-[10px] font-black uppercase tracking-widest text-teal-400">Traducción de tickets</p>
+                <h3 className="text-lg font-black leading-none">Fresco Vision</h3>
+                <p className="text-[9px] font-black uppercase tracking-widest text-teal-400 mt-1">Escáner Inteligente</p>
             </div>
         </div>
-        <button onClick={handleManualClose} className="p-3 bg-white/10 rounded-2xl hover:bg-white/20 transition-all"><X className="w-6 h-6" /></button>
+        <button onClick={handleManualClose} className="p-2.5 bg-white/5 rounded-xl hover:bg-white/10 transition-all"><X className="w-5 h-5 text-gray-400" /></button>
       </div>
 
-      <div className="flex-1 p-6 max-w-2xl mx-auto w-full">
+      <div className="flex-1 p-4 md:p-8 max-w-2xl mx-auto w-full flex flex-col overflow-y-auto no-scrollbar">
         {step === 'capture' && (
-          <div className="h-full flex flex-col items-center justify-center space-y-8 animate-slide-up">
-            <div className="w-full aspect-[3/4] rounded-[3.5rem] border-4 border-dashed border-white/20 flex flex-col items-center justify-center p-12 text-center group hover:border-orange-500/50 transition-all cursor-pointer bg-white/5"
+          <div className="flex-1 flex flex-col items-center justify-center space-y-6 md:space-y-8 animate-slide-up h-full">
+            <div className="w-full flex-1 min-h-[300px] rounded-[3rem] border-2 border-dashed border-white/10 flex flex-col items-center justify-center p-6 md:p-12 text-center group hover:border-orange-500/40 transition-all cursor-pointer bg-white/5"
                  onClick={() => fileInputRef.current?.click()}>
-                <div className="w-24 h-24 bg-white/10 rounded-[2rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-xl">
-                    <Camera className="w-10 h-10 text-teal-200" />
+                <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-xl border border-white/5">
+                    <Camera className="w-8 h-8 text-teal-200" />
                 </div>
-                <h4 className="text-white text-3xl font-black mb-3">Sube tu ticket</h4>
-                <p className="text-teal-200/60 font-medium text-lg leading-relaxed">Nuestra IA traducirá los códigos de supermercado a productos reales automáticamente.</p>
-                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                <h4 className="text-white text-2xl md:text-3xl font-black mb-3">Sube tu ticket</h4>
+                <p className="text-teal-200/50 font-medium text-base md:text-lg leading-relaxed max-w-xs">Toma una foto clara o sube un PDF de tu compra.</p>
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={handleFileUpload} />
             </div>
-            <div className="flex flex-col gap-4 w-full">
+            <div className="flex flex-col gap-3 w-full pb-8">
                 <button 
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-6 bg-orange-500 text-white rounded-[2rem] font-black text-lg shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                    className="w-full py-5 bg-orange-500 text-white rounded-[1.8rem] font-black text-base shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
                 >
-                    <Upload className="w-6 h-6" /> Seleccionar Ticket
+                    <Upload className="w-5 h-5" /> Seleccionar Archivo
                 </button>
-                <p className="text-[10px] font-black uppercase text-center text-teal-300 tracking-[0.2em] opacity-40">Admite Mercadona, Carrefour, Lidl y más</p>
+                <div className="flex items-center justify-center gap-4 text-teal-300/40 font-black text-[9px] uppercase tracking-[0.2em]">
+                    <span className="flex items-center gap-1.5"><Camera className="w-3 h-3" /> FOTOS</span>
+                    <span className="w-1 h-1 bg-white/20 rounded-full" />
+                    <span className="flex items-center gap-1.5"><FileText className="w-3 h-3" /> PDFS</span>
+                </div>
             </div>
           </div>
         )}
 
         {step === 'processing' && (
-          <div className="h-full flex flex-col items-center justify-center space-y-8">
+          <div className="flex-1 flex flex-col items-center justify-center space-y-8">
             <div className="relative">
-                <div className="w-40 h-40 border-8 border-teal-500/10 border-t-orange-500 rounded-full animate-spin" />
+                <div className="w-32 h-32 border-4 border-teal-500/10 border-t-orange-500 rounded-full animate-spin" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <Sparkles className="w-12 h-12 text-orange-400 animate-pulse" />
+                    <Sparkles className="w-10 h-10 text-orange-400 animate-pulse" />
                 </div>
             </div>
             <div className="text-center space-y-2">
-                <h4 className="text-white text-3xl font-black">Optimizando...</h4>
-                <p className="text-teal-200/60 font-medium text-lg">Comprimiendo imagen y analizando...</p>
+                <h4 className="text-white text-2xl font-black">Analizando...</h4>
+                <p className="text-teal-200/40 font-medium text-sm">Traducimos códigos a comida real...</p>
             </div>
           </div>
         )}
 
         {step === 'error' && (
-             <div className="h-full flex flex-col items-center justify-center space-y-8 animate-slide-up text-center">
-                <div className="w-32 h-32 bg-red-500/20 rounded-[3rem] flex items-center justify-center mb-4">
-                    <AlertCircle className="w-16 h-16 text-red-400" />
+             <div className="flex-1 flex flex-col items-center justify-center space-y-8 animate-slide-up text-center h-full">
+                <div className="w-24 h-24 bg-red-500/10 rounded-[2.5rem] flex items-center justify-center mb-4">
+                    <AlertCircle className="w-12 h-12 text-red-400" />
                 </div>
-                <h4 className="text-white text-3xl font-black">No entendí el ticket</h4>
-                <p className="text-teal-200/60 font-medium text-lg max-w-sm">La imagen estaba borrosa o no detectamos productos legibles. Intenta con mejor luz.</p>
+                <div>
+                    <h4 className="text-white text-2xl font-black mb-2">Lectura fallida</h4>
+                    <p className="text-teal-200/40 font-medium text-sm max-w-xs mx-auto">No logramos identificar los productos. Asegúrate de que el ticket esté bien iluminado o que el PDF sea legible.</p>
+                </div>
                 <button 
                     onClick={() => setStep('capture')}
-                    className="w-full py-6 bg-white text-teal-900 rounded-[2rem] font-black text-lg shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                    className="w-full py-5 bg-white text-teal-900 rounded-[1.8rem] font-black text-base shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
                 >
-                    <RefreshCw className="w-6 h-6" /> Intentar de nuevo
+                    <RefreshCw className="w-5 h-5" /> Reintentar
                 </button>
              </div>
         )}
 
         {step === 'review' && (
-          <div className="space-y-6 animate-slide-up pb-48">
-            <div className="bg-orange-500/10 border border-orange-500/20 p-6 rounded-[2.5rem] flex items-center gap-4">
-                <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center text-white flex-shrink-0">
-                    <AlertCircle className="w-6 h-6" />
+          <div className="space-y-6 animate-slide-up pb-40">
+            <div className="bg-orange-500/5 border border-orange-500/10 p-5 rounded-[2rem] flex items-center gap-4">
+                <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center text-orange-400 flex-shrink-0">
+                    <AlertCircle className="w-5 h-5" />
                 </div>
-                <p className="text-orange-200 text-xs font-bold leading-relaxed">
-                    Hemos traducido los nombres crípticos. Toca la categoría para corregir.
+                <p className="text-orange-200/60 text-[10px] font-bold uppercase tracking-wide leading-relaxed">
+                    Hemos traducido los nombres crípticos. Revisa y pulsa guardar.
                 </p>
             </div>
 
-            <div className="bg-white/10 rounded-[3rem] p-8 border border-white/5 space-y-4">
-                <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-white font-black uppercase text-xs tracking-widest opacity-40">Items encontrados ({detectedItems.length})</h4>
+            <div className="space-y-3">
+                <div className="flex items-center justify-between px-2">
+                    <h4 className="text-teal-200/40 font-black uppercase text-[10px] tracking-widest">Encontrados ({detectedItems.length})</h4>
                     <button 
-                        onClick={() => setDetectedItems([{ name: 'Nuevo producto', quantity: 1, unit: 'unidad', category: 'pantry', daysToExpire: 7 }, ...detectedItems])}
-                        className="bg-white/10 text-white p-2 rounded-xl"
+                        onClick={() => setDetectedItems([{ name: 'Nuevo producto', quantity: 1, unit: 'uds', category: 'pantry', daysToExpire: 7 }, ...detectedItems])}
+                        className="p-2 bg-white/5 text-white rounded-lg border border-white/5"
                     >
-                        <Plus className="w-5 h-5" />
+                        <Plus className="w-4 h-4" />
                     </button>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {detectedItems.map((item, i) => (
-                        <div key={i} className="p-6 rounded-[2rem] flex flex-col gap-4 transition-all border-2 bg-white border-transparent">
+                        <div key={i} className="p-5 rounded-[1.8rem] flex flex-col gap-4 bg-white shadow-xl animate-fade-in">
                             <div className="flex justify-between items-start gap-4">
                                 <div className="flex-1">
                                     <input 
-                                        className="bg-transparent font-black text-xl w-full focus:outline-none text-gray-900" 
+                                        className="bg-transparent font-black text-lg w-full focus:outline-none text-[#013b33] border-b border-gray-100 pb-1" 
                                         value={item.name} 
                                         onChange={(e) => {
                                             const newItems = [...detectedItems];
@@ -265,54 +287,54 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                                             setDetectedItems(newItems);
                                         }}
                                     />
-                                    <div className="relative mt-2 inline-block">
+                                    <div className="relative mt-3 inline-block">
                                         <select 
                                             value={item.category}
                                             onChange={(e) => {
                                                 const newItems = [...detectedItems];
                                                 const val = String(e.target.value);
                                                 newItems[i].category = val;
-                                                newItems[i].daysToExpire = EXPIRY_DAYS_BY_CATEGORY[val as string] || 14;
+                                                newItems[i].daysToExpire = EXPIRY_DAYS_BY_CATEGORY[val] || 14;
                                                 setDetectedItems(newItems);
                                             }}
-                                            className="appearance-none bg-teal-50 text-teal-700 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg pr-8 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer w-full"
+                                            className="appearance-none bg-teal-50 text-teal-700 text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg pr-8 focus:outline-none cursor-pointer w-full"
                                         >
                                             {CATEGORIES_OPTIONS.map(opt => (
-                                                <option key={opt.id} value={opt.id}>{opt.emoji} {opt.label}</option>
+                                                <option key={opt.id} value={opt.id}>{opt.emoji} {opt.label.toUpperCase()}</option>
                                             ))}
                                         </select>
                                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-teal-700">
-                                            <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                                            <ChevronDown className="h-3 w-3" />
                                         </div>
                                     </div>
                                 </div>
                                 <button 
                                     onClick={() => setDetectedItems(detectedItems.filter((_, idx) => idx !== i))}
-                                    className="p-3 text-red-400 hover:bg-red-50 rounded-2xl transition-all"
+                                    className="p-2 text-gray-200 hover:text-red-400 transition-all"
                                 >
                                     <Trash2 className="w-5 h-5" />
                                 </button>
                             </div>
                             
-                            <div className="flex gap-2">
-                                <div className="flex-1 bg-gray-50 rounded-2xl p-4 flex items-center justify-between">
-                                    <span className="text-[10px] font-black uppercase text-gray-400">Cant</span>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-between border border-gray-100">
+                                    <span className="text-[9px] font-black uppercase text-gray-300 tracking-wider">CANT</span>
                                     <input 
                                         type="number" 
                                         step="0.1"
-                                        className="bg-transparent text-right font-black text-gray-900 w-16 focus:outline-none"
+                                        className="bg-transparent text-right font-black text-[#013b33] w-12 focus:outline-none"
                                         value={item.quantity}
                                         onChange={(e) => {
                                             const newItems = [...detectedItems];
-                                            newItems[i].quantity = parseFloat(e.target.value);
+                                            newItems[i].quantity = e.target.value;
                                             setDetectedItems(newItems);
                                         }}
                                     />
                                 </div>
-                                <div className="flex-1 bg-gray-50 rounded-2xl p-4 flex items-center justify-between">
-                                    <span className="text-[10px] font-black uppercase text-gray-400">Uni</span>
+                                <div className="bg-gray-50 rounded-xl p-3 flex items-center justify-between border border-gray-100">
+                                    <span className="text-[9px] font-black uppercase text-gray-300 tracking-wider">UNI</span>
                                     <input 
-                                        className="bg-transparent text-right font-black text-gray-900 w-16 focus:outline-none"
+                                        className="bg-transparent text-right font-black text-[#013b33] w-12 focus:outline-none uppercase"
                                         value={item.unit}
                                         onChange={(e) => {
                                             const newItems = [...detectedItems];
@@ -323,16 +345,16 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                                 </div>
                             </div>
 
-                            <div className="bg-orange-50 rounded-2xl p-4 flex items-center justify-between border border-orange-100">
-                                <div className="flex items-center gap-2 text-orange-600">
-                                    <CalendarDays className="w-4 h-4" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Caduca en</span>
+                            <div className="bg-orange-50 rounded-xl p-3 flex items-center justify-between border border-orange-100/50">
+                                <div className="flex items-center gap-2 text-orange-500">
+                                    <CalendarDays className="w-3.5 h-3.5" />
+                                    <span className="text-[9px] font-black uppercase tracking-widest">CADUCIDAD ESTIMADA</span>
                                 </div>
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1.5">
                                     <input 
                                         type="number" 
                                         min="1"
-                                        className="bg-transparent text-right font-black text-orange-900 w-12 focus:outline-none"
+                                        className="bg-transparent text-right font-black text-orange-700 w-10 focus:outline-none"
                                         value={item.daysToExpire}
                                         onChange={(e) => {
                                             const newItems = [...detectedItems];
@@ -340,31 +362,35 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                                             setDetectedItems(newItems);
                                         }}
                                     />
-                                    <span className="text-xs font-bold text-orange-400">días</span>
+                                    <span className="text-[9px] font-black text-orange-300">DÍAS</span>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
-
-            <div className="fixed bottom-10 left-6 right-6 max-w-2xl mx-auto flex gap-4">
-                <button 
-                    onClick={() => setStep('capture')}
-                    className="flex-1 py-6 bg-white/10 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest active:scale-95 transition-all border border-white/10"
-                >
-                    Repetir
-                </button>
-                <button 
-                    onClick={handleSave}
-                    className="flex-[2] py-6 bg-orange-500 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
-                >
-                    <Check className="w-6 h-6 stroke-[3px]" /> Guardar
-                </button>
-            </div>
           </div>
         )}
       </div>
+
+      {step === 'review' && (
+          <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#013b33] via-[#013b33] to-transparent z-50">
+              <div className="flex gap-4 max-w-2xl mx-auto">
+                  <button 
+                      onClick={() => setStep('capture')}
+                      className="flex-1 py-5 bg-white/10 text-white rounded-[1.6rem] font-black text-xs uppercase tracking-[0.2em] active:scale-95 transition-all border border-white/5"
+                  >
+                      Repetir
+                  </button>
+                  <button 
+                      onClick={handleSave}
+                      className="flex-[2] py-5 bg-orange-500 text-white rounded-[1.6rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                  >
+                      <CheckCircle2 className="w-5 h-5 stroke-[3px]" /> Guardar Todo
+                  </button>
+              </div>
+          </div>
+      )}
     </div>
   );
 };

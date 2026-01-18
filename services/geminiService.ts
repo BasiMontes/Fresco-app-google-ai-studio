@@ -217,15 +217,15 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
     }
 };
 
-export const extractItemsFromTicket = async (base64Image: string): Promise<any[]> => {
+export const extractItemsFromTicket = async (base64Data: string, mimeType: string = 'image/jpeg'): Promise<any[]> => {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: {
         parts: [
-          { inlineData: { mimeType: 'image/jpeg', data: base64Image } }, 
-          { text: "Extrae productos del ticket en JSON. Simplifica nombres." }
+          { inlineData: { mimeType, data: base64Data } }, 
+          { text: "Extrae productos del ticket en JSON. Simplifica nombres. Devuelve un array de objetos con: name, quantity, unit, category." }
         ]
       },
       config: { 
