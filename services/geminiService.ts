@@ -11,9 +11,7 @@ const notifyError = (message: string) => {
 
 const cleanJson = (text: string): string => {
     let clean = text.trim();
-    // Eliminar bloques de código markdown si aparecen
     clean = clean.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '');
-    // Buscar el primer '[' y el último ']' para extraer solo el array JSON
     const start = clean.indexOf('[');
     const end = clean.lastIndexOf(']');
     if (start !== -1 && end !== -1) {
@@ -22,118 +20,8 @@ const cleanJson = (text: string): string => {
     return clean;
 };
 
-const calculatePantryScore = (recipe: Recipe, pantry: PantryItem[]): number => {
-    if (!recipe.ingredients || recipe.ingredients.length === 0) return 0;
-    let matches = 0;
-    recipe.ingredients.forEach(ing => {
-        const name = cleanName(ing.name);
-        const inPantry = pantry.some(p => cleanName(p.name).includes(name) || name.includes(cleanName(p.name)));
-        if (inPantry) matches++;
-    });
-    return matches / recipe.ingredients.length;
-};
-
-const satisfiesDiet = (recipe: Recipe, preferences: DietPreference[]): boolean => {
-    if (!preferences || preferences.length === 0 || preferences.includes('none')) return true;
-    return preferences.every(pref => {
-        if (pref === 'vegetarian') return recipe.dietary_tags.includes('vegetarian') || recipe.dietary_tags.includes('vegan');
-        return recipe.dietary_tags.includes(pref);
-    });
-};
-
-export const generateSmartMenu = async (
-    user: UserProfile,
-    pantry: PantryItem[],
-    targetDates: string[], 
-    targetTypes: MealCategory[],
-    availableRecipes: Recipe[]
-): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    const plan: MealSlot[] = [];
-    const usedRecipeIds = new Set<string>();
-    targetDates.forEach(date => {
-        targetTypes.forEach(type => {
-            let pool = availableRecipes.filter(r => {
-                if (type === 'breakfast') return r.meal_category === 'breakfast';
-                return r.meal_category === 'lunch' || r.meal_category === 'dinner';
-            });
-            let filteredPool = pool.filter(r => satisfiesDiet(r, user.dietary_preferences));
-            if (filteredPool.length === 0) filteredPool = pool; 
-            if (filteredPool.length === 0) return;
-            const scoredPool = filteredPool.map(r => ({
-                recipe: r,
-                score: calculatePantryScore(r, pantry) - (usedRecipeIds.has(r.id) ? 0.8 : 0)
-            }));
-            scoredPool.sort((a, b) => b.score - a.score);
-            const topChoices = scoredPool.slice(0, Math.min(5, scoredPool.length));
-            if (topChoices.length > 0) {
-                const selected = topChoices[Math.floor(Math.random() * topChoices.length)].recipe;
-                usedRecipeIds.add(selected.id);
-                plan.push({ date, type, recipeId: selected.id, servings: user.household_size, isCooked: false });
-            }
-        });
-    });
-    return { plan, newRecipes: [] };
-};
-
-export const generateWeeklyPlanAI = generateSmartMenu;
-
-export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSession> => {
-  try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const recipeTitles = recipes.map(r => r.title).join(", ");
-    const prompt = `Plan de Batch Cooking optimizado para: ${recipeTitles}. JSON output.`;
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: { responseMimeType: "application/json" }
-    });
-    const safeText = response.text ? response.text : '';
-    const data = JSON.parse(cleanJson(safeText));
-    return { total_duration: data.total_duration || 0, steps: Array.isArray(data.steps) ? data.steps : [] };
-  } catch (error) {
-    notifyError("La IA de cocina paralela no está disponible.");
-    return { total_duration: 0, steps: [] };
-  }
-};
-
-export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[], count: number = 3, customPrompt?: string): Promise<Recipe[]> => {
-    try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const pantryList = pantry.map(p => p.name).join(", ");
-        const dietString = user.dietary_preferences.filter(p => p !== 'none').join(", ");
-        const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. Dieta OBLIGATORIA: ${dietString}.`;
-        const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: prompt,
-            config: { responseMimeType: "application/json" }
-        });
-        const safeText = response.text ? response.text : '';
-        const data = JSON.parse(cleanJson(safeText));
-        if (!Array.isArray(data)) return [];
-        return data.map((raw: any, i: number) => ({
-            ...raw,
-            id: `gen-rec-${Date.now()}-${i}`,
-            servings: user.household_size,
-            dietary_tags: user.dietary_preferences.filter(p => p !== 'none'),
-            image_url: `https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&sig=${Math.random()}`
-        }));
-    } catch (e) {
-        notifyError("Error conectando con la cocina IA.");
-        return [];
-    }
-};
-
-/**
- * MOTOR DE EXTRACCIÓN FLASH (VELOCIDAD MÁXIMA)
- * Optimizado para tickets de Mercadona
- */
-const TICKET_PROMPT = `Extract food products from this receipt.
-RULES:
-1. MERCADONA: The first number on the line is the quantity.
-2. IGNORE: Plastic bags, totals, IVAs, addresses, and payment data.
-3. CATEGORIES: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.
-Return ONLY a JSON array.`;
+// MOTOR DE EXTRACCIÓN ULTRA-RÁPIDO
+const TICKET_PROMPT = "MERCADONA RECEIPT OCR: Extract [qty, name, unit, category] as JSON array. Ignore non-food. Categories: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.";
 
 const TICKET_SCHEMA = {
   type: Type.ARRAY,
@@ -153,9 +41,8 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   try {
-    // Usamos el modelo FLASH para velocidad instantánea
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview", 
+      model: "gemini-flash-lite-latest", // El modelo más rápido disponible
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
@@ -165,28 +52,75 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       config: { 
         responseMimeType: "application/json",
         responseSchema: TICKET_SCHEMA,
+        thinkingConfig: { thinkingBudget: 0 }, // Cero latencia de pensamiento
         temperature: 0.1
       }
     });
     
-    const safeText = response.text || '[]';
-    return JSON.parse(cleanJson(safeText));
+    return JSON.parse(cleanJson(response.text || '[]'));
   } catch (error) {
-    console.error("Extraction Error:", error);
+    console.error("Turbo Extraction Error:", error);
     return [];
   }
+};
+
+export const generateSmartMenu = async (
+    user: UserProfile,
+    pantry: PantryItem[],
+    targetDates: string[], 
+    targetTypes: MealCategory[],
+    availableRecipes: Recipe[]
+): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const plan: MealSlot[] = [];
+    const usedRecipeIds = new Set<string>();
+    targetDates.forEach(date => {
+        targetTypes.forEach(type => {
+            let pool = availableRecipes.filter(r => r.meal_category === (type === 'breakfast' ? 'breakfast' : r.meal_category));
+            if (pool.length === 0) return;
+            const selected = pool[Math.floor(Math.random() * pool.length)];
+            plan.push({ date, type, recipeId: selected.id, servings: user.household_size, isCooked: false });
+        });
+    });
+    return { plan, newRecipes: [] };
+};
+
+export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSession> => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Batch cooking plan for: ${recipes.map(r => r.title).join(", ")}. JSON.`,
+      config: { responseMimeType: "application/json" }
+    });
+    return JSON.parse(cleanJson(response.text || '{"steps":[]}'));
+  } catch (error) {
+    return { total_duration: 0, steps: [] };
+  }
+};
+
+export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[], count: number = 3): Promise<Recipe[]> => {
+    try {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: `Generate ${count} recipes with ingredients in: ${pantry.map(p => p.name).join(",")}. JSON array.`,
+            config: { responseMimeType: "application/json" }
+        });
+        const data = JSON.parse(cleanJson(response.text || '[]'));
+        return data.map((r: any, i: number) => ({ ...r, id: `ai-${Date.now()}-${i}`, servings: user.household_size }));
+    } catch (e) {
+        return [];
+    }
 };
 
 export const extractItemsFromRawText = async (rawText: string): Promise<any[]> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-flash-lite-latest",
       contents: `${TICKET_PROMPT}\n\nTEXT:\n${rawText}`,
-      config: { 
-        responseMimeType: "application/json",
-        responseSchema: TICKET_SCHEMA
-      }
+      config: { responseMimeType: "application/json", responseSchema: TICKET_SCHEMA }
     });
     return JSON.parse(cleanJson(response.text || '[]'));
   } catch (error) {
