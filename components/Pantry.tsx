@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { PantryItem } from '../types';
 import { Package, Plus, Trash2, X, Camera, Search, MoreVertical, Clock, AlertTriangle, ChevronDown, Minus, Calendar, Scale, ArrowUpDown, CalendarClock, Check, Tag } from 'lucide-react';
-import { differenceInDays, startOfDay, format, isBefore, addDays, parseISO, isValid } from 'date-fns';
+import { differenceInDays, startOfDay, format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TicketScanner } from './TicketScanner';
 import { triggerDialog } from './Dialog';
@@ -51,8 +51,8 @@ const CATEGORIES_OPTIONS = [
 
 type SortOption = 'name' | 'expiry' | 'quantity';
 
-// Estilos unificados para inputs de modales
-const MODAL_INPUT_CLASSES = "w-full px-6 py-5 bg-[#F9FAFB] rounded-[1.4rem] font-black text-[11px] text-[#013b33] uppercase tracking-widest outline-none border-none transition-all focus:bg-gray-50 appearance-none";
+// Estilos unificados para inputs de modales - Altura fija para alineación perfecta
+const MODAL_INPUT_CLASSES = "w-full h-[62px] px-6 bg-[#F9FAFB] rounded-[1.4rem] font-black text-[11px] text-[#013b33] uppercase tracking-widest outline-none border-none transition-all focus:bg-gray-100 appearance-none flex items-center";
 
 export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdateQuantity, onAddMany, onEdit, isOnline = true }) => {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -60,6 +60,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState<SortOption>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filterExpiring, setFilterExpiring] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<PantryItem | null>(null);
   const [visibleLimit, setVisibleLimit] = useState(ITEMS_PER_PAGE);
@@ -75,16 +76,12 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
   const getExpiryStatus = (item: PantryItem) => {
     if (!item.expires_at) return { type: 'none', label: 'Fresco', color: 'text-[#147A74]', icon: Clock };
-    
-    // Normalizar fechas a medianoche local para comparación pura de días
     const today = startOfDay(new Date());
     const expiryDate = startOfDay(new Date(item.expires_at));
     const days = differenceInDays(expiryDate, today);
-    
     if (days < 0) return { type: 'expired', label: 'CADUCADO', color: 'text-[#FF4D4D]', icon: AlertTriangle };
     if (days === 0) return { type: 'priority', label: 'Hoy', color: 'text-[#FF4D4D]', icon: AlertTriangle };
     if (days <= 3) return { type: 'priority', label: `${days}d`, color: 'text-[#E67E22]', icon: Clock };
-    
     return { type: 'fresh', label: format(expiryDate, "d MMM", { locale: es }), color: 'text-[#147A74]', icon: Clock };
   };
 
@@ -102,29 +99,30 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
       if (filterExpiring) {
           const today = startOfDay(new Date());
-          const limitDate = addDays(today, 5); // Hasta 5 días
-          
+          const limitDate = addDays(today, 5);
           result = result.filter(item => {
               if (!item.expires_at) return false;
-              // Forzamos comparación de fecha pura (inicio del día)
               const itemExpiry = startOfDay(new Date(item.expires_at));
               return itemExpiry.getTime() <= limitDate.getTime();
           });
       }
 
       result.sort((a, b) => {
-          if (sortBy === 'name') return a.name.localeCompare(b.name);
-          if (sortBy === 'expiry') {
-              if (!a.expires_at) return 1;
-              if (!b.expires_at) return -1;
-              return new Date(a.expires_at).getTime() - new Date(b.expires_at).getTime();
+          let comparison = 0;
+          if (sortBy === 'name') {
+              comparison = a.name.localeCompare(b.name);
+          } else if (sortBy === 'expiry') {
+              const timeA = a.expires_at ? new Date(a.expires_at).getTime() : Infinity;
+              const timeB = b.expires_at ? new Date(b.expires_at).getTime() : Infinity;
+              comparison = timeA - timeB;
+          } else if (sortBy === 'quantity') {
+              comparison = a.quantity - b.quantity;
           }
-          if (sortBy === 'quantity') return b.quantity - a.quantity;
-          return 0;
+          return sortDirection === 'asc' ? comparison : -comparison;
       });
 
       return result;
-  }, [items, searchTerm, selectedCategory, sortBy, filterExpiring]);
+  }, [items, searchTerm, selectedCategory, sortBy, sortDirection, filterExpiring]);
 
   const visibleItems = useMemo(() => filteredItems.slice(0, visibleLimit), [filteredItems, visibleLimit]);
 
@@ -202,15 +200,23 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
       {/* 2. BARRA DE HERRAMIENTAS (SORT & EXPIRING) */}
       <div className="flex items-center gap-6 mb-8 px-2">
-          <button 
-            onClick={() => setSortBy(prev => prev === 'name' ? 'expiry' : prev === 'expiry' ? 'quantity' : 'name')}
-            className="flex items-center gap-3 text-[#4a5f6b] hover:text-[#013b33] transition-colors group"
-          >
-              <ArrowUpDown className="w-4 h-4 text-[#4a5f6b] group-hover:scale-110 transition-transform" />
-              <span className="text-[12px] font-bold uppercase tracking-wider">
-                  Sort by: <span className="text-[#013b33] capitalize">{sortBy === 'expiry' ? 'Caducidad' : sortBy === 'quantity' ? 'Cantidad' : 'Nombre'}</span>
-              </span>
-          </button>
+          <div className="flex items-center gap-1 group">
+              <button 
+                onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                title={sortDirection === 'asc' ? 'Orden Ascendente' : 'Orden Descendente'}
+              >
+                  <ArrowUpDown className={`w-4 h-4 text-[#4a5f6b] transition-transform duration-300 ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
+              </button>
+              <button 
+                onClick={() => setSortBy(prev => prev === 'name' ? 'expiry' : prev === 'expiry' ? 'quantity' : 'name')}
+                className="flex items-center gap-2 text-[#4a5f6b] hover:text-[#013b33] transition-colors"
+              >
+                  <span className="text-[12px] font-bold uppercase tracking-wider">
+                      Sort by: <span className="text-[#013b33] capitalize">{sortBy === 'expiry' ? 'Caducidad' : sortBy === 'quantity' ? 'Cantidad' : 'Nombre'}</span>
+                  </span>
+              </button>
+          </div>
 
           <button 
             onClick={() => { setFilterExpiring(!filterExpiring); setVisibleLimit(ITEMS_PER_PAGE); }}
@@ -238,7 +244,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
                 return (
                     <div key={item.id} className="bg-white rounded-[2rem] shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.05)] transition-all duration-500 flex flex-col h-[215px] border border-gray-50 group animate-fade-in p-5 relative">
-                        
                         <div className="flex justify-between items-start mb-2">
                             <h3 className="text-[1.1rem] text-[#013b33] font-black leading-[1.1] tracking-tight line-clamp-1 pr-2 capitalize">
                                 {item.name}
@@ -306,7 +311,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
       {itemToEdit && (
         <div className="fixed inset-0 z-[5000] bg-black/30 backdrop-blur-xl flex items-center justify-center p-4">
             <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up">
-                
                 <div className="flex justify-between items-center mb-8">
                     <h2 className="text-[#013b33] text-[2rem] font-black tracking-tight leading-none">Editar Item</h2>
                     <div className="flex gap-1">
@@ -356,7 +360,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                     <div className="grid grid-cols-[1fr_2fr] gap-4">
                         <div className="flex flex-col">
                             <InputLabel>Cantidad</InputLabel>
-                            <input type="number" step="0.1" className={MODAL_INPUT_CLASSES + " text-center"} 
+                            <input type="number" step="0.1" className={MODAL_INPUT_CLASSES + " text-center px-2"} 
                                 value={itemToEdit.quantity} onChange={e => setItemToEdit({...itemToEdit, quantity: parseFloat(e.target.value) || 0})} />
                         </div>
                         <div className="flex flex-col">
@@ -372,7 +376,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                     </div>
 
                     <button onClick={() => { onEdit(itemToEdit); setItemToEdit(null); }} 
-                        className="w-full py-6 mt-4 bg-[#013b33] text-white rounded-[1.6rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all">
+                        className="w-full h-[64px] bg-[#013b33] text-white rounded-[1.6rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all">
                         Guardar Cambios
                     </button>
                 </div>
@@ -384,7 +388,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
       {showAddModal && (
         <div className="fixed inset-0 z-[5000] bg-black/30 backdrop-blur-xl flex items-center justify-center p-4">
             <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up">
-                
                 <div className="flex justify-between items-center mb-8">
                     <h2 className="text-[#013b33] text-[2rem] font-black tracking-tight leading-none">Nuevo Item</h2>
                     <button onClick={() => setShowAddModal(false)} className="p-2.5 text-gray-200 hover:text-black transition-colors">
@@ -426,7 +429,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                     <div className="grid grid-cols-[1fr_2fr] gap-4">
                         <div className="flex flex-col">
                             <InputLabel>Cantidad</InputLabel>
-                            <input type="number" step="0.1" className={MODAL_INPUT_CLASSES + " text-center"} 
+                            <input type="number" step="0.1" className={MODAL_INPUT_CLASSES + " text-center px-2"} 
                                 value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value) || 0})} />
                         </div>
                         <div className="flex flex-col">
@@ -442,7 +445,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                     </div>
 
                     <button onClick={handleAddNewItem} disabled={!newItem.name}
-                        className="w-full py-6 mt-4 bg-[#013b33] text-white rounded-[1.6rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all disabled:opacity-40">
+                        className="w-full h-[64px] bg-[#013b33] text-white rounded-[1.6rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all disabled:opacity-40">
                         AÑADIR A DESPENSA
                     </button>
                 </div>
