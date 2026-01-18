@@ -11,7 +11,6 @@ const notifyError = (message: string) => {
 
 const cleanJson = (text: string): string => {
     let clean = text.trim();
-    // Eliminar posibles bloques de código Markdown
     clean = clean.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '');
     return clean.trim();
 };
@@ -35,7 +34,6 @@ const calculatePantryScore = (recipe: Recipe, pantry: PantryItem[]): number => {
  */
 const satisfiesDiet = (recipe: Recipe, preferences: DietPreference[]): boolean => {
     if (!preferences || preferences.length === 0 || preferences.includes('none')) return true;
-    
     return preferences.every(pref => {
         if (pref === 'vegetarian') return recipe.dietary_tags.includes('vegetarian') || recipe.dietary_tags.includes('vegan');
         return recipe.dietary_tags.includes(pref);
@@ -53,44 +51,30 @@ export const generateSmartMenu = async (
     availableRecipes: Recipe[]
 ): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
     await new Promise(resolve => setTimeout(resolve, 800));
-
     const plan: MealSlot[] = [];
     const usedRecipeIds = new Set<string>();
-
     targetDates.forEach(date => {
         targetTypes.forEach(type => {
             let pool = availableRecipes.filter(r => {
                 if (type === 'breakfast') return r.meal_category === 'breakfast';
                 return r.meal_category === 'lunch' || r.meal_category === 'dinner';
             });
-
             let filteredPool = pool.filter(r => satisfiesDiet(r, user.dietary_preferences));
             if (filteredPool.length === 0) filteredPool = pool; 
-
             if (filteredPool.length === 0) return;
-
             const scoredPool = filteredPool.map(r => ({
                 recipe: r,
                 score: calculatePantryScore(r, pantry) - (usedRecipeIds.has(r.id) ? 0.8 : 0)
             }));
-
             scoredPool.sort((a, b) => b.score - a.score);
             const topChoices = scoredPool.slice(0, Math.min(5, scoredPool.length));
-            
             if (topChoices.length > 0) {
                 const selected = topChoices[Math.floor(Math.random() * topChoices.length)].recipe;
                 usedRecipeIds.add(selected.id);
-                plan.push({
-                    date,
-                    type,
-                    recipeId: selected.id,
-                    servings: user.household_size,
-                    isCooked: false
-                });
+                plan.push({ date, type, recipeId: selected.id, servings: user.household_size, isCooked: false });
             }
         });
     });
-
     return { plan, newRecipes: [] };
 };
 
@@ -101,42 +85,14 @@ export const generateBatchCookingAI = async (recipes: Recipe[]): Promise<BatchSe
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const recipeTitles = recipes.map(r => r.title).join(", ");
     const prompt = `Plan de Batch Cooking optimizado para: ${recipeTitles}. JSON output.`;
-
-    // Complex text reasoning task: using gemini-3-pro-preview
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
       contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            total_duration: { type: Type.INTEGER },
-            steps: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  id: { type: Type.STRING },
-                  instruction: { type: Type.STRING },
-                  duration_mins: { type: Type.INTEGER },
-                  recipes_affected: { type: Type.ARRAY, items: { type: Type.STRING } },
-                  type: { type: Type.STRING }
-                },
-                required: ["instruction", "duration_mins"]
-              }
-            }
-          }
-        }
-      }
+      config: { responseMimeType: "application/json" }
     });
-
     const safeText = response.text ? response.text : '';
     const data = JSON.parse(cleanJson(safeText));
-    return {
-        total_duration: data.total_duration || 0,
-        steps: Array.isArray(data.steps) ? data.steps : []
-    };
+    return { total_duration: data.total_duration || 0, steps: Array.isArray(data.steps) ? data.steps : [] };
   } catch (error) {
     notifyError("La IA de cocina paralela no está disponible.");
     return { total_duration: 0, steps: [] };
@@ -148,117 +104,79 @@ export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[],
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const pantryList = pantry.map(p => p.name).join(", ");
         const dietString = user.dietary_preferences.filter(p => p !== 'none').join(", ");
-        const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. 
-        Dieta OBLIGATORIA: ${dietString}.`;
-        
-        // Complex coding/reasoning task: using gemini-3-pro-preview
+        const prompt = `Genera ${count} recetas ${customPrompt || `basadas en: ${pantryList}`}. Dieta OBLIGATORIA: ${dietString}.`;
         const response = await ai.models.generateContent({
             model: "gemini-3-pro-preview",
             contents: prompt,
-            config: { 
-              responseMimeType: "application/json",
-              responseSchema: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    title: { type: Type.STRING },
-                    description: { type: Type.STRING },
-                    meal_category: { type: Type.STRING },
-                    cuisine_type: { type: Type.STRING },
-                    difficulty: { type: Type.STRING },
-                    prep_time: { type: Type.INTEGER },
-                    calories: { type: Type.INTEGER },
-                    ingredients: {
-                      type: Type.ARRAY,
-                      items: {
-                        type: Type.OBJECT,
-                        properties: {
-                          name: { type: Type.STRING },
-                          quantity: { type: Type.NUMBER },
-                          unit: { type: Type.STRING },
-                          category: { type: Type.STRING }
-                        },
-                        required: ["name", "quantity", "unit"]
-                      }
-                    },
-                    instructions: { type: Type.ARRAY, items: { type: Type.STRING } }
-                  }
-                }
-              }
-            }
+            config: { responseMimeType: "application/json" }
         });
-        
         const safeText = response.text ? response.text : '';
         const data = JSON.parse(cleanJson(safeText));
-        
         if (!Array.isArray(data)) return [];
-
-        return data.map((raw: any, i: number) => {
-            return {
-                ...raw,
-                id: `gen-rec-${Date.now()}-${i}`,
-                servings: user.household_size,
-                dietary_tags: user.dietary_preferences.filter(p => p !== 'none'),
-                image_url: `https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&sig=${Math.random()}`
-            };
-        });
+        return data.map((raw: any, i: number) => ({
+            ...raw,
+            id: `gen-rec-${Date.now()}-${i}`,
+            servings: user.household_size,
+            dietary_tags: user.dietary_preferences.filter(p => p !== 'none'),
+            image_url: `https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&sig=${Math.random()}`
+        }));
     } catch (e) {
         notifyError("Error conectando con la cocina IA.");
         return [];
     }
 };
 
+// MOTOR DE EXTRACCIÓN MAESTRO PARA TICKETS ESPAÑOLES (MERCADONA FOCUS)
+const TICKET_PROMPT = `Analiza este ticket de supermercado (Mercadona).
+REGLAS CRÍTICAS:
+1. Ignora: BOLSA PLASTICO, IVA, TOTAL, TARJETA, TOTAL, FECHA, DIRECCIÓN. Solo queremos alimentos.
+2. Formato de línea típico: [CANTIDAD] [NOMBRE PRODUCTO] [PRECIO]. 
+   Ejemplo: "1 100% INTEGRAL FINO 1,40" -> Cantidad: 1, Nombre: "Pan 100% Integral Fino", Precio: 1.40.
+3. Extrae: Nombre limpio, cantidad numérica, unidad (casi siempre 'uds' en Mercadona a menos que sea peso) y categoría.
+4. Categorías permitidas: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.
+5. Devuelve un ARRAY JSON: [{"name": string, "quantity": number, "unit": string, "category": string}]`;
+
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string = 'image/jpeg'): Promise<any[]> => {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
-    const prompt = `Analiza este ticket de Mercadona (u otro supermercado español). 
-    Extrae CADA producto comprado siguiendo exactamente este patrón:
-    - Busca líneas que empiecen por un número (cantidad).
-    - Identifica el nombre del producto (ej: "QUESO RALLADO PIZZA").
-    - Ignora bolsas de plástico, totales, IVA y datos de tarjeta.
-    - Limpia los nombres de códigos raros.
-    - Devuelve UN ARRAY JSON DE OBJETOS con este formato exacto: {"name": string, "quantity": number, "unit": string, "category": string}
-    - Para la categoría usa solo estas: vegetables, fruits, dairy, meat, fish, pasta, legumes, broths, bakery, frozen, pantry, spices, drinks, other.
-    - Devuelve SOLO el JSON, sin texto adicional.`;
-
-    // Vision + Text extraction: using gemini-3-flash-preview
-    // Correct contents structure for multiple parts: { parts: [...] }
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3-flash-preview", 
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: prompt }
+          { text: `Extrae los productos de esta imagen de ticket. ${TICKET_PROMPT}` }
         ] 
       },
-      config: { 
-        responseMimeType: "application/json"
-      }
+      config: { responseMimeType: "application/json" }
     });
-    
     const safeText = response.text ? response.text : '';
-    const cleanRaw = cleanJson(safeText);
-    
-    // Si la respuesta está vacía, lanzamos error
-    if (!cleanRaw) throw new Error("Respuesta vacía de IA");
+    const items = JSON.parse(cleanJson(safeText));
+    return Array.isArray(items) ? items : [];
+  } catch (error) {
+    console.error("Gemini Vision Error:", error);
+    return [];
+  }
+};
 
-    let items = JSON.parse(cleanRaw);
+export const extractItemsFromRawText = async (rawText: string): Promise<any[]> => {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Procesa este texto copiado de un ticket digital:\n\n${rawText}\n\n${TICKET_PROMPT}`,
+      config: { responseMimeType: "application/json" }
+    });
+    const safeText = response.text ? response.text : '';
+    const items = JSON.parse(cleanJson(safeText));
     
-    // Si es un objeto en lugar de array, lo envolvemos (safety check)
-    if (!Array.isArray(items) && items.items) items = items.items;
-    if (!Array.isArray(items)) items = [items];
-
-    // Limpieza de datos post-parsing (comas a puntos en cantidades)
-    return items.map((it: any) => ({
+    // Limpieza post-proceso para asegurar tipos correctos
+    return Array.isArray(items) ? items.map(it => ({
         ...it,
         quantity: parseFloat(String(it.quantity || "1").replace(',', '.')),
-        unit: it.unit || 'uds',
-        category: it.category || 'pantry'
-    }));
+        name: String(it.name).replace(/\d+(\.\d+)?$/, '').trim() // Quitar precio del final si se coló
+    })) : [];
   } catch (error) {
-    console.error("Gemini Extraction Error:", error);
-    return []; // Devolver vacío para que el componente maneje el estado de error
+    console.error("Gemini Text Error:", error);
+    return [];
   }
 };
