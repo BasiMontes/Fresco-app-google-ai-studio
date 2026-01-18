@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { PantryItem } from '../types';
-import { Package, Plus, Trash2, X, Camera, Search, MoreVertical, Clock, AlertTriangle, ChevronDown, Minus, Calendar, Scale, ArrowUpDown, CalendarClock, Check } from 'lucide-react';
+import { Package, Plus, Trash2, X, Camera, Search, MoreVertical, Clock, AlertTriangle, ChevronDown, Minus, Calendar, Scale, ArrowUpDown, CalendarClock, Check, Tag } from 'lucide-react';
 import { differenceInDays, startOfDay, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TicketScanner } from './TicketScanner';
@@ -28,13 +28,25 @@ const UNIT_OPTIONS = [
     { id: 'ml', label: 'Mililitros' }
 ];
 
+const CATEGORIES_LIST = [
+    { id: 'vegetables', label: 'Vegetables', emoji: '🥦' },
+    { id: 'fruits', label: 'Fruits', emoji: '🍎' },
+    { id: 'dairy', label: 'Dairy & Eggs', emoji: '🧀' },
+    { id: 'meat', label: 'Meat & Seafood', emoji: '🥩' },
+    { id: 'fish', label: 'Fish', emoji: '🐟' },
+    { id: 'pasta', label: 'Pasta & Grains', emoji: '🍝' },
+    { id: 'legumes', label: 'Legumes', emoji: '🫘' },
+    { id: 'bakery', label: 'Bakery', emoji: '🥐' },
+    { id: 'beverages', label: 'Beverages', emoji: '🥤' },
+    { id: 'frozen', label: 'Frozen', emoji: '❄️' },
+    { id: 'pantry', label: 'Pantry', emoji: '🥫' },
+    { id: 'spices', label: 'Spices', emoji: '🧂' },
+    { id: 'other', label: 'Other', emoji: '📦' },
+];
+
 const CATEGORIES_OPTIONS = [
     { id: 'all', label: 'All Categories', emoji: '🏠' },
-    { id: 'vegetables', label: 'Vegetables', emoji: '🥦' },
-    { id: 'dairy', label: 'Dairy & Eggs', emoji: '🧀' },
-    { id: 'beverages', label: 'Beverages', emoji: '🥤' },
-    { id: 'bakery', label: 'Bakery', emoji: '🥐' },
-    { id: 'meat', label: 'Meat & Seafood', emoji: '🥩' },
+    ...CATEGORIES_LIST
 ];
 
 type SortOption = 'name' | 'expiry' | 'quantity';
@@ -49,6 +61,16 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
   const [itemToEdit, setItemToEdit] = useState<PantryItem | null>(null);
   const [visibleLimit, setVisibleLimit] = useState(ITEMS_PER_PAGE);
 
+  // Estado para el nuevo producto (Formulario completo)
+  const [newItem, setNewItem] = useState<Partial<PantryItem>>({
+    name: '',
+    category: 'pantry',
+    quantity: 1,
+    unit: 'uds',
+    added_at: new Date().toISOString(),
+    expires_at: ''
+  });
+
   const getExpiryStatus = (item: PantryItem) => {
     if (!item.expires_at) return { type: 'none', label: 'Fresco', color: 'text-[#147A74]', icon: Clock };
     const today = startOfDay(new Date());
@@ -56,38 +78,34 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
     const days = differenceInDays(expiry, today);
     
     if (days < 0) return { type: 'expired', label: 'CADUCADO', color: 'text-[#FF4D4D]', icon: AlertTriangle };
-    if (days === 0) return { type: 'priority', label: 'Caduca Hoy', color: 'text-[#FF4D4D]', icon: AlertTriangle };
-    if (days <= 3) return { type: 'priority', label: `Hasta ${days}d`, color: 'text-[#E67E22]', icon: Clock };
+    if (days === 0) return { type: 'priority', label: 'Hoy', color: 'text-[#FF4D4D]', icon: AlertTriangle };
+    if (days <= 3) return { type: 'priority', label: `${days}d`, color: 'text-[#E67E22]', icon: Clock };
     
     const formattedDate = format(expiry, "d MMM", { locale: es });
-    return { type: 'fresh', label: `Hasta ${formattedDate}`, color: 'text-[#147A74]', icon: Clock };
+    return { type: 'fresh', label: `${formattedDate}`, color: 'text-[#147A74]', icon: Clock };
   };
 
   const filteredItems = useMemo(() => {
       let result = [...items];
 
-      // Filtro de Texto
       if (searchTerm) {
           const lower = searchTerm.toLowerCase();
           result = result.filter(item => item.name.toLowerCase().includes(lower));
       }
 
-      // Filtro de Categoría
       if (selectedCategory !== 'all') {
           result = result.filter(item => item.category === selectedCategory);
       }
 
-      // Filtro de Caducidad Próxima
       if (filterExpiring) {
           const today = startOfDay(new Date());
           result = result.filter(item => {
               if (!item.expires_at) return false;
-              const days = differenceInDays(new Date(item.expires_at), today);
+              const days = differenceInDays(startOfDay(new Date(item.expires_at)), today);
               return days <= 5;
           });
       }
 
-      // Ordenación
       result.sort((a, b) => {
           if (sortBy === 'name') return a.name.localeCompare(b.name);
           if (sortBy === 'expiry') {
@@ -103,6 +121,22 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
   }, [items, searchTerm, selectedCategory, sortBy, filterExpiring]);
 
   const visibleItems = useMemo(() => filteredItems.slice(0, visibleLimit), [filteredItems, visibleLimit]);
+
+  const handleAddNewItem = () => {
+    if (!newItem.name) return;
+    const finalItem: PantryItem = {
+      id: `manual-${Date.now()}`,
+      name: newItem.name || 'Nuevo Producto',
+      category: newItem.category || 'other',
+      quantity: newItem.quantity || 1,
+      unit: newItem.unit || 'uds',
+      added_at: newItem.added_at || new Date().toISOString(),
+      expires_at: newItem.expires_at || undefined
+    };
+    onAdd(finalItem);
+    setShowAddModal(false);
+    setNewItem({ name: '', category: 'pantry', quantity: 1, unit: 'uds', added_at: new Date().toISOString(), expires_at: '' });
+  };
 
   return (
     <div className="animate-fade-in pb-48 w-full max-w-full px-4 md:px-8 bg-[#FCFCFC] h-full overflow-y-auto no-scrollbar">
@@ -285,6 +319,24 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                         />
                     </div>
 
+                    <div className="space-y-2">
+                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1 flex items-center gap-1">
+                            <Tag className="w-3 h-3" /> Categoría
+                        </label>
+                        <div className="relative">
+                            <select 
+                                className="w-full px-5 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-sm text-[#013b33] outline-none border border-transparent focus:border-gray-100 appearance-none cursor-pointer"
+                                value={itemToEdit.category}
+                                onChange={e => setItemToEdit({...itemToEdit, category: e.target.value})}
+                            >
+                                {CATEGORIES_LIST.map(cat => <option key={cat.id} value={cat.id}>{cat.emoji} {cat.label.toUpperCase()}</option>)}
+                            </select>
+                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                                <ChevronDown className="w-4 h-4" />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1 flex items-center gap-1">
@@ -341,14 +393,113 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
         </div>
       )}
 
+      {/* Modal Añadir Producto (Completo) */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[5000] bg-[#013b33]/10 backdrop-blur-lg flex items-center justify-center p-4">
-            <div className="w-full max-w-[300px] bg-white rounded-[2.5rem] p-8 shadow-2xl relative animate-slide-up">
-                <button onClick={() => setShowAddModal(false)} className="absolute top-6 right-6 p-1.5 text-gray-200 hover:text-black transition-colors"><X className="w-6 h-6" /></button>
-                <h2 className="text-[#013b33] text-xl font-black mb-6 tracking-tight">Nuevo Producto</h2>
-                <div className="space-y-4">
-                    <input autoFocus className="w-full px-5 py-4 bg-[#F9FAFB] rounded-xl font-bold text-sm text-[#013b33] outline-none" placeholder="Nombre del producto..." />
-                    <button onClick={() => setShowAddModal(false)} className="w-full py-4 bg-[#013b33] text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl">Añadir</button>
+        <div className="fixed inset-0 z-[5000] bg-[#013b33]/20 backdrop-blur-xl flex items-center justify-center p-4">
+            <div className="w-full max-w-[380px] bg-white rounded-[2.8rem] p-8 shadow-2xl relative animate-slide-up">
+                
+                <div className="flex justify-between items-center mb-8">
+                    <h2 className="text-[#013b33] text-[1.8rem] font-black tracking-tight">Nuevo Item</h2>
+                    <button 
+                        onClick={() => setShowAddModal(false)} 
+                        className="p-2.5 text-gray-200 hover:text-black transition-colors"
+                    >
+                        <X className="w-7 h-7" />
+                    </button>
+                </div>
+
+                <div className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1">Nombre del producto</label>
+                        <input 
+                            autoFocus
+                            className="w-full px-5 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-lg text-[#013b33] outline-none border border-transparent focus:border-gray-100" 
+                            placeholder="Ej. Manzanas"
+                            value={newItem.name} 
+                            onChange={e => setNewItem({...newItem, name: e.target.value})} 
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1 flex items-center gap-1">
+                            <Tag className="w-3 h-3" /> Categoría
+                        </label>
+                        <div className="relative">
+                            <select 
+                                className="w-full px-5 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-sm text-[#013b33] outline-none border border-transparent focus:border-gray-100 appearance-none cursor-pointer"
+                                value={newItem.category}
+                                onChange={e => setNewItem({...newItem, category: e.target.value})}
+                            >
+                                {CATEGORIES_LIST.map(cat => <option key={cat.id} value={cat.id}>{cat.emoji} {cat.label.toUpperCase()}</option>)}
+                            </select>
+                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                                <ChevronDown className="w-4 h-4" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1 flex items-center gap-1">
+                                <Calendar className="w-2.5 h-2.5" /> Compra
+                            </label>
+                            <input 
+                                type="date"
+                                className="w-full px-4 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-[12px] text-[#013b33] outline-none border border-transparent focus:border-gray-100 appearance-none cursor-pointer" 
+                                value={newItem.added_at ? format(new Date(newItem.added_at), "yyyy-MM-dd") : ""}
+                                onChange={e => setNewItem({...newItem, added_at: new Date(e.target.value).toISOString()})} 
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1 flex items-center gap-1">
+                                <Clock className="w-2.5 h-2.5" /> Caducidad
+                            </label>
+                            <input 
+                                type="date"
+                                className="w-full px-4 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-[12px] text-[#013b33] outline-none border border-transparent focus:border-gray-100 appearance-none cursor-pointer" 
+                                value={newItem.expires_at || ""}
+                                onChange={e => setNewItem({...newItem, expires_at: e.target.value})} 
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <div className="flex-1 space-y-2">
+                            <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1">Cantidad</label>
+                            <input 
+                                type="number"
+                                step="0.1"
+                                className="w-full px-5 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-sm text-[#013b33] outline-none border border-transparent focus:border-gray-100" 
+                                value={newItem.quantity}
+                                onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value) || 0})}
+                            />
+                        </div>
+                        <div className="flex-[2] space-y-2">
+                            <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1 flex items-center gap-1">
+                                <Scale className="w-3 h-3" /> Unidad
+                            </label>
+                            <div className="relative">
+                                <select 
+                                    className="w-full px-5 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-sm text-[#013b33] outline-none border border-transparent focus:border-gray-100 appearance-none cursor-pointer"
+                                    value={newItem.unit}
+                                    onChange={e => setNewItem({...newItem, unit: e.target.value})}
+                                >
+                                    {UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label.toUpperCase()}</option>)}
+                                </select>
+                                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                                    <ChevronDown className="w-4 h-4" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={handleAddNewItem}
+                        disabled={!newItem.name}
+                        className="w-full py-5 mt-4 bg-[#013b33] text-white rounded-[1.4rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#013b33]/10 active:scale-95 transition-all disabled:opacity-50"
+                    >
+                        Añadir a Despensa
+                    </button>
                 </div>
             </div>
         </div>
