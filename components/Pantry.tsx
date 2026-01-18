@@ -51,6 +51,9 @@ const CATEGORIES_OPTIONS = [
 
 type SortOption = 'name' | 'expiry' | 'quantity';
 
+// Estilos unificados para inputs de modales
+const MODAL_INPUT_CLASSES = "w-full px-6 py-5 bg-[#F9FAFB] rounded-[1.4rem] font-black text-[11px] text-[#013b33] uppercase tracking-widest outline-none border-none transition-all focus:bg-gray-50 appearance-none";
+
 export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdateQuantity, onAddMany, onEdit, isOnline = true }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -72,6 +75,8 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
   const getExpiryStatus = (item: PantryItem) => {
     if (!item.expires_at) return { type: 'none', label: 'Fresco', color: 'text-[#147A74]', icon: Clock };
+    
+    // Normalizar fechas a medianoche local para comparación pura de días
     const today = startOfDay(new Date());
     const expiryDate = startOfDay(new Date(item.expires_at));
     const days = differenceInDays(expiryDate, today);
@@ -97,12 +102,12 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
       if (filterExpiring) {
           const today = startOfDay(new Date());
-          const limitDate = addDays(today, 5); // Queremos incluir hasta 5 días vista (ej: si hoy es 17, hasta el 22)
+          const limitDate = addDays(today, 5); // Hasta 5 días
           
           result = result.filter(item => {
               if (!item.expires_at) return false;
+              // Forzamos comparación de fecha pura (inicio del día)
               const itemExpiry = startOfDay(new Date(item.expires_at));
-              // Lógica robusta: El item caduca antes o el mismo día que el límite (hoy + 5)
               return itemExpiry.getTime() <= limitDate.getTime();
           });
       }
@@ -139,7 +144,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
     setNewItem({ name: '', category: 'pantry', quantity: 1, unit: 'uds', added_at: format(new Date(), 'yyyy-MM-dd'), expires_at: '' });
   };
 
-  // Fix: Make children optional in InputLabel props to satisfy TS JSX expectations for nested components
   const InputLabel = ({ children, icon: Icon }: { children?: React.ReactNode, icon?: any }) => (
     <label className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1 mb-2 flex items-center gap-1.5">
         {Icon && <Icon className="w-3 h-3" />}
@@ -298,7 +302,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
           </div>
       )}
       
-      {/* Modal de Edición (Sincronizado con diseño) */}
+      {/* Modal de Edición */}
       {itemToEdit && (
         <div className="fixed inset-0 z-[5000] bg-black/30 backdrop-blur-xl flex items-center justify-center p-4">
             <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up">
@@ -319,14 +323,14 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                 <div className="space-y-6">
                     <div className="flex flex-col">
                         <InputLabel>Nombre del producto</InputLabel>
-                        <input className="w-full px-6 py-5 bg-[#F9FAFB] rounded-[1.4rem] font-black text-[1.1rem] text-[#013b33] outline-none border-none placeholder:text-gray-200" 
+                        <input className={MODAL_INPUT_CLASSES + " !text-[1rem]"} 
                             placeholder="Ej. Manzanas" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} />
                     </div>
 
                     <div className="flex flex-col">
                         <InputLabel icon={Tag}>Categoría</InputLabel>
                         <div className="relative">
-                            <select className="w-full px-6 py-5 bg-[#F9FAFB] rounded-[1.4rem] font-black text-[11px] text-[#013b33] uppercase tracking-widest outline-none appearance-none cursor-pointer"
+                            <select className={MODAL_INPUT_CLASSES}
                                 value={itemToEdit.category} onChange={e => setItemToEdit({...itemToEdit, category: e.target.value})}>
                                 {CATEGORIES_LIST.map(cat => <option key={cat.id} value={cat.id}>{cat.emoji} {cat.label.toUpperCase()}</option>)}
                             </select>
@@ -337,13 +341,13 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col">
                             <InputLabel icon={Calendar}>Compra</InputLabel>
-                            <input type="date" className="w-full px-5 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-[11px] text-[#013b33] outline-none cursor-pointer" 
+                            <input type="date" className={MODAL_INPUT_CLASSES} 
                                 value={itemToEdit.added_at ? format(new Date(itemToEdit.added_at), "yyyy-MM-dd") : ""}
                                 onChange={e => setItemToEdit({...itemToEdit, added_at: new Date(e.target.value).toISOString()})} />
                         </div>
                         <div className="flex flex-col">
                             <InputLabel icon={Clock}>Caducidad</InputLabel>
-                            <input type="date" className="w-full px-5 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-[11px] text-[#147A74] outline-none cursor-pointer" 
+                            <input type="date" className={MODAL_INPUT_CLASSES + " !text-[#147A74]"} 
                                 value={itemToEdit.expires_at ? format(new Date(itemToEdit.expires_at), "yyyy-MM-dd") : ""}
                                 onChange={e => setItemToEdit({...itemToEdit, expires_at: new Date(e.target.value).toISOString()})} />
                         </div>
@@ -352,13 +356,13 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                     <div className="grid grid-cols-[1fr_2fr] gap-4">
                         <div className="flex flex-col">
                             <InputLabel>Cantidad</InputLabel>
-                            <input type="number" step="0.1" className="w-full px-6 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-base text-[#013b33] outline-none text-center" 
+                            <input type="number" step="0.1" className={MODAL_INPUT_CLASSES + " text-center"} 
                                 value={itemToEdit.quantity} onChange={e => setItemToEdit({...itemToEdit, quantity: parseFloat(e.target.value) || 0})} />
                         </div>
                         <div className="flex flex-col">
                             <InputLabel icon={Scale}>Unidad</InputLabel>
                             <div className="relative">
-                                <select className="w-full px-6 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-[11px] text-[#013b33] uppercase tracking-widest outline-none appearance-none cursor-pointer"
+                                <select className={MODAL_INPUT_CLASSES}
                                     value={itemToEdit.unit || 'uds'} onChange={e => setItemToEdit({...itemToEdit, unit: e.target.value})}>
                                     {UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label.toUpperCase()}</option>)}
                                 </select>
@@ -376,7 +380,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
         </div>
       )}
 
-      {/* Modal Añadir Producto (Calco del diseño propuesto) */}
+      {/* Modal Añadir Producto */}
       {showAddModal && (
         <div className="fixed inset-0 z-[5000] bg-black/30 backdrop-blur-xl flex items-center justify-center p-4">
             <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up">
@@ -391,14 +395,14 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                 <div className="space-y-6">
                     <div className="flex flex-col">
                         <InputLabel>Nombre del producto</InputLabel>
-                        <input autoFocus className="w-full px-6 py-5 bg-[#F9FAFB] rounded-[1.4rem] font-black text-[1.1rem] text-[#013b33] outline-none border-none placeholder:text-gray-200" 
+                        <input autoFocus className={MODAL_INPUT_CLASSES + " !text-[1rem] placeholder:text-gray-200"} 
                             placeholder="Ej. Manzanas" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} />
                     </div>
 
                     <div className="flex flex-col">
                         <InputLabel icon={Tag}>Categoría</InputLabel>
                         <div className="relative">
-                            <select className="w-full px-6 py-5 bg-[#F9FAFB] rounded-[1.4rem] font-black text-[11px] text-[#013b33] uppercase tracking-widest outline-none appearance-none cursor-pointer"
+                            <select className={MODAL_INPUT_CLASSES}
                                 value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})}>
                                 {CATEGORIES_LIST.map(cat => <option key={cat.id} value={cat.id}>{cat.emoji} {cat.label.toUpperCase()}</option>)}
                             </select>
@@ -409,12 +413,12 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col">
                             <InputLabel icon={Calendar}>Compra</InputLabel>
-                            <input type="date" className="w-full px-5 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-[11px] text-[#013b33] outline-none cursor-pointer" 
+                            <input type="date" className={MODAL_INPUT_CLASSES} 
                                 value={newItem.added_at || ""} onChange={e => setNewItem({...newItem, added_at: e.target.value})} />
                         </div>
                         <div className="flex flex-col">
                             <InputLabel icon={Clock}>Caducidad</InputLabel>
-                            <input type="date" className="w-full px-5 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-[11px] text-[#147A74] outline-none cursor-pointer" 
+                            <input type="date" className={MODAL_INPUT_CLASSES + " !text-[#147A74]"} 
                                 value={newItem.expires_at || ""} onChange={e => setNewItem({...newItem, expires_at: e.target.value})} />
                         </div>
                     </div>
@@ -422,13 +426,13 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                     <div className="grid grid-cols-[1fr_2fr] gap-4">
                         <div className="flex flex-col">
                             <InputLabel>Cantidad</InputLabel>
-                            <input type="number" step="0.1" className="w-full px-6 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-base text-[#013b33] outline-none text-center" 
+                            <input type="number" step="0.1" className={MODAL_INPUT_CLASSES + " text-center"} 
                                 value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value) || 0})} />
                         </div>
                         <div className="flex flex-col">
                             <InputLabel icon={Scale}>Unidad</InputLabel>
                             <div className="relative">
-                                <select className="w-full px-6 py-5 bg-[#F9FAFB] rounded-[1.2rem] font-black text-[11px] text-[#013b33] uppercase tracking-widest outline-none appearance-none cursor-pointer"
+                                <select className={MODAL_INPUT_CLASSES}
                                     value={newItem.unit} onChange={e => setNewItem({...newItem, unit: e.target.value})}>
                                     {UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label.toUpperCase()}</option>)}
                                 </select>
