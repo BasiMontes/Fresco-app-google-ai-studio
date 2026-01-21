@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, Tag } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
@@ -33,63 +33,68 @@ const UNIT_OPTIONS = [
     { id: 'ml', label: 'MILILITROS' }
 ];
 
-const MODAL_INPUT_CLASSES = "w-full h-[58px] px-5 bg-gray-50 rounded-2xl font-black text-[11px] text-[#013b33] uppercase tracking-widest outline-none border-2 border-transparent focus:border-teal-500/20 transition-all flex items-center appearance-none";
+const INPUT_STYLE = "w-full h-[58px] px-5 bg-gray-50 rounded-2xl font-black text-[11px] text-[#013b33] uppercase tracking-widest outline-none border-2 border-transparent focus:border-teal-500/20 transition-all flex items-center appearance-none";
 
 export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItems }) => {
   const [step, setStep] = useState<'idle' | 'processing' | 'review' | 'error'>('idle');
   const [items, setItems] = useState<any[]>([]);
-  const [loadingMsg, setLoadingMsg] = useState("Escaneando...");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = async (file: File) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
+
     setStep('processing');
-    setLoadingMsg("Leyendo documento...");
+    const reader = new FileReader();
     
-    try {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = async () => {
-            const base64 = (reader.result as string).split(',')[1];
-            const result = await extractItemsFromTicket(base64, file.type);
-            
-            if (result && result.length > 0) {
-                const today = format(new Date(), 'yyyy-MM-dd');
-                setItems(result.map(i => {
-                    const days = EXPIRY_DAYS_BY_CATEGORY[i.category] || 14;
-                    const expiry = new Date();
-                    expiry.setDate(expiry.getDate() + days);
-                    return { 
-                        ...i, 
-                        quantity: Number(i.quantity) || 1,
-                        added_at: today,
-                        expires_at: format(expiry, 'yyyy-MM-dd')
-                    };
-                }));
-                setStep('review');
-            } else {
-                setStep('error');
-            }
-        };
-        reader.onerror = () => setStep('error');
-    } catch (err) {
-        setStep('error');
-    }
+    reader.onload = async () => {
+      try {
+        const base64Data = (reader.result as string).split(',')[1];
+        const extracted = await extractItemsFromTicket(base64Data, file.type);
+        
+        if (extracted && extracted.length > 0) {
+            const today = format(new Date(), 'yyyy-MM-dd');
+            const processed = extracted.map(i => {
+                const days = EXPIRY_DAYS_BY_CATEGORY[i.category] || 14;
+                const expDate = new Date();
+                expDate.setDate(expDate.getDate() + days);
+                
+                return {
+                    ...i,
+                    quantity: Number(i.quantity) || 1,
+                    added_at: today,
+                    expires_at: format(expDate, 'yyyy-MM-dd')
+                };
+            });
+            setItems(processed);
+            setStep('review');
+        } else {
+            setStep('error');
+        }
+      } catch (err) {
+          console.error("Reader Error:", err);
+          setStep('error');
+      }
+    };
+    
+    reader.onerror = () => setStep('error');
+    reader.readAsDataURL(file);
   };
 
   const addItemManual = () => {
     const today = format(new Date(), 'yyyy-MM-dd');
-    const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 14);
-    
-    setItems([{ 
-        name: '', 
-        quantity: 1, 
-        category: 'other', 
-        unit: 'uds', 
-        added_at: today, 
-        expires_at: format(expiry, 'yyyy-MM-dd') 
-    }, ...items]);
+    const expDate = new Date();
+    expDate.setDate(expDate.getDate() + 14);
+
+    const newItem = {
+        name: '',
+        quantity: 1,
+        unit: 'uds',
+        category: 'other',
+        added_at: today,
+        expires_at: format(expDate, 'yyyy-MM-dd')
+    };
+    setItems([newItem, ...items]);
     if (step !== 'review') setStep('review');
   };
 
@@ -102,84 +107,81 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const removeItem = (index: number) => {
     const filtered = items.filter((_, i) => i !== index);
     if (filtered.length === 0) setStep('idle');
-    setItems(filtered);
+    else setItems(filtered);
   };
 
-  const handleSave = () => {
-    const finalItems: PantryItem[] = items.map((item, i) => ({
-        id: `vis-${Date.now()}-${i}`,
-        name: item.name || 'Producto nuevo',
-        quantity: Number(item.quantity) || 1,
+  const handleFinalSave = () => {
+    const pantryItems: PantryItem[] = items.map((item, i) => ({
+        id: `ocr-${Date.now()}-${i}`,
+        name: item.name || 'Sin nombre',
+        quantity: Number(item.quantity) || 0,
         unit: item.unit || 'uds',
         category: item.category || 'other',
         added_at: new Date(item.added_at).toISOString(),
         expires_at: item.expires_at ? new Date(item.expires_at).toISOString() : undefined
     }));
-    onAddItems(finalItems);
+    
+    onAddItems(pantryItems);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-[5000] bg-teal-900 flex flex-col animate-fade-in overflow-hidden safe-pb">
-      {/* Header Fijo */}
-      <div className="p-6 flex justify-between items-center text-white border-b border-white/5 bg-black/10 backdrop-blur-xl">
+    <div className="fixed inset-0 z-[5000] bg-teal-900 flex flex-col animate-fade-in overflow-hidden">
+      {/* Header */}
+      <div className="p-6 flex justify-between items-center bg-black/10 backdrop-blur-xl border-b border-white/5">
         <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <Sparkles className="w-6 h-6" />
+                <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-                <h2 className="text-xl font-black tracking-tight">Fresco Vision</h2>
-                <p className="text-[9px] font-black uppercase tracking-widest text-teal-400">Escáner de Compras</p>
+                <h2 className="text-xl font-black text-white tracking-tight">Fresco Vision</h2>
+                <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest">Escáner Multi-Formato</p>
             </div>
         </div>
-        <button onClick={onClose} className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-all"><X className="w-6 h-6" /></button>
+        <button onClick={onClose} className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-all text-white"><X className="w-6 h-6" /></button>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar p-6">
+      <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
         {step === 'idle' && (
           <div className="h-full flex flex-col items-center justify-center gap-8 max-w-sm mx-auto animate-slide-up">
-            <div className="text-center space-y-3">
-                <h3 className="text-4xl font-black text-white leading-none">Añade tu Compra</h3>
-                <p className="text-teal-200/50 text-sm font-medium">Extraemos los productos de tu ticket o PDF automáticamente.</p>
+            <div className="text-center">
+                <h3 className="text-4xl font-black text-white mb-2 leading-none">Tu Compra</h3>
+                <p className="text-teal-200/50 text-sm">Sube el ticket (foto o PDF) para autocompletar.</p>
             </div>
 
             <div 
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full aspect-square bg-white/5 border-4 border-dashed border-teal-500/30 rounded-[3.5rem] flex flex-col items-center justify-center gap-6 group hover:border-orange-500/50 transition-all cursor-pointer"
             >
-                <div className="relative">
-                    <div className="w-24 h-24 bg-teal-900 rounded-[2.5rem] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                        <Camera className="w-10 h-10 text-teal-400" />
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg border-2 border-teal-900">
-                        <FileText className="w-5 h-5" />
-                    </div>
+                <div className="w-24 h-24 bg-teal-900 rounded-[2rem] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                    <Upload className="w-10 h-10 text-teal-400" />
                 </div>
-                <p className="text-xl font-black text-white">Subir Foto o PDF</p>
-                <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
+                <div className="text-center">
+                    <p className="text-xl font-black text-white">Subir Archivo</p>
+                    <p className="text-[10px] text-teal-500 font-bold uppercase mt-1">Soporta Fotos y PDFs</p>
+                </div>
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={handleFileChange} />
             </div>
 
             <button 
                 onClick={addItemManual}
                 className="w-full py-5 border-2 border-teal-500/30 text-teal-400 rounded-[1.8rem] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-teal-500/10"
             >
-                <PenLine className="w-5 h-5" /> Introducir Productos a Mano
+                <PenLine className="w-5 h-5" /> Entrada Manual
             </button>
           </div>
         )}
 
         {step === 'processing' && (
-          <div className="h-full flex flex-col items-center justify-center gap-10 animate-fade-in text-center">
+          <div className="h-full flex flex-col items-center justify-center gap-10 text-center animate-fade-in">
             <div className="relative">
-                <div className="w-32 h-32 border-[6px] border-teal-500/10 border-t-orange-500 rounded-full animate-spin flex items-center justify-center">
-                    <Sparkles className="w-10 h-10 text-orange-500 animate-pulse" />
-                </div>
+                <div className="w-32 h-32 border-[6px] border-teal-500/10 border-t-orange-500 rounded-full animate-spin flex items-center justify-center" />
+                <FileText className="absolute inset-0 m-auto w-10 h-10 text-orange-500 animate-pulse" />
             </div>
             <div>
-                <h3 className="text-3xl font-black text-white mb-2">{loadingMsg}</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em]">IA Analizando Ticket</p>
+                <h3 className="text-3xl font-black text-white">Analizando...</h3>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em] mt-2">IA Gemini procesando documento</p>
             </div>
-            <button onClick={() => setStep('idle')} className="text-white/30 font-bold text-xs uppercase tracking-widest hover:text-white">Cancelar</button>
           </div>
         )}
 
@@ -189,14 +191,14 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                 <AlertCircle className="w-12 h-12 text-red-500" />
             </div>
             <div>
-                <h3 className="text-3xl font-black text-white">No pudimos procesarlo</h3>
-                <p className="text-teal-200/50 mt-2">Prueba con una imagen más clara o sube el PDF directamente.</p>
+                <h3 className="text-3xl font-black text-white">Error de lectura</h3>
+                <p className="text-teal-200/50 mt-2">No pudimos extraer los datos. Inténtalo de nuevo o añade los productos a mano.</p>
             </div>
             <div className="flex flex-col gap-3 w-full max-w-xs">
-                <button onClick={() => setStep('idle')} className="w-full py-5 bg-white text-teal-900 rounded-[1.8rem] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3">
+                <button onClick={() => setStep('idle')} className="w-full py-5 bg-white text-teal-900 rounded-[1.8rem] font-black text-xs uppercase tracking-widest flex justify-center gap-3">
                     <RefreshCw className="w-5 h-5" /> Reintentar
                 </button>
-                <button onClick={addItemManual} className="w-full py-4 text-teal-400 font-bold text-xs uppercase tracking-widest">Entrada Manual</button>
+                <button onClick={addItemManual} className="w-full py-4 text-teal-400 font-bold text-xs uppercase tracking-widest">Añadir a mano</button>
             </div>
           </div>
         )}
@@ -204,22 +206,21 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         {step === 'review' && (
           <div className="space-y-6 pb-40 animate-slide-up">
             <div className="flex justify-between items-center px-2">
-                <h3 className="text-white font-black text-xl">Revisar Compra ({items.length})</h3>
-                <button onClick={addItemManual} className="p-3 bg-orange-500 text-white rounded-xl shadow-lg active:scale-90 transition-transform"><Plus className="w-5 h-5" /></button>
+                <h3 className="text-white font-black text-xl">Confirmar Productos ({items.length})</h3>
+                <button onClick={addItemManual} className="p-3 bg-orange-500 text-white rounded-xl shadow-lg active:scale-90 transition-all"><Plus className="w-5 h-5" /></button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {items.map((item, i) => {
                     const catInfo = CATEGORIES.find(c => c.id === item.category) || CATEGORIES[CATEGORIES.length-1];
                     return (
-                        <div key={i} className="bg-white rounded-[2.5rem] p-6 shadow-2xl flex flex-col gap-5 border border-white/5 group animate-fade-in">
+                        <div key={i} className="bg-white rounded-[2.5rem] p-6 shadow-2xl flex flex-col gap-5 border border-white/5 animate-fade-in relative group">
                             <div className="flex justify-between items-start gap-3">
                                 <div className="flex-1">
-                                    <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1.5 block ml-1">Producto</label>
+                                    <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Nombre</label>
                                     <input 
-                                        className="bg-gray-50 font-black text-xl text-teal-950 w-full px-4 py-3 rounded-xl focus:outline-none focus:bg-gray-100 transition-colors placeholder:text-gray-200 capitalize" 
+                                        className="bg-gray-50 font-black text-lg text-teal-950 w-full px-4 py-3 rounded-xl focus:outline-none capitalize" 
                                         value={item.name} 
-                                        placeholder="Nombre..."
                                         onChange={(e) => updateItem(i, { name: e.target.value })}
                                     />
                                 </div>
@@ -230,25 +231,23 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1.5 block ml-1">Compra</label>
-                                    <input type="date" value={item.added_at} onChange={e => updateItem(i, { added_at: e.target.value })} 
-                                        className={MODAL_INPUT_CLASSES} />
+                                    <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">F. Compra</label>
+                                    <input type="date" value={item.added_at} onChange={e => updateItem(i, { added_at: e.target.value })} className={INPUT_STYLE} />
                                 </div>
                                 <div>
-                                    <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1.5 block ml-1">Caducidad</label>
-                                    <input type="date" value={item.expires_at} onChange={e => updateItem(i, { expires_at: e.target.value })} 
-                                        className={MODAL_INPUT_CLASSES + " !text-orange-500"} />
+                                    <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">F. Caducidad</label>
+                                    <input type="date" value={item.expires_at} onChange={e => updateItem(i, { expires_at: e.target.value })} className={INPUT_STYLE + " !text-orange-500"} />
                                 </div>
                             </div>
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1.5 block ml-1">Categoría</label>
+                                    <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Categoría</label>
                                     <div className="relative">
                                         <select 
                                             value={item.category}
                                             onChange={(e) => updateItem(i, { category: e.target.value })}
-                                            className={MODAL_INPUT_CLASSES + " pl-12"}
+                                            className={INPUT_STYLE + " pl-12"}
                                         >
                                             {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label.toUpperCase()}</option>)}
                                         </select>
@@ -258,31 +257,23 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                                 </div>
 
                                 <div className="grid grid-cols-[1.5fr_1fr] gap-3">
-                                    <div>
-                                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1.5 block ml-1">Unidad</label>
-                                        <div className="relative">
-                                            <select 
-                                                value={item.unit}
-                                                onChange={(e) => updateItem(i, { unit: e.target.value })}
-                                                className={MODAL_INPUT_CLASSES}
-                                            >
-                                                {UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
-                                            </select>
-                                            <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-3 h-3 text-teal-200 pointer-events-none" />
-                                        </div>
+                                    <div className="relative">
+                                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Unidad</label>
+                                        <select 
+                                            value={item.unit}
+                                            onChange={(e) => updateItem(i, { unit: e.target.value })}
+                                            className={INPUT_STYLE}
+                                        >
+                                            {UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
+                                        </select>
+                                        <ChevronDown className="absolute right-5 top-2/3 -translate-y-1/2 w-3 h-3 text-teal-200 pointer-events-none" />
                                     </div>
                                     <div>
-                                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1.5 block ml-1">Cantidad</label>
-                                        <div className="bg-teal-900 h-[58px] rounded-2xl flex items-center justify-between px-2 shadow-lg">
-                                            <button onClick={() => updateItem(i, { quantity: Math.max(0.1, item.quantity - 1) })} className="p-2 text-white/50 hover:text-white"><Minus className="w-4 h-4" /></button>
-                                            <input 
-                                                type="number" 
-                                                step="0.1" 
-                                                value={item.quantity} 
-                                                onChange={e => updateItem(i, { quantity: parseFloat(e.target.value) || 0 })} 
-                                                className="w-10 bg-transparent text-center font-black text-white text-sm outline-none" 
-                                            />
-                                            <button onClick={() => updateItem(i, { quantity: item.quantity + 1 })} className="p-2 text-white/50 hover:text-white"><Plus className="w-4 h-4" /></button>
+                                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Cantidad</label>
+                                        <div className="bg-teal-900 h-[58px] rounded-2xl flex items-center justify-between px-2">
+                                            <button onClick={() => updateItem(i, { quantity: Math.max(0.1, item.quantity - 0.5) })} className="p-2 text-white/50 hover:text-white"><Minus className="w-3 h-3" /></button>
+                                            <input type="number" step="0.1" value={item.quantity} onChange={e => updateItem(i, { quantity: parseFloat(e.target.value) || 0 })} className="w-8 bg-transparent text-center font-black text-white text-xs outline-none" />
+                                            <button onClick={() => updateItem(i, { quantity: item.quantity + 0.5 })} className="p-2 text-white/50 hover:text-white"><Plus className="w-3 h-3" /></button>
                                         </div>
                                     </div>
                                 </div>
@@ -290,15 +281,6 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                         </div>
                     );
                 })}
-                <button 
-                    onClick={addItemManual}
-                    className="aspect-[4/3] md:aspect-auto md:h-64 border-4 border-dashed border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 text-white/30 hover:bg-white/5 hover:border-white/20 transition-all"
-                >
-                    <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center">
-                        <Plus className="w-6 h-6" />
-                    </div>
-                    <span className="font-black text-[10px] uppercase tracking-widest">Añadir Otro</span>
-                </button>
             </div>
           </div>
         )}
@@ -307,11 +289,11 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       {step === 'review' && (
         <div className="fixed bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-teal-900 via-teal-900/90 to-transparent z-50">
             <button 
-                onClick={handleSave}
+                onClick={handleFinalSave}
                 disabled={items.length === 0}
                 className="w-full py-6 bg-orange-500 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-30"
             >
-                <CheckCircle2 className="w-6 h-6" /> Importar {items.length} Productos
+                <CheckCircle2 className="w-6 h-6" /> Añadir {items.length} productos
             </button>
         </div>
       )}

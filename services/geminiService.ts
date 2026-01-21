@@ -5,6 +5,7 @@ import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory }
 const cleanJson = (text: string | undefined): string => {
     if (!text) return '[]';
     let clean = text.trim();
+    // Eliminar posibles bloques de código markdown
     clean = clean.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '');
     const start = clean.indexOf('[');
     const end = clean.lastIndexOf(']');
@@ -19,10 +20,10 @@ const TICKET_SCHEMA = {
   items: {
     type: Type.OBJECT,
     properties: {
-      name: { type: Type.STRING },
-      quantity: { type: Type.NUMBER },
-      unit: { type: Type.STRING, description: "uds, kg, l, g, ml" },
-      category: { type: Type.STRING, description: "vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other" }
+      name: { type: Type.STRING, description: "Nombre legible del producto" },
+      quantity: { type: Type.NUMBER, description: "Cantidad numérica" },
+      unit: { type: Type.STRING, description: "Unidad normalizada: uds, kg, l, g, ml" },
+      category: { type: Type.STRING, description: "Categoría: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other" }
     },
     required: ["name", "quantity", "unit", "category"]
   }
@@ -36,22 +37,23 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       model: "gemini-3-flash-preview",
       contents: { 
         parts: [
-          { inlineData: { mimeType, data: base64Data } },
-          { text: "Analiza esta imagen o PDF de compra de supermercado. Extrae todos los productos de alimentación. Normaliza las unidades a: uds, kg, l, g, ml. Devuelve un array JSON." }
+          { inlineData: { mimeType: mimeType, data: base64Data } },
+          { text: "Extrae los productos de este ticket/factura. Devuelve una lista JSON siguiendo estrictamente el esquema proporcionado. Normaliza las unidades y categorías." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres Fresco Vision 3.0. Tu objetivo es convertir tickets de compra en inventario estructurado. Extrae nombre, cantidad, unidad y categoría. Idioma: Español.",
+        systemInstruction: "Eres Fresco Vision, un experto en OCR de alimentación. Tu salida DEBE ser exclusivamente un array JSON válido. No incluyas explicaciones. Si el documento es un PDF, analiza el contenido de texto e imágenes.",
         responseMimeType: "application/json",
         responseSchema: TICKET_SCHEMA,
         temperature: 0.1,
       }
     });
     
-    const text = response.text || "[]";
+    const text = response.text;
+    if (!text) return [];
     return JSON.parse(cleanJson(text));
   } catch (error) {
-    console.error("Fresco Vision OCR Error:", error);
+    console.error("Fresco Vision OCR Critical Error:", error);
     return [];
   }
 };
