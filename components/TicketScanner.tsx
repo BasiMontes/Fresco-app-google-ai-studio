@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, ShoppingBag, Loader2 } from 'lucide-react';
+import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, ShoppingBag, Loader2 } from 'lucide-center';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { EXPIRY_DAYS_BY_CATEGORY } from '../constants';
@@ -50,16 +50,25 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     
     reader.onload = async () => {
       try {
-        const base64Data = (reader.result as string).split(',')[1];
+        const result = reader.result as string;
+        if (!result) throw new Error("File read failed");
+
+        const base64Data = result.split(',')[1];
         
-        // Garantizar que el mimeType sea correcto, especialmente para PDF
-        const mimeType = file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+        // Detección manual de MIME si el navegador falla
+        let mimeType = file.type;
+        if (!mimeType) {
+            const ext = file.name.split('.').pop()?.toLowerCase();
+            if (ext === 'pdf') mimeType = 'application/pdf';
+            else if (['jpg', 'jpeg', 'png'].includes(ext || '')) mimeType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+            else mimeType = 'image/jpeg'; // Fallback
+        }
         
         const extracted = await extractItemsFromTicket(base64Data, mimeType);
         
         if (extracted && Array.isArray(extracted) && extracted.length > 0) {
             const today = format(new Date(), 'yyyy-MM-dd');
-            const processed = extracted.map(i => {
+            const processed = extracted.map((i, idx) => {
                 const days = EXPIRY_DAYS_BY_CATEGORY[i.category] || 14;
                 const expDate = new Date();
                 expDate.setDate(expDate.getDate() + days);
@@ -68,17 +77,17 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                     ...i,
                     quantity: Number(i.quantity) || 1,
                     added_at: today,
-                    expires_at: format(expDate, 'yyyy-MM-dd')
+                    expires_at: format(expDate, 'yyyy-MM-dd'),
+                    tempId: `item-${Date.now()}-${idx}`
                 };
             });
             setItems(processed);
             setStep('review');
         } else {
-            console.warn("Fresco Vision: No se extrajeron items del documento.");
             setStep('error');
         }
       } catch (err) {
-          console.error("Fresco Vision Reader Error:", err);
+          console.error("Fresco Vision Critical Error:", err);
           setStep('error');
       }
     };
@@ -98,22 +107,23 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         unit: 'uds',
         category: 'other',
         added_at: today,
-        expires_at: format(expDate, 'yyyy-MM-dd')
+        expires_at: format(expDate, 'yyyy-MM-dd'),
+        tempId: `manual-${Date.now()}`
     };
     setItems([newItem, ...items]);
     if (step !== 'review') setStep('review');
   };
 
-  const updateItem = (index: number, fields: any) => {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], ...fields };
-    setItems(newItems);
+  const updateItem = (tempId: string, fields: any) => {
+    setItems(prev => prev.map(item => item.tempId === tempId ? { ...item, ...fields } : item));
   };
 
-  const removeItem = (index: number) => {
-    const filtered = items.filter((_, i) => i !== index);
-    if (filtered.length === 0) setStep('idle');
-    else setItems(filtered);
+  const removeItem = (tempId: string) => {
+    setItems(prev => {
+        const filtered = prev.filter(item => item.tempId !== tempId);
+        if (filtered.length === 0) setStep('idle');
+        return filtered;
+    });
   };
 
   const handleFinalSave = async () => {
@@ -134,9 +144,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         await onAddItems(pantryItems);
         onClose();
     } catch (err) {
-        console.error("Error al guardar en la despensa:", err);
         setIsSaving(false);
-        alert("No se pudo guardar la compra. Revisa tu conexión.");
+        alert("Error al guardar.");
     }
   };
 
@@ -149,7 +158,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             </div>
             <div>
                 <h2 className="text-xl font-black text-white tracking-tight">Fresco Vision</h2>
-                <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest">IA Importadora</p>
+                <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest">IA Importadora Gold</p>
             </div>
         </div>
         <button onClick={onClose} className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-all text-white"><X className="w-6 h-6" /></button>
@@ -159,8 +168,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         {step === 'idle' && (
           <div className="h-full flex flex-col items-center justify-center gap-8 max-w-sm mx-auto animate-slide-up">
             <div className="text-center">
-                <h3 className="text-4xl font-black text-white mb-2 leading-none">Tu Ticket</h3>
-                <p className="text-teal-200/50 text-sm">Escanea el ticket físico o sube el PDF de Mercadona Online.</p>
+                <h3 className="text-4xl font-black text-white mb-2 leading-none">Nueva Compra</h3>
+                <p className="text-teal-200/50 text-sm">Escanea el ticket o sube el PDF de Mercadona.</p>
             </div>
 
             <div 
@@ -172,7 +181,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                 </div>
                 <div className="text-center px-4">
                     <p className="text-xl font-black text-white">Subir Foto o PDF</p>
-                    <p className="text-[10px] text-teal-500 font-bold uppercase mt-1">Soporta Tickets de Mercadona</p>
+                    <p className="text-[10px] text-teal-500 font-bold uppercase mt-1">Soporte Mercadona Nativo</p>
                 </div>
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={handleFileChange} />
             </div>
@@ -193,8 +202,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                 <FileText className="absolute inset-0 m-auto w-10 h-10 text-orange-500 animate-pulse" />
             </div>
             <div>
-                <h3 className="text-3xl font-black text-white">Analizando...</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em] mt-2">IA extrayendo productos</p>
+                <h3 className="text-3xl font-black text-white">Analizando Ticket...</h3>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em] mt-2">IA detectando productos</p>
             </div>
           </div>
         )}
@@ -205,8 +214,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                 <AlertCircle className="w-12 h-12 text-red-500" />
             </div>
             <div>
-                <h3 className="text-3xl font-black text-white">Lectura fallida</h3>
-                <p className="text-teal-200/50 mt-2 px-6">La IA no detectó productos. Asegúrate de que el ticket esté bien iluminado o usa el PDF original.</p>
+                <h3 className="text-3xl font-black text-white">No se detectó nada</h3>
+                <p className="text-teal-200/50 mt-2 px-6">Asegúrate de que la foto esté enfocada y se vea el texto completo del ticket.</p>
             </div>
             <div className="flex flex-col gap-3 w-full max-w-xs">
                 <button onClick={() => setStep('idle')} className="w-full py-5 bg-white text-teal-900 rounded-[1.8rem] font-black text-xs uppercase tracking-widest flex justify-center gap-3 shadow-xl">
@@ -228,20 +237,20 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {items.map((item, i) => {
+                {items.map((item) => {
                     const catInfo = CATEGORIES.find(c => c.id === item.category) || CATEGORIES[CATEGORIES.length-1];
                     return (
-                        <div key={i} className="bg-white rounded-[2.5rem] p-6 shadow-2xl flex flex-col gap-5 border border-white/5 animate-fade-in relative">
+                        <div key={item.tempId} className="bg-white rounded-[2.5rem] p-6 shadow-2xl flex flex-col gap-5 border border-white/5 animate-fade-in relative">
                             <div className="flex justify-between items-start gap-3">
                                 <div className="flex-1">
                                     <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Producto</label>
                                     <input 
                                         className="bg-gray-50 font-black text-lg text-teal-950 w-full px-4 py-3 rounded-xl focus:outline-none capitalize border-2 border-transparent focus:border-teal-500/10 transition-all" 
                                         value={item.name} 
-                                        onChange={(e) => updateItem(i, { name: e.target.value })}
+                                        onChange={(e) => updateItem(item.tempId, { name: e.target.value })}
                                     />
                                 </div>
-                                <button onClick={() => removeItem(i)} className="mt-7 p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all">
+                                <button onClick={() => removeItem(item.tempId)} className="mt-7 p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all">
                                     <Trash2 className="w-5 h-5" />
                                 </button>
                             </div>
@@ -249,11 +258,11 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Comprado</label>
-                                    <input type="date" value={item.added_at} onChange={e => updateItem(i, { added_at: e.target.value })} className={INPUT_STYLE} />
+                                    <input type="date" value={item.added_at} onChange={e => updateItem(item.tempId, { added_at: e.target.value })} className={INPUT_STYLE} />
                                 </div>
                                 <div>
                                     <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Caducidad</label>
-                                    <input type="date" value={item.expires_at} onChange={e => updateItem(i, { expires_at: e.target.value })} className={INPUT_STYLE + " !text-orange-500"} />
+                                    <input type="date" value={item.expires_at} onChange={e => updateItem(item.tempId, { expires_at: e.target.value })} className={INPUT_STYLE + " !text-orange-500"} />
                                 </div>
                             </div>
 
@@ -263,7 +272,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                                     <div className="relative">
                                         <select 
                                             value={item.category}
-                                            onChange={(e) => updateItem(i, { category: e.target.value })}
+                                            onChange={(e) => updateItem(item.tempId, { category: e.target.value })}
                                             className={INPUT_STYLE + " pl-12"}
                                         >
                                             {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label.toUpperCase()}</option>)}
@@ -278,7 +287,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                                         <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Unidad</label>
                                         <select 
                                             value={item.unit}
-                                            onChange={(e) => updateItem(i, { unit: e.target.value })}
+                                            onChange={(e) => updateItem(item.tempId, { unit: e.target.value })}
                                             className={INPUT_STYLE}
                                         >
                                             {UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
@@ -288,9 +297,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                                     <div>
                                         <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Cantidad</label>
                                         <div className="bg-teal-900 h-[58px] rounded-2xl flex items-center justify-between px-2 shadow-lg">
-                                            <button onClick={() => updateItem(i, { quantity: Math.max(0.1, item.quantity - 0.5) })} className="p-2 text-white/50 hover:text-white"><Minus className="w-3 h-3" /></button>
-                                            <input type="number" step="0.1" value={item.quantity} onChange={e => updateItem(i, { quantity: parseFloat(e.target.value) || 0 })} className="w-8 bg-transparent text-center font-black text-white text-xs outline-none" />
-                                            <button onClick={() => updateItem(i, { quantity: item.quantity + 0.5 })} className="p-2 text-white/50 hover:text-white"><Plus className="w-3 h-3" /></button>
+                                            <button onClick={() => updateItem(item.tempId, { quantity: Math.max(0.1, item.quantity - 0.5) })} className="p-2 text-white/50 hover:text-white"><Minus className="w-3 h-3" /></button>
+                                            <input type="number" step="0.1" value={item.quantity} onChange={e => updateItem(item.tempId, { quantity: parseFloat(e.target.value) || 0 })} className="w-8 bg-transparent text-center font-black text-white text-xs outline-none" />
+                                            <button onClick={() => updateItem(item.tempId, { quantity: item.quantity + 0.5 })} className="p-2 text-white/50 hover:text-white"><Plus className="w-3 h-3" /></button>
                                         </div>
                                     </div>
                                 </div>

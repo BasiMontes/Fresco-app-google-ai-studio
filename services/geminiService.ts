@@ -5,7 +5,7 @@ import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory }
 const cleanJson = (text: string | undefined): string => {
     if (!text) return '{"items":[]}';
     let clean = text.trim();
-    // Eliminar bloques de código markdown si los hay
+    // Eliminar posibles bloques de código markdown
     clean = clean.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '');
     const start = clean.indexOf('{');
     const end = clean.lastIndexOf('}');
@@ -15,7 +15,7 @@ const cleanJson = (text: string | undefined): string => {
     return clean;
 };
 
-// Usamos un objeto wrapper en lugar de un array directo para mayor compatibilidad con la salida de la IA
+// Esquema optimizado para la estructura de Mercadona
 const EXTRACTION_SCHEMA = {
   type: Type.OBJECT,
   properties: {
@@ -24,9 +24,9 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: Type.OBJECT,
         properties: {
-          name: { type: Type.STRING, description: "Nombre del producto alimenticio" },
-          quantity: { type: Type.NUMBER, description: "Cantidad numérica" },
-          unit: { type: Type.STRING, description: "Unidad: uds, kg, l, g, ml" },
+          name: { type: Type.STRING, description: "Descripción clara del producto (ej: QUESO DADOS ENSALADA)" },
+          quantity: { type: Type.NUMBER, description: "El primer número de la línea (ej: 1, 2)" },
+          unit: { type: Type.STRING, description: "Siempre 'uds' para Mercadona a menos que indique kg" },
           category: { type: Type.STRING, description: "Categoría: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other" }
         },
         required: ["name", "quantity", "unit", "category"]
@@ -45,14 +45,14 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Extrae todos los productos de este ticket. Estilo Mercadona: El número inicial es la CANTIDAD. Ejemplo: '1 QUESO DADOS' -> cantidad: 1, nombre: 'Queso Dados'. Ignora bolsas, IVA y el total. Clasifica en las categorías permitidas." }
+          { text: "Extrae los productos de este ticket de Mercadona. REGLA DE ORO: La línea empieza con la cantidad (ej: 1 o 2), sigue con el nombre y termina con el precio. IGNORA el precio final. IGNORA 'BOLSA PLASTICO'. Clasifica cada item en una categoría de alimentación." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres Fresco Vision. Tu única tarea es devolver un objeto JSON con una propiedad 'items'. No añadas texto adicional. Si no estás seguro de algo, omite el producto. Normaliza unidades a minúsculas.",
+        systemInstruction: "Eres un experto en tickets españoles. Tu salida debe ser exclusivamente un JSON siguiendo el esquema. Los nombres de productos deben estar en mayúsculas como en el ticket. Si ves 'QUESO DADOS ENSALADA', ese es el nombre. La cantidad es el primer dígito a la izquierda.",
         responseMimeType: "application/json",
         responseSchema: EXTRACTION_SCHEMA,
-        temperature: 0,
+        temperature: 0.1, // Baja temperatura para máxima precisión
       }
     });
     
