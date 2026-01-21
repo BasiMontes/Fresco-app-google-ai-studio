@@ -3,30 +3,37 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory } from "../types";
 
 const cleanJson = (text: string | undefined): string => {
-    if (!text) return '[]';
+    if (!text) return '{"items":[]}';
     let clean = text.trim();
-    // Eliminar posibles bloques de código markdown y caracteres extraños
+    // Eliminar bloques de código markdown si los hay
     clean = clean.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '');
-    const start = clean.indexOf('[');
-    const end = clean.lastIndexOf(']');
+    const start = clean.indexOf('{');
+    const end = clean.lastIndexOf('}');
     if (start !== -1 && end !== -1) {
         return clean.substring(start, end + 1);
     }
     return clean;
 };
 
-const TICKET_SCHEMA = {
-  type: Type.ARRAY,
-  items: {
-    type: Type.OBJECT,
-    properties: {
-      name: { type: Type.STRING, description: "Nombre del producto (ej: Queso Dados Ensalada)" },
-      quantity: { type: Type.NUMBER, description: "Cantidad comprada" },
-      unit: { type: Type.STRING, description: "Unidad (uds, kg, l, g, ml)" },
-      category: { type: Type.STRING, description: "Categoría (vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other)" }
-    },
-    required: ["name", "quantity", "unit", "category"]
-  }
+// Usamos un objeto wrapper en lugar de un array directo para mayor compatibilidad con la salida de la IA
+const EXTRACTION_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    items: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          name: { type: Type.STRING, description: "Nombre del producto alimenticio" },
+          quantity: { type: Type.NUMBER, description: "Cantidad numérica" },
+          unit: { type: Type.STRING, description: "Unidad: uds, kg, l, g, ml" },
+          category: { type: Type.STRING, description: "Categoría: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other" }
+        },
+        required: ["name", "quantity", "unit", "category"]
+      }
+    }
+  },
+  required: ["items"]
 };
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any[]> => {
@@ -38,23 +45,22 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Analiza este ticket de supermercado (estilo Mercadona). Ignora bolsas de plástico y totales de IVA. Extrae cada producto alimenticio: nombre, cantidad, unidad (normaliza a uds, kg, l, g, ml) y categoría lógica. Devuelve solo el JSON." }
+          { text: "Extrae todos los productos de este ticket. Estilo Mercadona: El número inicial es la CANTIDAD. Ejemplo: '1 QUESO DADOS' -> cantidad: 1, nombre: 'Queso Dados'. Ignora bolsas, IVA y el total. Clasifica en las categorías permitidas." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres un experto en OCR logístico para alimentación. Tu salida debe ser estrictamente un array JSON. Si es un ticket de Mercadona, el primer número suele ser la cantidad, seguido del nombre y al final el precio que debes ignorar.",
+        systemInstruction: "Eres Fresco Vision. Tu única tarea es devolver un objeto JSON con una propiedad 'items'. No añadas texto adicional. Si no estás seguro de algo, omite el producto. Normaliza unidades a minúsculas.",
         responseMimeType: "application/json",
-        responseSchema: TICKET_SCHEMA,
+        responseSchema: EXTRACTION_SCHEMA,
         temperature: 0,
       }
     });
     
     const text = response.text;
-    if (!text) return [];
-    const data = JSON.parse(cleanJson(text));
-    return Array.isArray(data) ? data : [];
+    const parsed = JSON.parse(cleanJson(text));
+    return parsed.items || [];
   } catch (error) {
-    console.error("Fresco Vision OCR Error:", error);
+    console.error("Fresco Vision Critical OCR Failure:", error);
     return [];
   }
 };
