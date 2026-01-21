@@ -28,7 +28,7 @@ const TICKET_SCHEMA = {
   }
 };
 
-export const extractItemsFromTicket = async (base64Data: string, mimeType: string = 'image/jpeg'): Promise<any[]> => {
+export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any[]> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   try {
@@ -37,21 +37,21 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Analiza este documento (ticket o factura PDF) de supermercado. Extrae los productos de alimentación a JSON estructurado." }
+          { text: "Analiza esta imagen o PDF de compra de supermercado. Extrae todos los productos de alimentación. Normaliza las unidades a: uds, kg, l, g, ml. Devuelve un array JSON." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres un experto en OCR y logística alimentaria. Extrae: nombre, cantidad, unidad (normaliza a uds, kg, l, g o ml) y categoría. Devuelve siempre un array JSON. Si es un PDF de varias páginas, procesa solo la primera.",
+        systemInstruction: "Eres Fresco Vision 3.0. Tu objetivo es convertir tickets de compra en inventario estructurado. Extrae nombre, cantidad, unidad y categoría. Idioma: Español.",
         responseMimeType: "application/json",
         responseSchema: TICKET_SCHEMA,
-        temperature: 0,
+        temperature: 0.1,
       }
     });
     
     const text = response.text || "[]";
     return JSON.parse(cleanJson(text));
   } catch (error) {
-    console.error("Fresco Vision Error:", error);
+    console.error("Fresco Vision OCR Error:", error);
     return [];
   }
 };
