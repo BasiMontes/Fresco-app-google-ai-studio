@@ -21,8 +21,8 @@ const TICKET_SCHEMA = {
     properties: {
       name: { type: Type.STRING },
       quantity: { type: Type.NUMBER },
-      unit: { type: Type.STRING },
-      category: { type: Type.STRING }
+      unit: { type: Type.STRING, description: "uds, kg, l, g, ml" },
+      category: { type: Type.STRING, description: "vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other" }
     },
     required: ["name", "quantity", "unit", "category"]
   }
@@ -37,11 +37,11 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Extrae productos de alimentación de este ticket a JSON. Idioma: Español." }
+          { text: "Analiza este documento (ticket o factura PDF) de supermercado. Extrae los productos de alimentación a JSON estructurado." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres Fresco Vision. Extrae productos de tickets de compra. Devuelve un array JSON con: name, quantity, unit, category (vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other).",
+        systemInstruction: "Eres un experto en OCR y logística alimentaria. Extrae: nombre, cantidad, unidad (normaliza a uds, kg, l, g o ml) y categoría. Devuelve siempre un array JSON. Si es un PDF de varias páginas, procesa solo la primera.",
         responseMimeType: "application/json",
         responseSchema: TICKET_SCHEMA,
         temperature: 0,
