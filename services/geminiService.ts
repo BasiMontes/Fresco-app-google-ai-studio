@@ -5,7 +5,7 @@ import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory }
 const cleanJson = (text: string | undefined): string => {
     if (!text) return '[]';
     let clean = text.trim();
-    // Eliminar posibles bloques de código markdown
+    // Eliminar posibles bloques de código markdown y caracteres extraños
     clean = clean.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '');
     const start = clean.indexOf('[');
     const end = clean.lastIndexOf(']');
@@ -20,10 +20,10 @@ const TICKET_SCHEMA = {
   items: {
     type: Type.OBJECT,
     properties: {
-      name: { type: Type.STRING, description: "Nombre legible del producto" },
-      quantity: { type: Type.NUMBER, description: "Cantidad numérica" },
-      unit: { type: Type.STRING, description: "Unidad normalizada: uds, kg, l, g, ml" },
-      category: { type: Type.STRING, description: "Categoría: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other" }
+      name: { type: Type.STRING, description: "Nombre del producto (ej: Queso Dados Ensalada)" },
+      quantity: { type: Type.NUMBER, description: "Cantidad comprada" },
+      unit: { type: Type.STRING, description: "Unidad (uds, kg, l, g, ml)" },
+      category: { type: Type.STRING, description: "Categoría (vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other)" }
     },
     required: ["name", "quantity", "unit", "category"]
   }
@@ -37,23 +37,24 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       model: "gemini-3-flash-preview",
       contents: { 
         parts: [
-          { inlineData: { mimeType: mimeType, data: base64Data } },
-          { text: "Extrae los productos de este ticket/factura. Devuelve una lista JSON siguiendo estrictamente el esquema proporcionado. Normaliza las unidades y categorías." }
+          { inlineData: { mimeType, data: base64Data } },
+          { text: "Analiza este ticket de supermercado (estilo Mercadona). Ignora bolsas de plástico y totales de IVA. Extrae cada producto alimenticio: nombre, cantidad, unidad (normaliza a uds, kg, l, g, ml) y categoría lógica. Devuelve solo el JSON." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres Fresco Vision, un experto en OCR de alimentación. Tu salida DEBE ser exclusivamente un array JSON válido. No incluyas explicaciones. Si el documento es un PDF, analiza el contenido de texto e imágenes.",
+        systemInstruction: "Eres un experto en OCR logístico para alimentación. Tu salida debe ser estrictamente un array JSON. Si es un ticket de Mercadona, el primer número suele ser la cantidad, seguido del nombre y al final el precio que debes ignorar.",
         responseMimeType: "application/json",
         responseSchema: TICKET_SCHEMA,
-        temperature: 0.1,
+        temperature: 0,
       }
     });
     
     const text = response.text;
     if (!text) return [];
-    return JSON.parse(cleanJson(text));
+    const data = JSON.parse(cleanJson(text));
+    return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("Fresco Vision OCR Critical Error:", error);
+    console.error("Fresco Vision OCR Error:", error);
     return [];
   }
 };
