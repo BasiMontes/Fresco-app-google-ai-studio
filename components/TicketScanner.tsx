@@ -4,7 +4,7 @@ import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenL
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { EXPIRY_DAYS_BY_CATEGORY } from '../constants';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 
 interface TicketScannerProps {
   onClose: () => void;
@@ -69,24 +69,26 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             const today = format(new Date(), 'yyyy-MM-dd');
             const processed = extracted.map((i, idx) => {
                 const days = EXPIRY_DAYS_BY_CATEGORY[i.category] || 14;
-                const expDate = new Date();
-                expDate.setDate(expDate.getDate() + days);
+                const expDate = addDays(new Date(), days);
                 
                 return {
-                    ...i,
+                    name: i.name || 'Producto desconocido',
                     quantity: Number(i.quantity) || 1,
+                    unit: i.unit || 'uds',
+                    category: i.category || 'other',
                     added_at: today,
                     expires_at: format(expDate, 'yyyy-MM-dd'),
-                    tempId: `item-${Date.now()}-${idx}`
+                    tempId: `item-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`
                 };
             });
             setItems(processed);
             setStep('review');
         } else {
+            console.warn("OCR returned empty items array");
             setStep('error');
         }
       } catch (err) {
-          console.error("Fresco Vision Error:", err);
+          console.error("Fresco Vision Component Error:", err);
           setStep('error');
       }
     };
@@ -97,8 +99,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
 
   const addItemManual = () => {
     const today = format(new Date(), 'yyyy-MM-dd');
-    const expDate = new Date();
-    expDate.setDate(expDate.getDate() + 14);
+    const expDate = addDays(new Date(), 14);
 
     const newItem = {
         name: '',
@@ -109,7 +110,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         expires_at: format(expDate, 'yyyy-MM-dd'),
         tempId: `manual-${Date.now()}`
     };
-    setItems([newItem, ...items]);
+    setItems(prev => [newItem, ...prev]);
     if (step !== 'review') setStep('review');
   };
 
