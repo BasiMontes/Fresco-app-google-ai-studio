@@ -5,7 +5,6 @@ import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory }
 const cleanJson = (text: string | undefined): string => {
     if (!text) return '{"items":[]}';
     let clean = text.trim();
-    // Eliminar bloques de código markdown si existen
     clean = clean.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '');
     const start = clean.indexOf('{');
     const end = clean.lastIndexOf('}');
@@ -36,6 +35,7 @@ const EXTRACTION_SCHEMA = {
 };
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any[]> => {
+  // Siempre crear instancia nueva con la clave más reciente del entorno
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   try {
@@ -44,11 +44,11 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Analiza este ticket. Instrucciones críticas:\n1. Cada línea útil empieza con un número (cantidad) y un nombre de producto.\n2. Ignora las líneas de 'BOLSA PLASTICO'.\n3. Extrae nombres exactos como 'QUESO DADOS ENSALADA' o 'SALMON SALVAJE'.\n4. Ignora los precios unitarios y totales.\n5. Devuelve la lista en formato JSON estructurado." }
+          { text: "Analiza este ticket de Mercadona. La estructura es: [CANTIDAD] [DESCRIPCIÓN] [PRECIO UNITARIO] [IMPORTE]. Ejemplo: '1 QUESO DADOS ENSALADA 1,15' -> cantidad: 1, nombre: 'QUESO DADOS ENSALADA'. Ignora 'BOLSA PLASTICO'." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres un OCR experto en supermercados españoles. Tu única misión es devolver un JSON con los productos del ticket. El primer número de la línea es la cantidad. El texto intermedio es el nombre. Las categorías deben ser: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other.",
+        systemInstruction: "Eres un OCR especializado en tickets de Mercadona. El primer dígito de cada línea es la cantidad. El texto que sigue es el nombre. No inventes productos. Ignora bolsas de plástico.",
         responseMimeType: "application/json",
         responseSchema: EXTRACTION_SCHEMA,
         temperature: 0.1,
@@ -60,8 +60,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     return parsed.items || [];
   } catch (error) {
     console.error("Fresco Vision OCR Error:", error);
-    // Fallback: Si falla el esquema, intentamos una petición de texto plano y parseo manual
-    return [];
+    throw error; // Re-lanzar para que el componente maneje la falta de key si ocurre
   }
 };
 

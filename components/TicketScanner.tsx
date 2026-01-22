@@ -1,6 +1,6 @@
 
-import React, { useState, useRef } from 'react';
-import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, ShoppingBag, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, ShoppingBag, Loader2, Key } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { EXPIRY_DAYS_BY_CATEGORY } from '../constants';
@@ -9,6 +9,18 @@ import { format, addDays } from 'date-fns';
 interface TicketScannerProps {
   onClose: () => void;
   onAddItems: (items: PantryItem[]) => void;
+}
+
+// Extensión para TypeScript de la API de AI Studio
+// Fix: Use the expected AIStudio type name to match the environment's internal declarations
+declare global {
+  interface AIStudio {
+    hasSelectedApiKey: () => Promise<boolean>;
+    openSelectKey: () => Promise<void>;
+  }
+  interface Window {
+    aistudio: AIStudio;
+  }
 }
 
 const CATEGORIES = [
@@ -36,10 +48,29 @@ const UNIT_OPTIONS = [
 const INPUT_STYLE = "w-full h-[58px] px-5 bg-gray-50 rounded-2xl font-black text-[11px] text-[#013b33] uppercase tracking-widest outline-none border-2 border-transparent focus:border-teal-500/20 transition-all flex items-center appearance-none";
 
 export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItems }) => {
-  const [step, setStep] = useState<'idle' | 'processing' | 'review' | 'error'>('idle');
+  const [step, setStep] = useState<'idle' | 'processing' | 'review' | 'error' | 'need-key'>('idle');
   const [items, setItems] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Comprobar si hay API Key al montar
+  useEffect(() => {
+    const checkKey = async () => {
+        if (window.aistudio) {
+            const hasKey = await window.aistudio.hasSelectedApiKey();
+            if (!hasKey) setStep('need-key');
+        }
+    };
+    checkKey();
+  }, []);
+
+  const handleOpenKeySelector = async () => {
+    if (window.aistudio) {
+        await window.aistudio.openSelectKey();
+        // Procedemos asumiendo que el usuario seleccionará una clave válida
+        setStep('idle');
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,12 +115,16 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             setItems(processed);
             setStep('review');
         } else {
-            console.warn("OCR returned empty items array");
             setStep('error');
         }
-      } catch (err) {
-          console.error("Fresco Vision Component Error:", err);
-          setStep('error');
+      } catch (err: any) {
+          console.error("Fresco Vision Error:", err);
+          // Si el error indica que falta la entidad (key), volvemos a pedirla
+          if (err.message?.includes("Requested entity was not found")) {
+              setStep('need-key');
+          } else {
+              setStep('error');
+          }
       }
     };
     
@@ -165,6 +200,27 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
+        {step === 'need-key' && (
+            <div className="h-full flex flex-col items-center justify-center gap-8 max-w-sm mx-auto text-center animate-slide-up">
+                <div className="w-24 h-24 bg-orange-500/20 rounded-[2.5rem] flex items-center justify-center">
+                    <Key className="w-12 h-12 text-orange-500" />
+                </div>
+                <div>
+                    <h3 className="text-3xl font-black text-white">Configura tu IA</h3>
+                    <p className="text-teal-200/50 mt-4 leading-relaxed">
+                        Para analizar tickets, necesitas activar una API Key. Este es un paso de seguridad requerido.
+                    </p>
+                    <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="text-orange-400 text-[10px] font-black uppercase mt-2 block underline">Info sobre facturación</a>
+                </div>
+                <button 
+                    onClick={handleOpenKeySelector}
+                    className="w-full py-6 bg-orange-500 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all"
+                >
+                    Seleccionar API Key
+                </button>
+            </div>
+        )}
+
         {step === 'idle' && (
           <div className="h-full flex flex-col items-center justify-center gap-8 max-w-sm mx-auto animate-slide-up">
             <div className="text-center">
@@ -312,12 +368,12 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         )}
       </div>
 
-      {step === 'review' && (
+      {(step === 'review' || step === 'idle' || step === 'error') && (
         <div className="fixed bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-teal-900 via-teal-900/90 to-transparent z-50">
             <button 
-                onClick={handleFinalSave}
-                disabled={isSaving || items.length === 0}
-                className="w-full py-6 bg-orange-500 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                onClick={step === 'review' ? handleFinalSave : () => {}}
+                disabled={isSaving || (step === 'review' && items.length === 0)}
+                className={`w-full py-6 bg-orange-500 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50 ${step !== 'review' ? 'hidden' : ''}`}
             >
                 {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CheckCircle2 className="w-6 h-6" /> Añadir a Despensa</>}
             </button>
