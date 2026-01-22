@@ -35,8 +35,14 @@ const EXTRACTION_SCHEMA = {
 };
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any[]> => {
-  // Siempre crear instancia nueva con la clave más reciente del entorno
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Validación defensiva: Si no hay clave, lanzamos un error controlado
+  const apiKey = process.env.API_KEY || (window as any).process?.env?.API_KEY;
+  
+  if (!apiKey || apiKey === "undefined") {
+    throw new Error("API Key must be set");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
   try {
     const response = await ai.models.generateContent({
@@ -60,7 +66,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     return parsed.items || [];
   } catch (error) {
     console.error("Fresco Vision OCR Error:", error);
-    throw error; // Re-lanzar para que el componente maneje la falta de key si ocurre
+    throw error;
   }
 };
 
@@ -78,7 +84,10 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
 };
 
 export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[], count: number = 3): Promise<Recipe[]> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY || (window as any).process?.env?.API_KEY;
+    if (!apiKey) return [];
+    
+    const ai = new GoogleGenAI({ apiKey });
     try {
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
