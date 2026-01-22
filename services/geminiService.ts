@@ -5,7 +5,6 @@ import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory }
 const cleanJson = (text: string | undefined): string => {
     if (!text) return '{"items":[]}';
     let clean = text.trim();
-    // Eliminar posibles bloques de código markdown
     clean = clean.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '');
     const start = clean.indexOf('{');
     const end = clean.lastIndexOf('}');
@@ -15,7 +14,6 @@ const cleanJson = (text: string | undefined): string => {
     return clean;
 };
 
-// Esquema optimizado para la estructura de Mercadona
 const EXTRACTION_SCHEMA = {
   type: Type.OBJECT,
   properties: {
@@ -24,10 +22,10 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: Type.OBJECT,
         properties: {
-          name: { type: Type.STRING, description: "Descripción clara del producto (ej: QUESO DADOS ENSALADA)" },
-          quantity: { type: Type.NUMBER, description: "El primer número de la línea (ej: 1, 2)" },
-          unit: { type: Type.STRING, description: "Siempre 'uds' para Mercadona a menos que indique kg" },
-          category: { type: Type.STRING, description: "Categoría: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other" }
+          name: { type: Type.STRING, description: "Descripción completa del producto (ej: QUESO DADOS ENSALADA)" },
+          quantity: { type: Type.NUMBER, description: "El primer número que aparece a la izquierda de la línea" },
+          unit: { type: Type.STRING, description: "Unidad (por defecto 'uds')" },
+          category: { type: Type.STRING, description: "Categoría de alimentación: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other" }
         },
         required: ["name", "quantity", "unit", "category"]
       }
@@ -45,14 +43,14 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Extrae los productos de este ticket de Mercadona. REGLA DE ORO: La línea empieza con la cantidad (ej: 1 o 2), sigue con el nombre y termina con el precio. IGNORA el precio final. IGNORA 'BOLSA PLASTICO'. Clasifica cada item en una categoría de alimentación." }
+          { text: "Extrae los productos de este ticket de Mercadona. La estructura es: [CANTIDAD] [DESCRIPCIÓN] [PRECIO UNITARIO (a veces)] [IMPORTE]. Ejemplo: '1 QUESO DADOS ENSALADA 1,15' -> cantidad: 1, nombre: 'QUESO DADOS ENSALADA'. Ignora 'BOLSA PLASTICO'. No inventes productos." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres un experto en tickets españoles. Tu salida debe ser exclusivamente un JSON siguiendo el esquema. Los nombres de productos deben estar en mayúsculas como en el ticket. Si ves 'QUESO DADOS ENSALADA', ese es el nombre. La cantidad es el primer dígito a la izquierda.",
+        systemInstruction: "Eres un OCR especializado en tickets de Mercadona. El primer dígito de cada línea es la cantidad. El texto que sigue es el nombre del producto. Devuelve solo un JSON válido con la lista de items. Si ves 'BOLSA PLASTICO', ignórala.",
         responseMimeType: "application/json",
         responseSchema: EXTRACTION_SCHEMA,
-        temperature: 0.1, // Baja temperatura para máxima precisión
+        temperature: 0.1,
       }
     });
     
@@ -60,7 +58,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     const parsed = JSON.parse(cleanJson(text));
     return parsed.items || [];
   } catch (error) {
-    console.error("Fresco Vision Critical OCR Failure:", error);
+    console.error("Fresco Vision OCR Error:", error);
     return [];
   }
 };

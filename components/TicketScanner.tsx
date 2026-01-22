@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, ShoppingBag, Loader2 } from 'lucide-center';
+import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, ShoppingBag, Loader2 } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { EXPIRY_DAYS_BY_CATEGORY } from '../constants';
@@ -55,13 +55,12 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
 
         const base64Data = result.split(',')[1];
         
-        // Detección manual de MIME si el navegador falla
         let mimeType = file.type;
         if (!mimeType) {
             const ext = file.name.split('.').pop()?.toLowerCase();
             if (ext === 'pdf') mimeType = 'application/pdf';
             else if (['jpg', 'jpeg', 'png'].includes(ext || '')) mimeType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
-            else mimeType = 'image/jpeg'; // Fallback
+            else mimeType = 'image/jpeg';
         }
         
         const extracted = await extractItemsFromTicket(base64Data, mimeType);
@@ -87,7 +86,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             setStep('error');
         }
       } catch (err) {
-          console.error("Fresco Vision Critical Error:", err);
+          console.error("Fresco Vision Error:", err);
           setStep('error');
       }
     };
