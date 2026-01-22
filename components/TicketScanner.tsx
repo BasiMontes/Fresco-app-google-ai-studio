@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, ShoppingBag, Loader2, Key } from 'lucide-react';
+import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, ShoppingBag, Loader2, Key, ExternalLink } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { EXPIRY_DAYS_BY_CATEGORY } from '../constants';
@@ -12,14 +12,14 @@ interface TicketScannerProps {
 }
 
 // Extensión para TypeScript de la API de AI Studio
-// Fix: Use the expected AIStudio type name to match the environment's internal declarations
 declare global {
   interface AIStudio {
     hasSelectedApiKey: () => Promise<boolean>;
     openSelectKey: () => Promise<void>;
   }
   interface Window {
-    aistudio: AIStudio;
+    // FIX: Make aistudio optional to match external declarations and fix the identical modifiers error
+    aistudio?: AIStudio;
   }
 }
 
@@ -57,8 +57,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   useEffect(() => {
     const checkKey = async () => {
         if (window.aistudio) {
-            const hasKey = await window.aistudio.hasSelectedApiKey();
-            if (!hasKey) setStep('need-key');
+            try {
+                const hasKey = await window.aistudio.hasSelectedApiKey();
+                if (!hasKey) setStep('need-key');
+            } catch (e) {
+                // En caso de error de la API de AI Studio, pedimos la clave por si acaso
+                setStep('need-key');
+            }
         }
     };
     checkKey();
@@ -67,7 +72,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const handleOpenKeySelector = async () => {
     if (window.aistudio) {
         await window.aistudio.openSelectKey();
-        // Procedemos asumiendo que el usuario seleccionará una clave válida
+        // Procedemos asumiendo éxito según directrices
         setStep('idle');
     }
   };
@@ -118,9 +123,11 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             setStep('error');
         }
       } catch (err: any) {
+          const errorMsg = err.message || "";
           console.error("Fresco Vision Error:", err);
-          // Si el error indica que falta la entidad (key), volvemos a pedirla
-          if (err.message?.includes("Requested entity was not found")) {
+          
+          // CAPTURA CRÍTICA: Si el error es por falta de API Key, forzamos el selector
+          if (errorMsg.includes("API Key must be set") || errorMsg.includes("Requested entity was not found")) {
               setStep('need-key');
           } else {
               setStep('error');
@@ -206,17 +213,24 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                     <Key className="w-12 h-12 text-orange-500" />
                 </div>
                 <div>
-                    <h3 className="text-3xl font-black text-white">Configura tu IA</h3>
-                    <p className="text-teal-200/50 mt-4 leading-relaxed">
-                        Para analizar tickets, necesitas activar una API Key. Este es un paso de seguridad requerido.
+                    <h3 className="text-3xl font-black text-white leading-none">Activar Motor IA</h3>
+                    <p className="text-teal-200/50 mt-6 text-sm leading-relaxed">
+                        Para analizar imágenes directamente en tu navegador, necesitas vincular una API Key de un proyecto con facturación habilitada.
                     </p>
-                    <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="text-orange-400 text-[10px] font-black uppercase mt-2 block underline">Info sobre facturación</a>
+                    <a 
+                        href="https://ai.google.dev/gemini-api/docs/billing" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-orange-400 text-[10px] font-black uppercase mt-4 tracking-widest hover:text-orange-300 transition-colors"
+                    >
+                        Requisitos de Facturación <ExternalLink className="w-3 h-3" />
+                    </a>
                 </div>
                 <button 
                     onClick={handleOpenKeySelector}
-                    className="w-full py-6 bg-orange-500 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all"
+                    className="w-full py-6 bg-orange-500 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all"
                 >
-                    Seleccionar API Key
+                    Seleccionar Clave
                 </button>
             </div>
         )}
@@ -373,7 +387,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             <button 
                 onClick={step === 'review' ? handleFinalSave : () => {}}
                 disabled={isSaving || (step === 'review' && items.length === 0)}
-                className={`w-full py-6 bg-orange-500 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50 ${step !== 'review' ? 'hidden' : ''}`}
+                className={`w-full py-6 bg-orange-500 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:bg-orange-600 active:scale-[0.98] transition-all flex items-center justify-center gap-4 disabled:opacity-50 ${step !== 'review' ? 'hidden' : ''}`}
             >
                 {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CheckCircle2 className="w-6 h-6" /> Añadir a Despensa</>}
             </button>
