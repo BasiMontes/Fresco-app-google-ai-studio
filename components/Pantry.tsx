@@ -6,6 +6,7 @@ import { differenceInDays, startOfDay, format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TicketScanner } from './TicketScanner';
 import { triggerDialog } from './Dialog';
+import { ModalPortal } from './ModalPortal';
 
 interface PantryProps {
   items: PantryItem[];
@@ -201,76 +202,80 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
       
       {/* Modal de Edición */}
       {itemToEdit && (
-        <div className="fixed inset-0 z-[5000] bg-black/40 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setItemToEdit(null)}>
-            <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-between items-center mb-8"><h2 className="text-[#013b33] text-[2rem] font-black tracking-tight leading-none">Editar Item</h2><div className="flex gap-1"><button onClick={() => { triggerDialog({ title: '¿Borrar?', message: 'Se perderá el stock.', type: 'confirm', onConfirm: () => { onRemove(itemToEdit.id); setItemToEdit(null); } }); }} className="p-2.5 text-gray-200 hover:text-red-500 transition-colors"><Trash2 className="w-6 h-6" /></button><button onClick={() => setItemToEdit(null)} className="p-2.5 text-gray-200 hover:text-black transition-colors"><X className="w-7 h-7" /></button></div></div>
-                <div className="space-y-6">
-                    <div className="flex flex-col"><InputLabel>Nombre del producto</InputLabel><input className={MODAL_INPUT_CLASSES + " !text-[1rem]"} placeholder="Ej. Manzanas" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} /></div>
-                    <div className="flex flex-col"><InputLabel icon={Tag}>Categoría</InputLabel><div className="relative"><select className={MODAL_INPUT_CLASSES} value={itemToEdit.category} onChange={e => setItemToEdit({...itemToEdit, category: e.target.value})}>{CATEGORIES_LIST.map(cat => <option key={cat.id} value={cat.id}>{cat.emoji} {cat.label.toUpperCase()}</option>)}</select><ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-300" /></div></div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="flex flex-col">
-                            <InputLabel icon={Calendar}>Compra</InputLabel>
-                            <div className="relative">
-                                <input type="text" className={MODAL_INPUT_CLASSES} placeholder="AAAA-MM-DD" value={itemToEdit.added_at ? format(new Date(itemToEdit.added_at), "yyyy-MM-dd") : ""} onChange={e => setItemToEdit({...itemToEdit, added_at: new Date(e.target.value).toISOString()})} />
-                                <input type="date" className="absolute inset-0 opacity-0 cursor-pointer" value={itemToEdit.added_at ? format(new Date(itemToEdit.added_at), "yyyy-MM-dd") : ""} onChange={e => {
-                                    const d = new Date(e.target.value);
-                                    if(!isNaN(d.getTime())) setItemToEdit({...itemToEdit, added_at: d.toISOString()});
-                                }} />
-                            </div>
-                        </div>
-                        <div className="flex flex-col">
-                            <InputLabel icon={Clock}>Caducidad</InputLabel>
-                            <div className="relative">
-                                <input type="text" className={MODAL_INPUT_CLASSES + " !text-[#147A74]"} placeholder="AAAA-MM-DD" value={itemToEdit.expires_at ? format(new Date(itemToEdit.expires_at), "yyyy-MM-dd") : ""} onChange={e => setItemToEdit({...itemToEdit, expires_at: new Date(e.target.value).toISOString()})} />
-                                <input type="date" className="absolute inset-0 opacity-0 cursor-pointer" value={itemToEdit.expires_at ? format(new Date(itemToEdit.expires_at), "yyyy-MM-dd") : ""} onChange={e => {
-                                    const d = new Date(e.target.value);
-                                    if(!isNaN(d.getTime())) setItemToEdit({...itemToEdit, expires_at: d.toISOString()});
-                                }} />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-[1fr_2fr] gap-4">
-                        <div className="flex flex-col"><InputLabel>Cantidad</InputLabel><input type="number" step="0.1" className={MODAL_INPUT_CLASSES + " text-center px-2"} value={itemToEdit.quantity} onChange={e => setItemToEdit({...itemToEdit, quantity: parseFloat(e.target.value) || 0})} /></div>
-                        <div className="flex flex-col"><InputLabel icon={Scale}>Unidad</InputLabel><div className="relative"><select className={MODAL_INPUT_CLASSES} value={itemToEdit.unit || 'uds'} onChange={e => setItemToEdit({...itemToEdit, unit: e.target.value})}>{UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label.toUpperCase()}</option>)}</select><ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-300" /></div></div>
-                    </div>
-                    <button onClick={() => { onEdit(itemToEdit); setItemToEdit(null); }} className="w-full h-[64px] bg-[#013b33] text-white rounded-[1.6rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all">Guardar Cambios</button>
-                </div>
-            </div>
-        </div>
+        <ModalPortal>
+          <div className="fixed inset-0 z-[5000] bg-black/40 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setItemToEdit(null)}>
+              <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up" onClick={e => e.stopPropagation()}>
+                  <div className="flex justify-between items-center mb-8"><h2 className="text-[#013b33] text-[2rem] font-black tracking-tight leading-none">Editar Item</h2><div className="flex gap-1"><button onClick={() => { triggerDialog({ title: '¿Borrar?', message: 'Se perderá el stock.', type: 'confirm', onConfirm: () => { onRemove(itemToEdit.id); setItemToEdit(null); } }); }} className="p-2.5 text-gray-200 hover:text-red-500 transition-colors"><Trash2 className="w-6 h-6" /></button><button onClick={() => setItemToEdit(null)} className="p-2.5 text-gray-200 hover:text-black transition-colors"><X className="w-7 h-7" /></button></div></div>
+                  <div className="space-y-6">
+                      <div className="flex flex-col"><InputLabel>Nombre del producto</InputLabel><input className={MODAL_INPUT_CLASSES + " !text-[1rem]"} placeholder="Ej. Manzanas" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} /></div>
+                      <div className="flex flex-col"><InputLabel icon={Tag}>Categoría</InputLabel><div className="relative"><select className={MODAL_INPUT_CLASSES} value={itemToEdit.category} onChange={e => setItemToEdit({...itemToEdit, category: e.target.value})}>{CATEGORIES_LIST.map(cat => <option key={cat.id} value={cat.id}>{cat.emoji} {cat.label.toUpperCase()}</option>)}</select><ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-300" /></div></div>
+                      <div className="grid grid-cols-2 gap-4">
+                          <div className="flex flex-col">
+                              <InputLabel icon={Calendar}>Compra</InputLabel>
+                              <div className="relative">
+                                  <input type="text" className={MODAL_INPUT_CLASSES} placeholder="AAAA-MM-DD" value={itemToEdit.added_at ? format(new Date(itemToEdit.added_at), "yyyy-MM-dd") : ""} onChange={e => setItemToEdit({...itemToEdit, added_at: new Date(e.target.value).toISOString()})} />
+                                  <input type="date" className="absolute inset-0 opacity-0 cursor-pointer" value={itemToEdit.added_at ? format(new Date(itemToEdit.added_at), "yyyy-MM-dd") : ""} onChange={e => {
+                                      const d = new Date(e.target.value);
+                                      if(!isNaN(d.getTime())) setItemToEdit({...itemToEdit, added_at: d.toISOString()});
+                                  }} />
+                              </div>
+                          </div>
+                          <div className="flex flex-col">
+                              <InputLabel icon={Clock}>Caducidad</InputLabel>
+                              <div className="relative">
+                                  <input type="text" className={MODAL_INPUT_CLASSES + " !text-[#147A74]"} placeholder="AAAA-MM-DD" value={itemToEdit.expires_at ? format(new Date(itemToEdit.expires_at), "yyyy-MM-dd") : ""} onChange={e => setItemToEdit({...itemToEdit, expires_at: new Date(e.target.value).toISOString()})} />
+                                  <input type="date" className="absolute inset-0 opacity-0 cursor-pointer" value={itemToEdit.expires_at ? format(new Date(itemToEdit.expires_at), "yyyy-MM-dd") : ""} onChange={e => {
+                                      const d = new Date(e.target.value);
+                                      if(!isNaN(d.getTime())) setItemToEdit({...itemToEdit, expires_at: d.toISOString()});
+                                  }} />
+                              </div>
+                          </div>
+                      </div>
+                      <div className="grid grid-cols-[1fr_2fr] gap-4">
+                          <div className="flex flex-col"><InputLabel>Cantidad</InputLabel><input type="number" step="0.1" className={MODAL_INPUT_CLASSES + " text-center px-2"} value={itemToEdit.quantity} onChange={e => setItemToEdit({...itemToEdit, quantity: parseFloat(e.target.value) || 0})} /></div>
+                          <div className="flex flex-col"><InputLabel icon={Scale}>Unidad</InputLabel><div className="relative"><select className={MODAL_INPUT_CLASSES} value={itemToEdit.unit || 'uds'} onChange={e => setItemToEdit({...itemToEdit, unit: e.target.value})}>{UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label.toUpperCase()}</option>)}</select><ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-300" /></div></div>
+                      </div>
+                      <button onClick={() => { onEdit(itemToEdit); setItemToEdit(null); }} className="w-full h-[64px] bg-[#013b33] text-white rounded-[1.6rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all">Guardar Cambios</button>
+                  </div>
+              </div>
+          </div>
+        </ModalPortal>
       )}
 
       {/* Modal Añadir Producto */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[5000] bg-black/40 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
-            <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-between items-center mb-8"><h2 className="text-[#013b33] text-[2rem] font-black tracking-tight leading-none">Nuevo Item</h2><button onClick={() => setShowAddModal(false)} className="p-2.5 text-gray-200 hover:text-black transition-colors"><X className="w-7 h-7" /></button></div>
-                <div className="space-y-6">
-                    <div className="flex flex-col"><InputLabel>Nombre del producto</InputLabel><input autoFocus className={MODAL_INPUT_CLASSES + " !text-[1rem] placeholder:text-gray-200"} placeholder="Ej. Manzanas" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} /></div>
-                    <div className="flex flex-col"><InputLabel icon={Tag}>Categoría</InputLabel><div className="relative"><select className={MODAL_INPUT_CLASSES} value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})}>{CATEGORIES_LIST.map(cat => <option key={cat.id} value={cat.id}>{cat.emoji} {cat.label.toUpperCase()}</option>)}</select><ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-300" /></div></div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="flex flex-col">
-                            <InputLabel icon={Calendar}>Compra</InputLabel>
-                            <div className="relative">
-                                <input type="text" className={MODAL_INPUT_CLASSES} placeholder="AAAA-MM-DD" value={newItem.added_at || ""} onChange={e => setNewItem({...newItem, added_at: e.target.value})} />
-                                <input type="date" className="absolute inset-0 opacity-0 cursor-pointer" value={newItem.added_at || ""} onChange={e => setNewItem({...newItem, added_at: e.target.value})} />
-                            </div>
-                        </div>
-                        <div className="flex flex-col">
-                            <InputLabel icon={Clock}>Caducidad</InputLabel>
-                            <div className="relative">
-                                <input type="text" className={MODAL_INPUT_CLASSES + " !text-[#147A74]"} placeholder="AAAA-MM-DD" value={newItem.expires_at || ""} onChange={e => setNewItem({...newItem, expires_at: e.target.value})} />
-                                <input type="date" className="absolute inset-0 opacity-0 cursor-pointer" value={newItem.expires_at || ""} onChange={e => setNewItem({...newItem, expires_at: e.target.value})} />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-[1fr_2fr] gap-4">
-                        <div className="flex flex-col"><InputLabel>Cantidad</InputLabel><input type="number" step="0.1" className={MODAL_INPUT_CLASSES + " text-center px-2"} value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value) || 0})} /></div>
-                        <div className="flex flex-col"><InputLabel icon={Scale}>Unidad</InputLabel><div className="relative"><select className={MODAL_INPUT_CLASSES} value={newItem.unit} onChange={e => setNewItem({...newItem, unit: e.target.value})}>{UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label.toUpperCase()}</option>)}</select><ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-300" /></div></div>
-                    </div>
-                    <button onClick={handleAddNewItem} disabled={!newItem.name} className="w-full h-[64px] bg-[#013b33] text-white rounded-[1.6rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all disabled:opacity-40">AÑADIR A DESPENSA</button>
-                </div>
-            </div>
-        </div>
+        <ModalPortal>
+          <div className="fixed inset-0 z-[5000] bg-black/40 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
+              <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up" onClick={e => e.stopPropagation()}>
+                  <div className="flex justify-between items-center mb-8"><h2 className="text-[#013b33] text-[2rem] font-black tracking-tight leading-none">Nuevo Item</h2><button onClick={() => setShowAddModal(false)} className="p-2.5 text-gray-200 hover:text-black transition-colors"><X className="w-7 h-7" /></button></div>
+                  <div className="space-y-6">
+                      <div className="flex flex-col"><InputLabel>Nombre del producto</InputLabel><input autoFocus className={MODAL_INPUT_CLASSES + " !text-[1rem] placeholder:text-gray-200"} placeholder="Ej. Manzanas" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} /></div>
+                      <div className="flex flex-col"><InputLabel icon={Tag}>Categoría</InputLabel><div className="relative"><select className={MODAL_INPUT_CLASSES} value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})}>{CATEGORIES_LIST.map(cat => <option key={cat.id} value={cat.id}>{cat.emoji} {cat.label.toUpperCase()}</option>)}</select><ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-300" /></div></div>
+                      <div className="grid grid-cols-2 gap-4">
+                          <div className="flex flex-col">
+                              <InputLabel icon={Calendar}>Compra</InputLabel>
+                              <div className="relative">
+                                  <input type="text" className={MODAL_INPUT_CLASSES} placeholder="AAAA-MM-DD" value={newItem.added_at || ""} onChange={e => setNewItem({...newItem, added_at: e.target.value})} />
+                                  <input type="date" className="absolute inset-0 opacity-0 cursor-pointer" value={newItem.added_at || ""} onChange={e => setNewItem({...newItem, added_at: e.target.value})} />
+                              </div>
+                          </div>
+                          <div className="flex flex-col">
+                              <InputLabel icon={Clock}>Caducidad</InputLabel>
+                              <div className="relative">
+                                  <input type="text" className={MODAL_INPUT_CLASSES + " !text-[#147A74]"} placeholder="AAAA-MM-DD" value={newItem.expires_at || ""} onChange={e => setNewItem({...newItem, expires_at: e.target.value})} />
+                                  <input type="date" className="absolute inset-0 opacity-0 cursor-pointer" value={newItem.expires_at || ""} onChange={e => setNewItem({...newItem, expires_at: e.target.value})} />
+                              </div>
+                          </div>
+                      </div>
+                      <div className="grid grid-cols-[1fr_2fr] gap-4">
+                          <div className="flex flex-col"><InputLabel>Cantidad</InputLabel><input type="number" step="0.1" className={MODAL_INPUT_CLASSES + " text-center px-2"} value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value) || 0})} /></div>
+                          <div className="flex flex-col"><InputLabel icon={Scale}>Unidad</InputLabel><div className="relative"><select className={MODAL_INPUT_CLASSES} value={newItem.unit} onChange={e => setNewItem({...newItem, unit: e.target.value})}>{UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label.toUpperCase()}</option>)}</select><ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-gray-300" /></div></div>
+                      </div>
+                      <button onClick={handleAddNewItem} disabled={!newItem.name} className="w-full h-[64px] bg-[#013b33] text-white rounded-[1.6rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all disabled:opacity-40">AÑADIR A DESPENSA</button>
+                  </div>
+              </div>
+          </div>
+        </ModalPortal>
       )}
       {showScanner && <TicketScanner onClose={() => setShowScanner(false)} onAddItems={(items) => { onAddMany(items); setShowScanner(false); }} />}
     </div>
