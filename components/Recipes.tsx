@@ -179,7 +179,7 @@ export const Recipes: React.FC<RecipesProps> = ({
                     className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative h-full min-h-[280px] animate-fade-in"
                 >
                     {isHighMatch && (
-                        <div className="absolute top-2 left-2 z-20 bg-green-500 text-white text-[9px] font-black px-2 py-1 rounded-full shadow-lg border border-white/20 flex items-center gap-1">
+                        <div className="absolute top-3 left-3 z-20 bg-green-500 text-white text-[9px] font-black px-2 py-1 rounded-full shadow-lg border border-white/20 flex items-center gap-1">
                             <PackageCheck className="w-3 h-3" /> {compatibility}%
                         </div>
                     )}
@@ -195,7 +195,7 @@ export const Recipes: React.FC<RecipesProps> = ({
                                 e.stopPropagation();
                                 if (onToggleFavorite) onToggleFavorite(recipe.id);
                             }}
-                            className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
+                            className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
                         >
                             <Heart className={`w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
                         </button>

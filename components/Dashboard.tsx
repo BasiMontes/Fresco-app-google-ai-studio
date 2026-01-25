@@ -94,7 +94,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
                                           e.stopPropagation();
                                           onToggleFavorite && onToggleFavorite(recipe.id);
                                       }} 
-                                      className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md z-10"
+                                      className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
                                   >
                                       <Heart className="w-4 h-4 fill-red-500 text-red-500" />
                                   </button>
@@ -238,9 +238,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
                                     e.stopPropagation();
                                     onToggleFavorite && onToggleFavorite(recipe.id);
                                 }}
-                                className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
+                                className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
                             >
-                                <Heart className={`w-3.5 h-3.5 ${favoriteIds.includes(recipe.id) ? 'fill-red-500 text-red-500' : 'text-gray-300'}`} />
+                                <Heart className={`w-4 h-4 ${favoriteIds.includes(recipe.id) ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
                             </button>
                         </div>
                         <div className="p-4 flex-1 flex flex-col">
