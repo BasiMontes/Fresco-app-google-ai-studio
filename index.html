@@ -74,6 +74,16 @@
         width: 100%;
         overflow: hidden;
       }
+      /* Ocultar flechas de inputs numéricos */
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type=number] {
+        -moz-appearance: textfield;
+      }
+
       /* Sistema de tipografía global Fresco - Pixel Perfect */
       .fresco-title { font-size: 2.2rem; font-weight: 900; line-height: 1.05; letter-spacing: -0.04em; }
       .fresco-label-wide { font-size: 0.6rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4em; color: #cbd5e1; }
