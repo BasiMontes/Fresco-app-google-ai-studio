@@ -109,7 +109,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       setExtraUnit('uds');
   };
 
-  const handleAdjust = (itemId: string, delta: number, currentQty: number) => {
+  const handleAdjust = (itemId: string, delta: number) => {
       const item = dbItems.find(i => i.id === itemId);
       if (item) {
           onUpdateShoppingItem({ ...item, quantity: Math.max(0.1, item.quantity + delta) });
@@ -321,9 +321,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         </div>
       </div>
 
-      {/* Formulario Añadir */}
-      <div className="mb-10 flex flex-col md:flex-row gap-3 max-w-2xl mx-auto items-stretch">
-          <form onSubmit={addExtraItem} className="flex-[3] bg-white border-2 border-gray-100 rounded-3xl flex items-center p-1.5 shadow-sm focus-within:border-teal-500/30 transition-all h-14">
+      {/* Formulario Añadir - Alineación a la izquierda corregida */}
+      <div className="mb-10 flex flex-col md:flex-row gap-3 w-full items-stretch">
+          <form onSubmit={addExtraItem} className="flex-[4] bg-white border-2 border-gray-100 rounded-3xl flex items-center p-1.5 shadow-sm focus-within:border-teal-500/30 transition-all h-14">
             <input 
               type="text" 
               value={newExtra} 
@@ -377,7 +377,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                 const allChecked = groupedItems[catKey].every(i => i.is_purchased);
                 return (
                     <div key={catKey} className="space-y-4">
-                        <div className="flex items-center justify-between border-b border-gray-100 pb-2 mx-2">
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
                             <div className={`flex items-center gap-2 ${info.color}`}>
                                 <span className="text-lg">{info.emoji}</span>
                                 <span className="text-xs font-black uppercase tracking-widest">{info.label}</span>
@@ -386,7 +386,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                 <CheckSquare className="w-3 h-3" /> {allChecked ? 'Desmarcar' : 'Todo'}
                             </button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 px-1">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                         {groupedItems[catKey].map(item => (
                             <div key={item.id} className={`group flex items-center gap-4 py-2 px-3 rounded-2xl transition-all cursor-pointer select-none border border-transparent ${item.is_purchased ? 'opacity-30' : 'hover:bg-white hover:border-gray-50 hover:shadow-sm'}`} onClick={() => toggleItemCheck(item)}>
                                 <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-teal-600 border-teal-600 shadow-inner' : 'border-gray-200 bg-white group-hover:border-teal-400'}`}>
@@ -396,10 +396,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                     <div className={`font-bold text-[13px] text-gray-900 capitalize truncate ${item.is_purchased ? 'line-through text-gray-400' : ''}`}>{item.name}</div>
                                 </div>
                                 
-                                {/* NUEVO STEPPER UNIFICADO - BYE BYE UX SUICIDIO */}
                                 <div className="flex items-center bg-gray-50 rounded-xl p-1 gap-1" onClick={e => e.stopPropagation()}>
                                     {!item.is_purchased && (
-                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1, item.quantity)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors bg-white rounded-lg shadow-sm border border-gray-100"><Minus className="w-3 h-3" /></button>
+                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors bg-white rounded-lg shadow-sm border border-gray-100"><Minus className="w-3 h-3" /></button>
                                     )}
                                     
                                     <div className="flex items-center gap-1 px-2 min-w-[45px] justify-center">
@@ -414,7 +413,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                     </div>
                                     
                                     {!item.is_purchased && (
-                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? 0.25 : 1, item.quantity)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-teal-600 transition-colors bg-white rounded-lg shadow-sm border border-gray-100"><Plus className="w-3 h-3" /></button>
+                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? 0.25 : 1)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-teal-600 transition-colors bg-white rounded-lg shadow-sm border border-gray-100"><Plus className="w-3 h-3" /></button>
                                     )}
                                 </div>
                             </div>
@@ -437,43 +436,43 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           </button>
       </div>
       
-      {/* Modales mantenidos */}
+      {/* Modal de Comparación de Precios - Compacto en Desktop */}
       {showComparison && (
           <ModalPortal>
               <div className="fixed inset-0 z-[5000] bg-teal-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowComparison(false)}>
-                  <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative animate-slide-up" onClick={e => e.stopPropagation()}>
-                      <button onClick={() => setShowComparison(false)} className="absolute top-8 right-8 p-2 bg-gray-50 rounded-full text-gray-400 hover:text-teal-900 transition-colors"><X className="w-5 h-5" /></button>
-                      <div className="mb-8">
-                          <h3 className="text-2xl font-black text-teal-900 mb-1">Comparador IA</h3>
-                          <p className="text-gray-400 text-xs font-medium uppercase tracking-widest">Optimización de presupuesto</p>
+                  <div className="bg-white w-full max-w-[400px] rounded-[3rem] p-8 shadow-2xl relative animate-slide-up" onClick={e => e.stopPropagation()}>
+                      <button onClick={() => setShowComparison(false)} className="absolute top-6 right-6 p-2 bg-gray-50 rounded-full text-gray-400 hover:text-teal-900 transition-colors"><X className="w-5 h-5" /></button>
+                      <div className="mb-6">
+                          <h3 className="text-xl font-black text-teal-900 mb-1">Comparador IA</h3>
+                          <p className="text-gray-400 text-[9px] font-black uppercase tracking-widest">Optimización de presupuesto</p>
                       </div>
 
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                           {shoppingData.storeComparisons.map((store, idx) => (
-                              <div key={store.id} onClick={() => { setSelectedStoreId(store.id); setShowComparison(false); }} className={`p-6 rounded-[2rem] border-2 transition-all cursor-pointer flex justify-between items-center ${selectedStoreId === store.id ? 'bg-teal-50 border-teal-900' : 'bg-white border-gray-100 hover:border-teal-200'}`}>
-                                  <div className="flex items-center gap-4">
-                                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${idx === 0 ? 'bg-green-100 text-green-700' : 'bg-gray-50 text-gray-400'}`}>
-                                          <Store className="w-6 h-6" />
+                              <div key={store.id} onClick={() => { setSelectedStoreId(store.id); setShowComparison(false); }} className={`p-4 rounded-[1.8rem] border-2 transition-all cursor-pointer flex justify-between items-center ${selectedStoreId === store.id ? 'bg-teal-50 border-teal-900' : 'bg-white border-gray-100 hover:border-teal-200'}`}>
+                                  <div className="flex items-center gap-3">
+                                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-inner ${idx === 0 ? 'bg-green-100 text-green-700' : 'bg-gray-50 text-gray-400'}`}>
+                                          <Store className="w-5 h-5" />
                                       </div>
                                       <div>
-                                          <p className="font-black text-teal-950">{store.name}</p>
-                                          {idx === 0 && <span className="text-[8px] font-black uppercase text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Más económico</span>}
+                                          <p className="font-black text-teal-950 text-sm">{store.name}</p>
+                                          {idx === 0 && <span className="text-[7px] font-black uppercase text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Más económico</span>}
                                       </div>
                                   </div>
                                   <div className="text-right">
-                                      <p className="text-xl font-black text-teal-900">{store.total.toFixed(2)}€</p>
-                                      {idx > 0 && <p className="text-[10px] font-bold text-red-400">+{ (store.total - shoppingData.cheapest.total).toFixed(2) }€</p>}
+                                      <p className="text-base font-black text-teal-900">{store.total.toFixed(2)}€</p>
+                                      {idx > 0 && <p className="text-[8px] font-black text-red-400">+{ (store.total - shoppingData.cheapest.total).toFixed(2) }€</p>}
                                   </div>
                               </div>
                           ))}
                       </div>
 
-                      <div className="mt-8 p-5 bg-orange-50 rounded-3xl border border-orange-100">
-                          <div className="flex gap-4 items-center">
-                              <TrendingDown className="w-8 h-8 text-orange-500" />
+                      <div className="mt-6 p-4 bg-orange-50 rounded-2xl border border-orange-100">
+                          <div className="flex gap-3 items-center">
+                              <TrendingDown className="w-6 h-6 text-orange-500" />
                               <div>
-                                  <p className="text-[10px] font-black uppercase tracking-widest text-orange-600/60">Ahorro Máximo</p>
-                                  <p className="text-2xl font-black text-orange-600">{shoppingData.maxSavings.toFixed(2)}€</p>
+                                  <p className="text-[8px] font-black uppercase tracking-widest text-orange-600/60">Ahorro Máximo</p>
+                                  <p className="text-lg font-black text-orange-600">{shoppingData.maxSavings.toFixed(2)}€</p>
                               </div>
                           </div>
                       </div>
