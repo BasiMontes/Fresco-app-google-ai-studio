@@ -129,7 +129,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       if (item) {
           onUpdateShoppingItem({ ...item, quantity: val });
       } else {
-          // Ajuste relativo para items calculados
           const baseQty = shoppingData.itemsList.find(i => i.id === itemId)?.quantity || 0;
           setAdjustments(prev => ({ ...prev, [itemId]: val - baseQty + (prev[itemId] || 0) }));
       }
@@ -322,7 +321,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         </div>
       </div>
 
-      {/* Formulario Añadir - Alineación Corregida Pixel-Perfect */}
+      {/* Formulario Añadir */}
       <div className="mb-10 flex flex-col md:flex-row gap-3 max-w-2xl mx-auto items-stretch">
           <form onSubmit={addExtraItem} className="flex-[3] bg-white border-2 border-gray-100 rounded-3xl flex items-center p-1.5 shadow-sm focus-within:border-teal-500/30 transition-all h-14">
             <input 
@@ -397,25 +396,25 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                     <div className={`font-bold text-[13px] text-gray-900 capitalize truncate ${item.is_purchased ? 'line-through text-gray-400' : ''}`}>{item.name}</div>
                                 </div>
                                 
-                                {/* Stepper de Cantidad Compacto y Unificado */}
+                                {/* NUEVO STEPPER UNIFICADO - BYE BYE UX SUICIDIO */}
                                 <div className="flex items-center bg-gray-50 rounded-xl p-1 gap-1" onClick={e => e.stopPropagation()}>
                                     {!item.is_purchased && (
-                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1, item.quantity)} className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"><Minus className="w-3 h-3" /></button>
+                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1, item.quantity)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors bg-white rounded-lg shadow-sm border border-gray-100"><Minus className="w-3 h-3" /></button>
                                     )}
                                     
-                                    <div className="flex items-baseline gap-0.5 px-1 min-w-[30px] justify-center">
+                                    <div className="flex items-center gap-1 px-2 min-w-[45px] justify-center">
                                         <input 
                                             type="number" 
                                             step="any"
-                                            className={`w-8 bg-transparent text-center font-black text-[11px] outline-none ${item.is_purchased ? 'text-gray-300' : 'text-teal-900'}`}
+                                            className={`w-10 bg-transparent text-center font-black text-[12px] outline-none ${item.is_purchased ? 'text-gray-300' : 'text-teal-900'}`}
                                             value={item.quantity}
                                             onChange={(e) => handleManualQtyChange(item.id, e.target.value)}
                                         />
-                                        <span className={`text-[8px] font-black uppercase ${item.is_purchased ? 'text-gray-300' : 'text-teal-600/40'}`}>{item.unit}</span>
+                                        <span className={`text-[9px] font-black uppercase ${item.is_purchased ? 'text-gray-300' : 'text-teal-600/50'}`}>{item.unit}</span>
                                     </div>
                                     
                                     {!item.is_purchased && (
-                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? 0.25 : 1, item.quantity)} className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-teal-600 transition-colors"><Plus className="w-3 h-3" /></button>
+                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? 0.25 : 1, item.quantity)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-teal-600 transition-colors bg-white rounded-lg shadow-sm border border-gray-100"><Plus className="w-3 h-3" /></button>
                                     )}
                                 </div>
                             </div>
@@ -427,18 +426,18 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         </div>
       )}
       
-      {/* Botón Flotante Refinado abajo a la derecha */}
+      {/* Botón Flotante Refinado */}
       <div className="fixed bottom-24 md:bottom-10 right-6 md:right-10 z-[100] animate-slide-up pointer-events-none">
           <button 
             onClick={handleFinishClick}
             disabled={shoppingData.itemsList.length === 0}
-            className="bg-teal-900 text-white px-8 h-14 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95 shadow-2xl shadow-teal-900/20 pointer-events-auto border border-white/10 disabled:opacity-50 text-[10px] uppercase tracking-[0.2em]"
+            className="bg-teal-900 text-white px-8 h-14 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95 shadow-xl shadow-teal-900/20 pointer-events-auto border border-white/5 disabled:opacity-50 text-[10px] uppercase tracking-[0.2em]"
           >
               <Check className="w-4 h-4 stroke-[3px]" /> Terminar Compra
           </button>
       </div>
       
-      {/* Modales mantenidos (Comparison & Receipt) */}
+      {/* Modales mantenidos */}
       {showComparison && (
           <ModalPortal>
               <div className="fixed inset-0 z-[5000] bg-teal-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowComparison(false)}>
