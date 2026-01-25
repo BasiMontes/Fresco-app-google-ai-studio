@@ -25,6 +25,66 @@ const MOCK_NOTIFICATIONS = [
     { id: 2, type: 'shopping', title: 'Lista de compras lista', desc: 'Tu lista para esta semana está preparada. ¡Ve al súper!', time: 'Hoy, 19:11', isNew: true, icon: ShoppingCart, color: 'bg-green-100 text-green-600' },
 ];
 
+// Unified Recipe Card component moved outside Dashboard to fix TypeScript key prop errors
+// and avoid re-creation on every parent render.
+const UnifiedRecipeCard = ({ 
+  recipe, 
+  isFav, 
+  onNavigate, 
+  onToggleFavorite 
+}: { 
+  recipe: Recipe; 
+  isFav: boolean; 
+  onNavigate: (tab: string) => void; 
+  onToggleFavorite?: (id: string) => void 
+}) => {
+  return (
+      <div 
+          onClick={() => { window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}`); onNavigate('recipes'); }}
+          className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative h-full min-h-[280px] animate-fade-in"
+      >
+          <div className="relative aspect-[3/2] overflow-hidden bg-gray-100 flex-shrink-0">
+              <SmartImage 
+                  src={recipe.image_url} 
+                  alt={recipe.title} 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <button 
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      if (onToggleFavorite) onToggleFavorite(recipe.id);
+                  }}
+                  className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
+              >
+                  <Heart className={`w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+              </button>
+          </div>
+          
+          <div className="p-3 flex-1 flex flex-col">
+              <h3 className="text-sm md:text-xs font-bold text-gray-900 leading-tight mb-2 line-clamp-2 group-hover:text-teal-700 transition-colors">
+                  {recipe.title}
+              </h3>
+              <div className="mt-auto flex items-center gap-2 pt-2 border-t border-gray-50">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 whitespace-nowrap">
+                      {recipe.cuisine_type}
+                  </span>
+                  <div className="flex-1" />
+                  <button 
+                      onClick={(e) => { 
+                          e.stopPropagation(); 
+                          window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}&mode=plan`);
+                          onNavigate('recipes');
+                      }}
+                      className="w-8 h-8 md:w-7 md:h-7 bg-teal-50 text-teal-700 rounded-lg flex items-center justify-center hover:bg-teal-900 hover:text-white transition-all active:scale-90 flex-shrink-0"
+                  >
+                      <CalendarPlus className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                  </button>
+              </div>
+          </div>
+      </div>
+  );
+};
+
 export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true, favoriteIds = [], onToggleFavorite }) => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'favorites' | 'notifications'>('dashboard');
   
@@ -79,35 +139,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
                       <h1 className="text-3xl font-black text-teal-900 flex items-center gap-3">
                           <Heart className="w-8 h-8 text-red-500 fill-current" /> Favoritos
                       </h1>
-                      <p className="text-gray-500 font-medium">Tus recetas guardadas para cocinar cuando quieras.</p>
+                      <p className="text-gray-500 font-medium text-sm">Tus recetas guardadas para cocinar cuando quieras.</p>
                   </div>
               </div>
 
               {favoriteRecipes.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {favoriteRecipes.map(recipe => (
-                          <div key={recipe.id} className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col">
-                              <div className="aspect-[4/3] relative overflow-hidden">
-                                  <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                                  <button 
-                                      onClick={(e) => {
-                                          e.stopPropagation();
-                                          onToggleFavorite && onToggleFavorite(recipe.id);
-                                      }} 
-                                      className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
-                                  >
-                                      <Heart className="w-4 h-4 fill-red-500 text-red-500" />
-                                  </button>
-                              </div>
-                              <div className="p-4 flex-1 flex flex-col">
-                                  <h3 className="font-black text-teal-900 line-clamp-1 mb-2">{recipe.title}</h3>
-                                  <div className="flex items-center gap-2 mb-4">
-                                      <span className="text-[10px] font-black uppercase tracking-widest text-teal-600 bg-teal-50 px-2 py-0.5 rounded">{recipe.difficulty}</span>
-                                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{recipe.prep_time} min</span>
-                                  </div>
-                                  <button onClick={() => onAddToPlan && onAddToPlan(recipe, recipe.servings)} className="w-full py-2.5 bg-teal-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-teal-800 transition-all">Añadir al plan</button>
-                              </div>
-                          </div>
+                          <UnifiedRecipeCard 
+                              key={recipe.id} 
+                              recipe={recipe} 
+                              isFav={favoriteIds.includes(recipe.id)}
+                              onNavigate={onNavigate}
+                              onToggleFavorite={onToggleFavorite}
+                          />
                       ))}
                   </div>
               ) : (
@@ -175,49 +220,50 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
           </div>
       </header>
 
+      {/* Métricas Unificadas con Valor Abajo */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm">
+          {/* Recetas */}
+          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-full min-h-[160px]">
               <div className="flex justify-between items-start mb-4">
-                  <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recetas</p>
-                      <p className="text-4xl font-black text-teal-900 mt-1">{recipes.length}</p>
-                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recetas</p>
                   <div className="p-3 bg-orange-50 rounded-2xl text-orange-500"><BookOpen className="w-6 h-6" /></div>
               </div>
+              <p className="text-4xl font-black text-teal-900 mt-auto">{recipes.length}</p>
           </div>
 
-          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm">
-               <div className="flex justify-between items-start mb-2">
+          {/* Gasto Semanal */}
+          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-full min-h-[160px]">
+               <div className="flex justify-between items-start mb-4">
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Gasto Semanal</p>
                   <div className={`p-3 rounded-2xl ${budgetStats.isOverBudget ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'}`}><TrendingUp className="w-6 h-6" /></div>
               </div>
-              <div className="flex items-end gap-1 mb-3">
-                  <p className="text-4xl font-black text-teal-900 leading-none">{budgetStats.spent.toFixed(0)}€</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-1">/ {budgetStats.limit}€</p>
-              </div>
-              <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all duration-1000 ${budgetStats.isOverBudget ? 'bg-red-500' : 'bg-green-500'}`} style={{ width: `${budgetStats.percentage}%` }} />
+              <div className="mt-auto">
+                <div className="flex items-end gap-1 mb-3">
+                    <p className="text-4xl font-black text-teal-900 leading-none">{budgetStats.spent.toFixed(0)}€</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-1">/ {budgetStats.limit}€</p>
+                </div>
+                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-1000 ${budgetStats.isOverBudget ? 'bg-red-500' : 'bg-green-500'}`} style={{ width: `${budgetStats.percentage}%` }} />
+                </div>
               </div>
           </div>
 
-          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm">
+          {/* Ahorro Total */}
+          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-full min-h-[160px]">
               <div className="flex justify-between items-start mb-4">
-                  <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ahorro Total</p>
-                      <p className="text-4xl font-black text-teal-900 mt-1">{user.total_savings.toFixed(0)}€</p>
-                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ahorro Total</p>
                   <div className="p-3 bg-teal-50 rounded-2xl text-teal-600"><PiggyBank className="w-6 h-6" /></div>
               </div>
+              <p className="text-4xl font-black text-teal-900 mt-auto">{user.total_savings.toFixed(0)}€</p>
           </div>
 
-          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm">
+          {/* Recuperado */}
+          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-full min-h-[160px]">
               <div className="flex justify-between items-start mb-4">
-                  <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recuperado</p>
-                      <p className="text-4xl font-black text-teal-900 mt-1">{Math.round(safeTimeSaved / 60)}h</p>
-                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recuperado</p>
                   <div className="p-3 bg-purple-50 rounded-2xl text-purple-500"><Timer className="w-6 h-6" /></div>
               </div>
+              <p className="text-4xl font-black text-teal-900 mt-auto">{Math.round(safeTimeSaved / 60)}h</p>
           </div>
       </div>
 
@@ -228,29 +274,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {latestRecipes.map((recipe) => (
-                    <div key={recipe.id} onClick={() => { window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}`); onNavigate('recipes'); }}
-                        className="group bg-white rounded-[2rem] overflow-hidden border border-gray-50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer"
-                    >
-                        <div className="relative aspect-[3/2] overflow-hidden bg-gray-100 flex-shrink-0">
-                            <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                            <button 
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onToggleFavorite && onToggleFavorite(recipe.id);
-                                }}
-                                className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
-                            >
-                                <Heart className={`w-4 h-4 ${favoriteIds.includes(recipe.id) ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
-                            </button>
-                        </div>
-                        <div className="p-4 flex-1 flex flex-col">
-                            <h3 className="font-black text-teal-950 text-sm line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors mb-3">{recipe.title}</h3>
-                            <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-50">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 truncate max-w-[80px]">{recipe.cuisine_type}</span>
-                                <CalendarPlus className="w-4 h-4 text-teal-200 group-hover:text-teal-500 transition-colors" />
-                            </div>
-                        </div>
-                    </div>
+                    <UnifiedRecipeCard 
+                        key={recipe.id} 
+                        recipe={recipe} 
+                        isFav={favoriteIds.includes(recipe.id)}
+                        onNavigate={onNavigate}
+                        onToggleFavorite={onToggleFavorite}
+                    />
                 ))}
           </div>
       </section>
