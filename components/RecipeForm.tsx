@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { X, Plus, Trash2, Check, ChefHat, Clock, Utensils, Tag, Info, Image as ImageIcon } from 'lucide-react';
-import { Recipe, Ingredient, Difficulty, MealCategory, CuisineType, DietPreference } from '../types';
+import { X, Plus, Trash2, Check, ChefHat, Clock, Utensils, Tag, ChevronDown } from 'lucide-react';
+import { Recipe, Ingredient, Difficulty, MealCategory, CuisineType } from '../types';
 
 interface RecipeFormProps {
   onClose: () => void;
@@ -22,11 +22,26 @@ const DIFFICULTIES: { id: Difficulty; label: string }[] = [
 
 const CUISINES: CuisineType[] = ['mediterranean', 'italian', 'mexican', 'asian', 'spanish', 'healthy', 'fast', 'indian'];
 
+const UNIT_OPTIONS = [
+  { id: 'uds', label: 'unidades' },
+  { id: 'g', label: 'gramos' },
+  { id: 'kg', label: 'kilogramos' },
+  { id: 'ml', label: 'mililitros' },
+  { id: 'l', label: 'litros' },
+  { id: 'taza', label: 'taza' },
+  { id: 'cda', label: 'cucharada' },
+  { id: 'cdta', label: 'cucharadita' },
+  { id: 'pizca', label: 'pizca' },
+  { id: 'puñado', label: 'puñado' },
+  { id: 'rebanada', label: 'rebanada' },
+  { id: 'diente', label: 'diente' },
+];
+
 const INPUT_STYLE = "w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl font-bold text-teal-900 outline-none focus:border-teal-500/20 transition-all placeholder:text-gray-300";
 const LABEL_STYLE = "text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block";
 
 export const RecipeForm: React.FC<RecipeFormProps> = ({ onClose, onSave }) => {
-  const [step, setStep] = useState(1); // 1: Info, 2: Ingredients, 3: Steps
+  const [step, setStep] = useState(1); 
   const [formData, setFormData] = useState<Partial<Recipe>>({
     title: '',
     description: '',
@@ -87,7 +102,6 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ onClose, onSave }) => {
     <div className="fixed inset-0 z-[5000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-4 md:p-6 animate-fade-in" onClick={onClose}>
       <div className="bg-white w-full max-w-2xl h-[90vh] md:h-auto md:max-h-[85vh] rounded-[3rem] overflow-hidden flex flex-col shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
         
-        {/* Header */}
         <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
           <div>
             <h2 className="text-2xl font-black text-teal-900 leading-none">Nueva Receta</h2>
@@ -96,17 +110,16 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ onClose, onSave }) => {
           <button onClick={onClose} className="p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all"><X className="w-5 h-5 text-gray-400" /></button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-8 no-scrollbar bg-gray-50/30">
           
           {step === 1 && (
             <div className="space-y-6 animate-fade-in">
               <div>
-                <label className={LABEL_STYLE}>Título de la obra maestra</label>
+                <label className={LABEL_STYLE}>Título de la receta</label>
                 <input 
                   autoFocus
                   className={INPUT_STYLE + " text-xl"} 
-                  placeholder="Ej: Pasta Carbonara Auténtica" 
+                  placeholder="Ej: Ensalada de Quinoa y Mango" 
                   value={formData.title}
                   onChange={e => setFormData({...formData, title: e.target.value})}
                 />
@@ -162,13 +175,16 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ onClose, onSave }) => {
 
               <div>
                 <label className={LABEL_STYLE}>Tipo de Cocina</label>
-                <select 
-                  className={INPUT_STYLE + " appearance-none capitalize"} 
-                  value={formData.cuisine_type}
-                  onChange={e => setFormData({...formData, cuisine_type: e.target.value as CuisineType})}
-                >
-                  {CUISINES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <div className="relative">
+                  <select 
+                    className={INPUT_STYLE + " appearance-none capitalize"} 
+                    value={formData.cuisine_type}
+                    onChange={e => setFormData({...formData, cuisine_type: e.target.value as CuisineType})}
+                  >
+                    {CUISINES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </div>
               </div>
             </div>
           )}
@@ -184,26 +200,35 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ onClose, onSave }) => {
                 {formData.ingredients?.map((ing, idx) => (
                   <div key={idx} className="flex gap-2 items-center group bg-white p-3 rounded-2xl border border-gray-100 shadow-sm animate-fade-in">
                     <input 
-                      placeholder="Ingrediente" 
+                      placeholder="Ej: Pasta de trigo" 
                       className="flex-1 bg-transparent font-bold text-sm outline-none px-2"
                       value={ing.name}
                       onChange={e => updateIngredient(idx, 'name', e.target.value)}
                     />
-                    <div className="flex items-center gap-1 bg-gray-50 rounded-xl px-2">
+                    <div className="flex items-center gap-1 bg-gray-50 rounded-xl px-2 border border-gray-100">
                         <input 
                           type="number" 
-                          className="w-10 bg-transparent text-center font-black text-xs py-2 outline-none"
+                          step="any"
+                          className="w-12 bg-transparent text-center font-black text-xs py-2 outline-none"
                           value={ing.quantity}
                           onChange={e => updateIngredient(idx, 'quantity', parseFloat(e.target.value) || 0)}
                         />
-                        <input 
-                          placeholder="uds" 
-                          className="w-12 bg-transparent text-center font-bold text-[10px] uppercase outline-none"
-                          value={ing.unit}
-                          onChange={e => updateIngredient(idx, 'unit', e.target.value)}
-                        />
+                        <div className="h-4 w-px bg-gray-200" />
+                        {/* SELECTOR DE UNIDADES REQUERIDO */}
+                        <div className="relative flex items-center">
+                          <select 
+                            className="bg-transparent font-black text-[9px] uppercase outline-none cursor-pointer px-1 pr-4 appearance-none text-teal-600"
+                            value={ing.unit}
+                            onChange={e => updateIngredient(idx, 'unit', e.target.value)}
+                          >
+                            {UNIT_OPTIONS.map(u => (
+                              <option key={u.id} value={u.id}>{u.id}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-0 w-2.5 h-2.5 text-teal-400 pointer-events-none" />
+                        </div>
                     </div>
-                    <button onClick={() => removeIngredient(idx)} className="p-2 text-gray-300 hover:text-red-500 transition-colors">
+                    <button onClick={() => removeIngredient(idx)} className="p-2 text-gray-200 hover:text-red-500 transition-colors">
                         <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -247,7 +272,6 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ onClose, onSave }) => {
 
         </div>
 
-        {/* Footer */}
         <div className="p-8 border-t border-gray-100 bg-white flex gap-3 sticky bottom-0">
           {step > 1 && (
             <button 
