@@ -25,7 +25,7 @@ const MOCK_NOTIFICATIONS = [
     { id: 2, type: 'shopping', title: 'Lista de compras lista', desc: 'Tu lista para esta semana está preparada. ¡Ve al súper!', time: 'Hoy, 19:11', isNew: true, icon: ShoppingCart, color: 'bg-green-100 text-green-600' },
 ];
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true, favoriteIds = [], onToggleFavorite }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true, favoriteIds = [], onToggleFavorite }) => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'favorites' | 'notifications'>('dashboard');
   
   const timeGreeting = useMemo(() => {
@@ -89,7 +89,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
                           <div key={recipe.id} className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg transition-all group flex flex-col">
                               <div className="aspect-[4/3] relative overflow-hidden">
                                   <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                                  <button onClick={() => onToggleFavorite && onToggleFavorite(recipe.id)} className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md z-10">
+                                  <button 
+                                      onClick={(e) => {
+                                          e.stopPropagation();
+                                          onToggleFavorite && onToggleFavorite(recipe.id);
+                                      }} 
+                                      className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md z-10"
+                                  >
                                       <Heart className="w-4 h-4 fill-red-500 text-red-500" />
                                   </button>
                               </div>
@@ -227,9 +233,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
                     >
                         <div className="relative aspect-[3/2] overflow-hidden bg-gray-100 flex-shrink-0">
                             <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                            <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-md z-10">
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onToggleFavorite && onToggleFavorite(recipe.id);
+                                }}
+                                className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
+                            >
                                 <Heart className={`w-3.5 h-3.5 ${favoriteIds.includes(recipe.id) ? 'fill-red-500 text-red-500' : 'text-gray-300'}`} />
-                            </div>
+                            </button>
                         </div>
                         <div className="p-4 flex-1 flex flex-col">
                             <h3 className="font-black text-teal-950 text-sm line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors mb-3">{recipe.title}</h3>
