@@ -25,65 +25,76 @@ const MOCK_NOTIFICATIONS = [
     { id: 2, type: 'shopping', title: 'Lista de compras lista', desc: 'Tu lista para esta semana está preparada. ¡Ve al súper!', time: 'Hoy, 19:11', isNew: true, icon: ShoppingCart, color: 'bg-green-100 text-green-600' },
 ];
 
-// Unified Recipe Card component moved outside Dashboard to fix TypeScript key prop errors
-// and avoid re-creation on every parent render.
-const UnifiedRecipeCard = ({ 
-  recipe, 
-  isFav, 
-  onNavigate, 
-  onToggleFavorite 
-}: { 
-  recipe: Recipe; 
-  isFav: boolean; 
-  onNavigate: (tab: string) => void; 
-  onToggleFavorite?: (id: string) => void 
-}) => {
-  return (
-      <div 
-          onClick={() => { window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}`); onNavigate('recipes'); }}
-          className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative h-full min-h-[280px] animate-fade-in"
-      >
-          <div className="relative aspect-[3/2] overflow-hidden bg-gray-100 flex-shrink-0">
-              <SmartImage 
-                  src={recipe.image_url} 
-                  alt={recipe.title} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <button 
-                  onClick={(e) => {
-                      e.stopPropagation();
-                      if (onToggleFavorite) onToggleFavorite(recipe.id);
-                  }}
-                  className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
-              >
-                  <Heart className={`w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
-              </button>
-          </div>
-          
-          <div className="p-3 flex-1 flex flex-col">
-              <h3 className="text-sm md:text-xs font-bold text-gray-900 leading-tight mb-2 line-clamp-2 group-hover:text-teal-700 transition-colors">
-                  {recipe.title}
-              </h3>
-              <div className="mt-auto flex items-center gap-2 pt-2 border-t border-gray-50">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 whitespace-nowrap">
-                      {recipe.cuisine_type}
-                  </span>
-                  <div className="flex-1" />
-                  <button 
-                      onClick={(e) => { 
-                          e.stopPropagation(); 
-                          window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}&mode=plan`);
-                          onNavigate('recipes');
-                      }}
-                      className="w-8 h-8 md:w-7 md:h-7 bg-teal-50 text-teal-700 rounded-lg flex items-center justify-center hover:bg-teal-900 hover:text-white transition-all active:scale-90 flex-shrink-0"
-                  >
-                      <CalendarPlus className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                  </button>
-              </div>
-          </div>
-      </div>
-  );
-};
+// Componente para las tarjetas de estadísticas con alineación forzada de línea de base
+const StatCard = ({ label, value, subValue, icon: Icon, colorClass, progress }: { 
+    label: string, 
+    value: string | number, 
+    subValue?: string,
+    icon: any, 
+    colorClass: string,
+    progress?: number 
+}) => (
+    <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-48">
+        <div className="flex justify-between items-start">
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{label}</p>
+            <div className={`p-3 rounded-2xl ${colorClass}`}><Icon className="w-6 h-6" /></div>
+        </div>
+        <div className="mt-auto">
+            <div className="flex items-end gap-1">
+                <p className="text-4xl font-black text-teal-900 leading-none">{value}</p>
+                {subValue && <p className="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-1">{subValue}</p>}
+            </div>
+            {/* Si hay progreso mostramos la barra, si no, un espaciador de la misma altura exacta */}
+            {progress !== undefined ? (
+                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mt-3">
+                    <div className={`h-full rounded-full transition-all duration-1000 ${progress > 100 ? 'bg-red-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, progress)}%` }} />
+                </div>
+            ) : (
+                <div className="h-1.5 mt-3 invisible" aria-hidden="true" />
+            )}
+        </div>
+    </div>
+);
+
+// Fix: Explicitly type UnifiedRecipeCard as React.FC to properly handle the 'key' prop when rendered in lists
+const UnifiedRecipeCard: React.FC<{ 
+    recipe: Recipe; 
+    isFav: boolean; 
+    onNavigate: (tab: string) => void; 
+    onToggleFavorite?: (id: string) => void; 
+}> = ({ recipe, isFav, onNavigate, onToggleFavorite }) => (
+    <div 
+        onClick={() => { window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}`); onNavigate('recipes'); }}
+        className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer relative h-full min-h-[280px] animate-fade-in"
+    >
+        <div className="relative aspect-[3/2] overflow-hidden bg-gray-100 flex-shrink-0">
+            <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <button 
+                onClick={(e) => { e.stopPropagation(); onToggleFavorite?.(recipe.id); }}
+                className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md z-10 hover:scale-110 transition-transform"
+            >
+                <Heart className={`w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+            </button>
+        </div>
+        <div className="p-3 flex-1 flex flex-col">
+            <h3 className="text-sm md:text-xs font-bold text-gray-900 leading-tight mb-2 line-clamp-2 group-hover:text-teal-700 transition-colors">{recipe.title}</h3>
+            <div className="mt-auto flex items-center gap-2 pt-2 border-t border-gray-50">
+                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 whitespace-nowrap">{recipe.cuisine_type}</span>
+                <div className="flex-1" />
+                <button 
+                    onClick={(e) => { 
+                        e.stopPropagation(); 
+                        window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}&mode=plan`);
+                        onNavigate('recipes');
+                    }}
+                    className="w-8 h-8 bg-teal-50 text-teal-700 rounded-lg flex items-center justify-center hover:bg-teal-900 hover:text-white transition-all active:scale-90 flex-shrink-0"
+                >
+                    <CalendarPlus className="w-4 h-4" />
+                </button>
+            </div>
+        </div>
+    </div>
+);
 
 export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true, favoriteIds = [], onToggleFavorite }) => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'favorites' | 'notifications'>('dashboard');
@@ -100,29 +111,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       const today = new Date();
       const start = startOfWeek(today, { weekStartsOn: 1 });
       const end = endOfWeek(today, { weekStartsOn: 1 });
-
       const weeklySlots = mealPlan.filter(slot => {
-          try {
-             return isWithinInterval(parseISO(slot.date), { start, end });
-          } catch { return false; }
+          try { return isWithinInterval(parseISO(slot.date), { start, end }); } catch { return false; }
       });
-
       const estimatedSpent = weeklySlots.length * 3.5; 
-      const percentage = Math.min(100, (estimatedSpent / BUDGET_LIMIT) * 100);
-      const isOverBudget = estimatedSpent > BUDGET_LIMIT;
-      const remaining = BUDGET_LIMIT - estimatedSpent;
-
-      return { limit: BUDGET_LIMIT, spent: estimatedSpent, percentage, isOverBudget, remaining };
+      const percentage = (estimatedSpent / BUDGET_LIMIT) * 100;
+      return { limit: BUDGET_LIMIT, spent: estimatedSpent, percentage };
   }, [mealPlan]);
 
-  const latestRecipes = useMemo(() => {
-      return [...recipes].reverse().slice(0, 8);
-  }, [recipes]);
-
-  const favoriteRecipes = useMemo(() => {
-      return recipes.filter(r => favoriteIds.includes(r.id));
-  }, [recipes, favoriteIds]);
-
+  const latestRecipes = useMemo(() => [...recipes].reverse().slice(0, 8), [recipes]);
+  const favoriteRecipes = useMemo(() => recipes.filter(r => favoriteIds.includes(r.id)), [recipes, favoriteIds]);
   const safeTimeSaved = useMemo(() => {
       const val = Number(user.time_saved_mins);
       return isNaN(val) ? 0 : val;
@@ -142,17 +140,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
                       <p className="text-gray-500 font-medium text-sm">Tus recetas guardadas para cocinar cuando quieras.</p>
                   </div>
               </div>
-
               {favoriteRecipes.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {favoriteRecipes.map(recipe => (
-                          <UnifiedRecipeCard 
-                              key={recipe.id} 
-                              recipe={recipe} 
-                              isFav={favoriteIds.includes(recipe.id)}
-                              onNavigate={onNavigate}
-                              onToggleFavorite={onToggleFavorite}
-                          />
+                          <UnifiedRecipeCard key={recipe.id} recipe={recipe} isFav={true} onNavigate={onNavigate} onToggleFavorite={onToggleFavorite} />
                       ))}
                   </div>
               ) : (
@@ -169,9 +160,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
     return (
         <div className="space-y-8 animate-fade-in pb-10">
             <div className="flex items-center gap-4">
-                <button onClick={() => setCurrentView('dashboard')} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-teal-900">
-                    <ArrowLeft className="w-6 h-6" />
-                </button>
+                <button onClick={() => setCurrentView('dashboard')} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-teal-900"><ArrowLeft className="w-6 h-6" /></button>
                 <div>
                     <h1 className="text-3xl font-black text-teal-900">Notificaciones</h1>
                     <p className="text-gray-500 font-medium">Mantente al día con tus comidas y recordatorios.</p>
@@ -180,9 +169,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
             <div className="space-y-4">
                 {MOCK_NOTIFICATIONS.map(notif => (
                     <div key={notif.id} className="bg-white border border-gray-50 p-6 rounded-3xl shadow-sm flex items-start gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${notif.color}`}>
-                            <notif.icon className="w-6 h-6" />
-                        </div>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${notif.color}`}><notif.icon className="w-6 h-6" /></div>
                         <div className="flex-1">
                             <h4 className="font-bold text-teal-950">{notif.title}</h4>
                             <p className="text-gray-500 text-xs mt-1 leading-relaxed">{notif.desc}</p>
@@ -201,13 +188,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
           <div className="space-y-1">
               <div className="flex items-center gap-3">
                   <span className="text-4xl md:text-3xl">{timeGreeting.text.includes('Días') ? '👋' : timeGreeting.text.includes('Tardes') ? '☀️' : '🌙'}</span>
-                  <h1 className="text-4xl md:text-3xl font-black text-teal-900 tracking-tight leading-none">
-                      ¡{timeGreeting.text}, {user.name.split(' ')[0]}!
-                  </h1>
+                  <h1 className="text-4xl md:text-3xl font-black text-teal-900 tracking-tight leading-none">¡{timeGreeting.text}, {user.name.split(' ')[0]}!</h1>
               </div>
-              <p className="text-lg md:text-base font-bold text-teal-900/60 pl-1">
-                  ¿Qué vas a cocinar hoy? Organiza tu semana y ahorra.
-              </p>
+              <p className="text-lg md:text-base font-bold text-teal-900/60 pl-1">¿Qué vas a cocinar hoy? Organiza tu semana y ahorra.</p>
           </div>
           <div className="flex items-center gap-3 pt-1">
               <button onClick={() => setCurrentView('favorites')} className="w-12 h-12 bg-white rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm group">
@@ -220,51 +203,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
           </div>
       </header>
 
-      {/* Métricas Unificadas con Valor Abajo */}
+      {/* Métricas con alineación de línea de base perfecta */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Recetas */}
-          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-full min-h-[160px]">
-              <div className="flex justify-between items-start mb-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recetas</p>
-                  <div className="p-3 bg-orange-50 rounded-2xl text-orange-500"><BookOpen className="w-6 h-6" /></div>
-              </div>
-              <p className="text-4xl font-black text-teal-900 mt-auto">{recipes.length}</p>
-          </div>
-
-          {/* Gasto Semanal */}
-          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-full min-h-[160px]">
-               <div className="flex justify-between items-start mb-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Gasto Semanal</p>
-                  <div className={`p-3 rounded-2xl ${budgetStats.isOverBudget ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'}`}><TrendingUp className="w-6 h-6" /></div>
-              </div>
-              <div className="mt-auto">
-                <div className="flex items-end gap-1 mb-3">
-                    <p className="text-4xl font-black text-teal-900 leading-none">{budgetStats.spent.toFixed(0)}€</p>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-1">/ {budgetStats.limit}€</p>
-                </div>
-                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all duration-1000 ${budgetStats.isOverBudget ? 'bg-red-500' : 'bg-green-500'}`} style={{ width: `${budgetStats.percentage}%` }} />
-                </div>
-              </div>
-          </div>
-
-          {/* Ahorro Total */}
-          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-full min-h-[160px]">
-              <div className="flex justify-between items-start mb-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ahorro Total</p>
-                  <div className="p-3 bg-teal-50 rounded-2xl text-teal-600"><PiggyBank className="w-6 h-6" /></div>
-              </div>
-              <p className="text-4xl font-black text-teal-900 mt-auto">{user.total_savings.toFixed(0)}€</p>
-          </div>
-
-          {/* Recuperado */}
-          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-full min-h-[160px]">
-              <div className="flex justify-between items-start mb-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recuperado</p>
-                  <div className="p-3 bg-purple-50 rounded-2xl text-purple-500"><Timer className="w-6 h-6" /></div>
-              </div>
-              <p className="text-4xl font-black text-teal-900 mt-auto">{Math.round(safeTimeSaved / 60)}h</p>
-          </div>
+          <StatCard label="Recetas" value={recipes.length} icon={BookOpen} colorClass="bg-orange-50 text-orange-500" />
+          <StatCard label="Gasto Semanal" value={`${budgetStats.spent.toFixed(0)}€`} subValue={`/ ${budgetStats.limit}€`} icon={TrendingUp} colorClass={budgetStats.spent > budgetStats.limit ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'} progress={budgetStats.percentage} />
+          <StatCard label="Ahorro Total" value={`${user.total_savings.toFixed(0)}€`} icon={PiggyBank} colorClass="bg-teal-50 text-teal-600" />
+          <StatCard label="Recuperado" value={`${Math.round(safeTimeSaved / 60)}h`} icon={Timer} colorClass="bg-purple-50 text-purple-500" />
       </div>
 
       <section className="space-y-8">
@@ -274,13 +218,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {latestRecipes.map((recipe) => (
-                    <UnifiedRecipeCard 
-                        key={recipe.id} 
-                        recipe={recipe} 
-                        isFav={favoriteIds.includes(recipe.id)}
-                        onNavigate={onNavigate}
-                        onToggleFavorite={onToggleFavorite}
-                    />
+                    <UnifiedRecipeCard key={recipe.id} recipe={recipe} isFav={favoriteIds.includes(recipe.id)} onNavigate={onNavigate} onToggleFavorite={onToggleFavorite} />
                 ))}
           </div>
       </section>
