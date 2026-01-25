@@ -30,9 +30,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
   
   const timeGreeting = useMemo(() => {
       const h = getHours(new Date());
-      if (h < 12) return { text: "Buenos días", icon: Sunrise };
-      if (h < 20) return { text: "Buenas tardes", icon: Sun };
-      return { text: "Buenas noches", icon: Moon };
+      if (h < 12) return { text: "Buenos Días", icon: Sunrise };
+      if (h < 20) return { text: "Buenas Tardes", icon: Sun };
+      return { text: "Buenas Noches", icon: Moon };
   }, []);
 
   const budgetStats = useMemo(() => {
@@ -56,7 +56,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
   }, [mealPlan]);
 
   const latestRecipes = useMemo(() => {
-      return [...recipes].reverse().slice(0, 4);
+      return [...recipes].reverse().slice(0, 8);
   }, [recipes]);
 
   const favoriteRecipes = useMemo(() => {
@@ -76,10 +76,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
                       <ArrowLeft className="w-6 h-6" />
                   </button>
                   <div>
-                      <h1 className="fresco-h1 text-teal-900 flex items-center gap-3">
+                      <h1 className="text-3xl font-black text-teal-900 flex items-center gap-3">
                           <Heart className="w-8 h-8 text-red-500 fill-current" /> Favoritos
                       </h1>
-                      <p className="fresco-body">Tus recetas guardadas para cocinar cuando quieras.</p>
+                      <p className="text-gray-500 font-medium">Tus recetas guardadas para cocinar cuando quieras.</p>
                   </div>
               </div>
 
@@ -94,10 +94,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
                                   </button>
                               </div>
                               <div className="p-4 flex-1 flex flex-col">
-                                  <h3 className="fresco-h2 text-teal-900 line-clamp-1 mb-2">{recipe.title}</h3>
+                                  <h3 className="font-black text-teal-900 line-clamp-1 mb-2">{recipe.title}</h3>
                                   <div className="flex items-center gap-2 mb-4">
-                                      <span className="fresco-label !text-teal-600 bg-teal-50 px-2 py-0.5 rounded">{recipe.difficulty}</span>
-                                      <span className="fresco-label !text-gray-400">{recipe.prep_time} min</span>
+                                      <span className="text-[10px] font-black uppercase tracking-widest text-teal-600 bg-teal-50 px-2 py-0.5 rounded">{recipe.difficulty}</span>
+                                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{recipe.prep_time} min</span>
                                   </div>
                                   <button onClick={() => onAddToPlan && onAddToPlan(recipe, recipe.servings)} className="w-full py-2.5 bg-teal-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-teal-800 transition-all">Añadir al plan</button>
                               </div>
@@ -122,8 +122,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
                     <ArrowLeft className="w-6 h-6" />
                 </button>
                 <div>
-                    <h1 className="fresco-h1 text-teal-900">Notificaciones</h1>
-                    <p className="fresco-body">Mantente al día con tus comidas y recordatorios.</p>
+                    <h1 className="text-3xl font-black text-teal-900">Notificaciones</h1>
+                    <p className="text-gray-500 font-medium">Mantente al día con tus comidas y recordatorios.</p>
                 </div>
             </div>
             <div className="space-y-4">
@@ -134,8 +134,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
                         </div>
                         <div className="flex-1">
                             <h4 className="font-bold text-teal-950">{notif.title}</h4>
-                            <p className="fresco-body !text-xs mt-1">{notif.desc}</p>
-                            <p className="fresco-label mt-3 !text-gray-300">{notif.time}</p>
+                            <p className="text-gray-500 text-xs mt-1 leading-relaxed">{notif.desc}</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest mt-3 text-gray-300">{notif.time}</p>
                         </div>
                     </div>
                 ))}
@@ -146,15 +146,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
 
   return (
     <div className="space-y-12 animate-fade-in pb-10">
-      <header className="flex items-center justify-between">
-          <div>
-              <div className="flex items-center gap-3 mb-1">
-                  <span className="text-3xl">{timeGreeting.text.includes('días') ? '👋' : timeGreeting.text.includes('tardes') ? '☀️' : '🌙'}</span>
-                  <h1 className="fresco-h1 text-teal-900 capitalize">¡{timeGreeting.text}, {user.name.split(' ')[0]}!</h1>
+      <header className="flex items-start justify-between">
+          <div className="space-y-1">
+              <div className="flex items-center gap-3">
+                  <span className="text-4xl md:text-3xl">{timeGreeting.text.includes('Días') ? '👋' : timeGreeting.text.includes('Tardes') ? '☀️' : '🌙'}</span>
+                  <h1 className="text-4xl md:text-3xl font-black text-teal-900 tracking-tight leading-none">
+                      ¡{timeGreeting.text}, {user.name.split(' ')[0]}!
+                  </h1>
               </div>
-              <p className="fresco-body">¿Qué vas a cocinar hoy? Organiza tu semana y ahorra.</p>
+              <p className="text-lg md:text-base font-bold text-teal-900/60 pl-1">
+                  ¿Qué vas a cocinar hoy? Organiza tu semana y ahorra.
+              </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pt-1">
               <button onClick={() => setCurrentView('favorites')} className="w-12 h-12 bg-white rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm group">
                   <Heart className="w-6 h-6 group-hover:fill-current" />
               </button>
@@ -169,7 +173,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
           <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm">
               <div className="flex justify-between items-start mb-4">
                   <div>
-                      <p className="fresco-label">Recetas</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recetas</p>
                       <p className="text-4xl font-black text-teal-900 mt-1">{recipes.length}</p>
                   </div>
                   <div className="p-3 bg-orange-50 rounded-2xl text-orange-500"><BookOpen className="w-6 h-6" /></div>
@@ -178,12 +182,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
 
           <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm">
                <div className="flex justify-between items-start mb-2">
-                  <p className="fresco-label">Gasto Semanal</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Gasto Semanal</p>
                   <div className={`p-3 rounded-2xl ${budgetStats.isOverBudget ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'}`}><TrendingUp className="w-6 h-6" /></div>
               </div>
               <div className="flex items-end gap-1 mb-3">
                   <p className="text-4xl font-black text-teal-900 leading-none">{budgetStats.spent.toFixed(0)}€</p>
-                  <p className="fresco-label !text-gray-300 mb-1">/ {budgetStats.limit}€</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-1">/ {budgetStats.limit}€</p>
               </div>
               <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                   <div className={`h-full rounded-full transition-all duration-1000 ${budgetStats.isOverBudget ? 'bg-red-500' : 'bg-green-500'}`} style={{ width: `${budgetStats.percentage}%` }} />
@@ -193,7 +197,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
           <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm">
               <div className="flex justify-between items-start mb-4">
                   <div>
-                      <p className="fresco-label">Ahorro Total</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ahorro Total</p>
                       <p className="text-4xl font-black text-teal-900 mt-1">{user.total_savings.toFixed(0)}€</p>
                   </div>
                   <div className="p-3 bg-teal-50 rounded-2xl text-teal-600"><PiggyBank className="w-6 h-6" /></div>
@@ -203,7 +207,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
           <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm">
               <div className="flex justify-between items-start mb-4">
                   <div>
-                      <p className="fresco-label">Recuperado</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recuperado</p>
                       <p className="text-4xl font-black text-teal-900 mt-1">{Math.round(safeTimeSaved / 60)}h</p>
                   </div>
                   <div className="p-3 bg-purple-50 rounded-2xl text-purple-500"><Timer className="w-6 h-6" /></div>
@@ -211,28 +215,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
           </div>
       </div>
 
-      <section className="space-y-6">
-        <h2 className="fresco-h2 text-teal-900">Acciones Directas</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-                { id: 'planner', icon: Calendar, color: 'text-teal-700', bg: 'bg-teal-50', title: 'Calendario', desc: 'Planifica tus próximos 7 días.' },
-                { id: 'recipes', icon: ChefHat, color: 'text-orange-500', bg: 'bg-orange-50', title: 'Explorar', desc: 'Recetas adaptadas a tu stock.' },
-                { id: 'shopping', icon: ShoppingCart, color: 'text-green-600', bg: 'bg-green-50', title: 'Lista Compra', desc: 'Generada según tu plan semanal.' }
-            ].map(act => (
-                <button key={act.id} onClick={() => onNavigate(act.id)} className="bg-white p-8 rounded-[3rem] text-left border border-gray-50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
-                    <div className={`w-14 h-14 ${act.bg} rounded-2xl flex items-center justify-center ${act.color} mb-6 group-hover:scale-110 transition-transform`}>
-                        <act.icon className="w-8 h-8" />
-                    </div>
-                    <h3 className="fresco-h2 text-teal-950 mb-1">{act.title}</h3>
-                    <p className="fresco-body !text-xs mb-8">{act.desc}</p>
-                    <div className="fresco-label !text-teal-600 flex items-center gap-2 group-hover:gap-3 transition-all">Comenzar <ArrowRight className="w-3 h-3" /></div>
-                </button>
-            ))}
-        </div>
-      </section>
-
-      <section className="space-y-6">
-          <h2 className="fresco-h2 text-teal-900">Últimas del Chef</h2>
+      <section className="space-y-8">
+          <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-black text-teal-900 tracking-tight">Últimas del Chef</h2>
+              <button onClick={() => onNavigate('recipes')} className="text-[10px] font-black uppercase tracking-widest text-teal-600 flex items-center gap-2 hover:gap-3 transition-all">Ver todas <ArrowRight className="w-4 h-4" /></button>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {latestRecipes.map((recipe) => (
                     <div key={recipe.id} onClick={() => { window.history.pushState(null, '', `?tab=recipes&recipe=${recipe.id}`); onNavigate('recipes'); }}
@@ -245,10 +232,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, mealPlan = [], recip
                             </div>
                         </div>
                         <div className="p-4 flex-1 flex flex-col">
-                            <h3 className="fresco-h2 !text-sm text-teal-950 line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors mb-3">{recipe.title}</h3>
+                            <h3 className="font-black text-teal-950 text-sm line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors mb-3">{recipe.title}</h3>
                             <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-50">
-                                <span className="fresco-label !text-[8px] truncate">{recipe.cuisine_type}</span>
-                                <CalendarPlus className="w-4 h-4 text-teal-200" />
+                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 truncate max-w-[80px]">{recipe.cuisine_type}</span>
+                                <CalendarPlus className="w-4 h-4 text-teal-200 group-hover:text-teal-500 transition-colors" />
                             </div>
                         </div>
                     </div>
