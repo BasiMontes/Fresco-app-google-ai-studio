@@ -206,7 +206,7 @@ export const Recipes: React.FC<RecipesProps> = ({
                             {recipe.title}
                         </h3>
                         <div className="mt-auto flex items-center gap-2 pt-2 border-t border-gray-50">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 truncate max-w-[80px]">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 whitespace-nowrap">
                                 {recipe.cuisine_type}
                             </span>
                             <div className="flex-1" />
