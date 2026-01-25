@@ -1,9 +1,9 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Recipe, UserProfile, PantryItem, ShoppingItem, MealCategory } from '../types';
-import { Search, Sparkles, Clock, Users, Flame, PackageCheck, Zap, X, Heart, Eye, ImageOff, Wand2, Leaf, WifiOff, CheckCircle2, ChevronDown, CalendarPlus, BookX, FilterX, ChefHat, Play, PlusCircle } from 'lucide-react';
-import { generateRecipesAI } from '../services/geminiService';
+import { Search, Clock, Users, Flame, PackageCheck, Zap, X, Heart, Eye, ImageOff, Leaf, WifiOff, CheckCircle2, ChevronDown, CalendarPlus, BookX, FilterX, ChefHat, Play, PlusCircle } from 'lucide-react';
 import { RecipeDetail } from './RecipeDetail';
+import { RecipeForm } from './RecipeForm';
 import { SmartImage } from './SmartImage';
 import { differenceInDays } from 'date-fns';
 
@@ -39,7 +39,7 @@ export const Recipes: React.FC<RecipesProps> = ({
     onAddToShoppingList, isOnline = true, initialRecipeId,
     favoriteIds = [], onToggleFavorite
 }) => {
-  const [loadingAI, setLoadingAI] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [initialMode, setInitialMode] = useState<'view' | 'plan'>('view');
   const [searchTerm, setSearchTerm] = useState(() => sessionStorage.getItem('recipes_search') || '');
   const [activeCategory, setActiveCategory] = useState<string>(() => sessionStorage.getItem('recipes_category') || 'all');
@@ -64,18 +64,6 @@ export const Recipes: React.FC<RecipesProps> = ({
       }
   }, [initialRecipeId, recipes]);
 
-  const handleGenerate = async () => {
-    if(!isOnline) return;
-    setLoadingAI(true);
-    try {
-        const newRecipes = await generateRecipesAI(user, pantry);
-        if (newRecipes.length > 0) onAddRecipes(newRecipes);
-    } catch (e) {
-    } finally {
-        setLoadingAI(false);
-    }
-  };
-
   const checkPantryStock = (recipe: Recipe) => {
     const totalIngredients = recipe.ingredients.length;
     const normalize = (s: string) => s.toLowerCase().trim().replace(/s$/, '').replace(/es$/, '');
@@ -92,7 +80,7 @@ export const Recipes: React.FC<RecipesProps> = ({
   const filteredRecipes = useMemo(() => {
     let result = recipes.filter(r => {
         const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = r.title.toLowerCase().includes(searchLower) || r.cuisine_type.toLowerCase().includes(searchLower) || r.ingredients.some(i => i.name.toLowerCase().includes(searchLower));
+        const matchesSearch = r.title.toLowerCase().includes(searchLower) || (r.cuisine_type || '').toLowerCase().includes(searchLower) || r.ingredients.some(i => i.name.toLowerCase().includes(searchLower));
         const matchesCategory = activeCategory === 'all' || r.meal_category === activeCategory;
         const stock = checkPantryStock(r);
         const isCookable = !showOnlyCookable || (stock.count / stock.total >= 0.6); 
@@ -104,7 +92,7 @@ export const Recipes: React.FC<RecipesProps> = ({
                     if (!r.dietary_tags.includes('vegetarian') && !r.dietary_tags.includes('vegan')) matchesDiet = false;
                 }
                 else {
-                    if (!r.dietary_tags.includes(pref)) matchesDiet = false;
+                    if (!r.dietary_tags.includes(pref as any)) matchesDiet = false;
                 }
             }
         }
@@ -112,6 +100,11 @@ export const Recipes: React.FC<RecipesProps> = ({
     });
     return result;
   }, [recipes, searchTerm, activeCategory, showOnlyCookable, pantry, user.dietary_preferences]);
+
+  const handleSaveManualRecipe = (newRecipe: Recipe) => {
+    onAddRecipes([newRecipe]);
+    setShowCreateModal(false);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in pb-48">
@@ -123,18 +116,10 @@ export const Recipes: React.FC<RecipesProps> = ({
         
         <div className="flex gap-2">
             <button
-                onClick={() => alert("Función 'Crear Manualmente' próximamente.")}
-                className="flex items-center justify-center gap-2 bg-white text-teal-900 border border-teal-100 px-4 py-2 rounded-xl font-black text-xs md:text-[9px] uppercase tracking-widest hover:bg-teal-50 transition-all"
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center justify-center gap-2 bg-teal-900 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-teal-800 transition-all active:scale-95"
             >
-                <PlusCircle className="w-4 h-4" /> <span className="hidden md:inline">Crear Propia</span>
-            </button>
-
-            <button
-            onClick={handleGenerate}
-            disabled={loadingAI || !isOnline}
-            className="w-full md:w-auto flex items-center justify-center gap-2 bg-teal-900 text-white px-6 py-3 md:py-2 md:px-4 rounded-xl shadow-lg hover:bg-teal-800 transition-all disabled:opacity-50 font-black text-xs md:text-[9px] uppercase tracking-widest active:scale-95 group disabled:bg-gray-400"
-            >
-            {isOnline ? <><Sparkles className={`w-4 h-4 md:w-3 md:h-3 text-orange-400 ${loadingAI ? 'animate-spin' : ''}`} /> Generar con IA</> : <><WifiOff className="w-4 h-4" /> Offline</>}
+                <PlusCircle className="w-4 h-4" /> <span>Crear Propia</span>
             </button>
         </div>
       </header>
@@ -181,8 +166,7 @@ export const Recipes: React.FC<RecipesProps> = ({
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-4 auto-rows-fr">
-          {loadingAI && <><RecipeSkeleton /><RecipeSkeleton /><RecipeSkeleton /><RecipeSkeleton /></>}
-          {!loadingAI && filteredRecipes.slice(0, visibleCount).map((recipe) => {
+          {filteredRecipes.slice(0, visibleCount).map((recipe) => {
             const stock = checkPantryStock(recipe);
             const compatibility = Math.round((stock.count / stock.total) * 100);
             const isHighMatch = compatibility >= 80;
@@ -243,7 +227,6 @@ export const Recipes: React.FC<RecipesProps> = ({
           })}
       </div>
       
-      {/* Redesigned Load More Button */}
       {visibleCount < filteredRecipes.length && (
           <div className="flex justify-center pt-8 animate-fade-in">
               <button 
@@ -275,6 +258,13 @@ export const Recipes: React.FC<RecipesProps> = ({
             onAddToShoppingList={(items) => { onAddToShoppingList(items); setSelectedRecipe(null); }}
             isFavorite={favoriteIds.includes(selectedRecipe.id)}
             onToggleFavorite={onToggleFavorite}
+        />
+      )}
+
+      {showCreateModal && (
+        <RecipeForm 
+          onClose={() => setShowCreateModal(false)}
+          onSave={handleSaveManualRecipe}
         />
       )}
     </div>

@@ -331,7 +331,11 @@ const App: React.FC = () => {
                         }} 
                     />}
 
-                    {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(x => [...x, ...r])} onAddToPlan={async (rid, serv, date, type) => {
+                    {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={async r => {
+                        setRecipes(x => [...x, ...r]);
+                        if (userId) await db.saveRecipesBulkDB(userId, r);
+                        setToast({ msg: "Receta guardada", type: 'success' });
+                    }} onAddToPlan={async (rid, serv, date, type) => {
                         if (date && type) {
                             const ns = { date, type, recipeId: rid.id, servings: serv, isCooked: false };
                             setMealPlan(p => [...p.filter(x => !(x.date === date && x.type === type)), ns]);
