@@ -1,8 +1,8 @@
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { MealSlot, Recipe, ShoppingItem, PantryItem, UserProfile } from '../types';
 import { SPANISH_PRICES, SUPERMARKETS, EXPIRY_DAYS_BY_CATEGORY, PREDICTIVE_CATEGORY_RULES } from '../constants';
-import { Share2, ShoppingCart, TrendingDown, ShoppingBag, Check, TrendingUp, AlertCircle, Store, Zap, Trophy, ChevronRight, X, Info, Plus, ArrowDown, Sparkles, Minus, ListChecks, CheckSquare, ExternalLink, RefreshCw, Pen, DollarSign, EyeOff, Eye, PartyPopper, Loader2 } from 'lucide-react';
+import { Share2, ShoppingCart, TrendingDown, ShoppingBag, Check, TrendingUp, AlertCircle, Store, Zap, Trophy, ChevronRight, X, Info, Plus, ArrowDown, Sparkles, Minus, ListChecks, CheckSquare, ExternalLink, RefreshCw, Pen, DollarSign, EyeOff, Eye, PartyPopper, Loader2, Scale, ChevronDown } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { normalizeUnit, convertBack, subtractIngredient, cleanName } from '../services/unitService';
 
@@ -54,6 +54,15 @@ const CATEGORY_LABELS: Record<string, { label: string, emoji: string, color: str
     "other": { label: "Varios", emoji: "🛍️", color: "text-purple-700" }
 };
 
+const SHOPPING_UNIT_OPTIONS = [
+  { id: 'uds', label: 'uds' },
+  { id: 'g', label: 'g' },
+  { id: 'kg', label: 'kg' },
+  { id: 'ml', label: 'ml' },
+  { id: 'l', label: 'l' },
+  { id: 'pack', label: 'pack' },
+];
+
 export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantry, user, dbItems, onAddShoppingItem, onUpdateShoppingItem, onRemoveShoppingItem, onFinishShopping, onOpenRecipe, onSyncServings }) => {
   const [adjustments, setAdjustments] = useState<Record<string, number>>(() => {
       try { return JSON.parse(localStorage.getItem('fresco_shopping_adjustments') || '{}'); } catch { return {}; }
@@ -69,6 +78,8 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [hidePurchased, setHidePurchased] = useState(false);
   const [newExtra, setNewExtra] = useState('');
+  const [extraQty, setExtraQty] = useState(1);
+  const [extraUnit, setExtraUnit] = useState('uds');
   const [reviewItemsList, setReviewItemsList] = useState<TraceableShoppingItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -80,12 +91,12 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       if (!newExtra.trim()) return;
       const lowerName = newExtra.toLowerCase();
       const matchKey = Object.keys(PREDICTIVE_CATEGORY_RULES).find(key => lowerName.includes(key));
-      const rule = matchKey ? PREDICTIVE_CATEGORY_RULES[matchKey] : { category: 'other', unit: 'unidad' };
+      const rule = matchKey ? PREDICTIVE_CATEGORY_RULES[matchKey] : { category: 'other', unit: extraUnit };
       const newItem: ShoppingItem = {
           id: `extra-${Date.now()}`,
           name: newExtra.trim(),
-          quantity: 1,
-          unit: rule.unit,
+          quantity: extraQty,
+          unit: extraUnit,
           category: rule.category,
           estimated_price: 2.0, 
           is_purchased: instantlyPurchased
@@ -93,6 +104,8 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       onAddShoppingItem([newItem]);
       if (instantlyPurchased && navigator.vibrate) navigator.vibrate(50);
       setNewExtra('');
+      setExtraQty(1);
+      setExtraUnit('uds');
   };
 
   const handleAdjust = (itemId: string, delta: number, currentQty: number) => {
@@ -304,15 +317,45 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         </div>
       </div>
 
-      <div className="mb-10 flex gap-3 max-w-2xl mx-auto">
-          <form onSubmit={addExtraItem} className="relative group flex-1">
-            <input type="text" value={newExtra} onChange={(e) => setNewExtra(e.target.value)} placeholder="Añadir..." className="w-full p-4 pl-6 pr-12 bg-white border-2 border-gray-100 rounded-2xl focus:outline-none focus:border-teal-500 font-bold text-gray-700 placeholder-gray-300 shadow-sm transition-all focus:shadow-md text-sm" />
-            <button type="submit" disabled={!newExtra} className="absolute right-2 top-2 bottom-2 w-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center hover:bg-teal-100 transition-all disabled:opacity-30">
+      <div className="mb-10 flex flex-col md:flex-row gap-3 max-w-2xl mx-auto">
+          <form onSubmit={addExtraItem} className="flex-1 bg-white border-2 border-gray-100 rounded-3xl flex items-center p-1 shadow-sm focus-within:border-teal-500/50 transition-all">
+            <input 
+              type="text" 
+              value={newExtra} 
+              onChange={(e) => setNewExtra(e.target.value)} 
+              placeholder="Añadir producto..." 
+              className="flex-1 p-3 pl-5 bg-transparent focus:outline-none font-bold text-gray-700 placeholder-gray-300 text-sm" 
+            />
+            
+            <div className="flex items-center gap-1 bg-gray-50 rounded-2xl p-1 border border-gray-100 mr-1">
+                <input 
+                  type="number" 
+                  step="any"
+                  value={extraQty}
+                  onChange={e => setExtraQty(parseFloat(e.target.value) || 0)}
+                  className="w-10 bg-transparent text-center font-black text-xs outline-none text-teal-900"
+                />
+                <div className="h-4 w-px bg-gray-200" />
+                <div className="relative flex items-center">
+                    <select 
+                        value={extraUnit}
+                        onChange={e => setExtraUnit(e.target.value)}
+                        className="bg-transparent font-black text-[9px] uppercase outline-none cursor-pointer pl-1 pr-4 appearance-none text-teal-600"
+                    >
+                        {SHOPPING_UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
+                    </select>
+                    <ChevronDown className="absolute right-0 w-2.5 h-2.5 text-teal-400 pointer-events-none" />
+                </div>
+            </div>
+
+            <button type="submit" disabled={!newExtra} className="w-10 h-10 bg-teal-900 text-white rounded-2xl flex items-center justify-center hover:bg-teal-800 transition-all disabled:opacity-30 shadow-md">
                 <Plus className="w-5 h-5" />
             </button>
           </form>
-          <button onClick={() => setHidePurchased(!hidePurchased)} className={`px-4 rounded-2xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all border-2 ${hidePurchased ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}>
+          
+          <button onClick={() => setHidePurchased(!hidePurchased)} className={`h-14 px-6 rounded-3xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all border-2 shadow-sm ${hidePurchased ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}>
               {hidePurchased ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <span className="hidden md:inline">{hidePurchased ? 'Ver todos' : 'Ocultar comprados'}</span>
           </button>
       </div>
 
@@ -320,6 +363,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           <div className="bg-white p-12 rounded-[2.5rem] border border-gray-100 text-center space-y-4 max-w-md mx-auto">
               <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto text-gray-300"><ShoppingBag size={32} /></div>
               <h3 className="text-xl font-black text-teal-900">Tu lista está vacía</h3>
+              <p className="text-gray-400 text-sm font-medium">Planifica recetas en el Calendario o añade productos arriba.</p>
           </div>
       ) : (
         <div className="space-y-10 pb-32">
@@ -345,11 +389,11 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                         {item.is_purchased && <Check className="w-4 h-4 text-white stroke-[3px]" />}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className={`font-bold text-sm text-gray-900 capitalize truncate ${item.is_purchased ? 'line-through' : ''}`}>{item.name}</div>
+                                        <div className={`font-bold text-sm text-gray-900 capitalize truncate ${item.is_purchased ? 'line-through text-gray-400' : ''}`}>{item.name}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
-                                    <span className="text-xs font-black text-gray-500 tabular-nums">{item.quantity.toFixed(item.unit === 'g' || item.unit === 'ml' ? 0 : 1)} <span className="text-[9px] uppercase">{item.unit}</span></span>
+                                    <span className={`text-xs font-black tabular-nums ${item.is_purchased ? 'text-gray-300' : 'text-gray-500'}`}>{item.quantity.toFixed(item.unit === 'g' || item.unit === 'ml' ? 0 : 1)} <span className="text-[9px] uppercase">{item.unit}</span></span>
                                     {!item.is_purchased && (
                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1, item.quantity)} className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md"><Minus className="w-3 h-3" /></button>
@@ -382,14 +426,14 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           <div className="fixed inset-0 z-[5000] bg-teal-900/95 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-fade-in text-white">
               <div className="w-full max-w-md bg-white rounded-[2rem] p-8 text-gray-900 shadow-2xl relative">
                   <button onClick={() => setShowReceipt(false)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200"><X className="w-5 h-5" /></button>
-                  <h3 className="text-2xl font-black mb-1">Confirmar Compra</h3>
-                  <p className="text-gray-500 text-xs mb-6">Revisa los productos que vas a guardar en la despensa.</p>
+                  <h3 className="text-2xl font-black mb-1 text-teal-900">Confirmar Compra</h3>
+                  <p className="text-gray-500 text-xs mb-6 font-medium">Los productos seleccionados se añadirán a tu Despensa automáticamente.</p>
                   
-                  <div className="max-h-[50vh] overflow-y-auto space-y-2 mb-6 pr-2">
+                  <div className="max-h-[50vh] overflow-y-auto space-y-2 mb-6 pr-2 no-scrollbar">
                       {reviewItemsList.map(item => (
                           <div key={item.id} className="flex justify-between items-center border-b border-gray-100 pb-2">
-                              <span className="font-bold text-sm capitalize">{item.name}</span>
-                              <span className="font-mono text-xs text-gray-500">{item.quantity} {item.unit}</span>
+                              <span className="font-bold text-sm capitalize text-gray-800">{item.name}</span>
+                              <span className="font-black text-xs text-teal-600 bg-teal-50 px-2 py-1 rounded-lg">{item.quantity} {item.unit}</span>
                           </div>
                       ))}
                   </div>
@@ -397,9 +441,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                   <button 
                     onClick={confirmFinishShopping}
                     disabled={isProcessing}
-                    className="w-full py-4 bg-teal-900 text-white rounded-xl font-black uppercase tracking-widest hover:bg-teal-800 transition-all flex justify-center items-center gap-2"
+                    className="w-full py-5 bg-teal-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-teal-800 active:scale-95 transition-all flex justify-center items-center gap-2"
                   >
-                      {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmar y Guardar'}
+                      {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Check className="w-5 h-5 stroke-[3px]" /> Confirmar y Guardar</>}
                   </button>
               </div>
           </div>
