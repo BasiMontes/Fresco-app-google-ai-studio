@@ -199,10 +199,10 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
           <div className="flex justify-center pt-10"><button onClick={() => setVisibleLimit(prev => prev + ITEMS_PER_PAGE)} className="group flex items-center gap-4 px-8 py-3 bg-white border border-gray-100 rounded-2xl shadow-md hover:shadow-lg transition-all"><span className="text-[#013b33] font-black text-[10px] uppercase tracking-widest">Ver más inventario</span><ChevronDown className="w-4 h-4 text-gray-200 group-hover:translate-y-1 transition-transform" /></button></div>
       )}
       
-      {/* Modal de Edición con inputs híbridos para fecha */}
+      {/* Modal de Edición */}
       {itemToEdit && (
-        <div className="fixed inset-0 z-[5000] bg-black/30 backdrop-blur-xl flex items-center justify-center p-4">
-            <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up">
+        <div className="fixed inset-0 z-[5000] bg-black/40 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setItemToEdit(null)}>
+            <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-8"><h2 className="text-[#013b33] text-[2rem] font-black tracking-tight leading-none">Editar Item</h2><div className="flex gap-1"><button onClick={() => { triggerDialog({ title: '¿Borrar?', message: 'Se perderá el stock.', type: 'confirm', onConfirm: () => { onRemove(itemToEdit.id); setItemToEdit(null); } }); }} className="p-2.5 text-gray-200 hover:text-red-500 transition-colors"><Trash2 className="w-6 h-6" /></button><button onClick={() => setItemToEdit(null)} className="p-2.5 text-gray-200 hover:text-black transition-colors"><X className="w-7 h-7" /></button></div></div>
                 <div className="space-y-6">
                     <div className="flex flex-col"><InputLabel>Nombre del producto</InputLabel><input className={MODAL_INPUT_CLASSES + " !text-[1rem]"} placeholder="Ej. Manzanas" value={itemToEdit.name} onChange={e => setItemToEdit({...itemToEdit, name: e.target.value})} /></div>
@@ -241,8 +241,8 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
       {/* Modal Añadir Producto */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[5000] bg-black/30 backdrop-blur-xl flex items-center justify-center p-4">
-            <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up">
+        <div className="fixed inset-0 z-[5000] bg-black/40 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
+            <div className="w-full max-w-[420px] bg-white rounded-[2.8rem] p-10 shadow-2xl relative animate-slide-up" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-8"><h2 className="text-[#013b33] text-[2rem] font-black tracking-tight leading-none">Nuevo Item</h2><button onClick={() => setShowAddModal(false)} className="p-2.5 text-gray-200 hover:text-black transition-colors"><X className="w-7 h-7" /></button></div>
                 <div className="space-y-6">
                     <div className="flex flex-col"><InputLabel>Nombre del producto</InputLabel><input autoFocus className={MODAL_INPUT_CLASSES + " !text-[1rem] placeholder:text-gray-200"} placeholder="Ej. Manzanas" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} /></div>

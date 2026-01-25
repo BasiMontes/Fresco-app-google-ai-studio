@@ -102,70 +102,68 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm animate-fade-in flex justify-center items-center p-3 md:p-6" onClick={onClose}>
-        <div className="bg-white w-full max-w-5xl max-h-[92vh] rounded-[2rem] overflow-hidden flex flex-col relative shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
-            
-            {/* Planning Overlay - Centered for better visibility and preventing cut-off */}
-            {showPlanningMode && (
-                <div className="absolute inset-0 z-[100] bg-teal-900/10 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
-                    <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-teal-50 space-y-8 animate-slide-up">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <h3 className="text-2xl font-black text-teal-900">Planificar Comida</h3>
-                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">¿Cuándo vas a cocinar esto?</p>
-                            </div>
-                            <button onClick={() => setShowPlanningMode(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-all"><X className="w-5 h-5 text-gray-400" /></button>
+    <div className="fixed inset-0 z-[2000] bg-black/40 backdrop-blur-md animate-fade-in flex justify-center items-center p-3 md:p-6" onClick={onClose}>
+        {/* Planning Overlay - Ahora fuera de la tarjeta blanca para cobertura total */}
+        {showPlanningMode && (
+            <div className="fixed inset-0 z-[3000] bg-teal-900/10 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in" onClick={(e) => { e.stopPropagation(); setShowPlanningMode(false); }}>
+                <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-teal-50 space-y-8 animate-slide-up" onClick={e => e.stopPropagation()}>
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-teal-900 tracking-tight">Planificar Comida</h3>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1">¿Cuándo vas a cocinar esto?</p>
                         </div>
-
-                        <div className="space-y-5">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1">Fecha (AAAA-MM-DD)</label>
-                                <div className="relative h-[64px] bg-gray-50 rounded-2xl border-2 border-transparent focus-within:border-teal-500/20 transition-all">
-                                    <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-600 pointer-events-none z-10" />
-                                    <input 
-                                        type="text" 
-                                        placeholder="2024-05-24"
-                                        value={planDate} 
-                                        onChange={e => setPlanDate(e.target.value)} 
-                                        className="w-full h-full pl-14 pr-5 bg-transparent font-black text-teal-900 outline-none placeholder:text-gray-300"
-                                    />
-                                    {/* Selector nativo oculto pero funcional para el icono */}
-                                    <input 
-                                        type="date" 
-                                        className="absolute inset-0 opacity-0 cursor-pointer"
-                                        onChange={e => setPlanDate(e.target.value)}
-                                        value={planDate}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1">Momento del día</label>
-                                <div className="grid grid-cols-3 gap-2 bg-gray-50 p-1.5 rounded-2xl">
-                                    {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map(cat => (
-                                        <button 
-                                            key={cat} 
-                                            onClick={() => setPlanType(cat)} 
-                                            className={`flex flex-col items-center justify-center gap-2 py-4 rounded-xl transition-all ${planType === cat ? 'bg-white text-teal-900 shadow-md scale-[1.02]' : 'text-gray-400 hover:text-teal-600'}`}
-                                        >
-                                            {cat === 'breakfast' ? <Sunrise className="w-5 h-5" /> : cat === 'lunch' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                                            <span className="text-[8px] font-black uppercase tracking-widest">{cat === 'breakfast' ? 'Desayuno' : cat === 'lunch' ? 'Comida' : 'Cena'}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <button 
-                            onClick={() => { onAddToPlan?.(desiredServings, planDate, planType); onClose(); }} 
-                            className="w-full py-5 bg-teal-900 text-white rounded-[1.4rem] font-black text-xs uppercase tracking-widest shadow-xl hover:bg-teal-800 active:scale-95 transition-all"
-                        >
-                            Confirmar en mi Plan
-                        </button>
+                        <button onClick={() => setShowPlanningMode(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-all"><X className="w-5 h-5 text-gray-400" /></button>
                     </div>
-                </div>
-            )}
 
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1">Fecha (AAAA-MM-DD)</label>
+                            <div className="relative h-[64px] bg-gray-50 rounded-2xl border-2 border-transparent focus-within:border-teal-500/20 transition-all">
+                                <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-600 pointer-events-none z-10" />
+                                <input 
+                                    type="text" 
+                                    placeholder="2024-05-24"
+                                    value={planDate} 
+                                    onChange={e => setPlanDate(e.target.value)} 
+                                    className="w-full h-full pl-14 pr-5 bg-transparent font-black text-teal-900 outline-none placeholder:text-gray-300"
+                                />
+                                <input 
+                                    type="date" 
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    onChange={e => setPlanDate(e.target.value)}
+                                    value={planDate}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] ml-1">Momento del día</label>
+                            <div className="grid grid-cols-3 gap-2 bg-gray-50 p-1.5 rounded-2xl">
+                                {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map(cat => (
+                                    <button 
+                                        key={cat} 
+                                        onClick={() => setPlanType(cat)} 
+                                        className={`flex flex-col items-center justify-center gap-2 py-4 rounded-xl transition-all ${planType === cat ? 'bg-white text-teal-900 shadow-md scale-[1.02]' : 'text-gray-400 hover:text-teal-600'}`}
+                                    >
+                                        {cat === 'breakfast' ? <Sunrise className="w-5 h-5" /> : cat === 'lunch' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                                        <span className="text-[8px] font-black uppercase tracking-widest">{cat === 'breakfast' ? 'Desayuno' : cat === 'lunch' ? 'Comida' : 'Cena'}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={() => { onAddToPlan?.(desiredServings, planDate, planType); onClose(); }} 
+                        className="w-full py-5 bg-teal-900 text-white rounded-[1.4rem] font-black text-xs uppercase tracking-widest shadow-xl hover:bg-teal-800 active:scale-95 transition-all"
+                    >
+                        Confirmar en mi Plan
+                    </button>
+                </div>
+            </div>
+        )}
+
+        <div className="bg-white w-full max-w-5xl max-h-[92vh] rounded-[3rem] overflow-hidden flex flex-col relative shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
             <div className="flex-1 overflow-y-auto no-scrollbar grid grid-cols-1 md:grid-cols-12 h-full">
                 {/* Left Side: Photo & Quick Info */}
                 <div className="md:col-span-4 p-5 md:p-8 flex flex-col gap-6 bg-gray-50/50 border-r border-gray-100">

@@ -99,8 +99,8 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[5000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-4 md:p-6 animate-fade-in" onClick={onClose}>
-      <div className="bg-white w-full max-w-2xl h-[90vh] md:h-auto md:max-h-[85vh] rounded-[3rem] overflow-hidden flex flex-col shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[5000] bg-teal-900/40 backdrop-blur-xl flex items-center justify-center p-4 md:p-6 animate-fade-in" onClick={onClose}>
+      <div className="bg-white w-full max-w-2xl h-full max-h-[90vh] md:h-auto md:max-h-[85vh] rounded-[3rem] overflow-hidden flex flex-col shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
         
         <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
           <div>
@@ -214,7 +214,6 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ onClose, onSave }) => {
                           onChange={e => updateIngredient(idx, 'quantity', parseFloat(e.target.value) || 0)}
                         />
                         <div className="h-4 w-px bg-gray-200" />
-                        {/* SELECTOR DE UNIDADES REQUERIDO */}
                         <div className="relative flex items-center">
                           <select 
                             className="bg-transparent font-black text-[9px] uppercase outline-none cursor-pointer px-1 pr-4 appearance-none text-teal-600"
