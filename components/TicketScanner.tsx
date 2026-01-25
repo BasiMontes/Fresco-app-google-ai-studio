@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, ShoppingBag, Loader2, Key, ExternalLink, ArrowRight } from 'lucide-react';
+import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, ShoppingBag, Loader2, Key, ExternalLink, ArrowRight, Info } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { EXPIRY_DAYS_BY_CATEGORY } from '../constants';
@@ -186,23 +186,43 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                     <Key className="w-12 h-12 text-orange-500" />
                 </div>
                 <div>
-                    <h3 className="text-3xl font-black text-white leading-none">Motor de IA Detenido</h3>
-                    <p className="text-teal-200/60 mt-6 text-sm leading-relaxed">
-                        Gemini es el "cerebro" que lee tus tickets. Para activarlo, necesitamos que selecciones una API Key de tu proyecto.
+                    <h3 className="text-3xl font-black text-white leading-none">Activar Motor IA</h3>
+                    <p className="text-teal-200/60 mt-4 text-sm leading-relaxed">
+                        Para que Fresco pueda "leer" tus tickets, necesitas vincular una API Key de Gemini.
                     </p>
+                </div>
+
+                <div className="w-full bg-white/5 rounded-[2rem] p-6 text-left space-y-4 border border-white/5">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-orange-400 mb-2 flex items-center gap-2">
+                        <Info className="w-3 h-3" /> Pasos para empezar gratis:
+                    </h4>
+                    <ol className="text-white/70 text-xs space-y-3 font-medium">
+                        <li className="flex gap-3">
+                            <span className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center text-[10px] font-black text-white flex-shrink-0">1</span>
+                            <span>Crea tu clave en <a href="https://aistudio.google.com/" target="_blank" className="text-orange-400 underline">AI Studio</a>.</span>
+                        </li>
+                        <li className="flex gap-3">
+                            <span className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center text-[10px] font-black text-white flex-shrink-0">2</span>
+                            <span>Vincula un proyecto con facturación (gratis hasta 15 escaneos/min).</span>
+                        </li>
+                        <li className="flex gap-3">
+                            <span className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center text-[10px] font-black text-white flex-shrink-0">3</span>
+                            <span>Pulsa el botón naranja de abajo y selecciónala.</span>
+                        </li>
+                    </ol>
                 </div>
                 
                 <div className="w-full space-y-3">
                     <button onClick={handleOpenKeySelector} className="w-full py-6 bg-orange-500 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all">
-                        Seleccionar Clave IA
+                        Seleccionar Clave
                     </button>
                     <button onClick={addItemManual} className="w-full py-4 text-teal-400 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
-                        No tengo clave, usar entrada manual <ArrowRight className="w-3 h-3" />
+                        Usar entrada manual sin IA <ArrowRight className="w-3 h-3" />
                     </button>
                 </div>
 
-                <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="inline-flex items-center gap-2 text-teal-500 text-[10px] font-black uppercase tracking-widest mt-4">
-                    Documentación de Facturación <ExternalLink className="w-3 h-3" />
+                <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="inline-flex items-center gap-2 text-teal-500 text-[9px] font-black uppercase tracking-widest mt-2 opacity-50">
+                    Saber más sobre facturación <ExternalLink className="w-3 h-3" />
                 </a>
             </div>
         )}
@@ -283,8 +303,16 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                             <button onClick={() => removeItem(item.tempId)} className="mt-7 p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all"><Trash2 className="w-5 h-5" /></button>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                            <div><label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Comprado</label><input type="date" value={item.added_at} onChange={e => updateItem(item.tempId, { added_at: e.target.value })} className={INPUT_STYLE} /></div>
-                            <div><label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Caducidad</label><input type="date" value={item.expires_at} onChange={e => updateItem(item.tempId, { expires_at: e.target.value })} className={INPUT_STYLE + " !text-orange-500"} /></div>
+                            <div className="relative">
+                                <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Comprado</label>
+                                <input type="text" value={item.added_at} placeholder="AAAA-MM-DD" onChange={e => updateItem(item.tempId, { added_at: e.target.value })} className={INPUT_STYLE} />
+                                <input type="date" value={item.added_at} onChange={e => updateItem(item.tempId, { added_at: e.target.value })} className="absolute inset-0 opacity-0 cursor-pointer" />
+                            </div>
+                            <div className="relative">
+                                <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block ml-1">Caducidad</label>
+                                <input type="text" value={item.expires_at} placeholder="AAAA-MM-DD" onChange={e => updateItem(item.tempId, { expires_at: e.target.value })} className={INPUT_STYLE + " !text-orange-500"} />
+                                <input type="date" value={item.expires_at} onChange={e => updateItem(item.tempId, { expires_at: e.target.value })} className="absolute inset-0 opacity-0 cursor-pointer" />
+                            </div>
                         </div>
                         <div className="space-y-4">
                             <div className="relative">
