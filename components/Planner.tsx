@@ -1,13 +1,14 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { MealSlot, Recipe, MealCategory, PantryItem, UserProfile, ShoppingItem } from '../types';
-import { Plus, X, Loader2, PackageCheck, ShoppingCart, ChevronLeft, ChevronRight, BrainCircuit, ChefHat, Trash2, Sunrise, Sun, Moon, Share2, Check, Calendar, Sparkles, History, ArrowLeft, Clock, Users } from 'lucide-react';
+import { Plus, X, Loader2, PackageCheck, ShoppingCart, ChevronLeft, ChevronRight, BrainCircuit, ChefHat, Trash2, Sunrise, Sun, Moon, Share2, Check, Calendar, Sparkles, History, ArrowLeft, Clock, Users, CalendarCheck, CheckCircle2 } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks, isBefore, startOfDay, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { generateSmartMenu } from '../services/geminiService';
 import { RecipeDetail } from './RecipeDetail';
 import { cleanName } from '../services/unitService';
 import { triggerDialog } from './Dialog';
+import { ModalPortal } from './ModalPortal';
 
 interface PlannerProps {
   user: UserProfile;
@@ -28,16 +29,21 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   
+  const days = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i)), [currentWeekStart]);
+  
   const [selectedWizardDays, setSelectedWizardDays] = useState<string[]>([]);
   const [selectedWizardTypes, setSelectedWizardTypes] = useState<MealCategory[]>(['lunch', 'dinner']);
 
-  const days = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i)), [currentWeekStart]);
+  // Inicializar selección por defecto al abrir el wizard
+  useEffect(() => {
+    if (showPlanWizard) {
+      setSelectedWizardDays(days.map(d => format(d, 'yyyy-MM-dd')));
+    }
+  }, [showPlanWizard, days]);
 
-  // Agrupación de historial (Siempre 4 semanas atrás, incluso vacías)
   const historyWeeks = useMemo(() => {
       const weeks: { weekStart: Date; meals: MealSlot[] }[] = [];
       const today = startOfDay(new Date());
-      
       for (let i = 1; i <= 4; i++) {
           const wStart = startOfWeek(subDays(today, i * 7), { weekStartsOn: 1 });
           const wEnd = addDays(wStart, 6);
@@ -45,15 +51,28 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
               const d = new Date(slot.date);
               return d >= wStart && d <= wEnd && slot.recipeId;
           });
-          
-          // NOTA: Se eliminó el filtro que ocultaba semanas vacías para mantener consistencia visual
           weeks.push({ weekStart: wStart, meals: weekMeals });
       }
       return weeks;
   }, [plan]);
 
+  const toggleWizardDay = (dateStr: string) => {
+    setSelectedWizardDays(prev => 
+      prev.includes(dateStr) ? prev.filter(d => d !== dateStr) : [...prev, dateStr]
+    );
+  };
+
+  const toggleWizardType = (type: MealCategory) => {
+    setSelectedWizardTypes(prev => 
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+  };
+
   const executeSmartPlan = async () => {
-    if (selectedWizardDays.length === 0 || selectedWizardTypes.length === 0) return;
+    if (selectedWizardDays.length === 0 || selectedWizardTypes.length === 0) {
+      triggerDialog({ title: 'Atención', message: 'Selecciona al menos un día y un tipo de comida.', type: 'alert' });
+      return;
+    }
     setIsGenerating(true);
     try {
         const result = await generateSmartMenu(user, pantry, selectedWizardDays, selectedWizardTypes, recipes);
@@ -63,7 +82,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         }
         setShowPlanWizard(false);
     } catch (e) {
-        triggerDialog({ title: 'Error', message: 'No se pudo generar el menú.', type: 'alert' });
+        triggerDialog({ title: 'Error', message: 'No se pudo generar el menú inteligente.', type: 'alert' });
     } finally {
         setIsGenerating(false);
     }
@@ -73,7 +92,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
       return (
           <div className="h-full flex flex-col animate-fade-in bg-white safe-pt">
               <header className="p-6 flex items-start gap-4 sticky top-0 bg-white z-20 border-b border-gray-50">
-                  <button onClick={() => setShowHistory(false)} className="p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors">
+                  <button onClick={() => setShowHistory(false)} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
                       <ArrowLeft className="w-6 h-6 text-teal-900" />
                   </button>
                   <div>
@@ -84,60 +103,37 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                       <p className="text-gray-500 font-medium text-sm leading-relaxed">Consulta tus recetas y planes de las últimas 4 semanas.</p>
                   </div>
               </header>
-
               <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-40">
                   {historyWeeks.map((week, idx) => (
                       <div key={idx} className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 space-y-6">
-                          <div className="flex items-start justify-between">
-                              <div className="space-y-2">
-                                  <div className="flex items-center gap-2 text-teal-900">
-                                      <Calendar className="w-5 h-5" />
-                                      <h3 className="font-black text-lg">Semana del {format(week.weekStart, "d 'de' MMMM, yyyy", { locale: es })}</h3>
-                                  </div>
-                                  <span className={`inline-block px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${week.meals.length > 0 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-gray-50 text-gray-400 border-gray-100'}`}>
-                                      {week.meals.length} {week.meals.length === 1 ? 'comida' : 'comidas'}
-                                  </span>
-                              </div>
+                          <div className="flex items-center gap-2 text-teal-900">
+                              <Calendar className="w-5 h-5" />
+                              <h3 className="font-black text-lg">Semana del {format(week.weekStart, "d 'de' MMMM", { locale: es })}</h3>
                           </div>
-
                           <div className="space-y-3">
                               {week.meals.length === 0 ? (
-                                  <div className="py-4 text-center border-2 border-dashed border-gray-50 rounded-2xl">
-                                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Sin actividad registrada</p>
+                                  <div className="py-4 text-center border-2 border-dashed border-gray-50 rounded-2xl opacity-30">
+                                      <p className="text-[10px] font-black uppercase tracking-widest">Sin actividad</p>
                                   </div>
                               ) : (
-                                  <>
-                                    {week.meals.slice(0, 3).map((slot, sIdx) => {
-                                        const recipe = recipes.find(r => r.id === slot.recipeId);
-                                        if (!recipe) return null;
-                                        return (
-                                            <div key={sIdx} onClick={() => setSelectedRecipe(recipe)} className="flex items-center gap-4 p-3 bg-gray-50/50 rounded-2xl border border-transparent hover:border-teal-200 transition-all cursor-pointer">
-                                                <img src={recipe.image_url} className="w-16 h-16 rounded-xl object-cover shadow-sm" alt="" />
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-bold text-gray-900 text-sm truncate">{recipe.title}</h4>
-                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider capitalize">{slot.type}</p>
-                                                    <div className="flex gap-3 mt-1.5 opacity-60">
-                                                        <div className="flex items-center gap-1"><Clock className="w-3 h-3" /><span className="text-[9px] font-black">{recipe.prep_time} min</span></div>
-                                                        <div className="flex items-center gap-1"><Users className="w-3 h-3" /><span className="text-[9px] font-black">{slot.servings} pax</span></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                    {week.meals.length > 3 && <p className="text-center text-[9px] font-black text-gray-300 uppercase tracking-widest">+ {week.meals.length - 3} platos más</p>}
-                                  </>
+                                  week.meals.slice(0, 3).map((slot, sIdx) => {
+                                      const recipe = recipes.find(r => r.id === slot.recipeId);
+                                      if (!recipe) return null;
+                                      return (
+                                          <div key={sIdx} onClick={() => setSelectedRecipe(recipe)} className="flex items-center gap-4 p-3 bg-gray-50/50 rounded-2xl border border-transparent hover:border-teal-200 transition-all cursor-pointer">
+                                              <img src={recipe.image_url} className="w-12 h-12 rounded-xl object-cover shadow-sm" alt="" />
+                                              <div className="flex-1 min-w-0">
+                                                  <h4 className="font-bold text-gray-900 text-sm truncate">{recipe.title}</h4>
+                                                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider capitalize">{slot.type}</p>
+                                              </div>
+                                          </div>
+                                      );
+                                  })
                               )}
                           </div>
                       </div>
                   ))}
               </div>
-              
-              {selectedRecipe && (
-                  <RecipeDetail 
-                      recipe={selectedRecipe} pantry={pantry} userProfile={user} onClose={() => setSelectedRecipe(null)} 
-                      onAddToPlan={(serv, date, type) => { onUpdateSlot(date!, type!, selectedRecipe.id); setSelectedRecipe(null); }}
-                  />
-              )}
           </div>
       );
   }
@@ -154,21 +150,16 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 </div>
                 <button onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} className="p-1 hover:bg-gray-100 rounded-md text-gray-400"><ChevronRight className="w-3.5 h-3.5" /></button>
             </div>
-            <button onClick={() => setShowHistory(true)} title="Historial" className="p-2 bg-white text-teal-600 rounded-lg hover:bg-teal-50 transition-all border border-gray-100 shadow-sm relative group">
-                <History className="w-3.5 h-3.5" />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full border-2 border-white scale-0 group-hover:scale-100 transition-transform" />
-            </button>
         </div>
 
         <div className="flex gap-2">
             <button onClick={() => triggerDialog({ title: 'Borrar Semana', message: '¿Limpiar todo el plan actual?', type: 'confirm', onConfirm: onClear })} className="p-2 bg-white text-red-400 rounded-lg hover:bg-red-50 border border-gray-100 shadow-sm"><Trash2 className="w-3.5 h-3.5" /></button>
             <button onClick={() => setShowPlanWizard(true)} className="flex items-center gap-1.5 bg-teal-900 text-white px-3 py-1.5 rounded-lg font-black text-[8px] uppercase tracking-widest hover:bg-teal-800 transition-all shadow-lg active:scale-95">
-                <BrainCircuit className="w-3 h-3 text-orange-400" /> Plan IA
+                <BrainCircuit className="w-3 h-3 text-orange-400" /> Generar plan
             </button>
         </div>
       </header>
 
-      {/* Tarjeta Historial (Acceso rápido tipo imagen 1) */}
       <div className="px-4 py-3 mt-2">
           <button 
             onClick={() => setShowHistory(true)}
@@ -228,6 +219,80 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           );
         })}
       </div>
+
+      {/* PLAN WIZARD MODAL RESTAURADO */}
+      {showPlanWizard && (
+        <ModalPortal>
+          <div className="fixed inset-0 z-[5000] bg-teal-900/60 backdrop-blur-xl flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowPlanWizard(false)}>
+            <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative animate-slide-up" onClick={e => e.stopPropagation()}>
+              <button onClick={() => setShowPlanWizard(false)} className="absolute top-8 right-8 p-2 bg-gray-50 rounded-full text-gray-400 hover:text-black transition-colors"><X className="w-6 h-6" /></button>
+              
+              <div className="mb-8">
+                <div className="w-16 h-16 bg-teal-900 rounded-2xl flex items-center justify-center text-orange-400 mb-6 shadow-xl">
+                  <BrainCircuit className="w-8 h-8" />
+                </div>
+                <h3 className="text-3xl font-black text-teal-950 leading-tight">Generar plan</h3>
+                <p className="text-gray-400 font-medium text-sm mt-2">Dime qué huecos quieres que la IA Fresco rellene por ti.</p>
+              </div>
+
+              <div className="space-y-8">
+                {/* Selección de Días */}
+                <div>
+                  <label className="text-[10px] font-black text-teal-600 uppercase tracking-widest block mb-4 ml-1">Días a planificar</label>
+                  <div className="flex justify-between gap-1">
+                    {days.map((day) => {
+                      const dateStr = format(day, 'yyyy-MM-dd');
+                      const isSelected = selectedWizardDays.includes(dateStr);
+                      return (
+                        <button 
+                          key={dateStr}
+                          onClick={() => toggleWizardDay(dateStr)}
+                          className={`w-10 h-14 rounded-xl flex flex-col items-center justify-center transition-all border-2 ${isSelected ? 'bg-teal-900 border-teal-900 text-white shadow-lg' : 'bg-white border-gray-50 text-gray-400'}`}
+                        >
+                          <span className="text-[7px] font-black uppercase mb-1">{format(day, 'EEE', { locale: es })}</span>
+                          <span className="text-sm font-black">{format(day, 'd')}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Selección de Comidas */}
+                <div>
+                  <label className="text-[10px] font-black text-teal-600 uppercase tracking-widest block mb-4 ml-1">Momento del día</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { id: 'breakfast', label: 'Desayuno', icon: Sunrise },
+                      { id: 'lunch', label: 'Comida', icon: Sun },
+                      { id: 'dinner', label: 'Cena', icon: Moon }
+                    ].map((m) => {
+                      const isSelected = selectedWizardTypes.includes(m.id as MealCategory);
+                      return (
+                        <button 
+                          key={m.id}
+                          onClick={() => toggleWizardType(m.id as MealCategory)}
+                          className={`p-4 rounded-2xl flex flex-col items-center gap-3 transition-all border-2 ${isSelected ? 'bg-orange-500 border-orange-500 text-white shadow-lg scale-[1.02]' : 'bg-gray-50 border-transparent text-gray-400'}`}
+                        >
+                          <m.icon className="w-6 h-6" />
+                          <span className="text-[9px] font-black uppercase tracking-widest">{m.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button 
+                  onClick={executeSmartPlan}
+                  disabled={isGenerating}
+                  className="w-full h-16 bg-teal-900 text-white rounded-[1.8rem] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-4 hover:bg-teal-800 active:scale-95 transition-all"
+                >
+                  {isGenerating ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Sparkles className="w-5 h-5 text-orange-400" /> Organizar con IA</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </ModalPortal>
+      )}
       
       {selectedRecipe && (
         <RecipeDetail 
