@@ -5,14 +5,12 @@ import { Onboarding } from './components/Onboarding';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { supabase, isConfigured } from './lib/supabase';
 import * as db from './services/dbService';
-import { subtractIngredient, cleanName } from './services/unitService';
 import { AuthPage } from './components/AuthPage';
 import { initSyncListener } from './services/syncService';
 import { STATIC_RECIPES } from './constants';
-import { Dialog, DialogOptions, triggerDialog } from './components/Dialog';
+import { Dialog, DialogOptions } from './components/Dialog';
 import { Logo } from './components/Logo';
-import { Home, Calendar, ShoppingBag, BookOpen, Package, User, RefreshCw, AlertCircle, RotateCcw } from 'lucide-react';
-import { format } from 'date-fns';
+import { Home, Calendar, ShoppingBag, BookOpen, Package, User, RotateCcw } from 'lucide-react';
 
 const Dashboard = React.lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
 const Planner = React.lazy(() => import('./components/Planner').then(module => ({ default: module.Planner })));
@@ -45,9 +43,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('loading');
   const [user, setUser] = useState<UserProfile | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | undefined>(undefined);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const [dialogOptions, setDialogOptions] = useState<DialogOptions | null>(null);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
@@ -116,7 +112,7 @@ const App: React.FC = () => {
     checkSession();
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
-        setView('auth'); setUser(null); setUserId(null); setUserEmail(undefined);
+        setView('auth'); setUser(null); setUserId(null);
         return;
       }
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') { await handleSessionChange(session); }
@@ -129,7 +125,6 @@ const App: React.FC = () => {
     const uid = session.user.id;
     const email = session.user.email;
     setUserId(uid);
-    setUserEmail(email);
     try {
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
       if (profile && profile.onboarding_completed) {

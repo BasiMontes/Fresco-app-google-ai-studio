@@ -1,8 +1,7 @@
 
-import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { UserProfile, DietPreference, CuisineType } from '../types';
-import { Logo } from './Logo';
-import { User, Users, ChefHat, Settings as SettingsIcon, LogOut, Download, Trash2, ShieldCheck, Heart, ChevronRight, Upload, Globe, Trophy, PiggyBank, Sparkles, Smartphone, Share as ShareIcon, Bug, Mail, Send, RefreshCw, Shield, HelpCircle, FileText, Check, ArrowRight } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { UserProfile, DietPreference } from '../types';
+import { Settings as SettingsIcon, LogOut, Trash2, PiggyBank, ChevronRight, HelpCircle, Shield, ArrowRight, RefreshCw } from 'lucide-react';
 
 interface ProfileProps {
   user: UserProfile;
@@ -24,18 +23,8 @@ const DIETS: { id: DietPreference; label: string; emoji: string }[] = [
 const EXTRA_TAGS = ['Indian', 'Fast'];
 
 export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onReset, onNavigate }) => {
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [tempPreferences, setTempPreferences] = useState<DietPreference[]>(user.dietary_preferences);
   const [isUpdating, setIsUpdating] = useState(false);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-        e.preventDefault();
-        setInstallPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt' as any, handler);
-    return () => window.removeEventListener('beforeinstallprompt' as any, handler);
-  }, []);
 
   const hasChanges = useMemo(() => {
     return JSON.stringify([...tempPreferences].sort()) !== JSON.stringify([...user.dietary_preferences].sort());
@@ -123,9 +112,8 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
             <div className="space-y-3">
                 {[
                     { id: 'settings', icon: SettingsIcon, label: 'Configuración', color: 'text-teal-600' },
-                    { id: 'privacy', icon: Shield, label: 'Política de Privacidad', color: 'text-teal-600' },
                     { id: 'faq', icon: HelpCircle, label: 'FAQ', color: 'text-teal-600' },
-                    { id: 'terms', icon: FileText, label: 'Términos de Servicio', color: 'text-teal-600' }
+                    { id: 'privacy', icon: Shield, label: 'Privacidad', color: 'text-gray-400' }
                 ].map((item, idx) => (
                     <button 
                       key={idx} 
