@@ -2,14 +2,14 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { UserProfile, DietPreference, CuisineType } from '../types';
 import { Logo } from './Logo';
-// Fix: Added missing ArrowRight icon to the import list
-import { User, Users, ChefHat, Settings, LogOut, Download, Trash2, ShieldCheck, Heart, ChevronRight, Upload, Globe, Trophy, PiggyBank, Sparkles, Smartphone, Share as ShareIcon, Bug, Mail, Send, RefreshCw, Shield, HelpCircle, FileText, Check, ArrowRight } from 'lucide-react';
+import { User, Users, ChefHat, Settings as SettingsIcon, LogOut, Download, Trash2, ShieldCheck, Heart, ChevronRight, Upload, Globe, Trophy, PiggyBank, Sparkles, Smartphone, Share as ShareIcon, Bug, Mail, Send, RefreshCw, Shield, HelpCircle, FileText, Check, ArrowRight } from 'lucide-react';
 
 interface ProfileProps {
   user: UserProfile;
   onUpdate: (updatedUser: UserProfile) => void;
   onLogout: () => void;
   onReset: () => void;
+  onNavigate?: (tab: string) => void;
 }
 
 const DIETS: { id: DietPreference; label: string; emoji: string }[] = [
@@ -17,16 +17,14 @@ const DIETS: { id: DietPreference; label: string; emoji: string }[] = [
   { id: 'vegan', label: 'Vegan', emoji: '🌱' },
   { id: 'gluten_free', label: 'Gluten Free', emoji: '🌾' },
   { id: 'keto', label: 'Keto', emoji: '🥑' },
-  { id: 'none', label: 'Kosher', emoji: '🥩' }, // Usando labels de la imagen del usuario
+  { id: 'none', label: 'Kosher', emoji: '🥩' },
   { id: 'healthy', label: 'Healthy', emoji: '🥗' },
 ];
 
-const EXTRA_TAGS = ['Indian', 'Fast']; // Tags adicionales mostrados en la imagen
+const EXTRA_TAGS = ['Indian', 'Fast'];
 
-export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onReset }) => {
+export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onReset, onNavigate }) => {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
-  
-  // Estado local para preferencias (para el flujo de confirmación)
   const [tempPreferences, setTempPreferences] = useState<DietPreference[]>(user.dietary_preferences);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -66,7 +64,6 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
 
   return (
     <div className="space-y-10 animate-fade-in pb-52 px-1 md:px-0" role="main">
-      {/* User Header */}
       <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-50 flex items-center gap-4">
         <div className="w-16 h-16 rounded-2xl shadow-xl border-4 border-gray-50 overflow-hidden">
             <InitialsAvatar name={user.name} />
@@ -81,33 +78,26 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Preferencias Card (Según imagen del usuario) */}
         <section className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col">
             <h3 className="text-xl font-black text-gray-900 mb-6">Preferencias</h3>
-            
             <div className="flex flex-wrap gap-2 mb-8">
-                {DIETS.map(diet => {
-                    const isSelected = tempPreferences.includes(diet.id);
-                    return (
-                        <button
-                            key={diet.id}
-                            onClick={() => togglePreference(diet.id)}
-                            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-2 ${
-                                isSelected
-                                ? 'bg-teal-50 border-teal-200 text-teal-800 shadow-sm'
-                                : 'bg-white border-gray-100 text-gray-400 hover:border-teal-100'
-                            }`}
-                        >
-                            {diet.label}
-                        </button>
-                    );
-                })}
+                {DIETS.map(diet => (
+                    <button
+                        key={diet.id}
+                        onClick={() => togglePreference(diet.id)}
+                        className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-2 ${
+                            tempPreferences.includes(diet.id)
+                            ? 'bg-teal-50 border-teal-200 text-teal-800 shadow-sm'
+                            : 'bg-white border-gray-100 text-gray-400 hover:border-teal-100'
+                        }`}
+                    >
+                        {diet.label}
+                    </button>
+                ))}
                 {EXTRA_TAGS.map(tag => (
                     <button key={tag} className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white border-2 border-gray-100 text-gray-400 opacity-60">{tag}</button>
                 ))}
             </div>
-
             <div className="mt-auto pt-6 border-t border-gray-50">
                 <button 
                     onClick={handleUpdatePreferences}
@@ -128,17 +118,20 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
             </div>
         </section>
 
-        {/* Ayuda Card (Según imagen del usuario) */}
         <section className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
             <h3 className="text-xl font-black text-gray-900 mb-6">Ayuda</h3>
             <div className="space-y-3">
                 {[
-                    { icon: Settings, label: 'Configuración', color: 'text-teal-600' },
-                    { icon: Shield, label: 'Política de Privacidad', color: 'text-teal-600' },
-                    { icon: HelpCircle, label: 'FAQ', color: 'text-teal-600' },
-                    { icon: FileText, label: 'Términos de Servicio', color: 'text-teal-600' }
+                    { id: 'settings', icon: SettingsIcon, label: 'Configuración', color: 'text-teal-600' },
+                    { id: 'privacy', icon: Shield, label: 'Política de Privacidad', color: 'text-teal-600' },
+                    { id: 'faq', icon: HelpCircle, label: 'FAQ', color: 'text-teal-600' },
+                    { id: 'terms', icon: FileText, label: 'Términos de Servicio', color: 'text-teal-600' }
                 ].map((item, idx) => (
-                    <button key={idx} className="w-full h-16 bg-white border-2 border-gray-50 hover:border-teal-100 rounded-2xl px-5 flex items-center justify-between group transition-all">
+                    <button 
+                      key={idx} 
+                      onClick={() => { if(item.id === 'settings' && onNavigate) onNavigate('settings'); }}
+                      className="w-full h-16 bg-white border-2 border-gray-50 hover:border-teal-100 rounded-2xl px-5 flex items-center justify-between group transition-all"
+                    >
                         <div className="flex items-center gap-4">
                             <item.icon className={`w-5 h-5 ${item.color}`} />
                             <span className="font-bold text-sm text-gray-800">{item.label}</span>
@@ -149,7 +142,6 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
             </div>
         </section>
 
-        {/* Centro de Seguridad (Inverted) */}
         <section className="bg-teal-900 p-8 rounded-[2.5rem] shadow-2xl space-y-6 md:col-span-2 text-white relative overflow-hidden">
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex-1 text-center md:text-left">
@@ -169,7 +161,6 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
             >
                 <Trash2 className="w-4 h-4" /> Borrar Cuenta Definitivamente
             </button>
-            <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-orange-500 rounded-full blur-[150px] opacity-10" />
         </section>
       </div>
     </div>

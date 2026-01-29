@@ -20,6 +20,7 @@ const Recipes = React.lazy(() => import('./components/Recipes').then(module => (
 const ShoppingList = React.lazy(() => import('./components/ShoppingList').then(module => ({ default: module.ShoppingList })));
 const Pantry = React.lazy(() => import('./components/Pantry').then(module => ({ default: module.Pantry })));
 const Profile = React.lazy(() => import('./components/Profile').then(module => ({ default: module.Profile })));
+const Settings = React.lazy(() => import('./components/Settings').then(module => ({ default: module.Settings })));
 
 type ViewState = 'loading' | 'auth' | 'onboarding' | 'app' | 'error-config' | 'stuck';
 
@@ -61,7 +62,6 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleVisualViewportResize = () => {
       if (window.visualViewport) {
-        // Si el alto visible es menor al 80% del alto total, es probable que el teclado esté abierto
         const isCurrentlyOpen = window.visualViewport.height < window.innerHeight * 0.8;
         setIsKeyboardOpen(isCurrentlyOpen);
       }
@@ -398,16 +398,16 @@ const App: React.FC = () => {
                         onSyncServings={() => {}} 
                     />}
                     
-                    {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} />}
+                    {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} onNavigate={setActiveTab} />}
+                    {activeTab === 'settings' && user && <Settings user={user} onBack={() => setActiveTab('profile')} onUpdateUser={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} />}
                 </div>
                 </Suspense>
             </div>
           </main>
           
-           {/* La barra de navegación se oculta suavemente si el teclado está abierto */}
            <nav className={`md:hidden fixed left-4 right-4 z-[800] bg-teal-900/95 backdrop-blur-3xl p-2 rounded-[2rem] shadow-2xl flex gap-1 safe-pb border border-white/5 transition-all duration-300 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-6 opacity-100'}`}>
               {[ {id:'dashboard', icon:Home}, {id:'planner', icon:Calendar}, {id:'pantry', icon:Package}, {id:'recipes', icon:BookOpen}, {id:'shopping', icon:ShoppingBag}, {id:'profile', icon:User} ].map(item => (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3.5 rounded-2xl transition-all ${activeTab === item.id ? 'bg-white text-teal-900 shadow-lg' : 'text-teal-100 opacity-40 hover:opacity-70'}`}><item.icon className="w-5 h-5" /></button>
+                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3.5 rounded-2xl transition-all ${activeTab === item.id || activeTab === 'settings' && item.id === 'profile' ? 'bg-white text-teal-900 shadow-lg' : 'text-teal-100 opacity-40 hover:opacity-70'}`}><item.icon className="w-5 h-5" /></button>
               ))}
           </nav>
          </>
