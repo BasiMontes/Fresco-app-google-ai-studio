@@ -64,12 +64,10 @@ const App: React.FC = () => {
     };
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleVisualViewportResize);
-      window.visualViewport.addEventListener('scroll', handleVisualViewportResize);
     }
     return () => {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleVisualViewportResize);
-        window.visualViewport.removeEventListener('scroll', handleVisualViewportResize);
       }
     };
   }, []);
@@ -161,8 +159,8 @@ const App: React.FC = () => {
                   {id:'shopping', icon:ShoppingBag, label:'Lista'}, 
                   {id:'profile', icon:User, label:'Perfil'}
                 ].map(item => (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-4 px-5 py-3 rounded-xl transition-all ${activeTab === item.id ? 'bg-white text-teal-900 font-bold shadow-lg' : 'text-teal-100 hover:bg-white/10'}`}>
-                    <item.icon className={`w-4 h-4 ${activeTab === item.id ? 'text-teal-900' : 'text-teal-400'}`} /> 
+                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-4 px-5 py-3 rounded-xl transition-all ${activeTab === item.id || (['settings', 'faq'].includes(activeTab) && item.id === 'profile') ? 'bg-white text-teal-900 font-bold shadow-lg' : 'text-teal-100 hover:bg-white/10'}`}>
+                    <item.icon className={`w-4 h-4 ${activeTab === item.id || (['settings', 'faq'].includes(activeTab) && item.id === 'profile') ? 'text-teal-900' : 'text-teal-400'}`} /> 
                     <span className="text-sm font-medium tracking-wide">{item.label}</span>
                   </button>
                 ))}
@@ -185,7 +183,7 @@ const App: React.FC = () => {
           </main>
           <nav className={`md:hidden fixed left-4 right-4 z-[800] bg-teal-900/95 backdrop-blur-3xl p-2 rounded-[2rem] shadow-2xl flex gap-1 safe-pb border border-white/5 transition-all duration-300 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-6 opacity-100'}`}>
               {[ {id:'dashboard', icon:Home}, {id:'planner', icon:Calendar}, {id:'pantry', icon:Package}, {id:'recipes', icon:BookOpen}, {id:'shopping', icon:ShoppingBag}, {id:'profile', icon:User} ].map(item => (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3.5 rounded-2xl transition-all ${activeTab === item.id || ['settings', 'faq'].includes(activeTab) && item.id === 'profile' ? 'bg-white text-teal-900 shadow-lg' : 'text-teal-100 opacity-40 hover:opacity-70'}`}><item.icon className="w-5 h-5" /></button>
+                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3.5 rounded-2xl transition-all ${activeTab === item.id || (['settings', 'faq'].includes(activeTab) && item.id === 'profile') ? 'bg-white text-teal-900 shadow-lg' : 'text-teal-100 opacity-40 hover:opacity-70'}`}><item.icon className="w-5 h-5" /></button>
               ))}
           </nav>
          </>

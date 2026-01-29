@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { UserProfile, DietPreference } from '../types';
 import { Settings as SettingsIcon, LogOut, Trash2, PiggyBank, ChevronRight, HelpCircle, Shield, ArrowRight, RefreshCw } from 'lucide-react';
 
