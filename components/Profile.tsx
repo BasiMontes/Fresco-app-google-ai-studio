@@ -129,7 +129,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
                 ].map((item, idx) => (
                     <button 
                       key={idx} 
-                      onClick={() => { if(item.id === 'settings' && onNavigate) onNavigate('settings'); }}
+                      onClick={() => { if(onNavigate) onNavigate(item.id); }}
                       className="w-full h-16 bg-white border-2 border-gray-50 hover:border-teal-100 rounded-2xl px-5 flex items-center justify-between group transition-all"
                     >
                         <div className="flex items-center gap-4">
