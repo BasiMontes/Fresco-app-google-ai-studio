@@ -55,13 +55,14 @@ const CATEGORY_LABELS: Record<string, { label: string, emoji: string, color: str
     "other": { label: "Varios", emoji: "🛍️", color: "text-purple-700" }
 };
 
+// UNIFICACIÓN DE UNIDADES PARA PRO (UDS en lugar de unidad)
 const SHOPPING_UNIT_OPTIONS = [
-  { id: 'uds', label: 'uds' },
-  { id: 'g', label: 'g' },
-  { id: 'kg', label: 'kg' },
-  { id: 'ml', label: 'ml' },
-  { id: 'l', label: 'l' },
-  { id: 'pack', label: 'pack' },
+  { id: 'uds', label: 'UDS' },
+  { id: 'g', label: 'G' },
+  { id: 'kg', label: 'KG' },
+  { id: 'ml', label: 'ML' },
+  { id: 'l', label: 'L' },
+  { id: 'pack', label: 'PACK' },
 ];
 
 export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantry, user, dbItems, onAddShoppingItem, onUpdateShoppingItem, onRemoveShoppingItem, onFinishShopping, onOpenRecipe, onSyncServings }) => {
@@ -321,7 +322,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         </div>
       </div>
 
-      {/* Formulario Añadir - Alineación a la izquierda corregida */}
+      {/* Formulario Añadir - PÍXEL PERFECT PARA PRODUCCIÓN */}
       <div className="mb-10 flex flex-col md:flex-row gap-3 w-full items-stretch">
           <form onSubmit={addExtraItem} className="flex-[4] bg-white border-2 border-gray-100 rounded-3xl flex items-center p-1.5 shadow-sm focus-within:border-teal-500/30 transition-all h-14">
             <input 
@@ -332,20 +333,20 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
               className="flex-1 px-4 bg-transparent focus:outline-none font-bold text-gray-700 placeholder-gray-300 text-sm h-full" 
             />
             
-            <div className="flex items-center gap-1 bg-gray-50 rounded-2xl p-1 border border-gray-100 mr-1 h-11 px-2">
+            <div className="flex items-center gap-1 bg-gray-50 rounded-2xl p-1 border border-gray-200 mr-1 h-11 px-2">
                 <input 
                   type="number" 
                   step="any"
                   value={extraQty}
                   onChange={e => setExtraQty(parseFloat(e.target.value) || 0)}
-                  className="w-8 bg-transparent text-center font-black text-xs outline-none text-teal-900"
+                  className="w-10 bg-transparent text-center font-black text-xs outline-none text-teal-900"
                 />
                 <div className="h-4 w-px bg-gray-200 mx-1" />
-                <div className="relative flex items-center">
+                <div className="relative flex items-center min-w-[50px]">
                     <select 
                         value={extraUnit}
                         onChange={e => setExtraUnit(e.target.value)}
-                        className="bg-transparent font-black text-[9px] uppercase outline-none cursor-pointer pr-4 appearance-none text-teal-600"
+                        className="bg-transparent font-black text-[9px] uppercase outline-none cursor-pointer pr-4 appearance-none text-teal-600 w-full"
                     >
                         {SHOPPING_UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
                     </select>
@@ -360,7 +361,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           
           <button onClick={() => setHidePurchased(!hidePurchased)} className={`flex-1 h-14 px-6 rounded-3xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all border-2 shadow-sm ${hidePurchased ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}>
               {hidePurchased ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              <span className="hidden lg:inline">{hidePurchased ? 'Ver todos' : 'Ocultar comprados'}</span>
+              <span className="hidden lg:inline">{hidePurchased ? 'Ver todos' : 'Ocultar'}</span>
           </button>
       </div>
 
@@ -396,12 +397,13 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                     <div className={`font-bold text-[13px] text-gray-900 capitalize truncate ${item.is_purchased ? 'line-through text-gray-400' : ''}`}>{item.name}</div>
                                 </div>
                                 
-                                <div className="flex items-center bg-gray-50 rounded-xl p-1 gap-1" onClick={e => e.stopPropagation()}>
+                                {/* NUEVO STEPPER UNIFICADO - IGUAL AL DEL BUSCADOR */}
+                                <div className="flex items-center bg-gray-50 rounded-xl p-1 h-11 border border-gray-100" onClick={e => e.stopPropagation()}>
                                     {!item.is_purchased && (
-                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors bg-white rounded-lg shadow-sm border border-gray-100"><Minus className="w-3 h-3" /></button>
+                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors bg-white rounded-lg shadow-sm border border-gray-100/50 active:scale-90"><Minus className="w-3 h-3" /></button>
                                     )}
                                     
-                                    <div className="flex items-center gap-1 px-2 min-w-[45px] justify-center">
+                                    <div className="flex items-center gap-1 px-2 min-w-[55px] justify-center">
                                         <input 
                                             type="number" 
                                             step="any"
@@ -409,11 +411,13 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                             value={item.quantity}
                                             onChange={(e) => handleManualQtyChange(item.id, e.target.value)}
                                         />
-                                        <span className={`text-[9px] font-black uppercase ${item.is_purchased ? 'text-gray-300' : 'text-teal-600/50'}`}>{item.unit}</span>
+                                        <span className={`text-[9px] font-black uppercase ${item.is_purchased ? 'text-gray-300' : 'text-teal-600/60'}`}>
+                                            {item.unit === 'uds' ? 'UDS' : item.unit.toUpperCase()}
+                                        </span>
                                     </div>
                                     
                                     {!item.is_purchased && (
-                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? 0.25 : 1)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-teal-600 transition-colors bg-white rounded-lg shadow-sm border border-gray-100"><Plus className="w-3 h-3" /></button>
+                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? 0.25 : 1)} className="w-8 h-8 flex items-center justify-center text-teal-600 hover:bg-teal-50 transition-colors bg-white rounded-lg shadow-sm border border-gray-100/50 active:scale-90"><Plus className="w-3 h-3" /></button>
                                     )}
                                 </div>
                             </div>
@@ -492,7 +496,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                       {reviewItemsList.map(item => (
                           <div key={item.id} className="flex justify-between items-center border-b border-gray-100 pb-2">
                               <span className="font-bold text-sm capitalize text-gray-800">{item.name}</span>
-                              <span className="font-black text-xs text-teal-600 bg-teal-50 px-2 py-1 rounded-lg">{item.quantity} {item.unit}</span>
+                              <span className="font-black text-xs text-teal-600 bg-teal-50 px-2 py-1 rounded-lg">{item.quantity} {item.unit.toUpperCase()}</span>
                           </div>
                       ))}
                   </div>
