@@ -28,14 +28,11 @@ interface TraceableShoppingItem extends ShoppingItem {
     internalType?: 'mass' | 'volume' | 'count';
 }
 
-const UNIT_EQUIVALENCES: Record<string, { weight: number, unit: string }> = {
-  "tomate": { weight: 150, unit: "g" }, "cebolla": { weight: 130, unit: "g" },
-  "ajo": { weight: 10, unit: "g" }, "huevo": { weight: 60, unit: "g" },
-  "pimiento": { weight: 180, unit: "g" }, "zanahoria": { weight: 90, unit: "g" },
-  "patata": { weight: 200, unit: "g" }, "aguacate": { weight: 220, unit: "g" },
-  "limon": { weight: 100, unit: "g" }, "manzana": { weight: 180, unit: "g" },
-  "platano": { weight: 130, unit: "g" }, "pepino": { weight: 250, unit: "g" },
-  "calabacin": { weight: 300, unit: "g" }
+// Función de normalización visual forzada para producción
+const formatUnit = (unit: string = '') => {
+  const u = unit.toLowerCase().trim();
+  if (['uds', 'unidad', 'unidades', 'ud', 'u'].includes(u)) return 'UDS';
+  return u.toUpperCase();
 };
 
 const CATEGORY_LABELS: Record<string, { label: string, emoji: string, color: string }> = {
@@ -55,7 +52,6 @@ const CATEGORY_LABELS: Record<string, { label: string, emoji: string, color: str
     "other": { label: "Varios", emoji: "🛍️", color: "text-purple-700" }
 };
 
-// UNIFICACIÓN DE UNIDADES PARA PRO (UDS en lugar de unidad)
 const SHOPPING_UNIT_OPTIONS = [
   { id: 'uds', label: 'UDS' },
   { id: 'g', label: 'G' },
@@ -68,9 +64,6 @@ const SHOPPING_UNIT_OPTIONS = [
 export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantry, user, dbItems, onAddShoppingItem, onUpdateShoppingItem, onRemoveShoppingItem, onFinishShopping, onOpenRecipe, onSyncServings }) => {
   const [adjustments, setAdjustments] = useState<Record<string, number>>(() => {
       try { return JSON.parse(localStorage.getItem('fresco_shopping_adjustments') || '{}'); } catch { return {}; }
-  });
-  const [customPrices, setCustomPrices] = useState<Record<string, number>>(() => {
-      try { return JSON.parse(localStorage.getItem('fresco_custom_prices') || '{}'); } catch { return {}; }
   });
   
   const [showComparison, setShowComparison] = useState(false);
@@ -86,7 +79,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => { localStorage.setItem('fresco_shopping_adjustments', JSON.stringify(adjustments)); }, [adjustments]);
-  useEffect(() => { localStorage.setItem('fresco_custom_prices', JSON.stringify(customPrices)); }, [customPrices]);
 
   const addExtraItem = (e: React.FormEvent | React.MouseEvent, instantlyPurchased = false) => {
       e.preventDefault();
@@ -167,9 +159,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         const key = normalizeName(ing.name);
         const qtyNeeded = (ing.quantity / (recipe.servings || 1)) * (slot.servings || 1);
         let normalized = normalizeUnit(qtyNeeded, ing.unit);
-        if (normalized.type === 'count' && UNIT_EQUIVALENCES[key]) {
-            normalized = { value: qtyNeeded * UNIT_EQUIVALENCES[key].weight, type: 'mass' };
-        }
         if (itemsMap[key]) {
             if (itemsMap[key].internalType === normalized.type) itemsMap[key].internalValue = (itemsMap[key].internalValue || 0) + normalized.value;
             if(!itemsMap[key].sourceRecipes.includes(recipe.title)) itemsMap[key].sourceRecipes.push(recipe.title);
@@ -191,7 +180,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       const display = convertBack(remainingValue, item.internalType || 'count');
       const adjustment = adjustments[item.id] || 0;
       const finalQty = Math.max(0, display.quantity + adjustment);
-      const basePrice = customPrices[item.name] || SPANISH_PRICES[item.id] || SPANISH_PRICES[normalizedName] || SPANISH_PRICES['default'];
+      const basePrice = SPANISH_PRICES[item.id] || SPANISH_PRICES[normalizedName] || SPANISH_PRICES['default'];
       const priceMultiplier = (display.unit === 'g' || display.unit === 'ml') ? 0.001 : 1;
       const itemCost = finalQty * priceMultiplier * basePrice;
       return { ...item, quantity: finalQty, unit: display.unit, estimated_price: activeStore ? itemCost * activeStore.multiplier : itemCost, store: activeStore?.name || 'Cualquiera' };
@@ -206,12 +195,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         } else {
             finalItemsList.push({ ...extra, sourceRecipes: ['Manual'], internalValue: 0, internalType: 'count' });
         }
-    });
-
-    finalItemsList.forEach(item => {
-        const basePrice = customPrices[item.name] || SPANISH_PRICES[item.name.toLowerCase()] || SPANISH_PRICES['default'];
-        const mult = (item.unit === 'g' || item.unit === 'ml') ? 0.001 : 1;
-        item.estimated_price = item.quantity * mult * basePrice * (activeStore ? activeStore.multiplier : 1);
     });
 
     const storeComparisons = SUPERMARKETS.map(shop => {
@@ -229,7 +212,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         cheapest: storeComparisons[0], 
         maxSavings: storeComparisons[storeComparisons.length - 1].total - storeComparisons[0].total 
     };
-  }, [plan, recipes, pantry, selectedStoreId, dbItems, adjustments, customPrices]);
+  }, [plan, recipes, pantry, selectedStoreId, dbItems, adjustments]);
 
   const groupedItems = useMemo(() => {
       const groups: Record<string, TraceableShoppingItem[]> = {};
@@ -322,7 +305,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         </div>
       </div>
 
-      {/* Formulario Añadir - PÍXEL PERFECT PARA PRODUCCIÓN */}
+      {/* Buscador: Alineación perfecta izquierda coincidente con header */}
       <div className="mb-10 flex flex-col md:flex-row gap-3 w-full items-stretch">
           <form onSubmit={addExtraItem} className="flex-[4] bg-white border-2 border-gray-100 rounded-3xl flex items-center p-1.5 shadow-sm focus-within:border-teal-500/30 transition-all h-14">
             <input 
@@ -333,7 +316,8 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
               className="flex-1 px-4 bg-transparent focus:outline-none font-bold text-gray-700 placeholder-gray-300 text-sm h-full" 
             />
             
-            <div className="flex items-center gap-1 bg-gray-50 rounded-2xl p-1 border border-gray-200 mr-1 h-11 px-2">
+            {/* STEPPER UNIFICADO (Busqueda) */}
+            <div className="flex items-center gap-1 bg-gray-50 rounded-2xl p-1 border border-gray-100 mr-1 h-11 px-2">
                 <input 
                   type="number" 
                   step="any"
@@ -397,13 +381,13 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                     <div className={`font-bold text-[13px] text-gray-900 capitalize truncate ${item.is_purchased ? 'line-through text-gray-400' : ''}`}>{item.name}</div>
                                 </div>
                                 
-                                {/* NUEVO STEPPER UNIFICADO - IGUAL AL DEL BUSCADOR */}
-                                <div className="flex items-center bg-gray-50 rounded-xl p-1 h-11 border border-gray-100" onClick={e => e.stopPropagation()}>
+                                {/* STEPPER UNIFICADO (Item Lista) - MISMO DISEÑO QUE EL BUSCADOR */}
+                                <div className="flex items-center bg-gray-50 rounded-2xl p-1 h-11 border border-gray-100/50" onClick={e => e.stopPropagation()}>
                                     {!item.is_purchased && (
-                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors bg-white rounded-lg shadow-sm border border-gray-100/50 active:scale-90"><Minus className="w-3 h-3" /></button>
+                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors bg-white rounded-lg shadow-sm border border-gray-100 active:scale-90"><Minus className="w-3 h-3" /></button>
                                     )}
                                     
-                                    <div className="flex items-center gap-1 px-2 min-w-[55px] justify-center">
+                                    <div className="flex items-center gap-1 px-3 min-w-[60px] justify-center">
                                         <input 
                                             type="number" 
                                             step="any"
@@ -411,13 +395,13 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                             value={item.quantity}
                                             onChange={(e) => handleManualQtyChange(item.id, e.target.value)}
                                         />
-                                        <span className={`text-[9px] font-black uppercase ${item.is_purchased ? 'text-gray-300' : 'text-teal-600/60'}`}>
-                                            {item.unit === 'uds' ? 'UDS' : item.unit.toUpperCase()}
+                                        <span className={`text-[9px] font-black uppercase tracking-wider ${item.is_purchased ? 'text-gray-300' : 'text-teal-600/60'}`}>
+                                            {formatUnit(item.unit)}
                                         </span>
                                     </div>
                                     
                                     {!item.is_purchased && (
-                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? 0.25 : 1)} className="w-8 h-8 flex items-center justify-center text-teal-600 hover:bg-teal-50 transition-colors bg-white rounded-lg shadow-sm border border-gray-100/50 active:scale-90"><Plus className="w-3 h-3" /></button>
+                                        <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? 0.25 : 1)} className="w-8 h-8 flex items-center justify-center text-teal-600 hover:bg-teal-50 transition-colors bg-white rounded-lg shadow-sm border border-gray-100 active:scale-90"><Plus className="w-3 h-3" /></button>
                                     )}
                                 </div>
                             </div>
@@ -440,7 +424,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           </button>
       </div>
       
-      {/* Modal de Comparación de Precios - Compacto en Desktop */}
+      {/* Modal Comparador Compacto */}
       {showComparison && (
           <ModalPortal>
               <div className="fixed inset-0 z-[5000] bg-teal-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowComparison(false)}>
@@ -496,7 +480,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                       {reviewItemsList.map(item => (
                           <div key={item.id} className="flex justify-between items-center border-b border-gray-100 pb-2">
                               <span className="font-bold text-sm capitalize text-gray-800">{item.name}</span>
-                              <span className="font-black text-xs text-teal-600 bg-teal-50 px-2 py-1 rounded-lg">{item.quantity} {item.unit.toUpperCase()}</span>
+                              <span className="font-black text-xs text-teal-600 bg-teal-50 px-2 py-1 rounded-lg">{item.quantity} {formatUnit(item.unit)}</span>
                           </div>
                       ))}
                   </div>
