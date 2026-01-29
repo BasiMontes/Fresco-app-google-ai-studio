@@ -65,7 +65,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
   };
 
   return (
-    <div className="space-y-10 animate-fade-in pb-48" role="main">
+    <div className="space-y-10 animate-fade-in pb-52 px-1 md:px-0" role="main">
       {/* User Header */}
       <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-50 flex items-center gap-4">
         <div className="w-16 h-16 rounded-2xl shadow-xl border-4 border-gray-50 overflow-hidden">
@@ -114,7 +114,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
                     disabled={!hasChanges || isUpdating}
                     className={`w-full h-14 rounded-2xl font-black text-sm flex items-center justify-between px-6 transition-all border-2 ${
                         hasChanges 
-                        ? 'bg-teal-900 text-white border-teal-900 shadow-xl' 
+                        ? 'bg-teal-900 text-white border-teal-900 shadow-xl scale-[1.02]' 
                         : 'bg-white text-gray-300 border-gray-100 cursor-not-allowed'
                     }`}
                 >
@@ -156,7 +156,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate, onLogout, onRe
                     <h3 className="text-xl font-black tracking-tight">Tus datos son tuyos.</h3>
                     <p className="text-teal-300 font-medium text-xs opacity-60">Sincronización en la nube activa.</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap justify-center md:justify-end gap-3">
                     <button onClick={exportData} className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">Backup JSON</button>
                     <button onClick={() => { if(confirm("¿Cerrar sesión?")) onLogout(); }} className="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2">
                         <LogOut className="w-3.5 h-3.5" /> Salir

@@ -21,9 +21,6 @@ interface PlannerProps {
   onAddToShoppingList?: (items: ShoppingItem[]) => void;
 }
 
-const SLOT_LEFTOVERS = 'SPECIAL_LEFTOVERS';
-const SLOT_EAT_OUT = 'SPECIAL_EAT_OUT';
-
 export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, onUpdateSlot, onAIPlanGenerated, onClear, onCookFinish, onAddToShoppingList }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [showPlanWizard, setShowPlanWizard] = useState(false);
@@ -36,7 +33,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   const days = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i)), [currentWeekStart]);
 
-  // Agrupación de historial (Máximo 4 semanas atrás)
+  // Agrupación de historial (Siempre 4 semanas atrás, incluso vacías)
   const historyWeeks = useMemo(() => {
       const weeks: { weekStart: Date; meals: MealSlot[] }[] = [];
       const today = startOfDay(new Date());
@@ -49,9 +46,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
               return d >= wStart && d <= wEnd && slot.recipeId;
           });
           
-          if (weekMeals.length > 0) {
-              weeks.push({ weekStart: wStart, meals: weekMeals });
-          }
+          // NOTA: Se eliminó el filtro que ocultaba semanas vacías para mantener consistencia visual
+          weeks.push({ weekStart: wStart, meals: weekMeals });
       }
       return weeks;
   }, [plan]);
@@ -76,7 +72,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   if (showHistory) {
       return (
           <div className="h-full flex flex-col animate-fade-in bg-white safe-pt">
-              <header className="p-6 flex items-start gap-4">
+              <header className="p-6 flex items-start gap-4 sticky top-0 bg-white z-20 border-b border-gray-50">
                   <button onClick={() => setShowHistory(false)} className="p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors">
                       <ArrowLeft className="w-6 h-6 text-teal-900" />
                   </button>
@@ -85,54 +81,55 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <History className="w-6 h-6 text-teal-600" />
                           <h2 className="text-2xl font-black text-teal-900">Historial de Menús</h2>
                       </div>
-                      <p className="text-gray-500 font-medium text-sm leading-relaxed">Consulta tus recetas y planes de semanas anteriores.</p>
+                      <p className="text-gray-500 font-medium text-sm leading-relaxed">Consulta tus recetas y planes de las últimas 4 semanas.</p>
                   </div>
               </header>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-32">
-                  {historyWeeks.length === 0 ? (
-                      <div className="text-center py-20 opacity-30">
-                          <History className="w-16 h-16 mx-auto mb-4" />
-                          <p className="font-bold">No hay menús guardados aún.</p>
-                      </div>
-                  ) : (
-                      historyWeeks.map((week, idx) => (
-                          <div key={idx} className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 space-y-6">
-                              <div className="flex items-start justify-between">
-                                  <div className="space-y-2">
-                                      <div className="flex items-center gap-2 text-teal-900">
-                                          <Calendar className="w-5 h-5" />
-                                          <h3 className="font-black text-lg">Semana del {format(week.weekStart, "d 'de' MMMM, yyyy", { locale: es })}</h3>
-                                      </div>
-                                      <span className="inline-block px-3 py-1 bg-green-50 text-green-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-green-100">
-                                          {week.meals.length} comidas
-                                      </span>
+              <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-40">
+                  {historyWeeks.map((week, idx) => (
+                      <div key={idx} className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 space-y-6">
+                          <div className="flex items-start justify-between">
+                              <div className="space-y-2">
+                                  <div className="flex items-center gap-2 text-teal-900">
+                                      <Calendar className="w-5 h-5" />
+                                      <h3 className="font-black text-lg">Semana del {format(week.weekStart, "d 'de' MMMM, yyyy", { locale: es })}</h3>
                                   </div>
-                              </div>
-
-                              <div className="space-y-3">
-                                  {week.meals.slice(0, 3).map((slot, sIdx) => {
-                                      const recipe = recipes.find(r => r.id === slot.recipeId);
-                                      if (!recipe) return null;
-                                      return (
-                                          <div key={sIdx} onClick={() => setSelectedRecipe(recipe)} className="flex items-center gap-4 p-3 bg-gray-50/50 rounded-2xl border border-transparent hover:border-teal-200 transition-all cursor-pointer">
-                                              <img src={recipe.image_url} className="w-16 h-16 rounded-xl object-cover shadow-sm" alt="" />
-                                              <div className="flex-1 min-w-0">
-                                                  <h4 className="font-bold text-gray-900 text-sm truncate">{recipe.title}</h4>
-                                                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider capitalize">{slot.type}</p>
-                                                  <div className="flex gap-3 mt-1.5 opacity-60">
-                                                      <div className="flex items-center gap-1"><Clock className="w-3 h-3" /><span className="text-[9px] font-black">{recipe.prep_time} min</span></div>
-                                                      <div className="flex items-center gap-1"><Users className="w-3 h-3" /><span className="text-[9px] font-black">{slot.servings} pax</span></div>
-                                                  </div>
-                                              </div>
-                                          </div>
-                                      );
-                                  })}
-                                  {week.meals.length > 3 && <p className="text-center text-[9px] font-black text-gray-300 uppercase tracking-widest">+ {week.meals.length - 3} platos más</p>}
+                                  <span className={`inline-block px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${week.meals.length > 0 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-gray-50 text-gray-400 border-gray-100'}`}>
+                                      {week.meals.length} {week.meals.length === 1 ? 'comida' : 'comidas'}
+                                  </span>
                               </div>
                           </div>
-                      ))
-                  )}
+
+                          <div className="space-y-3">
+                              {week.meals.length === 0 ? (
+                                  <div className="py-4 text-center border-2 border-dashed border-gray-50 rounded-2xl">
+                                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Sin actividad registrada</p>
+                                  </div>
+                              ) : (
+                                  <>
+                                    {week.meals.slice(0, 3).map((slot, sIdx) => {
+                                        const recipe = recipes.find(r => r.id === slot.recipeId);
+                                        if (!recipe) return null;
+                                        return (
+                                            <div key={sIdx} onClick={() => setSelectedRecipe(recipe)} className="flex items-center gap-4 p-3 bg-gray-50/50 rounded-2xl border border-transparent hover:border-teal-200 transition-all cursor-pointer">
+                                                <img src={recipe.image_url} className="w-16 h-16 rounded-xl object-cover shadow-sm" alt="" />
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-bold text-gray-900 text-sm truncate">{recipe.title}</h4>
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider capitalize">{slot.type}</p>
+                                                    <div className="flex gap-3 mt-1.5 opacity-60">
+                                                        <div className="flex items-center gap-1"><Clock className="w-3 h-3" /><span className="text-[9px] font-black">{recipe.prep_time} min</span></div>
+                                                        <div className="flex items-center gap-1"><Users className="w-3 h-3" /><span className="text-[9px] font-black">{slot.servings} pax</span></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {week.meals.length > 3 && <p className="text-center text-[9px] font-black text-gray-300 uppercase tracking-widest">+ {week.meals.length - 3} platos más</p>}
+                                  </>
+                              )}
+                          </div>
+                      </div>
+                  ))}
               </div>
               
               {selectedRecipe && (
