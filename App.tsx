@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { UserProfile, Recipe, MealSlot, PantryItem, MealCategory, ShoppingItem } from './types';
 import { Onboarding } from './components/Onboarding';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { supabase, isConfigured } from './lib/supabase';
 import * as db from './services/dbService';
 import { AuthPage } from './components/AuthPage';
-import { initSyncListener } from './services/syncService';
+import { initSyncListener, addToSyncQueue } from './services/syncService';
 import { STATIC_RECIPES } from './constants';
 import { Dialog, DialogOptions } from './components/Dialog';
 import { Logo } from './components/Logo';
@@ -133,6 +133,45 @@ const App: React.FC = () => {
     } catch (e) { setView('onboarding'); }
   };
 
+  const handleUpdateMealSlot = useCallback(async (date: string, type: MealCategory, recipeId: string | undefined) => {
+    if (!userId) return;
+    const newSlot: MealSlot = { date, type, recipeId, servings: user?.household_size || 2, isCooked: false };
+    
+    setMealPlan(prev => {
+        const filtered = prev.filter(p => !(p.date === date && p.type === type));
+        return recipeId ? [...filtered, newSlot] : filtered;
+    });
+
+    if (recipeId) {
+        addToSyncQueue(userId, 'UPDATE_SLOT', newSlot);
+    } else {
+        addToSyncQueue(userId, 'DELETE_SLOT', { date, type });
+    }
+  }, [userId, user]);
+
+  const handleAIPlanGenerated = useCallback(async (newPlan: MealSlot[], newRecipes: Recipe[]) => {
+      if (!userId) return;
+      
+      if (newRecipes.length > 0) {
+          setRecipes(prev => [...prev, ...newRecipes]);
+          newRecipes.forEach(r => addToSyncQueue(userId, 'SAVE_RECIPE', r));
+      }
+
+      setMealPlan(prev => {
+          const datesToReplace = new Set(newPlan.map(p => p.date));
+          const filtered = prev.filter(p => !datesToReplace.has(p.date));
+          return [...filtered, ...newPlan];
+      });
+
+      newPlan.forEach(slot => addToSyncQueue(userId, 'UPDATE_SLOT', slot));
+  }, [userId]);
+
+  const handleClearMealPlan = useCallback(async () => {
+      if (!userId) return;
+      setMealPlan([]);
+      await db.clearMealPlanDB(userId);
+  }, [userId]);
+
   const handleForceReset = async () => {
       await supabase.auth.signOut();
       localStorage.clear();
@@ -171,7 +210,7 @@ const App: React.FC = () => {
             <div className={`flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 ${isKeyboardOpen ? 'pb-4' : 'pb-32'} md:pb-8 h-full overflow-y-auto no-scrollbar`}>
                 <Suspense fallback={<PageLoader message="Cargando vista..." />}>
                     {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
-                    {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={() => {}} onAIPlanGenerated={() => {}} onClear={() => {}} />}
+                    {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={handleAIPlanGenerated} onClear={handleClearMealPlan} />}
                     {activeTab === 'pantry' && <Pantry items={pantry} onRemove={() => {}} onAdd={() => {}} onUpdateQuantity={() => {}} onAddMany={() => {}} onEdit={() => {}} />}
                     {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={() => {}} onAddToPlan={() => {}} onCookFinish={() => {}} onAddToShoppingList={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
                     {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={() => {}} onUpdateShoppingItem={() => {}} onRemoveShoppingItem={() => {}} onFinishShopping={() => {}} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
