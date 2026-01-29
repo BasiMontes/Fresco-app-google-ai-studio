@@ -274,7 +274,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       return (
           <div className="fixed inset-0 z-[5000] bg-teal-900 flex flex-col items-center justify-center p-6 animate-fade-in text-white text-center">
               <PartyPopper className="w-24 h-24 mb-6 text-yellow-400 animate-bounce" />
-              <h2 className="text-4xl font-black mb-4">¡Compra Finalizada!</h2>
+              <h2 className="text-4xl font-black mb-4 text-balance">¡Compra Finalizada!</h2>
               <p className="text-xl opacity-80 mb-8">Has añadido {lastSessionStats.count} productos a tu despensa.</p>
               <button onClick={() => setShowCelebration(false)} className="px-8 py-4 bg-white text-teal-900 rounded-2xl font-black uppercase tracking-widest">Volver</button>
           </div>
@@ -282,21 +282,21 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   }
 
   return (
-    <div className="p-4 md:p-2 max-w-5xl mx-auto pb-48 safe-pt animate-fade-in">
+    <div className="md:p-2 max-w-5xl mx-auto pb-48 animate-fade-in">
       {/* Header Widget */}
-      <div className="bg-teal-900 rounded-[3.5rem] md:rounded-3xl p-10 md:p-8 text-white shadow-2xl mb-12 md:mb-8 relative overflow-hidden">
+      <div className="bg-teal-900 rounded-[2.5rem] md:rounded-3xl p-8 md:p-8 text-white shadow-2xl mb-8 relative overflow-hidden">
         <div className="relative z-10">
             <div className="flex justify-between items-start mb-6">
-                <h1 className="text-4xl md:text-3xl font-black">Lista de Compra</h1>
+                <h1 className="text-3xl md:text-3xl font-black">Lista de Compra</h1>
                 <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10 flex items-center gap-2">
                     <TrendingUp className="text-orange-400 w-4 h-4" />
-                    <span className="text-lg md:text-sm font-black">{shoppingData.totalEstimated.toFixed(2)}€</span>
+                    <span className="text-base md:text-sm font-black">{shoppingData.totalEstimated.toFixed(2)}€</span>
                 </div>
             </div>
             <div className="bg-white/10 rounded-full h-3 w-full mb-3 p-0.5">
                 <div className="bg-orange-500 h-full rounded-full transition-all duration-700" style={{ width: `${progress}%` }} />
             </div>
-            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-teal-300">
+            <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-teal-300">
                 <span>{progress}% Comprado</span>
                 <button onClick={() => setShowComparison(true)} className="flex items-center gap-2 hover:text-white transition-all group">
                     <TrendingDown className="w-3 h-3 group-hover:scale-110 transition-transform" /> Comparar
@@ -306,7 +306,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       </div>
 
       {/* Buscador: Alineación perfecta izquierda coincidente con header */}
-      <div className="mb-10 flex flex-col md:flex-row gap-3 w-full items-stretch">
+      <div className="mb-8 flex flex-col md:flex-row gap-3 w-full items-stretch">
           <form onSubmit={addExtraItem} className="flex-[4] bg-white border-2 border-gray-100 rounded-3xl flex items-center p-1.5 shadow-sm focus-within:border-teal-500/30 transition-all h-14">
             <input 
               type="text" 
@@ -323,18 +323,18 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                   step="any"
                   value={extraQty}
                   onChange={e => setExtraQty(parseFloat(e.target.value) || 0)}
-                  className="w-10 bg-transparent text-center font-black text-xs outline-none text-teal-900"
+                  className="w-8 md:w-10 bg-transparent text-center font-black text-xs outline-none text-teal-900"
                 />
                 <div className="h-4 w-px bg-gray-200 mx-1" />
-                <div className="relative flex items-center min-w-[50px]">
+                <div className="relative flex items-center min-w-[45px] md:min-w-[50px]">
                     <select 
                         value={extraUnit}
                         onChange={e => setExtraUnit(e.target.value)}
-                        className="bg-transparent font-black text-[9px] uppercase outline-none cursor-pointer pr-4 appearance-none text-teal-600 w-full"
+                        className="bg-transparent font-black text-[8px] md:text-[9px] uppercase outline-none cursor-pointer pr-4 appearance-none text-teal-600 w-full"
                     >
                         {SHOPPING_UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
                     </select>
-                    <ChevronDown className="absolute right-0 w-2.5 h-2.5 text-teal-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-0 w-2 h-2 text-teal-400 pointer-events-none" />
                 </div>
             </div>
 
@@ -345,7 +345,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           
           <button onClick={() => setHidePurchased(!hidePurchased)} className={`flex-1 h-14 px-6 rounded-3xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all border-2 shadow-sm ${hidePurchased ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}>
               {hidePurchased ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              <span className="hidden lg:inline">{hidePurchased ? 'Ver todos' : 'Ocultar'}</span>
+              <span className="">{hidePurchased ? 'Ver todos' : 'Ocultar'}</span>
           </button>
       </div>
 
@@ -356,46 +356,46 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
               <p className="font-bold text-teal-900">Tu lista está vacía</p>
           </div>
       ) : (
-        <div className="space-y-12 pb-32">
+        <div className="space-y-10 pb-40 px-1 md:px-0">
             {Object.keys(groupedItems).sort().map(catKey => {
                 const info = CATEGORY_LABELS[catKey] || CATEGORY_LABELS['other'];
                 const allChecked = groupedItems[catKey].every(i => i.is_purchased);
                 return (
                     <div key={catKey} className="space-y-4">
-                        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-2 px-1">
                             <div className={`flex items-center gap-2 ${info.color}`}>
                                 <span className="text-lg">{info.emoji}</span>
-                                <span className="text-xs font-black uppercase tracking-widest">{info.label}</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest">{info.label}</span>
                             </div>
-                            <button onClick={() => checkAllCategory(groupedItems[catKey])} className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1 px-3 py-1 rounded-lg transition-all ${allChecked ? 'bg-teal-50 text-teal-600' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}>
+                            <button onClick={() => checkAllCategory(groupedItems[catKey])} className={`text-[8px] font-black uppercase tracking-widest flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all ${allChecked ? 'bg-teal-50 text-teal-600' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}>
                                 <CheckSquare className="w-3 h-3" /> {allChecked ? 'Desmarcar' : 'Todo'}
                             </button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
                         {groupedItems[catKey].map(item => (
-                            <div key={item.id} className={`group flex items-center gap-4 py-2 px-3 rounded-2xl transition-all cursor-pointer select-none border border-transparent ${item.is_purchased ? 'opacity-30' : 'hover:bg-white hover:border-gray-50 hover:shadow-sm'}`} onClick={() => toggleItemCheck(item)}>
+                            <div key={item.id} className={`group flex items-center gap-3 py-2 px-2 md:px-3 rounded-2xl transition-all cursor-pointer select-none border border-transparent ${item.is_purchased ? 'opacity-30' : 'hover:bg-white hover:border-gray-50 hover:shadow-sm'}`} onClick={() => toggleItemCheck(item)}>
                                 <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-teal-600 border-teal-600 shadow-inner' : 'border-gray-200 bg-white group-hover:border-teal-400'}`}>
                                     {item.is_purchased && <Check className="w-4 h-4 text-white stroke-[3.5px]" />}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className={`font-bold text-[13px] text-gray-900 capitalize truncate ${item.is_purchased ? 'line-through text-gray-400' : ''}`}>{item.name}</div>
+                                    <div className={`font-bold text-sm md:text-[13px] text-gray-900 capitalize truncate ${item.is_purchased ? 'line-through text-gray-400' : ''}`}>{item.name}</div>
                                 </div>
                                 
                                 {/* STEPPER UNIFICADO (Item Lista) - MISMO DISEÑO QUE EL BUSCADOR */}
-                                <div className="flex items-center bg-gray-50 rounded-2xl p-1 h-11 border border-gray-100/50 shadow-fresco-inner" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center bg-gray-50 rounded-2xl p-1 h-11 border border-gray-100/50 shadow-fresco-inner flex-shrink-0" onClick={e => e.stopPropagation()}>
                                     {!item.is_purchased && (
                                         <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors bg-white rounded-lg shadow-sm border border-gray-100 active:scale-90"><Minus className="w-3 h-3" /></button>
                                     )}
                                     
-                                    <div className="flex items-center gap-1 px-3 min-w-[60px] justify-center">
+                                    <div className="flex items-center gap-1 px-2 min-w-[55px] md:min-w-[60px] justify-center">
                                         <input 
                                             type="number" 
                                             step="any"
-                                            className={`w-10 bg-transparent text-center font-black text-[12px] outline-none ${item.is_purchased ? 'text-gray-300' : 'text-teal-900'}`}
+                                            className={`w-8 md:w-10 bg-transparent text-center font-black text-[12px] outline-none ${item.is_purchased ? 'text-gray-300' : 'text-teal-900'}`}
                                             value={item.quantity}
                                             onChange={(e) => handleManualQtyChange(item.id, e.target.value)}
                                         />
-                                        <span className={`text-[9px] font-black uppercase tracking-wider ${item.is_purchased ? 'text-gray-300' : 'text-teal-600/60'}`}>
+                                        <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-wider ${item.is_purchased ? 'text-gray-300' : 'text-teal-600/60'}`}>
                                             {formatUnitLabel(item.unit)}
                                         </span>
                                     </div>
@@ -413,12 +413,12 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         </div>
       )}
       
-      {/* Botón Flotante Refinado */}
-      <div className="fixed bottom-24 md:bottom-10 right-6 md:right-10 z-[100] animate-slide-up pointer-events-none">
+      {/* Botón Flotante Refinado - POSICIÓN MOBILE AJUSTADA */}
+      <div className="fixed bottom-28 md:bottom-10 right-6 md:right-10 z-[100] animate-slide-up pointer-events-none">
           <button 
             onClick={handleFinishClick}
             disabled={shoppingData.itemsList.length === 0}
-            className="bg-teal-900 text-white px-8 h-14 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95 shadow-xl shadow-teal-900/20 pointer-events-auto border border-white/5 disabled:opacity-50 text-[10px] uppercase tracking-[0.2em]"
+            className="bg-teal-900 text-white px-8 h-14 rounded-[1.8rem] font-black flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95 shadow-xl shadow-teal-900/30 pointer-events-auto border border-white/10 disabled:opacity-50 text-[10px] uppercase tracking-[0.2em]"
           >
               <Check className="w-4 h-4 stroke-[3px]" /> Terminar Compra
           </button>

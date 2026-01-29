@@ -47,6 +47,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const [dialogOptions, setDialogOptions] = useState<DialogOptions | null>(null);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [mealPlan, setMealPlan] = useState<MealSlot[]>([]);
@@ -55,6 +56,29 @@ const App: React.FC = () => {
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
       try { return JSON.parse(localStorage.getItem('fresco_favorites') || '[]'); } catch { return []; }
   });
+
+  // Detección inteligente de teclado virtual
+  useEffect(() => {
+    const handleVisualViewportResize = () => {
+      if (window.visualViewport) {
+        // Si el alto visible es menor al 80% del alto total, es probable que el teclado esté abierto
+        const isCurrentlyOpen = window.visualViewport.height < window.innerHeight * 0.8;
+        setIsKeyboardOpen(isCurrentlyOpen);
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleVisualViewportResize);
+      window.visualViewport.addEventListener('scroll', handleVisualViewportResize);
+    }
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleVisualViewportResize);
+        window.visualViewport.removeEventListener('scroll', handleVisualViewportResize);
+      }
+    };
+  }, []);
 
   useEffect(() => { localStorage.setItem('fresco_favorites', JSON.stringify(favoriteIds)); }, [favoriteIds]);
 
@@ -271,7 +295,7 @@ const App: React.FC = () => {
           </aside>
 
           <main className="flex-1 h-full overflow-hidden flex flex-col relative bg-[#FDFDFD]">
-            <div className={`flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 h-full ${activeTab === 'planner' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-auto'} no-scrollbar overscroll-none`}>
+            <div className={`flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 ${isKeyboardOpen ? 'pb-4' : 'pb-32'} md:pb-8 h-full ${activeTab === 'planner' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-auto'} no-scrollbar overscroll-none transition-all duration-300`}>
                 <Suspense fallback={<PageLoader message="Cargando vista..." />}>
                 <div className="h-full w-full">
                     {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
@@ -380,9 +404,10 @@ const App: React.FC = () => {
             </div>
           </main>
           
-           <nav className="md:hidden fixed bottom-6 left-4 right-4 z-[800] bg-teal-800/95 backdrop-blur-3xl p-1.5 rounded-3xl shadow-2xl flex gap-1 safe-pb">
+           {/* La barra de navegación se oculta suavemente si el teclado está abierto */}
+           <nav className={`md:hidden fixed left-4 right-4 z-[800] bg-teal-900/95 backdrop-blur-3xl p-2 rounded-[2rem] shadow-2xl flex gap-1 safe-pb border border-white/5 transition-all duration-300 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-6 opacity-100'}`}>
               {[ {id:'dashboard', icon:Home}, {id:'planner', icon:Calendar}, {id:'pantry', icon:Package}, {id:'recipes', icon:BookOpen}, {id:'shopping', icon:ShoppingBag}, {id:'profile', icon:User} ].map(item => (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-all ${activeTab === item.id ? 'bg-white text-teal-800' : 'text-teal-100 opacity-40'}`}><item.icon className="w-5 h-5" /></button>
+                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3.5 rounded-2xl transition-all ${activeTab === item.id ? 'bg-white text-teal-900 shadow-lg' : 'text-teal-100 opacity-40 hover:opacity-70'}`}><item.icon className="w-5 h-5" /></button>
               ))}
           </nav>
          </>
