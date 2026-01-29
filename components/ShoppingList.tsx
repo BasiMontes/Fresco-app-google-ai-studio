@@ -28,10 +28,10 @@ interface TraceableShoppingItem extends ShoppingItem {
     internalType?: 'mass' | 'volume' | 'count';
 }
 
-// Función de normalización visual forzada para producción
-const formatUnit = (unit: string = '') => {
+// Función de normalización visual estricta para producción
+const formatUnitLabel = (unit: string = '') => {
   const u = unit.toLowerCase().trim();
-  if (['uds', 'unidad', 'unidades', 'ud', 'u'].includes(u)) return 'UDS';
+  if (['uds', 'unidad', 'unidades', 'ud', 'u', 'unid'].includes(u)) return 'UDS';
   return u.toUpperCase();
 };
 
@@ -382,7 +382,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                 </div>
                                 
                                 {/* STEPPER UNIFICADO (Item Lista) - MISMO DISEÑO QUE EL BUSCADOR */}
-                                <div className="flex items-center bg-gray-50 rounded-2xl p-1 h-11 border border-gray-100/50" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center bg-gray-50 rounded-2xl p-1 h-11 border border-gray-100/50 shadow-fresco-inner" onClick={e => e.stopPropagation()}>
                                     {!item.is_purchased && (
                                         <button onClick={() => handleAdjust(item.id, (item.unit === 'kg' || item.unit === 'l') ? -0.25 : -1)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors bg-white rounded-lg shadow-sm border border-gray-100 active:scale-90"><Minus className="w-3 h-3" /></button>
                                     )}
@@ -396,7 +396,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                             onChange={(e) => handleManualQtyChange(item.id, e.target.value)}
                                         />
                                         <span className={`text-[9px] font-black uppercase tracking-wider ${item.is_purchased ? 'text-gray-300' : 'text-teal-600/60'}`}>
-                                            {formatUnit(item.unit)}
+                                            {formatUnitLabel(item.unit)}
                                         </span>
                                     </div>
                                     
@@ -480,7 +480,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                       {reviewItemsList.map(item => (
                           <div key={item.id} className="flex justify-between items-center border-b border-gray-100 pb-2">
                               <span className="font-bold text-sm capitalize text-gray-800">{item.name}</span>
-                              <span className="font-black text-xs text-teal-600 bg-teal-50 px-2 py-1 rounded-lg">{item.quantity} {formatUnit(item.unit)}</span>
+                              <span className="font-black text-xs text-teal-600 bg-teal-50 px-2 py-1 rounded-lg">{item.quantity} {formatUnitLabel(item.unit)}</span>
                           </div>
                       ))}
                   </div>
