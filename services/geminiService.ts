@@ -34,15 +34,9 @@ const EXTRACTION_SCHEMA = {
   required: ["items"]
 };
 
+// Fix: Always use process.env.API_KEY directly when initializing GoogleGenAI client
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any[]> => {
-  // Validación defensiva: Si no hay clave, lanzamos un error controlado
-  const apiKey = process.env.API_KEY || (window as any).process?.env?.API_KEY;
-  
-  if (!apiKey || apiKey === "undefined") {
-    throw new Error("API Key must be set");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   try {
     const response = await ai.models.generateContent({
@@ -83,11 +77,9 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
     return { plan, newRecipes: [] };
 };
 
+// Fix: Always use process.env.API_KEY directly when initializing GoogleGenAI client
 export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[], count: number = 3): Promise<Recipe[]> => {
-    const apiKey = process.env.API_KEY || (window as any).process?.env?.API_KEY;
-    if (!apiKey) return [];
-    
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     try {
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
