@@ -153,10 +153,8 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
     const { quantity: finalQty, unit: finalUnit } = autoScaleIngredient(rawNewQty, unit);
 
     if (item.id.startsWith('calc-')) {
-        // Para items calculados, creamos una entrada en DB para persistir el cambio (incluso si es 0)
         onAddShoppingItem([{ ...item, id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, quantity: finalQty, unit: finalUnit }]);
     } else {
-        // No borramos al llegar a cero por petición de UX, solo actualizamos
         onUpdateShoppingItem({ ...item, quantity: finalQty, unit: finalUnit });
     }
   };
@@ -307,20 +305,20 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                 {item.name}
                             </p>
                         </div>
-                        {/* Selector ULTRA COMPACTO (Ancho fijo 82px) */}
-                        <div className="flex items-center bg-gray-50 rounded-xl p-0.5 border border-gray-100 flex-shrink-0 w-[82px] h-8" onClick={e => e.stopPropagation()}>
+                        {/* Selector PRECISION (Ancho fijo 100px para XX,XXX) */}
+                        <div className="flex items-center bg-gray-50 rounded-xl p-0.5 border border-gray-100 flex-shrink-0 w-[100px] h-9" onClick={e => e.stopPropagation()}>
                             <button 
                                 onClick={(e) => canDecrement && handleAdjust(e, item, -1)} 
                                 disabled={!canDecrement}
-                                className={`w-6 h-6 flex items-center justify-center transition-colors ${canDecrement ? 'text-gray-400 hover:text-red-500' : 'text-gray-200'}`}
+                                className={`w-7 h-7 flex items-center justify-center transition-colors ${canDecrement ? 'text-gray-400 hover:text-red-500' : 'text-gray-200'}`}
                             >
-                                <Minus className="w-2.5 h-2.5" />
+                                <Minus className="w-3 h-3" />
                             </button>
                             <div className="flex-1 text-center min-w-0">
                                 <input 
                                     type="text"
                                     inputMode="decimal"
-                                    className="w-full bg-transparent font-black text-[10px] text-teal-900 leading-none text-center outline-none border-none p-0 focus:ring-0"
+                                    className="w-full bg-transparent font-black text-[10px] text-teal-900 leading-none text-center outline-none border-none p-0 focus:ring-0 tracking-tighter"
                                     value={isEditing ? localValue : formatQuantity(item.quantity, item.unit).replace('.', ',')}
                                     onChange={(e) => handleLocalChange(e.target.value)}
                                     onFocus={() => startEditing(item)}
@@ -328,9 +326,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                     onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                                     onClick={e => (e.target as HTMLInputElement).select()}
                                 />
-                                <p className="text-[5px] font-black text-teal-600/40 uppercase tracking-tighter leading-none">{formatUnitLabel(item.unit)}</p>
+                                <p className="text-[5px] font-black text-teal-600/40 uppercase tracking-tighter leading-none mt-0.5">{formatUnitLabel(item.unit)}</p>
                             </div>
-                            <button onClick={(e) => handleAdjust(e, item, 1)} className="w-6 h-6 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-2.5 h-2.5" /></button>
+                            <button onClick={(e) => handleAdjust(e, item, 1)} className="w-7 h-7 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-3 h-3" /></button>
                         </div>
                     </div>
                 );
