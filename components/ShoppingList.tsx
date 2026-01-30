@@ -337,7 +337,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       </div>
 
       <div className={`fixed left-8 right-8 md:left-auto md:right-8 z-[100] transition-all duration-500 ${shoppingData.finalItems.filter(i => i.is_purchased).length > 0 ? 'bottom-28 opacity-100' : 'bottom-[-100px] opacity-0'}`}>
-          <button onClick={() => setShowReceipt(true)} className="w-full md:w-auto bg-[#013b33] text-white px-8 h-16 rounded-full font-black flex items-center justify-center gap-3 hover:bg-teal-900 shadow-2xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
+          <button onClick={() => setShowReceipt(true)} className="w-full md:w-auto bg-[#013b33] text-white px-10 h-16 rounded-[1.8rem] font-black flex items-center justify-center gap-3 hover:bg-teal-900 shadow-2xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
               <Check className="w-5 h-5 stroke-[4px]" /> TERMINAR COMPRA
           </button>
       </div>
