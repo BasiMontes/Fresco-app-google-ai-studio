@@ -104,13 +104,13 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
   };
 
   const getExpiryStatus = (item: PantryItem) => {
-    if (!item.expires_at) return { type: 'none', label: 'Fresco', color: 'text-[#147A74]', icon: Clock };
+    if (!item.expires_at) return { type: 'none', label: 'Sin fecha', color: 'text-gray-400', icon: Clock };
     const today = startOfDay(new Date());
     const expiryDate = startOfDay(new Date(item.expires_at));
     const days = differenceInDays(expiryDate, today);
     if (days < 0) return { type: 'expired', label: 'CADUCADO', color: 'text-[#FF4D4D]', icon: AlertTriangle };
-    if (days === 0) return { type: 'Hoy', label: 'Hoy', color: 'text-[#FF4D4D]', icon: AlertTriangle };
-    if (days <= 3) return { type: 'priority', label: `${days}d`, color: 'text-[#E67E22]', icon: Clock };
+    if (days === 0) return { type: 'today', label: 'HOY', color: 'text-[#FF4D4D]', icon: AlertTriangle };
+    if (days <= 3) return { type: 'soon', label: format(expiryDate, "d MMM", { locale: es }), color: 'text-[#E67E22]', icon: Clock };
     return { type: 'fresh', label: format(expiryDate, "d MMM", { locale: es }), color: 'text-[#147A74]', icon: Clock };
   };
 
@@ -147,7 +147,8 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
   const visibleItems = useMemo(() => filteredItems.slice(0, visibleLimit), [filteredItems, visibleLimit]);
 
-  const handleSmartUpdate = (item: PantryItem, direction: number) => {
+  const handleAdjust = (e: React.MouseEvent, item: PantryItem, direction: number) => {
+    e.stopPropagation();
     const unit = item.unit.toLowerCase();
     let delta = 1;
     if (['g', 'ml'].includes(unit)) delta = 100 * direction;
@@ -220,7 +221,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
         </div>
       </header>
 
-      {/* SISTEMA DE FILTROS NORMALIZADO */}
       <div className="relative group/filters mb-6">
           {canScrollLeft && (
               <button 
@@ -241,9 +241,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                   const count = opt.id === 'all' 
                     ? items.length 
                     : items.filter(i => i.category === opt.id).length;
-
-                  // Opcional: Ocultar categorías vacías en el Stock si se prefiere limpieza máxima
-                  // Pero en stock suele ser útil verlas para saber qué falta. Por ahora mostramos todas.
                   
                   return (
                       <button 
@@ -283,7 +280,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
           <button onClick={() => { setFilterExpiring(!filterExpiring); setVisibleLimit(ITEMS_PER_PAGE); }} className={`flex items-center gap-3 transition-colors group ${filterExpiring ? 'text-[#147A74]' : 'text-[#4a5f6b] hover:text-[#013b33]'}`}><CalendarClock className={`w-4 h-4 group-hover:scale-110 transition-transform ${filterExpiring ? 'text-[#147A74]' : 'text-[#4a5f6b]'}`} /><span className="text-[12px] font-bold uppercase tracking-wider">Expiring soon</span>{filterExpiring && <div className="w-1.5 h-1.5 rounded-full bg-[#147A74] animate-pulse" />}</button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {visibleItems.length === 0 ? (
               <div className="col-span-full py-20 text-center opacity-10 flex flex-col items-center">
                   {selectedCategory === 'all' ? <Package size={40} className="mb-2" /> : <FilterX size={40} className="mb-2" />}
@@ -294,31 +291,52 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
             visibleItems.map(item => {
                 const status = getExpiryStatus(item);
                 const catInfo = CATEGORIES_LIST.find(c => c.id === item.category) || CATEGORIES_LIST[0];
-                const isLowStock = item.quantity <= 1;
-                const StatusIcon = status.icon;
                 const isEditing = editingId === item.id;
+                const canDecrement = item.quantity > 0;
+                const StatusIcon = status.icon;
+
                 return (
-                    <div key={item.id} className="bg-white rounded-[2rem] shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.05)] transition-all duration-500 flex flex-col h-[230px] border border-gray-50 group animate-fade-in p-5 relative">
-                        <div className="flex justify-between items-start mb-2"><h3 className="text-[1.1rem] text-[#013b33] font-black leading-[1.1] tracking-tight line-clamp-1 pr-2 capitalize">{item.name}</h3><button onClick={() => setItemToEdit(item)} className="p-1 text-[#013b33] hover:opacity-60 transition-opacity"><MoreVertical className="w-5 h-5" /></button></div>
-                        <div className="flex items-center gap-4 flex-1 min-h-0"><div className="w-14 h-14 rounded-full bg-[#F2F4F7] shadow-inner border border-white flex items-center justify-center text-3xl flex-shrink-0 group-hover:scale-110 transition-transform duration-500">{catInfo.emoji || '📦'}</div><div className="flex flex-col gap-0.5 min-w-0"><div className={`flex items-center gap-1.5 font-black text-[10px] tracking-tight ${status.color}`}><StatusIcon className="w-3.5 h-3.5 stroke-[2.5px]" /><span className="truncate uppercase">{status.label}</span></div></div></div>
-                        
-                        <div className={`mt-2 rounded-[1.8rem] p-0.5 flex items-center justify-between border transition-all duration-500 w-[100px] self-end ${isLowStock ? 'bg-[#FFF5F5] border-[#FFEBEB]' : 'bg-[#F9FAFB] border-[#F2F4F7]'}`}>
-                          <button onClick={(e) => { e.stopPropagation(); handleSmartUpdate(item, -1); }} className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm text-gray-300 hover:text-red-500 transition-all"><Minus className="w-3 h-3 stroke-[2.5px]" /></button>
-                          <div className="px-0.5 text-center min-w-0 flex-1">
-                              <input 
-                                  type="text"
-                                  inputMode="decimal"
-                                  className={`w-full bg-transparent font-black text-[10px] leading-none tracking-tighter text-center outline-none border-none p-0 focus:ring-0 ${isLowStock ? 'text-[#FF4D4D]' : 'text-[#013b33]'}`}
-                                  value={isEditing ? localValue : formatQuantity(item.quantity, item.unit).replace('.', ',')}
-                                  onChange={(e) => handleLocalChange(e.target.value)}
-                                  onFocus={() => startEditing(item)}
-                                  onBlur={() => finishEditing(item)}
-                                  onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-                                  onClick={e => (e.target as HTMLInputElement).select()}
-                              />
-                              <span className={`text-[5px] font-black mt-0.5 tracking-widest block leading-none ${isLowStock ? 'text-[#FF4D4D]' : 'text-[#9DB2AF]'}`}>{isLowStock ? 'BAJO' : (item.unit || 'uds').toUpperCase()}</span>
-                          </div>
-                          <button onClick={(e) => { e.stopPropagation(); handleSmartUpdate(item, 1); }} className={`w-8 h-8 flex items-center justify-center text-white rounded-full shadow-md transition-all ${isLowStock ? 'bg-[#FF4D4D]' : 'bg-[#147A74]'}`}><Plus className="w-3.5 h-3.5 stroke-[3px]" /></button>
+                    <div key={item.id} className="bg-white rounded-[2.2rem] shadow-sm border border-gray-100 p-4 md:p-5 flex flex-col gap-4 group transition-all hover:shadow-md animate-fade-in relative">
+                        <div className="flex justify-between items-start">
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-[17px] text-[#013b33] font-black leading-tight tracking-tight line-clamp-1 capitalize pr-2">{item.name}</h3>
+                                <div className={`flex items-center gap-1.5 mt-1 font-black text-[10px] tracking-tight ${status.color}`}>
+                                    <StatusIcon className="w-3 h-3 stroke-[3px]" />
+                                    <span className="uppercase">{status.label}</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setItemToEdit(item)} className="p-2 text-gray-400 hover:text-[#013b33] transition-colors"><MoreVertical className="w-5 h-5" /></button>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-3xl flex-shrink-0 shadow-inner border border-white">
+                                {catInfo.emoji}
+                            </div>
+                            
+                            <div className="flex items-center bg-gray-50 rounded-xl p-0.5 border border-gray-100 flex-shrink-0 w-[110px] h-10">
+                                <button 
+                                    onClick={(e) => canDecrement && handleAdjust(e, item, -1)} 
+                                    disabled={!canDecrement}
+                                    className={`w-8 h-8 flex items-center justify-center transition-colors ${canDecrement ? 'text-gray-400 hover:text-red-500' : 'text-gray-200'}`}
+                                >
+                                    <Minus className="w-3.5 h-3.5" />
+                                </button>
+                                <div className="flex-1 text-center min-w-0 flex flex-col justify-center">
+                                    <input 
+                                        type="text"
+                                        inputMode="decimal"
+                                        className="w-full bg-transparent font-black text-[13px] text-teal-900 leading-none text-center outline-none border-none p-0 focus:ring-0 tracking-tighter"
+                                        value={isEditing ? localValue : formatQuantity(item.quantity, item.unit).replace('.', ',')}
+                                        onChange={(e) => handleLocalChange(e.target.value)}
+                                        onFocus={() => startEditing(item)}
+                                        onBlur={() => finishEditing(item)}
+                                        onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+                                        onClick={e => (e.target as HTMLInputElement).select()}
+                                    />
+                                    <p className="text-[9px] font-black text-teal-600/60 uppercase tracking-tighter leading-none mt-0.5">{(item.unit || 'uds').toUpperCase()}</p>
+                                </div>
+                                <button onClick={(e) => handleAdjust(e, item, 1)} className="w-8 h-8 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-3.5 h-3.5" /></button>
+                            </div>
                         </div>
                     </div>
                 );

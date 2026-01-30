@@ -404,19 +404,19 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                 {item.name}
                             </p>
                         </div>
-                        <div className="flex items-center bg-gray-50 rounded-xl p-0.5 border border-gray-100 flex-shrink-0 w-[100px] h-9" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center bg-gray-50 rounded-xl p-0.5 border border-gray-100 flex-shrink-0 w-[110px] h-10" onClick={e => e.stopPropagation()}>
                             <button 
                                 onClick={(e) => canDecrement && handleAdjust(e, item, -1)} 
                                 disabled={!canDecrement}
-                                className={`w-7 h-7 flex items-center justify-center transition-colors ${canDecrement ? 'text-gray-400 hover:text-red-500' : 'text-gray-200'}`}
+                                className={`w-8 h-8 flex items-center justify-center transition-colors ${canDecrement ? 'text-gray-400 hover:text-red-500' : 'text-gray-200'}`}
                             >
-                                <Minus className="w-3 h-3" />
+                                <Minus className="w-3.5 h-3.5" />
                             </button>
-                            <div className="flex-1 text-center min-w-0">
+                            <div className="flex-1 text-center min-w-0 flex flex-col justify-center">
                                 <input 
                                     type="text"
                                     inputMode="decimal"
-                                    className="w-full bg-transparent font-black text-[10px] text-teal-900 leading-none text-center outline-none border-none p-0 focus:ring-0 tracking-tighter"
+                                    className="w-full bg-transparent font-black text-[13px] text-teal-900 leading-none text-center outline-none border-none p-0 focus:ring-0 tracking-tighter"
                                     value={isEditing ? localValue : formatQuantity(item.quantity, item.unit).replace('.', ',')}
                                     onChange={(e) => handleLocalChange(e.target.value)}
                                     onFocus={() => startEditing(item)}
@@ -424,9 +424,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                     onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                                     onClick={e => (e.target as HTMLInputElement).select()}
                                 />
-                                <p className="text-[5px] font-black text-teal-600/40 uppercase tracking-tighter leading-none mt-0.5">{formatUnitLabel(item.unit)}</p>
+                                <p className="text-[9px] font-black text-teal-600/60 uppercase tracking-tighter leading-none mt-0.5">{formatUnitLabel(item.unit)}</p>
                             </div>
-                            <button onClick={(e) => handleAdjust(e, item, 1)} className="w-7 h-7 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-3 h-3" /></button>
+                            <button onClick={(e) => handleAdjust(e, item, 1)} className="w-8 h-8 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-3.5 h-3.5" /></button>
                         </div>
                     </div>
                 );
