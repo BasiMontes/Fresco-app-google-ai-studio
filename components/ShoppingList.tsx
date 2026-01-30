@@ -320,7 +320,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           </form>
       </div>
 
-      {/* BARRA DE FILTROS UNIFICADA */}
       <div className="relative group/filters mb-8">
           {canScrollLeft && (
               <button 
@@ -400,12 +399,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                             {item.is_purchased && <Check className="w-3.5 h-3.5 stroke-[4px] text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className={`font-bold capitalize leading-snug text-xs ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>
-                                <span className="mr-2 opacity-50">{catInfo.emoji}</span>
+                            <p className={`font-bold capitalize leading-tight text-[15px] ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>
+                                <span className="mr-2 opacity-60">{catInfo.emoji}</span>
                                 {item.name}
-                            </p>
-                            <p className="text-[8px] font-black uppercase tracking-widest text-teal-600/30 mt-0.5 ml-6">
-                                {catInfo.label}
                             </p>
                         </div>
                         <div className="flex items-center bg-gray-50 rounded-xl p-0.5 border border-gray-100 flex-shrink-0 w-[100px] h-9" onClick={e => e.stopPropagation()}>
