@@ -66,7 +66,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
   const [itemToEdit, setItemToEdit] = useState<PantryItem | null>(null);
   const [visibleLimit, setVisibleLimit] = useState(ITEMS_PER_PAGE);
 
-  // Estados para edición fluida
   const [editingId, setEditingId] = useState<string | null>(null);
   const [localValue, setLocalValue] = useState("");
 
@@ -85,7 +84,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
     const expiryDate = startOfDay(new Date(item.expires_at));
     const days = differenceInDays(expiryDate, today);
     if (days < 0) return { type: 'expired', label: 'CADUCADO', color: 'text-[#FF4D4D]', icon: AlertTriangle };
-    if (days === 0) return { type: 'priority', label: 'Hoy', color: 'text-[#FF4D4D]', icon: AlertTriangle };
+    if (days === 0) return { type: 'Hoy', label: 'Hoy', color: 'text-[#FF4D4D]', icon: AlertTriangle };
     if (days <= 3) return { type: 'priority', label: `${days}d`, color: 'text-[#E67E22]', icon: Clock };
     return { type: 'fresh', label: format(expiryDate, "d MMM", { locale: es }), color: 'text-[#147A74]', icon: Clock };
   };
@@ -226,12 +225,15 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                     <div key={item.id} className="bg-white rounded-[2rem] shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.05)] transition-all duration-500 flex flex-col h-[230px] border border-gray-50 group animate-fade-in p-5 relative">
                         <div className="flex justify-between items-start mb-2"><h3 className="text-[1.1rem] text-[#013b33] font-black leading-[1.1] tracking-tight line-clamp-1 pr-2 capitalize">{item.name}</h3><button onClick={() => setItemToEdit(item)} className="p-1 text-[#013b33] hover:opacity-60 transition-opacity"><MoreVertical className="w-5 h-5" /></button></div>
                         <div className="flex items-center gap-4 flex-1 min-h-0"><div className="w-14 h-14 rounded-full bg-[#F2F4F7] shadow-inner border border-white flex items-center justify-center text-3xl flex-shrink-0 group-hover:scale-110 transition-transform duration-500">{catInfo.emoji || '📦'}</div><div className="flex flex-col gap-0.5 min-w-0"><div className={`flex items-center gap-1.5 font-black text-[10px] tracking-tight ${status.color}`}><StatusIcon className="w-3.5 h-3.5 stroke-[2.5px]" /><span className="truncate uppercase">{status.label}</span></div></div></div>
-                        <div className={`mt-2 rounded-[1.8rem] p-0.5 flex items-center justify-between border transition-all duration-500 ${isLowStock ? 'bg-[#FFF5F5] border-[#FFEBEB]' : 'bg-[#F9FAFB] border-[#F2F4F7]'}`}><button onClick={(e) => { e.stopPropagation(); handleSmartUpdate(item, -1); }} className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm text-gray-300 hover:text-red-500 active:scale-90 transition-all"><Minus className="w-5 h-5 stroke-[2.5px]" /></button>
-                          <div className="flex flex-col items-center flex-1 px-1">
+                        
+                        {/* Selector COMPACTO (Sincronizado con ShoppingList) */}
+                        <div className={`mt-2 rounded-[1.8rem] p-0.5 flex items-center justify-between border transition-all duration-500 w-fit self-end ${isLowStock ? 'bg-[#FFF5F5] border-[#FFEBEB]' : 'bg-[#F9FAFB] border-[#F2F4F7]'}`}>
+                          <button onClick={(e) => { e.stopPropagation(); handleSmartUpdate(item, -1); }} className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm text-gray-300 hover:text-red-500 transition-all"><Minus className="w-3 h-3 stroke-[2.5px]" /></button>
+                          <div className="px-0.5 text-center w-9">
                               <input 
                                   type="text"
                                   inputMode="decimal"
-                                  className={`w-full bg-transparent font-black text-2xl leading-none tracking-tighter text-center outline-none border-none p-0 focus:ring-0 ${isLowStock ? 'text-[#FF4D4D]' : 'text-[#013b33]'}`}
+                                  className={`w-full bg-transparent font-black text-sm leading-none tracking-tighter text-center outline-none border-none p-0 focus:ring-0 ${isLowStock ? 'text-[#FF4D4D]' : 'text-[#013b33]'}`}
                                   value={isEditing ? localValue : formatQuantity(item.quantity, item.unit).replace('.', ',')}
                                   onChange={(e) => handleLocalChange(e.target.value)}
                                   onFocus={() => startEditing(item)}
@@ -239,9 +241,9 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                                   onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                                   onClick={e => (e.target as HTMLInputElement).select()}
                               />
-                              <span className={`text-[7px] font-black mt-0.5 tracking-[0.1em] ${isLowStock ? 'text-[#FF4D4D]' : 'text-[#9DB2AF]'}`}>{isLowStock ? 'BAJO' : (item.unit || 'uds').toUpperCase()}</span>
+                              <span className={`text-[6px] font-black mt-0.5 tracking-widest block leading-none ${isLowStock ? 'text-[#FF4D4D]' : 'text-[#9DB2AF]'}`}>{isLowStock ? 'BAJO' : (item.unit || 'uds').toUpperCase()}</span>
                           </div>
-                          <button onClick={(e) => { e.stopPropagation(); handleSmartUpdate(item, 1); }} className={`w-10 h-10 flex items-center justify-center text-white rounded-full shadow-md active:scale-90 transition-all ${isLowStock ? 'bg-[#FF4D4D]' : 'bg-[#147A74]'}`}><Plus className="w-6 h-6 stroke-[3px]" /></button>
+                          <button onClick={(e) => { e.stopPropagation(); handleSmartUpdate(item, 1); }} className={`w-8 h-8 flex items-center justify-center text-white rounded-full shadow-md transition-all ${isLowStock ? 'bg-[#FF4D4D]' : 'bg-[#147A74]'}`}><Plus className="w-4 h-4 stroke-[3px]" /></button>
                         </div>
                     </div>
                 );

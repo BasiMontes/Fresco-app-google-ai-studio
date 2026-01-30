@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { MealSlot, Recipe, ShoppingItem, PantryItem, UserProfile } from '../types';
 import { SPANISH_PRICES, EXPIRY_DAYS_BY_CATEGORY } from '../constants';
-import { ShoppingBag, Check, X, Plus, Minus, Loader2, PartyPopper, PlusCircle, Tag, Scale, ChevronDown } from 'lucide-react';
+import { ShoppingBag, Check, X, Plus, Minus, Loader2, PartyPopper, PlusCircle, ChevronDown } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cleanName, subtractIngredient, autoScaleIngredient, formatQuantity, parseLocaleNumber } from '../services/unitService';
 import { ModalPortal } from './ModalPortal';
@@ -51,7 +51,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   const [showCelebration, setShowCelebration] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // Estado detallado para añadir manual
   const [manualItem, setManualItem] = useState({
       name: "",
       quantity: 1,
@@ -59,7 +58,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       category: "other"
   });
   
-  // Estado local para edición fluida
   const [editingId, setEditingId] = useState<string | null>(null);
   const [localValue, setLocalValue] = useState("");
 
@@ -232,7 +230,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-teal-800 rounded-full blur-3xl opacity-50" />
       </div>
 
-      {/* Formulario Detallado de Añadir Manual */}
       <div className="bg-white border border-gray-100 rounded-[2.5rem] p-6 md:p-8 mb-8 shadow-sm">
           <h3 className="text-[10px] font-black uppercase tracking-widest text-teal-600 mb-6 flex items-center gap-2">
               <PlusCircle className="w-3 h-3" /> Añadir Producto Manualmente
@@ -298,24 +295,24 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                 const isEditing = editingId === item.id;
                 const catInfo = CATEGORIES.find(c => c.id === item.category) || CATEGORIES[0];
                 return (
-                    <div key={item.id} onClick={() => toggleItem(item)} className={`bg-white p-4 md:p-5 rounded-[2.2rem] flex items-center gap-4 border-2 transition-all cursor-pointer ${item.is_purchased ? 'opacity-40 border-gray-50' : 'border-white shadow-sm hover:border-teal-100 hover:shadow-md'}`}>
-                        <div className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-green-50 border-green-500' : 'border-gray-100'}`}>
-                            {item.is_purchased && <Check className="w-4 h-4 stroke-[4px] text-white" />}
+                    <div key={item.id} onClick={() => toggleItem(item)} className={`bg-white p-3 md:p-4 rounded-[2.2rem] flex items-center gap-3 border-2 transition-all cursor-pointer ${item.is_purchased ? 'opacity-40 border-gray-50' : 'border-white shadow-sm hover:border-teal-100 hover:shadow-md'}`}>
+                        <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-green-50 border-green-500' : 'border-gray-100'}`}>
+                            {item.is_purchased && <Check className="w-3.5 h-3.5 stroke-[4px] text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className={`font-bold capitalize leading-snug text-sm ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>
+                            <p className={`font-bold capitalize leading-snug text-xs ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>
                                 <span className="mr-2 opacity-50">{catInfo.emoji}</span>
                                 {item.name}
                             </p>
                         </div>
-                        {/* Selector COMPACTADO al máximo */}
-                        <div className="flex items-center bg-gray-50 rounded-2xl p-0.5 border border-gray-100 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                            <button onClick={(e) => handleAdjust(e, item, -1)} className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"><Minus className="w-2.5 h-2.5" /></button>
-                            <div className="px-0.5 text-center min-w-[42px]">
+                        {/* Selector COMPACTO AL MÁXIMO (Forzado w-fit y min-w pequeño) */}
+                        <div className="flex items-center bg-gray-100 rounded-2xl p-0.5 border border-gray-200 flex-shrink-0 w-fit h-9" onClick={e => e.stopPropagation()}>
+                            <button onClick={(e) => handleAdjust(e, item, -1)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"><Minus className="w-2.5 h-2.5" /></button>
+                            <div className="px-0.5 text-center w-9">
                                 <input 
                                     type="text"
                                     inputMode="decimal"
-                                    className="w-full bg-transparent font-black text-[11px] text-teal-900 leading-none text-center outline-none border-none p-0 focus:ring-0"
+                                    className="w-full bg-transparent font-black text-[10px] text-teal-900 leading-none text-center outline-none border-none p-0 focus:ring-0"
                                     value={isEditing ? localValue : formatQuantity(item.quantity, item.unit).replace('.', ',')}
                                     onChange={(e) => handleLocalChange(e.target.value)}
                                     onFocus={() => startEditing(item)}
@@ -325,7 +322,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                 />
                                 <p className="text-[5px] font-black text-gray-400 uppercase tracking-tighter leading-none mt-0.5">{formatUnitLabel(item.unit)}</p>
                             </div>
-                            <button onClick={(e) => handleAdjust(e, item, 1)} className="w-6 h-6 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-2.5 h-2.5" /></button>
+                            <button onClick={(e) => handleAdjust(e, item, 1)} className="w-7 h-7 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-2.5 h-2.5" /></button>
                         </div>
                     </div>
                 );
