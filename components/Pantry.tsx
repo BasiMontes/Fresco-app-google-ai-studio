@@ -7,7 +7,7 @@ import { es } from 'date-fns/locale';
 import { TicketScanner } from './TicketScanner';
 import { triggerDialog } from './Dialog';
 import { ModalPortal } from './ModalPortal';
-import { autoScaleIngredient, formatQuantity } from '../services/unitService';
+import { autoScaleIngredient, formatQuantity, parseLocaleNumber } from '../services/unitService';
 
 interface PantryProps {
   items: PantryItem[];
@@ -65,6 +65,10 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
   const [filterExpiring, setFilterExpiring] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<PantryItem | null>(null);
   const [visibleLimit, setVisibleLimit] = useState(ITEMS_PER_PAGE);
+
+  // Estados para edición fluida
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [localValue, setLocalValue] = useState("");
 
   const [newItem, setNewItem] = useState<Partial<PantryItem>>({
     name: '',
@@ -131,12 +135,23 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
     onEdit({ ...item, quantity: finalQty, unit: finalUnit });
   };
 
-  const handleDirectInput = (item: PantryItem, value: string) => {
-      const num = parseFloat(value.replace(',', '.'));
-      if (isNaN(num)) return;
-      const cleanNum = Math.max(0, num);
-      const { quantity: finalQty, unit: finalUnit } = autoScaleIngredient(cleanNum, item.unit);
+  const startEditing = (item: PantryItem) => {
+      setEditingId(item.id);
+      setLocalValue(formatQuantity(item.quantity, item.unit).replace('.', ','));
+  };
+
+  const handleLocalChange = (val: string) => {
+      const sanitized = val.replace(/[^0-9.,]/g, '');
+      const parts = sanitized.split(/[.,]/);
+      if (parts.length > 2) return;
+      setLocalValue(sanitized);
+  };
+
+  const finishEditing = (item: PantryItem) => {
+      const num = parseLocaleNumber(localValue);
+      const { quantity: finalQty, unit: finalUnit } = autoScaleIngredient(num, item.unit);
       onEdit({ ...item, quantity: finalQty, unit: finalUnit });
+      setEditingId(null);
   };
 
   const handleAddNewItem = () => {
@@ -206,6 +221,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                 const catInfo = CATEGORIES_OPTIONS.find(c => c.id === item.category) || CATEGORIES_OPTIONS[0];
                 const isLowStock = item.quantity <= 1;
                 const StatusIcon = status.icon;
+                const isEditing = editingId === item.id;
                 return (
                     <div key={item.id} className="bg-white rounded-[2rem] shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.05)] transition-all duration-500 flex flex-col h-[230px] border border-gray-50 group animate-fade-in p-5 relative">
                         <div className="flex justify-between items-start mb-2"><h3 className="text-[1.1rem] text-[#013b33] font-black leading-[1.1] tracking-tight line-clamp-1 pr-2 capitalize">{item.name}</h3><button onClick={() => setItemToEdit(item)} className="p-1 text-[#013b33] hover:opacity-60 transition-opacity"><MoreVertical className="w-5 h-5" /></button></div>
@@ -216,8 +232,11 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                                   type="text"
                                   inputMode="decimal"
                                   className={`w-full bg-transparent font-black text-2xl leading-none tracking-tighter text-center outline-none border-none p-0 focus:ring-0 ${isLowStock ? 'text-[#FF4D4D]' : 'text-[#013b33]'}`}
-                                  value={formatQuantity(item.quantity, item.unit)}
-                                  onChange={(e) => handleDirectInput(item, e.target.value)}
+                                  value={isEditing ? localValue : formatQuantity(item.quantity, item.unit).replace('.', ',')}
+                                  onChange={(e) => handleLocalChange(e.target.value)}
+                                  onFocus={() => startEditing(item)}
+                                  onBlur={() => finishEditing(item)}
+                                  onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                                   onClick={e => (e.target as HTMLInputElement).select()}
                               />
                               <span className={`text-[7px] font-black mt-0.5 tracking-[0.1em] ${isLowStock ? 'text-[#FF4D4D]' : 'text-[#9DB2AF]'}`}>{isLowStock ? 'BAJO' : (item.unit || 'uds').toUpperCase()}</span>
@@ -234,7 +253,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
           <div className="flex justify-center pt-10"><button onClick={() => setVisibleLimit(prev => prev + ITEMS_PER_PAGE)} className="group flex items-center gap-4 px-8 py-3 bg-white border border-gray-100 rounded-2xl shadow-md hover:shadow-lg transition-all"><span className="text-[#013b33] font-black text-[10px] uppercase tracking-widest">Ver más inventario</span><ChevronDown className="w-4 h-4 text-gray-200 group-hover:translate-y-1 transition-transform" /></button></div>
       )}
       
-      {/* Modals remain the same... */}
       {itemToEdit && (
         <ModalPortal>
           <div className="fixed inset-0 z-[5000] bg-black/40 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setItemToEdit(null)}>
@@ -276,7 +294,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
         </ModalPortal>
       )}
 
-      {/* Modal Añadir Producto */}
       {showAddModal && (
         <ModalPortal>
           <div className="fixed inset-0 z-[5000] bg-black/40 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>

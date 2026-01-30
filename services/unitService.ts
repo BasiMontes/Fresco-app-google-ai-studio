@@ -13,6 +13,17 @@ export const cleanName = (name: string): string => {
 };
 
 /**
+ * Convierte un string de entrada (que puede tener comas o puntos) a un número válido.
+ */
+export const parseLocaleNumber = (input: string): number => {
+    if (!input) return 0;
+    // Reemplazamos coma por punto y quitamos todo lo que no sea número o punto
+    const clean = input.replace(',', '.').replace(/[^0-9.]/g, '');
+    const num = parseFloat(clean);
+    return isNaN(num) ? 0 : num;
+};
+
+/**
  * Redondeo seguro para evitar errores de precisión float.
  * Ahora soporta hasta 3 decimales para alta precisión (gramos en kg).
  */

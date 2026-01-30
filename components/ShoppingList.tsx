@@ -4,7 +4,7 @@ import { MealSlot, Recipe, ShoppingItem, PantryItem, UserProfile } from '../type
 import { SPANISH_PRICES, EXPIRY_DAYS_BY_CATEGORY } from '../constants';
 import { ShoppingBag, Check, X, Plus, Minus, Info, Loader2, PartyPopper } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { cleanName, subtractIngredient, autoScaleIngredient, roundSafe, formatQuantity } from '../services/unitService';
+import { cleanName, subtractIngredient, autoScaleIngredient, roundSafe, formatQuantity, parseLocaleNumber } from '../services/unitService';
 import { ModalPortal } from './ModalPortal';
 import { format, addDays } from 'date-fns';
 
@@ -28,6 +28,10 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   const [showReceipt, setShowReceipt] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Estado local para edición fluida
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [localValue, setLocalValue] = useState("");
 
   const shoppingData = useMemo(() => {
     const calculatedNeeds: Record<string, ShoppingItem> = {};
@@ -68,7 +72,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
     const finalItems: ShoppingItem[] = [...dbItems];
     Object.values(calculatedNeeds).forEach(calcItem => {
-        if (calcItem.quantity > 0.005) { // Precisión aumentada
+        if (calcItem.quantity > 0.005) { 
             const existsInDb = dbItems.some(db => cleanName(db.name) === cleanName(calcItem.name));
             if (!existsInDb) {
                 const scaled = autoScaleIngredient(calcItem.quantity, calcItem.unit);
@@ -110,19 +114,31 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
     }
   };
 
-  const handleDirectInput = (item: ShoppingItem, value: string) => {
-      const num = parseFloat(value.replace(',', '.'));
-      if (isNaN(num)) return;
-      const cleanNum = Math.max(0, num);
-      
-      const { quantity: finalQty, unit: finalUnit } = autoScaleIngredient(cleanNum, item.unit);
+  const startEditing = (item: ShoppingItem) => {
+      setEditingId(item.id);
+      setLocalValue(formatQuantity(item.quantity, item.unit).replace('.', ','));
+  };
+
+  const handleLocalChange = (val: string) => {
+      // Sanitizador: Solo números, una coma o un punto
+      const sanitized = val.replace(/[^0-9.,]/g, '');
+      // Evitar múltiples separadores
+      const parts = sanitized.split(/[.,]/);
+      if (parts.length > 2) return;
+      setLocalValue(sanitized);
+  };
+
+  const finishEditing = (item: ShoppingItem) => {
+      const num = parseLocaleNumber(localValue);
+      const { quantity: finalQty, unit: finalUnit } = autoScaleIngredient(num, item.unit);
 
       if (item.id.startsWith('calc-')) {
           onAddShoppingItem([{ ...item, id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, quantity: finalQty, unit: finalUnit }]);
       } else {
-          if (finalQty === 0) onRemoveShoppingItem(item.id);
+          if (finalQty === 0 && localValue !== "") onRemoveShoppingItem(item.id);
           else onUpdateShoppingItem({ ...item, quantity: finalQty, unit: finalUnit });
       }
+      setEditingId(null);
   };
 
   const confirmFinish = () => {
@@ -179,10 +195,11 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           ) : (
             shoppingData.finalItems.map(item => {
                 const isCalculated = item.id.startsWith('calc-');
+                const isEditing = editingId === item.id;
                 return (
                     <div key={item.id} onClick={() => toggleItem(item)} className={`bg-white p-4 md:p-5 rounded-[2.2rem] flex items-center gap-4 border-2 transition-all cursor-pointer ${item.is_purchased ? 'opacity-40 border-gray-50' : 'border-white shadow-sm hover:border-teal-100 hover:shadow-md'}`}>
-                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${item.is_purchased ? 'bg-green-50 border-green-500 text-white' : 'border-gray-100'}`}>
-                            {item.is_purchased && <Check className="w-5 h-5 stroke-[4px]" />}
+                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${item.is_purchased ? 'bg-green-50 border-green-500' : 'border-gray-100'}`}>
+                            {item.is_purchased && <Check className="w-5 h-5 stroke-[4px] text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className={`font-bold capitalize truncate ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>{item.name}</p>
@@ -195,8 +212,11 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                     type="text"
                                     inputMode="decimal"
                                     className="w-full bg-transparent font-black text-sm text-teal-900 leading-none text-center outline-none border-none p-0 focus:ring-0"
-                                    value={formatQuantity(item.quantity, item.unit)}
-                                    onChange={(e) => handleDirectInput(item, e.target.value)}
+                                    value={isEditing ? localValue : formatQuantity(item.quantity, item.unit).replace('.', ',')}
+                                    onChange={(e) => handleLocalChange(e.target.value)}
+                                    onFocus={() => startEditing(item)}
+                                    onBlur={() => finishEditing(item)}
+                                    onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                                     onClick={e => (e.target as HTMLInputElement).select()}
                                 />
                                 <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mt-0.5">{formatUnitLabel(item.unit)}</p>
