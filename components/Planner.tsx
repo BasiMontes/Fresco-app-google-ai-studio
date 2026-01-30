@@ -98,60 +98,59 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   return (
     <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden">
-      <header className="px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border-b border-gray-100">
+      <header className="px-6 py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border-b border-gray-100">
         <div>
-            <h1 className="text-xl font-black text-teal-900 tracking-tight leading-none mb-1">Calendario</h1>
+            <h1 className="text-xl font-black text-teal-900 tracking-tight leading-none mb-0.5">Calendario</h1>
             <p className="text-gray-400 font-bold uppercase text-[9px] tracking-widest">Planifica tu bienestar</p>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="flex items-center gap-1 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100 flex-1 md:flex-none">
+            <div className="flex items-center gap-1 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 flex-1 md:flex-none">
                 <button onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} className="p-1 hover:bg-white rounded-lg text-gray-400"><ChevronLeft className="w-4 h-4" /></button>
                 <span className="text-xs font-black text-teal-900 mx-2 uppercase tracking-widest whitespace-nowrap">{format(currentWeekStart, 'd MMM', { locale: es })}</span>
                 <button onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} className="p-1 hover:bg-white rounded-lg text-gray-400"><ChevronRight className="w-4 h-4" /></button>
             </div>
-            <button onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} className="p-3 text-red-400 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-5 h-5" /></button>
-            <button onClick={() => setShowPlanWizard(true)} className="flex items-center gap-2 bg-teal-900 text-white px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg hover:bg-teal-800 transition-all">
+            <button onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} className="p-2.5 text-red-400 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-4.5 h-4.5" /></button>
+            <button onClick={() => setShowPlanWizard(true)} className="flex items-center gap-2 bg-teal-900 text-white px-5 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg hover:bg-teal-800 transition-all">
                 <BrainCircuit className="w-4 h-4 text-orange-400" /> Generar plan
             </button>
         </div>
       </header>
 
-      <div ref={scrollContainerRef} className="flex-1 overflow-x-auto no-scrollbar flex gap-4 p-6 bg-gray-50/30">
+      <div ref={scrollContainerRef} className="flex-1 overflow-x-auto no-scrollbar flex gap-4 p-4 bg-gray-50/30">
         {days.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd');
           const isToday = isSameDay(day, new Date());
           return (
-            <div key={dateStr} className="min-w-[280px] max-w-[320px] flex-1 flex flex-col gap-4">
-                <div className={`text-center p-4 rounded-3xl border transition-all ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-xl ring-4 ring-teal-900/10' : 'bg-white text-teal-900 border-gray-100 shadow-sm'}`}>
-                    <span className={`block text-[8px] font-black uppercase tracking-[0.3em] mb-1 ${isToday ? 'text-teal-400' : 'opacity-50'}`}>{format(day, 'EEEE', { locale: es })}</span>
-                    <span className="block text-2xl font-black">{format(day, 'd')}</span>
-                    {isToday && <div className="mt-1 mx-auto w-1 h-1 bg-orange-500 rounded-full" />}
+            <div key={dateStr} className="min-w-[280px] max-w-[320px] flex-1 flex flex-col gap-2">
+                <div className={`text-center p-2.5 rounded-[2rem] border transition-all ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-xl ring-4 ring-teal-900/10' : 'bg-white text-teal-900 border-gray-100 shadow-sm'}`}>
+                    <span className={`block text-[7px] font-black uppercase tracking-[0.3em] mb-0.5 ${isToday ? 'text-teal-400' : 'opacity-50'}`}>{format(day, 'EEEE', { locale: es })}</span>
+                    <span className="block text-xl font-black">{format(day, 'd')}</span>
                 </div>
                 {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                     const slot = plan.find(p => p.date === dateStr && p.type === type);
                     const recipe = recipes.find(r => r.id === slot?.recipeId);
                     return (
-                        <div key={type} onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} className={`flex-1 min-h-[140px] rounded-3xl p-5 border-2 transition-all cursor-pointer flex flex-col justify-between group ${recipe ? 'bg-white border-white shadow-md hover:shadow-xl hover:-translate-y-1' : 'bg-transparent border-dashed border-gray-200 hover:bg-white hover:border-teal-200 hover:shadow-lg'}`}>
+                        <div key={type} onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} className={`flex-1 min-h-[100px] rounded-[2rem] p-4 border-2 transition-all cursor-pointer flex flex-col justify-between group ${recipe ? 'bg-white border-white shadow-md hover:shadow-xl hover:-translate-y-1' : 'bg-transparent border-dashed border-gray-200 hover:bg-white hover:border-teal-200 hover:shadow-lg'}`}>
                             <div className="flex justify-between items-start">
-                                <span className={`text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full ${recipe ? 'bg-teal-50 text-teal-600' : 'bg-gray-100 text-gray-400'}`}>{type}</span>
+                                <span className={`text-[7px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full ${recipe ? 'bg-teal-50 text-teal-600' : 'bg-gray-100 text-gray-400'}`}>{type}</span>
                                 {recipe ? (
                                     <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-1 opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 transition-all"><X className="w-3.5 h-3.5" /></button>
                                 ) : (
-                                    <Plus className="w-4 h-4 text-gray-200 group-hover:text-teal-400 transition-colors" />
+                                    <Plus className="w-3.5 h-3.5 text-gray-200 group-hover:text-teal-400 transition-colors" />
                                 )}
                             </div>
                             {recipe ? (
-                                <div className="mt-3">
-                                    <h5 className="font-black text-sm text-teal-950 line-clamp-2 leading-tight mb-2 group-hover:text-teal-700 transition-colors">{recipe.title}</h5>
+                                <div className="mt-2">
+                                    <h5 className="font-black text-xs text-teal-950 line-clamp-2 leading-tight mb-1 group-hover:text-teal-700 transition-colors">{recipe.title}</h5>
                                     <div className="flex items-center gap-1.5">
-                                        <PackageCheck className="w-3.5 h-3.5 text-teal-600" />
-                                        <span className="text-[8px] font-black text-teal-600 uppercase tracking-widest">En Biblioteca</span>
+                                        <PackageCheck className="w-3 h-3 text-teal-600" />
+                                        <span className="text-[7px] font-black text-teal-600 uppercase tracking-widest">En Biblioteca</span>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="flex-1 flex flex-col items-center justify-center opacity-10 group-hover:opacity-30 transition-opacity">
-                                    <ChefHat className="w-8 h-8 mb-1" />
-                                    <span className="text-[7px] font-black uppercase">Vacio</span>
+                                <div className="flex-1 flex flex-col items-center justify-center opacity-5 group-hover:opacity-20 transition-opacity">
+                                    <ChefHat className="w-6 h-6 mb-0.5" />
+                                    <span className="text-[6px] font-black uppercase">Vacio</span>
                                 </div>
                             )}
                         </div>
