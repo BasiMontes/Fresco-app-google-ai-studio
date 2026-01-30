@@ -69,7 +69,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   const [editingId, setEditingId] = useState<string | null>(null);
   const [localValue, setLocalValue] = useState("");
 
-  // Lógica para scroll horizontal
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -86,7 +85,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [dbItems, plan]);
+  }, [dbItems, plan, activeFilter]);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -321,7 +320,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           </form>
       </div>
 
-      {/* BARRA DE FILTROS CON NAVEGACIÓN ASISTIDA */}
+      {/* BARRA DE FILTROS UNIFICADA */}
       <div className="relative group/filters mb-8">
           {canScrollLeft && (
               <button 

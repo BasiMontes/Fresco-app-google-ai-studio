@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { PantryItem } from '../types';
-import { Package, Plus, Trash2, X, Camera, Search, MoreVertical, Clock, AlertTriangle, ChevronDown, Minus, Calendar, Scale, ArrowUpDown, CalendarClock, Check, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Package, Plus, Trash2, X, Camera, Search, MoreVertical, Clock, AlertTriangle, ChevronDown, Minus, Calendar, Scale, ArrowUpDown, CalendarClock, Check, Tag, ChevronLeft, ChevronRight, FilterX } from 'lucide-react';
 import { differenceInDays, startOfDay, format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TicketScanner } from './TicketScanner';
@@ -46,7 +46,7 @@ const CATEGORIES_LIST = [
     { id: 'other', label: 'Other', emoji: '📦' },
 ];
 
-const CATEGORIES_OPTIONS = [
+const FILTER_OPTIONS = [
     { id: 'all', label: 'All Categories', emoji: '🏠' },
     ...CATEGORIES_LIST
 ];
@@ -78,7 +78,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
     expires_at: ''
   });
 
-  // Lógica para scroll horizontal
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -95,7 +94,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [items]);
+  }, [items, selectedCategory]);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -221,7 +220,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
         </div>
       </header>
 
-      {/* BARRA DE FILTROS CON NAVEGACIÓN */}
+      {/* SISTEMA DE FILTROS NORMALIZADO */}
       <div className="relative group/filters mb-6">
           {canScrollLeft && (
               <button 
@@ -237,9 +236,31 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
             onScroll={checkScroll}
             className="flex overflow-x-auto no-scrollbar gap-3 pb-2 -mx-2 px-2 scroll-smooth"
           >
-              {CATEGORIES_OPTIONS.map(cat => (
-                  <button key={cat.id} onClick={() => { setSelectedCategory(cat.id); setVisibleLimit(ITEMS_PER_PAGE); }} className={`px-5 py-2.5 rounded-full font-bold text-[11px] whitespace-nowrap transition-all duration-300 border ${selectedCategory === cat.id ? 'bg-[#e6f2f1] border-[#147A74] text-[#147A74] shadow-sm' : 'bg-[#f4f7f6] border-transparent text-[#6e8a88] hover:bg-gray-100'}`}>{cat.label}</button>
-              ))}
+              {FILTER_OPTIONS.map(opt => {
+                  const isActive = selectedCategory === opt.id;
+                  const count = opt.id === 'all' 
+                    ? items.length 
+                    : items.filter(i => i.category === opt.id).length;
+
+                  // Opcional: Ocultar categorías vacías en el Stock si se prefiere limpieza máxima
+                  // Pero en stock suele ser útil verlas para saber qué falta. Por ahora mostramos todas.
+                  
+                  return (
+                      <button 
+                        key={opt.id} 
+                        onClick={() => { setSelectedCategory(opt.id); setVisibleLimit(ITEMS_PER_PAGE); }}
+                        className={`px-5 py-2.5 rounded-full font-bold text-[11px] whitespace-nowrap transition-all duration-300 border flex items-center gap-2 ${
+                            isActive 
+                            ? 'bg-[#e6f2f1] border-[#147A74] text-[#147A74] shadow-sm' 
+                            : 'bg-[#f4f7f6] border-transparent text-[#6e8a88] hover:bg-gray-100'
+                        }`}
+                      >
+                          <span>{opt.emoji}</span>
+                          {opt.label}
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-md ${isActive ? 'bg-[#147A74] text-white' : 'bg-white/50 text-[#6e8a88]'}`}>{count}</span>
+                      </button>
+                  );
+              })}
           </div>
 
           {canScrollRight && (
@@ -264,11 +285,15 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {visibleItems.length === 0 ? (
-              <div className="col-span-full py-20 text-center opacity-10 flex flex-col items-center"><Package size={40} className="mb-2" /><p className="font-black text-sm uppercase tracking-widest">Sin resultados</p></div>
+              <div className="col-span-full py-20 text-center opacity-10 flex flex-col items-center">
+                  {selectedCategory === 'all' ? <Package size={40} className="mb-2" /> : <FilterX size={40} className="mb-2" />}
+                  <p className="font-black text-sm uppercase tracking-widest">Sin resultados</p>
+                  {selectedCategory !== 'all' && <button onClick={() => setSelectedCategory('all')} className="mt-4 text-teal-600 font-bold text-xs underline pointer-events-auto">Ver todo el stock</button>}
+              </div>
           ) : (
             visibleItems.map(item => {
                 const status = getExpiryStatus(item);
-                const catInfo = CATEGORIES_OPTIONS.find(c => c.id === item.category) || CATEGORIES_OPTIONS[0];
+                const catInfo = CATEGORIES_LIST.find(c => c.id === item.category) || CATEGORIES_LIST[0];
                 const isLowStock = item.quantity <= 1;
                 const StatusIcon = status.icon;
                 const isEditing = editingId === item.id;
@@ -277,7 +302,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
                         <div className="flex justify-between items-start mb-2"><h3 className="text-[1.1rem] text-[#013b33] font-black leading-[1.1] tracking-tight line-clamp-1 pr-2 capitalize">{item.name}</h3><button onClick={() => setItemToEdit(item)} className="p-1 text-[#013b33] hover:opacity-60 transition-opacity"><MoreVertical className="w-5 h-5" /></button></div>
                         <div className="flex items-center gap-4 flex-1 min-h-0"><div className="w-14 h-14 rounded-full bg-[#F2F4F7] shadow-inner border border-white flex items-center justify-center text-3xl flex-shrink-0 group-hover:scale-110 transition-transform duration-500">{catInfo.emoji || '📦'}</div><div className="flex flex-col gap-0.5 min-w-0"><div className={`flex items-center gap-1.5 font-black text-[10px] tracking-tight ${status.color}`}><StatusIcon className="w-3.5 h-3.5 stroke-[2.5px]" /><span className="truncate uppercase">{status.label}</span></div></div></div>
                         
-                        {/* Selector PRECISION (Sincronizado con ShoppingList: 100px) */}
                         <div className={`mt-2 rounded-[1.8rem] p-0.5 flex items-center justify-between border transition-all duration-500 w-[100px] self-end ${isLowStock ? 'bg-[#FFF5F5] border-[#FFEBEB]' : 'bg-[#F9FAFB] border-[#F2F4F7]'}`}>
                           <button onClick={(e) => { e.stopPropagation(); handleSmartUpdate(item, -1); }} className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm text-gray-300 hover:text-red-500 transition-all"><Minus className="w-3 h-3 stroke-[2.5px]" /></button>
                           <div className="px-0.5 text-center min-w-0 flex-1">
