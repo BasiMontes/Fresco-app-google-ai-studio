@@ -12,9 +12,27 @@ export const cleanName = (name: string): string => {
         .trim();
 };
 
-// QA FIX BB-02: Evitar problemas de precisión float (0.1 + 0.2 !== 0.3)
-export const roundSafe = (num: number): number => {
-    return Math.round((num + Number.EPSILON) * 100) / 100;
+/**
+ * Redondeo seguro para evitar errores de precisión float.
+ * Ahora soporta hasta 3 decimales para alta precisión (gramos en kg).
+ */
+export const roundSafe = (num: number, decimals: number = 3): number => {
+    const factor = Math.pow(10, decimals);
+    return Math.round((num + Number.EPSILON) * factor) / factor;
+};
+
+/**
+ * Formatea un número para mostrar siempre el número de decimales deseado
+ * útil para que el usuario vea el cambio (ej: 2.25 -> 2.250)
+ */
+export const formatQuantity = (num: number, unit: string): string => {
+    const u = unit.toLowerCase();
+    // Si es kg o l, mostramos 3 decimales para que se vean los gramos/ml
+    if (['kg', 'l'].includes(u)) {
+        return num.toFixed(3);
+    }
+    // Para unidades, packs o gramos sueltos, con 1 decimal o entero suele bastar
+    return Number.isInteger(num) ? num.toString() : num.toFixed(1);
 };
 
 /**

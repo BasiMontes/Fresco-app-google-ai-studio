@@ -4,7 +4,7 @@ import { MealSlot, Recipe, ShoppingItem, PantryItem, UserProfile } from '../type
 import { SPANISH_PRICES, EXPIRY_DAYS_BY_CATEGORY } from '../constants';
 import { ShoppingBag, Check, X, Plus, Minus, Info, Loader2, PartyPopper } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { cleanName, subtractIngredient, autoScaleIngredient, roundSafe } from '../services/unitService';
+import { cleanName, subtractIngredient, autoScaleIngredient, roundSafe, formatQuantity } from '../services/unitService';
 import { ModalPortal } from './ModalPortal';
 import { format, addDays } from 'date-fns';
 
@@ -68,10 +68,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
     const finalItems: ShoppingItem[] = [...dbItems];
     Object.values(calculatedNeeds).forEach(calcItem => {
-        if (calcItem.quantity > 0.05) { 
+        if (calcItem.quantity > 0.005) { // Precisión aumentada
             const existsInDb = dbItems.some(db => cleanName(db.name) === cleanName(calcItem.name));
             if (!existsInDb) {
-                // Auto-escalar al mostrar por primera vez (ej. 1500g -> 1.5kg)
                 const scaled = autoScaleIngredient(calcItem.quantity, calcItem.unit);
                 finalItems.push({ ...calcItem, ...scaled });
             }
@@ -94,8 +93,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
   const handleAdjust = (e: React.MouseEvent, item: ShoppingItem, direction: number) => {
     e.stopPropagation();
-    
-    // Determinar el paso (delta) según la unidad actual
     const unit = item.unit.toLowerCase();
     let delta = 1;
     if (['g', 'ml'].includes(unit)) delta = 100 * direction;
@@ -103,19 +100,29 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
     else delta = direction;
 
     const rawNewQty = Math.max(0, item.quantity + delta);
-    
-    // Aplicar Auto-escalado (Smart Units)
     const { quantity: finalQty, unit: finalUnit } = autoScaleIngredient(rawNewQty, unit);
 
     if (item.id.startsWith('calc-')) {
         onAddShoppingItem([{ ...item, id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, quantity: finalQty, unit: finalUnit }]);
     } else {
-        if (finalQty === 0) {
-            onRemoveShoppingItem(item.id);
-        } else {
-            onUpdateShoppingItem({ ...item, quantity: finalQty, unit: finalUnit });
-        }
+        if (finalQty === 0) onRemoveShoppingItem(item.id);
+        else onUpdateShoppingItem({ ...item, quantity: finalQty, unit: finalUnit });
     }
+  };
+
+  const handleDirectInput = (item: ShoppingItem, value: string) => {
+      const num = parseFloat(value.replace(',', '.'));
+      if (isNaN(num)) return;
+      const cleanNum = Math.max(0, num);
+      
+      const { quantity: finalQty, unit: finalUnit } = autoScaleIngredient(cleanNum, item.unit);
+
+      if (item.id.startsWith('calc-')) {
+          onAddShoppingItem([{ ...item, id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, quantity: finalQty, unit: finalUnit }]);
+      } else {
+          if (finalQty === 0) onRemoveShoppingItem(item.id);
+          else onUpdateShoppingItem({ ...item, quantity: finalQty, unit: finalUnit });
+      }
   };
 
   const confirmFinish = () => {
@@ -174,7 +181,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                 const isCalculated = item.id.startsWith('calc-');
                 return (
                     <div key={item.id} onClick={() => toggleItem(item)} className={`bg-white p-4 md:p-5 rounded-[2.2rem] flex items-center gap-4 border-2 transition-all cursor-pointer ${item.is_purchased ? 'opacity-40 border-gray-50' : 'border-white shadow-sm hover:border-teal-100 hover:shadow-md'}`}>
-                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${item.is_purchased ? 'bg-green-500 border-green-500 text-white' : 'border-gray-100'}`}>
+                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${item.is_purchased ? 'bg-green-50 border-green-500 text-white' : 'border-gray-100'}`}>
                             {item.is_purchased && <Check className="w-5 h-5 stroke-[4px]" />}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -183,8 +190,15 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                         </div>
                         <div className="flex items-center bg-gray-50 rounded-2xl p-1 border border-gray-100" onClick={e => e.stopPropagation()}>
                             <button onClick={(e) => handleAdjust(e, item, -1)} className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"><Minus className="w-3 h-3" /></button>
-                            <div className="px-2 text-center min-w-[50px]">
-                                <p className="font-black text-sm text-teal-900 leading-none">{Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(1)}</p>
+                            <div className="px-1 text-center min-w-[70px]">
+                                <input 
+                                    type="text"
+                                    inputMode="decimal"
+                                    className="w-full bg-transparent font-black text-sm text-teal-900 leading-none text-center outline-none border-none p-0 focus:ring-0"
+                                    value={formatQuantity(item.quantity, item.unit)}
+                                    onChange={(e) => handleDirectInput(item, e.target.value)}
+                                    onClick={e => (e.target as HTMLInputElement).select()}
+                                />
                                 <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mt-0.5">{formatUnitLabel(item.unit)}</p>
                             </div>
                             <button onClick={(e) => handleAdjust(e, item, 1)} className="w-8 h-8 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-3 h-3" /></button>
@@ -214,7 +228,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                         {shoppingData.finalItems.filter(i => i.is_purchased).map(item => (
                             <div key={item.id} className="flex justify-between items-center">
                                 <span className="font-bold capitalize text-teal-950 text-sm">{item.name}</span>
-                                <span className="font-black text-teal-600 text-sm">{Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(1)} {item.unit}</span>
+                                <span className="font-black text-teal-600 text-sm">{formatQuantity(item.quantity, item.unit)} {item.unit}</span>
                             </div>
                         ))}
                     </div>
