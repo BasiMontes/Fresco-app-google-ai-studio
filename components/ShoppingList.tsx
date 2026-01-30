@@ -22,22 +22,25 @@ interface ShoppingListProps {
   onSyncServings: () => void; 
 }
 
+// Categorías sincronizadas exactamente con Pantry.tsx
 const CATEGORIES = [
-    { id: 'other', label: 'Otros', emoji: '📦' },
-    { id: 'vegetables', label: 'Verdulería', emoji: '🥦' },
-    { id: 'fruits', label: 'Frutería', emoji: '🍎' },
-    { id: 'dairy', label: 'Lácteos', emoji: '🧀' },
-    { id: 'meat', label: 'Carnicería', emoji: '🥩' },
-    { id: 'fish', label: 'Pescadería', emoji: '🐟' },
-    { id: 'pasta', label: 'Pasta/Arroz', emoji: '🍝' },
-    { id: 'legumes', label: 'Legumbres', emoji: '🫘' },
-    { id: 'bakery', label: 'Panadería', emoji: '🥖' },
-    { id: 'drinks', label: 'Bebidas', emoji: '🥤' },
-    { id: 'pantry', label: 'Despensa', emoji: '🥫' },
+    { id: 'vegetables', label: 'Vegetables', emoji: '🥦' },
+    { id: 'fruits', label: 'Fruits', emoji: '🍎' },
+    { id: 'dairy', label: 'Dairy & Eggs', emoji: '🧀' },
+    { id: 'meat', label: 'Meat & Seafood', emoji: '🥩' },
+    { id: 'fish', label: 'Fish', emoji: '🐟' },
+    { id: 'pasta', label: 'Pasta & Grains', emoji: '🍝' },
+    { id: 'legumes', label: 'Legumes', emoji: '🫘' },
+    { id: 'bakery', label: 'Bakery', emoji: '🥐' },
+    { id: 'beverages', label: 'Beverages', emoji: '🥤' },
+    { id: 'frozen', label: 'Frozen', emoji: '❄️' },
+    { id: 'pantry', label: 'Pantry', emoji: '🥫' },
+    { id: 'spices', label: 'Spices', emoji: '🧂' },
+    { id: 'other', label: 'Other', emoji: '📦' },
 ];
 
 const FILTER_OPTIONS = [
-    { id: 'all', label: 'Todo', emoji: '📋' },
+    { id: 'all', label: 'All Categories', emoji: '🏠' },
     ...CATEGORIES
 ];
 
@@ -293,8 +296,8 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           </form>
       </div>
 
-      {/* BARRA DE FILTROS POR CATEGORÍA */}
-      <div className="mb-6">
+      {/* BARRA DE FILTROS REPLICADA DE LA DESPENSA */}
+      <div className="mb-8">
           <div className="flex overflow-x-auto no-scrollbar gap-3 pb-2 -mx-1 px-1">
               {FILTER_OPTIONS.map(opt => {
                   const isActive = activeFilter === opt.id;
@@ -308,15 +311,15 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                       <button 
                         key={opt.id} 
                         onClick={() => setActiveFilter(opt.id)}
-                        className={`px-5 py-2.5 rounded-full font-black text-[11px] whitespace-nowrap transition-all duration-300 border flex items-center gap-2 ${
+                        className={`px-5 py-2.5 rounded-full font-bold text-[11px] whitespace-nowrap transition-all duration-300 border flex items-center gap-2 ${
                             isActive 
                             ? 'bg-[#e6f2f1] border-[#147A74] text-[#147A74] shadow-sm' 
-                            : 'bg-white border-gray-100 text-gray-400 hover:bg-gray-50'
+                            : 'bg-[#f4f7f6] border-transparent text-[#6e8a88] hover:bg-gray-100'
                         }`}
                       >
                           <span>{opt.emoji}</span>
-                          {opt.label.toUpperCase()}
-                          <span className={`text-[9px] px-1.5 py-0.5 rounded-md ${isActive ? 'bg-[#147A74] text-white' : 'bg-gray-100 text-gray-400'}`}>{count}</span>
+                          {opt.label}
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-md ${isActive ? 'bg-[#147A74] text-white' : 'bg-white/50 text-[#6e8a88]'}`}>{count}</span>
                       </button>
                   );
               })}
@@ -355,7 +358,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                 <span className="mr-2 opacity-50">{catInfo.emoji}</span>
                                 {item.name}
                             </p>
-                            <p className="text-[8px] font-black uppercase tracking-widest text-teal-600/40 mt-0.5 ml-6">
+                            <p className="text-[8px] font-black uppercase tracking-widest text-teal-600/30 mt-0.5 ml-6">
                                 {catInfo.label}
                             </p>
                         </div>
@@ -389,7 +392,8 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           )}
       </div>
 
-      <div className={`fixed left-8 right-8 md:left-auto md:right-8 z-[100] transition-all duration-500 ${shoppingData.finalItems.filter(i => i.is_purchased).length > 0 ? 'bottom-22 opacity-100' : 'bottom-[-100px] opacity-0'}`}>
+      {/* POSICIÓN CORREGIDA: Subido a bottom-28 para evitar colisión con menú inferior */}
+      <div className={`fixed left-8 right-8 md:left-auto md:right-8 z-[100] transition-all duration-500 ${shoppingData.finalItems.filter(i => i.is_purchased).length > 0 ? 'bottom-28 opacity-100' : 'bottom-[-100px] opacity-0'}`}>
           <button onClick={() => setShowReceipt(true)} className="w-full md:w-auto bg-[#013b33] text-white px-10 h-14 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-teal-900 shadow-xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
               <Check className="w-5 h-5 stroke-[3px]" /> TERMINAR COMPRA
           </button>
