@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MealSlot, Recipe, MealCategory, PantryItem, UserProfile } from '../types';
-import { Plus, X, Loader2, PackageCheck, ChevronLeft, ChevronRight, BrainCircuit, Trash2, Sunrise, Sun, Moon, Sparkles, ChefHat, Search, Check } from 'lucide-react';
+import { Plus, X, Loader2, ChevronLeft, ChevronRight, BrainCircuit, Trash2, Sunrise, Sun, Moon, Sparkles, ChefHat, Search, Check } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { generateSmartMenu } from '../services/geminiService';
@@ -34,13 +34,12 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   const [selectedWizardDays, setSelectedWizardDays] = useState<string[]>([]);
   const [selectedWizardTypes, setSelectedWizardTypes] = useState<MealCategory[]>(['lunch', 'dinner']);
 
-  // Auto-scroll al día actual
   useEffect(() => {
     const timer = setTimeout(() => {
         if (scrollContainerRef.current) {
             const todayIndex = days.findIndex(d => isSameDay(d, new Date()));
             if (todayIndex !== -1) {
-                const dayWidth = 300; // Ancho aproximado de cada columna
+                const dayWidth = 300; 
                 scrollContainerRef.current.scrollTo({
                     left: todayIndex * dayWidth,
                     behavior: 'smooth'
@@ -122,35 +121,35 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           const isToday = isSameDay(day, new Date());
           return (
             <div key={dateStr} className="min-w-[280px] max-w-[320px] flex-1 flex flex-col gap-2">
-                <div className={`text-center p-2.5 rounded-[2rem] border transition-all ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-xl ring-4 ring-teal-900/10' : 'bg-white text-teal-900 border-gray-100 shadow-sm'}`}>
-                    <span className={`block text-[7px] font-black uppercase tracking-[0.3em] mb-0.5 ${isToday ? 'text-teal-400' : 'opacity-50'}`}>{format(day, 'EEEE', { locale: es })}</span>
-                    <span className="block text-xl font-black">{format(day, 'd')}</span>
+                <div className={`text-center p-2 rounded-2xl border transition-all ${isToday ? 'bg-teal-900 text-white border-teal-900 shadow-xl' : 'bg-white text-teal-900 border-gray-100 shadow-sm'}`}>
+                    <span className={`block text-[7px] font-black uppercase tracking-[0.3em] mb-0.5 ${isToday ? 'text-teal-400' : 'opacity-40'}`}>{format(day, 'EEEE', { locale: es })}</span>
+                    <span className="block text-lg font-black">{format(day, 'd')}</span>
                 </div>
                 {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                     const slot = plan.find(p => p.date === dateStr && p.type === type);
                     const recipe = recipes.find(r => r.id === slot?.recipeId);
                     return (
-                        <div key={type} onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} className={`flex-1 min-h-[100px] rounded-[2rem] p-4 border-2 transition-all cursor-pointer flex flex-col justify-between group ${recipe ? 'bg-white border-white shadow-md hover:shadow-xl hover:-translate-y-1' : 'bg-transparent border-dashed border-gray-200 hover:bg-white hover:border-teal-200 hover:shadow-lg'}`}>
-                            <div className="flex justify-between items-start">
+                        <div key={type} onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} className={`flex-1 min-h-[90px] rounded-2xl p-3 border-2 transition-all cursor-pointer flex flex-col group ${recipe ? 'bg-white border-white shadow-sm hover:shadow-md hover:-translate-y-0.5' : 'bg-transparent border-dashed border-gray-200 hover:bg-white hover:border-teal-200'}`}>
+                            <div className="flex justify-between items-center mb-2">
                                 <span className={`text-[7px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full ${recipe ? 'bg-teal-50 text-teal-600' : 'bg-gray-100 text-gray-400'}`}>{type}</span>
-                                {recipe ? (
+                                {recipe && (
                                     <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-1 opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 transition-all"><X className="w-3.5 h-3.5" /></button>
-                                ) : (
-                                    <Plus className="w-3.5 h-3.5 text-gray-200 group-hover:text-teal-400 transition-colors" />
                                 )}
                             </div>
+                            
                             {recipe ? (
-                                <div className="mt-2">
-                                    <h5 className="font-black text-xs text-teal-950 line-clamp-2 leading-tight mb-1 group-hover:text-teal-700 transition-colors">{recipe.title}</h5>
-                                    <div className="flex items-center gap-1.5">
-                                        <PackageCheck className="w-3 h-3 text-teal-600" />
-                                        <span className="text-[7px] font-black text-teal-600 uppercase tracking-widest">En Biblioteca</span>
+                                <div className="flex gap-3 items-center">
+                                    <div className="w-12 h-12 rounded-xl overflow-hidden shadow-inner flex-shrink-0 bg-gray-50 border border-gray-100">
+                                        <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h5 className="font-black text-[11px] text-teal-950 line-clamp-2 leading-tight group-hover:text-teal-700 transition-colors uppercase">{recipe.title}</h5>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="flex-1 flex flex-col items-center justify-center opacity-5 group-hover:opacity-20 transition-opacity">
-                                    <ChefHat className="w-6 h-6 mb-0.5" />
-                                    <span className="text-[6px] font-black uppercase">Vacio</span>
+                                    <Plus className="w-5 h-5 mb-0.5" />
+                                    <span className="text-[6px] font-black uppercase">Añadir</span>
                                 </div>
                             )}
                         </div>
