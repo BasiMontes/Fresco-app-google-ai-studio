@@ -133,6 +133,68 @@ const App: React.FC = () => {
     } catch (e) { setView('onboarding'); }
   };
 
+  // --- HANDLERS PANTRY ---
+  const handleAddPantry = (item: PantryItem) => {
+      if (!userId) return;
+      setPantry(prev => [...prev, item]);
+      addToSyncQueue(userId, 'ADD_PANTRY', item);
+  };
+  const handleUpdatePantryQty = (id: string, delta: number) => {
+      if (!userId) return;
+      setPantry(prev => prev.map(p => p.id === id ? { ...p, quantity: Math.max(0, p.quantity + delta) } : p));
+      const item = pantry.find(p => p.id === id);
+      if (item) addToSyncQueue(userId, 'UPDATE_PANTRY', { ...item, quantity: Math.max(0, item.quantity + delta) });
+  };
+  const handleRemovePantry = (id: string) => {
+      if (!userId) return;
+      setPantry(prev => prev.filter(p => p.id !== id));
+      addToSyncQueue(userId, 'DELETE_PANTRY', { id });
+  };
+
+  // --- HANDLERS SHOPPING ---
+  const handleAddShoppingItem = (items: ShoppingItem[]) => {
+      if (!userId) return;
+      // Evitar duplicados por nombre
+      setShoppingList(prev => {
+          const names = new Set(prev.map(i => i.name.toLowerCase()));
+          const newItems = items.filter(i => !names.has(i.name.toLowerCase()));
+          newItems.forEach(item => addToSyncQueue(userId, 'ADD_SHOPPING', item));
+          return [...prev, ...newItems];
+      });
+  };
+
+  const handleUpdateShoppingItem = (item: ShoppingItem) => {
+      if (!userId) return;
+      setShoppingList(prev => prev.map(i => i.id === item.id ? item : i));
+      addToSyncQueue(userId, 'UPDATE_SHOPPING', item);
+  };
+
+  const handleRemoveShoppingItem = (id: string) => {
+      if (!userId) return;
+      setShoppingList(prev => prev.filter(i => i.id !== id));
+      addToSyncQueue(userId, 'DELETE_SHOPPING', { id });
+  };
+
+  const handleFinishShopping = async (itemsToAdd: PantryItem[]) => {
+      if (!userId) return;
+      
+      // 1. Añadir los nuevos items a la despensa (estado local)
+      setPantry(prev => [...prev, ...itemsToAdd]);
+      
+      // 2. Sincronizar masivamente con la DB
+      await db.addPantryItemsBulkDB(userId, itemsToAdd);
+      
+      // 3. Limpiar los items comprados de la lista de la compra (estado local)
+      const purchasedIds = shoppingList.filter(i => i.is_purchased).map(i => i.id);
+      setShoppingList(prev => prev.filter(i => !i.is_purchased));
+      
+      // 4. Limpiar de la DB
+      for (const id of purchasedIds) {
+          await db.deleteShoppingItemDB(id);
+      }
+  };
+
+  // --- HANDLERS PLANNER ---
   const handleUpdateMealSlot = useCallback(async (date: string, type: MealCategory, recipeId: string | undefined) => {
     if (!userId) return;
     const newSlot: MealSlot = { date, type, recipeId, servings: user?.household_size || 2, isCooked: false };
@@ -211,9 +273,9 @@ const App: React.FC = () => {
                 <Suspense fallback={<PageLoader message="Cargando vista..." />}>
                     {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
                     {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={handleAIPlanGenerated} onClear={handleClearMealPlan} />}
-                    {activeTab === 'pantry' && <Pantry items={pantry} onRemove={() => {}} onAdd={() => {}} onUpdateQuantity={() => {}} onAddMany={() => {}} onEdit={() => {}} />}
-                    {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={() => {}} onAddToPlan={() => {}} onCookFinish={() => {}} onAddToShoppingList={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
-                    {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={() => {}} onUpdateShoppingItem={() => {}} onRemoveShoppingItem={() => {}} onFinishShopping={() => {}} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
+                    {activeTab === 'pantry' && <Pantry items={pantry} onRemove={handleRemovePantry} onAdd={handleAddPantry} onUpdateQuantity={handleUpdatePantryQty} onAddMany={items => handleFinishShopping(items)} onEdit={i => addToSyncQueue(userId!, 'UPDATE_PANTRY', i)} />}
+                    {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={() => {}} onAddToPlan={() => {}} onCookFinish={() => {}} onAddToShoppingList={handleAddShoppingItem} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
+                    {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={handleAddShoppingItem} onUpdateShoppingItem={handleUpdateShoppingItem} onRemoveShoppingItem={handleRemoveShoppingItem} onFinishShopping={handleFinishShopping} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
                     {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} onNavigate={setActiveTab} />}
                     {activeTab === 'settings' && user && <Settings user={user} onBack={() => setActiveTab('profile')} onUpdateUser={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} />}
                     {activeTab === 'faq' && <FAQ onBack={() => setActiveTab('profile')} />}
