@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { MealSlot, Recipe, ShoppingItem, PantryItem, UserProfile } from '../types';
 import { SPANISH_PRICES, EXPIRY_DAYS_BY_CATEGORY } from '../constants';
-import { ShoppingBag, Check, X, Plus, Minus, Loader2, PartyPopper, PlusCircle } from 'lucide-react';
+import { ShoppingBag, Check, X, Plus, Minus, Loader2, PartyPopper, PlusCircle, Tag, Scale, ChevronDown } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cleanName, subtractIngredient, autoScaleIngredient, formatQuantity, parseLocaleNumber } from '../services/unitService';
 import { ModalPortal } from './ModalPortal';
@@ -22,6 +22,28 @@ interface ShoppingListProps {
   onSyncServings: () => void; 
 }
 
+const CATEGORIES = [
+    { id: 'other', label: 'Otros', emoji: '📦' },
+    { id: 'vegetables', label: 'Verdulería', emoji: '🥦' },
+    { id: 'fruits', label: 'Frutería', emoji: '🍎' },
+    { id: 'dairy', label: 'Lácteos', emoji: '🧀' },
+    { id: 'meat', label: 'Carnicería', emoji: '🥩' },
+    { id: 'fish', label: 'Pescadería', emoji: '🐟' },
+    { id: 'pasta', label: 'Pasta/Arroz', emoji: '🍝' },
+    { id: 'legumes', label: 'Legumbres', emoji: '🫘' },
+    { id: 'bakery', label: 'Panadería', emoji: '🥖' },
+    { id: 'drinks', label: 'Bebidas', emoji: '🥤' },
+    { id: 'pantry', label: 'Despensa', emoji: '🥫' },
+];
+
+const UNIT_OPTIONS = [
+    { id: 'uds', label: 'UDS' },
+    { id: 'kg', label: 'KG' },
+    { id: 'l', label: 'L' },
+    { id: 'g', label: 'G' },
+    { id: 'ml', label: 'ML' }
+];
+
 const formatUnitLabel = (unit: string = '') => unit.toUpperCase() || 'UDS';
 
 export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantry, dbItems, onAddShoppingItem, onUpdateShoppingItem, onRemoveShoppingItem, onFinishShopping }) => {
@@ -29,8 +51,13 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   const [showCelebration, setShowCelebration] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // Estado para añadir manual
-  const [manualInput, setManualInput] = useState("");
+  // Estado detallado para añadir manual
+  const [manualItem, setManualItem] = useState({
+      name: "",
+      quantity: 1,
+      unit: "uds",
+      category: "other"
+  });
   
   // Estado local para edición fluida
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -92,20 +119,20 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
   const handleAddManual = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!manualInput.trim()) return;
+    if (!manualItem.name.trim()) return;
     
     const newItem: ShoppingItem = {
         id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-        name: manualInput.trim(),
-        quantity: 1,
-        unit: 'uds',
-        category: 'other',
+        name: manualItem.name.trim(),
+        quantity: manualItem.quantity,
+        unit: manualItem.unit,
+        category: manualItem.category,
         estimated_price: 0,
         is_purchased: false
     };
     
     onAddShoppingItem([newItem]);
-    setManualInput("");
+    setManualItem({ name: "", quantity: 1, unit: "uds", category: "other" });
   };
 
   const toggleItem = (item: ShoppingItem) => {
@@ -205,22 +232,60 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-teal-800 rounded-full blur-3xl opacity-50" />
       </div>
 
-      {/* Input de Añadir Manual - RESTAURADO */}
-      <form onSubmit={handleAddManual} className="mb-8 flex gap-3 px-2">
-          <input 
-              type="text" 
-              placeholder="¿Algo más que necesites? Ej: Leche, Pan..." 
-              className="flex-1 h-14 bg-white border-2 border-gray-50 rounded-2xl px-6 font-bold text-teal-900 outline-none focus:border-teal-500/20 transition-all shadow-sm"
-              value={manualInput}
-              onChange={(e) => setManualInput(e.target.value)}
-          />
-          <button 
-              type="submit"
-              className="w-14 h-14 bg-teal-900 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-all hover:bg-teal-800"
-          >
-              <PlusCircle className="w-6 h-6" />
-          </button>
-      </form>
+      {/* Formulario Detallado de Añadir Manual */}
+      <div className="bg-white border border-gray-100 rounded-[2.5rem] p-6 md:p-8 mb-8 shadow-sm">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-teal-600 mb-6 flex items-center gap-2">
+              <PlusCircle className="w-3 h-3" /> Añadir Producto Manualmente
+          </h3>
+          <form onSubmit={handleAddManual} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                  <div className="md:col-span-6">
+                      <input 
+                          type="text" 
+                          placeholder="Nombre del producto (ej: Leche)" 
+                          className="w-full h-14 bg-gray-50 border-2 border-transparent rounded-2xl px-6 font-bold text-teal-900 outline-none focus:border-teal-500/20 transition-all"
+                          value={manualItem.name}
+                          onChange={(e) => setManualItem({...manualItem, name: e.target.value})}
+                      />
+                  </div>
+                  <div className="md:col-span-3 flex bg-gray-50 rounded-2xl overflow-hidden border-2 border-transparent focus-within:border-teal-500/20">
+                      <input 
+                          type="number" 
+                          step="0.1"
+                          placeholder="Cant." 
+                          className="w-1/2 h-14 bg-transparent px-4 font-black text-center text-teal-900 outline-none"
+                          value={manualItem.quantity}
+                          onChange={(e) => setManualItem({...manualItem, quantity: parseFloat(e.target.value) || 0})}
+                      />
+                      <div className="w-px h-8 bg-gray-200 self-center" />
+                      <select 
+                          className="w-1/2 h-14 bg-transparent px-2 font-black text-[10px] text-teal-600 outline-none appearance-none text-center cursor-pointer"
+                          value={manualItem.unit}
+                          onChange={(e) => setManualItem({...manualItem, unit: e.target.value})}
+                      >
+                          {UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
+                      </select>
+                  </div>
+                  <div className="md:col-span-3 relative">
+                      <select 
+                          className="w-full h-14 bg-gray-50 border-2 border-transparent rounded-2xl px-5 font-black text-[10px] text-teal-900 outline-none appearance-none cursor-pointer"
+                          value={manualItem.category}
+                          onChange={(e) => setManualItem({...manualItem, category: e.target.value})}
+                      >
+                          {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label.toUpperCase()}</option>)}
+                      </select>
+                      <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
+                  </div>
+              </div>
+              <button 
+                  type="submit"
+                  disabled={!manualItem.name.trim()}
+                  className="w-full h-14 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg active:scale-[0.98] transition-all hover:bg-teal-800 flex items-center justify-center gap-3 disabled:opacity-30"
+              >
+                  <PlusCircle className="w-4 h-4" /> AÑADIR A LA LISTA
+              </button>
+          </form>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {shoppingData.finalItems.length === 0 ? (
@@ -231,24 +296,26 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           ) : (
             shoppingData.finalItems.map(item => {
                 const isEditing = editingId === item.id;
+                const catInfo = CATEGORIES.find(c => c.id === item.category) || CATEGORIES[0];
                 return (
                     <div key={item.id} onClick={() => toggleItem(item)} className={`bg-white p-4 md:p-5 rounded-[2.2rem] flex items-center gap-4 border-2 transition-all cursor-pointer ${item.is_purchased ? 'opacity-40 border-gray-50' : 'border-white shadow-sm hover:border-teal-100 hover:shadow-md'}`}>
-                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-green-50 border-green-500' : 'border-gray-100'}`}>
-                            {item.is_purchased && <Check className="w-5 h-5 stroke-[4px] text-white" />}
+                        <div className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-green-50 border-green-500' : 'border-gray-100'}`}>
+                            {item.is_purchased && <Check className="w-4 h-4 stroke-[4px] text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className={`font-bold capitalize leading-snug ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>
+                            <p className={`font-bold capitalize leading-snug text-sm ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>
+                                <span className="mr-2 opacity-50">{catInfo.emoji}</span>
                                 {item.name}
                             </p>
                         </div>
-                        {/* Selector Compactado y Input de Precisión */}
-                        <div className="flex items-center bg-gray-50 rounded-2xl p-1 border border-gray-100 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                            <button onClick={(e) => handleAdjust(e, item, -1)} className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"><Minus className="w-2.5 h-2.5" /></button>
-                            <div className="px-1 text-center min-w-[50px]">
+                        {/* Selector COMPACTADO al máximo */}
+                        <div className="flex items-center bg-gray-50 rounded-2xl p-0.5 border border-gray-100 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                            <button onClick={(e) => handleAdjust(e, item, -1)} className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"><Minus className="w-2.5 h-2.5" /></button>
+                            <div className="px-0.5 text-center min-w-[42px]">
                                 <input 
                                     type="text"
                                     inputMode="decimal"
-                                    className="w-full bg-transparent font-black text-sm text-teal-900 leading-none text-center outline-none border-none p-0 focus:ring-0"
+                                    className="w-full bg-transparent font-black text-[11px] text-teal-900 leading-none text-center outline-none border-none p-0 focus:ring-0"
                                     value={isEditing ? localValue : formatQuantity(item.quantity, item.unit).replace('.', ',')}
                                     onChange={(e) => handleLocalChange(e.target.value)}
                                     onFocus={() => startEditing(item)}
@@ -256,9 +323,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                     onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                                     onClick={e => (e.target as HTMLInputElement).select()}
                                 />
-                                <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest mt-0.5">{formatUnitLabel(item.unit)}</p>
+                                <p className="text-[5px] font-black text-gray-400 uppercase tracking-tighter leading-none mt-0.5">{formatUnitLabel(item.unit)}</p>
                             </div>
-                            <button onClick={(e) => handleAdjust(e, item, 1)} className="w-7 h-7 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-2.5 h-2.5" /></button>
+                            <button onClick={(e) => handleAdjust(e, item, 1)} className="w-6 h-6 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-2.5 h-2.5" /></button>
                         </div>
                     </div>
                 );
