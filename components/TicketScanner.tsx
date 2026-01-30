@@ -175,7 +175,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
           </button>
           
           <div className="flex-1 flex items-center gap-3 overflow-hidden">
-              <Logo variant="inverted" className="scale-75 origin-left hidden sm:flex" />
+              <div className="p-2 bg-white/10 rounded-xl">
+                <Logo variant="inverted" iconOnly className="scale-90" />
+              </div>
               <div className="min-w-0">
                   <h2 className="text-lg font-black text-white tracking-tight truncate">Fresco, tu cocina inteligente</h2>
                   <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest opacity-60">Escáner Vision</p>

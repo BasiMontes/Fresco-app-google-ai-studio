@@ -5,9 +5,10 @@ interface LogoProps {
   className?: string;
   variant?: 'default' | 'inverted';
   align?: 'left' | 'center' | 'right';
+  iconOnly?: boolean;
 }
 
-export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'default', align = 'left' }) => {
+export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'default', align = 'left', iconOnly = false }) => {
   const baseColor = variant === 'inverted' ? 'text-white' : 'text-[#013b33]';
   const justify = align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start';
   const iconColor = variant === 'inverted' ? 'white' : '#013b33';
@@ -15,8 +16,8 @@ export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'default',
   return (
     <div className={`flex items-center gap-3 ${justify} ${className} select-none`}>
       <svg 
-        width="38" 
-        height="38" 
+        width={iconOnly ? "32" : "38"} 
+        height={iconOnly ? "32" : "38"} 
         viewBox="0 0 256 256" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
@@ -27,9 +28,11 @@ export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'default',
           fill={iconColor}
         />
       </svg>
-      <span className={`font-black text-3xl tracking-[-0.05em] leading-none ${baseColor}`}>
-        Fresco<span className="text-orange-500">.</span>
-      </span>
+      {!iconOnly && (
+        <span className={`font-black text-3xl tracking-[-0.05em] leading-none ${baseColor}`}>
+          Fresco<span className="text-orange-500">.</span>
+        </span>
+      )}
     </div>
   );
 };
