@@ -129,27 +129,30 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     const slot = plan.find(p => p.date === dateStr && p.type === type);
                     const recipe = recipes.find(r => r.id === slot?.recipeId);
                     return (
-                        <div key={type} onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} className={`flex-1 min-h-[90px] rounded-2xl p-3 border-2 transition-all cursor-pointer flex flex-col group ${recipe ? 'bg-white border-white shadow-sm hover:shadow-md hover:-translate-y-0.5' : 'bg-transparent border-dashed border-gray-200 hover:bg-white hover:border-teal-200'}`}>
-                            <div className="flex justify-between items-center mb-2">
-                                <span className={`text-[7px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full ${recipe ? 'bg-teal-50 text-teal-600' : 'bg-gray-100 text-gray-400'}`}>{type}</span>
-                                {recipe && (
-                                    <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-1 opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 transition-all"><X className="w-3.5 h-3.5" /></button>
-                                )}
-                            </div>
-                            
+                        <div key={type} onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} className={`relative flex-1 min-h-[140px] rounded-2xl border-2 transition-all cursor-pointer flex flex-col overflow-hidden group ${recipe ? 'border-white shadow-sm hover:shadow-xl hover:-translate-y-1' : 'bg-transparent border-dashed border-gray-200 hover:bg-white hover:border-teal-200'}`}>
                             {recipe ? (
-                                <div className="flex gap-3 items-center">
-                                    <div className="w-12 h-12 rounded-xl overflow-hidden shadow-inner flex-shrink-0 bg-gray-50 border border-gray-100">
-                                        <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover" />
+                                <>
+                                    <SmartImage src={recipe.image_url} alt={recipe.title} className="absolute inset-0 w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                                    <div className="relative z-10 flex flex-col justify-between h-full p-4">
+                                        <div className="flex justify-between items-start">
+                                            <span className="text-[7px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md text-white border border-white/10">{type}</span>
+                                            <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-1.5 bg-black/40 backdrop-blur-md rounded-lg text-white/70 hover:text-white hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100"><X className="w-3.5 h-3.5" /></button>
+                                        </div>
+                                        <div>
+                                            <h5 className="font-black text-[13px] text-white leading-tight uppercase line-clamp-2 drop-shadow-md">{recipe.title}</h5>
+                                        </div>
                                     </div>
-                                    <div className="min-w-0">
-                                        <h5 className="font-black text-[11px] text-teal-950 line-clamp-2 leading-tight group-hover:text-teal-700 transition-colors uppercase">{recipe.title}</h5>
-                                    </div>
-                                </div>
+                                </>
                             ) : (
-                                <div className="flex-1 flex flex-col items-center justify-center opacity-5 group-hover:opacity-20 transition-opacity">
-                                    <Plus className="w-5 h-5 mb-0.5" />
-                                    <span className="text-[6px] font-black uppercase">Añadir</span>
+                                <div className="flex-1 flex flex-col items-center justify-center p-4">
+                                    <div className="flex justify-between items-center w-full mb-auto">
+                                        <span className="text-[7px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">{type}</span>
+                                    </div>
+                                    <div className="flex-1 flex flex-col items-center justify-center opacity-5 group-hover:opacity-20 transition-opacity">
+                                        <Plus className="w-6 h-6 mb-1" />
+                                        <span className="text-[8px] font-black uppercase tracking-widest">Añadir</span>
+                                    </div>
                                 </div>
                             )}
                         </div>
