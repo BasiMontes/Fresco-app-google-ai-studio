@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { MealSlot, Recipe, ShoppingItem, PantryItem, UserProfile } from '../types';
 import { SPANISH_PRICES, EXPIRY_DAYS_BY_CATEGORY } from '../constants';
-import { ShoppingBag, Check, X, Plus, Minus, Loader2, PartyPopper, PlusCircle, ChevronDown } from 'lucide-react';
+import { ShoppingBag, Check, X, Plus, Minus, Loader2, PartyPopper, PlusCircle, ChevronDown, FilterX } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cleanName, subtractIngredient, autoScaleIngredient, formatQuantity, parseLocaleNumber } from '../services/unitService';
 import { ModalPortal } from './ModalPortal';
@@ -36,6 +36,11 @@ const CATEGORIES = [
     { id: 'pantry', label: 'Despensa', emoji: '🥫' },
 ];
 
+const FILTER_OPTIONS = [
+    { id: 'all', label: 'Todo', emoji: '📋' },
+    ...CATEGORIES
+];
+
 const UNIT_OPTIONS = [
     { id: 'uds', label: 'UDS' },
     { id: 'kg', label: 'KG' },
@@ -50,6 +55,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   const [showReceipt, setShowReceipt] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState('all');
   
   const [manualItem, setManualItem] = useState({
       name: "",
@@ -114,6 +120,11 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
     return { finalItems, total, progress };
   }, [plan, recipes, pantry, dbItems]);
+
+  const filteredItems = useMemo(() => {
+    if (activeFilter === 'all') return shoppingData.finalItems;
+    return shoppingData.finalItems.filter(item => item.category === activeFilter);
+  }, [shoppingData.finalItems, activeFilter]);
 
   const handleAddManual = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -282,14 +293,54 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           </form>
       </div>
 
+      {/* BARRA DE FILTROS POR CATEGORÍA */}
+      <div className="mb-6">
+          <div className="flex overflow-x-auto no-scrollbar gap-3 pb-2 -mx-1 px-1">
+              {FILTER_OPTIONS.map(opt => {
+                  const isActive = activeFilter === opt.id;
+                  const count = opt.id === 'all' 
+                    ? shoppingData.finalItems.length 
+                    : shoppingData.finalItems.filter(i => i.category === opt.id).length;
+                  
+                  if (opt.id !== 'all' && count === 0) return null;
+
+                  return (
+                      <button 
+                        key={opt.id} 
+                        onClick={() => setActiveFilter(opt.id)}
+                        className={`px-5 py-2.5 rounded-full font-black text-[11px] whitespace-nowrap transition-all duration-300 border flex items-center gap-2 ${
+                            isActive 
+                            ? 'bg-[#e6f2f1] border-[#147A74] text-[#147A74] shadow-sm' 
+                            : 'bg-white border-gray-100 text-gray-400 hover:bg-gray-50'
+                        }`}
+                      >
+                          <span>{opt.emoji}</span>
+                          {opt.label.toUpperCase()}
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded-md ${isActive ? 'bg-[#147A74] text-white' : 'bg-gray-100 text-gray-400'}`}>{count}</span>
+                      </button>
+                  );
+              })}
+          </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {shoppingData.finalItems.length === 0 ? (
+          {filteredItems.length === 0 ? (
               <div className="col-span-full py-20 text-center space-y-4 opacity-20">
-                  <ShoppingBag className="w-16 h-16 mx-auto" />
-                  <p className="font-black text-sm uppercase tracking-widest">Nada que comprar por ahora</p>
+                  {activeFilter === 'all' ? (
+                      <>
+                        <ShoppingBag className="w-16 h-16 mx-auto" />
+                        <p className="font-black text-sm uppercase tracking-widest">Nada que comprar por ahora</p>
+                      </>
+                  ) : (
+                      <>
+                        <FilterX className="w-16 h-16 mx-auto" />
+                        <p className="font-black text-sm uppercase tracking-widest">No hay productos en esta categoría</p>
+                        <button onClick={() => setActiveFilter('all')} className="text-teal-600 font-bold text-xs underline">Ver todos los productos</button>
+                      </>
+                  )}
               </div>
           ) : (
-            shoppingData.finalItems.map(item => {
+            filteredItems.map(item => {
                 const isEditing = editingId === item.id;
                 const catInfo = CATEGORIES.find(c => c.id === item.category) || CATEGORIES[0];
                 const canDecrement = item.quantity > 0;
@@ -304,7 +355,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                 <span className="mr-2 opacity-50">{catInfo.emoji}</span>
                                 {item.name}
                             </p>
-                            {/* REINTEGRACIÓN DE CATEGORÍA */}
                             <p className="text-[8px] font-black uppercase tracking-widest text-teal-600/40 mt-0.5 ml-6">
                                 {catInfo.label}
                             </p>
@@ -339,7 +389,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           )}
       </div>
 
-      {/* REPOSICIONAMIENTO DEL BOTÓN: BAJADO A bottom-22 */}
       <div className={`fixed left-8 right-8 md:left-auto md:right-8 z-[100] transition-all duration-500 ${shoppingData.finalItems.filter(i => i.is_purchased).length > 0 ? 'bottom-22 opacity-100' : 'bottom-[-100px] opacity-0'}`}>
           <button onClick={() => setShowReceipt(true)} className="w-full md:w-auto bg-[#013b33] text-white px-10 h-14 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-teal-900 shadow-xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
               <Check className="w-5 h-5 stroke-[3px]" /> TERMINAR COMPRA
