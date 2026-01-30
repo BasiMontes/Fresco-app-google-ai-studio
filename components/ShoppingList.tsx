@@ -305,7 +305,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                 {item.name}
                             </p>
                         </div>
-                        {/* Selector PRECISION (Ancho fijo 100px para XX,XXX) */}
                         <div className="flex items-center bg-gray-50 rounded-xl p-0.5 border border-gray-100 flex-shrink-0 w-[100px] h-9" onClick={e => e.stopPropagation()}>
                             <button 
                                 onClick={(e) => canDecrement && handleAdjust(e, item, -1)} 
@@ -336,9 +335,10 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           )}
       </div>
 
+      {/* Botón sincronizado con la jerarquía de botones de acción primarios */}
       <div className={`fixed left-8 right-8 md:left-auto md:right-8 z-[100] transition-all duration-500 ${shoppingData.finalItems.filter(i => i.is_purchased).length > 0 ? 'bottom-28 opacity-100' : 'bottom-[-100px] opacity-0'}`}>
-          <button onClick={() => setShowReceipt(true)} className="w-full md:w-auto bg-[#013b33] text-white px-10 h-16 rounded-[1.8rem] font-black flex items-center justify-center gap-3 hover:bg-teal-900 shadow-2xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
-              <Check className="w-5 h-5 stroke-[4px]" /> TERMINAR COMPRA
+          <button onClick={() => setShowReceipt(true)} className="w-full md:w-auto bg-[#013b33] text-white px-10 h-14 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-teal-900 shadow-xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
+              <Check className="w-5 h-5 stroke-[3px]" /> TERMINAR COMPRA
           </button>
       </div>
 
@@ -359,7 +359,8 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                             </div>
                         ))}
                     </div>
-                    <button onClick={confirmFinish} disabled={isProcessing} className="w-full py-5 bg-[#013b33] text-white rounded-[1.8rem] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95">
+                    {/* Botones de modal también sincronizados a la jerarquía de 2xl/h-14 */}
+                    <button onClick={confirmFinish} disabled={isProcessing} className="w-full h-14 bg-[#013b33] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95">
                         {isProcessing ? <Loader2 className="w-6 h-6 animate-spin" /> : 'CONFIRMAR Y GUARDAR'}
                     </button>
                   </div>
@@ -373,7 +374,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                 <PartyPopper className="w-32 h-32 mb-8 text-orange-400 animate-bounce" />
                 <h2 className="text-4xl font-black mb-4">¡Compra Lista!</h2>
                 <p className="text-teal-200/60 font-medium mb-12 max-w-xs">Tu despensa ha sido actualizada automáticamente.</p>
-                <button onClick={() => setShowCelebration(false)} className="px-12 py-5 bg-white text-[#013b33] rounded-full font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all">VOLVER AL PANEL</button>
+                <button onClick={() => setShowCelebration(false)} className="px-12 h-14 bg-white text-[#013b33] rounded-2xl font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all">VOLVER AL PANEL</button>
             </div>
           </ModalPortal>
       )}
