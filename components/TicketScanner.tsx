@@ -6,6 +6,7 @@ import { PantryItem } from '../types';
 import { EXPIRY_DAYS_BY_CATEGORY } from '../constants';
 import { format, addDays } from 'date-fns';
 import { ModalPortal } from './ModalPortal';
+import { Logo } from './Logo';
 
 interface TicketScannerProps {
   onClose: () => void;
@@ -168,17 +169,18 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   return (
     <ModalPortal>
       <div className="fixed inset-0 z-[5000] bg-[#013b33] flex flex-col animate-fade-in overflow-hidden safe-pb">
-        <div className="p-6 flex justify-between items-center bg-black/20 backdrop-blur-xl border-b border-white/5">
-          <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                  <h2 className="text-xl font-black text-white tracking-tight">Fresco Vision</h2>
-                  <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest">Importador Inteligente</p>
+        <div className="p-6 flex items-center bg-black/20 backdrop-blur-xl border-b border-white/5 gap-4">
+          <button onClick={onClose} className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 text-white transition-all active:scale-90">
+            <X className="w-6 h-6" />
+          </button>
+          
+          <div className="flex-1 flex items-center gap-3 overflow-hidden">
+              <Logo variant="inverted" className="scale-75 origin-left hidden sm:flex" />
+              <div className="min-w-0">
+                  <h2 className="text-lg font-black text-white tracking-tight truncate">Fresco, tu cocina inteligente</h2>
+                  <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest opacity-60">Escáner Vision</p>
               </div>
           </div>
-          <button onClick={onClose} className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 text-white"><X className="w-6 h-6" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
