@@ -1,7 +1,7 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { PantryItem } from '../types';
-import { Package, Plus, Trash2, X, Camera, Search, MoreVertical, Clock, AlertTriangle, ChevronDown, Minus, Calendar, Scale, ArrowUpDown, CalendarClock, Check, Tag } from 'lucide-react';
+import { Package, Plus, Trash2, X, Camera, Search, MoreVertical, Clock, AlertTriangle, ChevronDown, Minus, Calendar, Scale, ArrowUpDown, CalendarClock, Check, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { differenceInDays, startOfDay, format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TicketScanner } from './TicketScanner';
@@ -77,6 +77,32 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
     added_at: format(new Date(), 'yyyy-MM-dd'),
     expires_at: ''
   });
+
+  // Lógica para scroll horizontal
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        setCanScrollLeft(scrollLeft > 5);
+        setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [items]);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+        const amount = direction === 'left' ? -200 : 200;
+        scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
 
   const getExpiryStatus = (item: PantryItem) => {
     if (!item.expires_at) return { type: 'none', label: 'Fresco', color: 'text-[#147A74]', icon: Clock };
@@ -195,10 +221,35 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
         </div>
       </header>
 
-      <div className="flex overflow-x-auto no-scrollbar gap-3 mb-6 pb-2 -mx-2 px-2">
-          {CATEGORIES_OPTIONS.map(cat => (
-              <button key={cat.id} onClick={() => { setSelectedCategory(cat.id); setVisibleLimit(ITEMS_PER_PAGE); }} className={`px-5 py-2.5 rounded-full font-bold text-[11px] whitespace-nowrap transition-all duration-300 border ${selectedCategory === cat.id ? 'bg-[#e6f2f1] border-[#147A74] text-[#147A74] shadow-sm' : 'bg-[#f4f7f6] border-transparent text-[#6e8a88] hover:bg-gray-100'}`}>{cat.label}</button>
-          ))}
+      {/* BARRA DE FILTROS CON NAVEGACIÓN */}
+      <div className="relative group/filters mb-6">
+          {canScrollLeft && (
+              <button 
+                onClick={() => scroll('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-full flex items-center justify-center text-[#147A74] border border-gray-100 animate-fade-in"
+              >
+                  <ChevronLeft className="w-5 h-5" />
+              </button>
+          )}
+          
+          <div 
+            ref={scrollRef}
+            onScroll={checkScroll}
+            className="flex overflow-x-auto no-scrollbar gap-3 pb-2 -mx-2 px-2 scroll-smooth"
+          >
+              {CATEGORIES_OPTIONS.map(cat => (
+                  <button key={cat.id} onClick={() => { setSelectedCategory(cat.id); setVisibleLimit(ITEMS_PER_PAGE); }} className={`px-5 py-2.5 rounded-full font-bold text-[11px] whitespace-nowrap transition-all duration-300 border ${selectedCategory === cat.id ? 'bg-[#e6f2f1] border-[#147A74] text-[#147A74] shadow-sm' : 'bg-[#f4f7f6] border-transparent text-[#6e8a88] hover:bg-gray-100'}`}>{cat.label}</button>
+              ))}
+          </div>
+
+          {canScrollRight && (
+              <button 
+                onClick={() => scroll('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-full flex items-center justify-center text-[#147A74] border border-gray-100 animate-fade-in"
+              >
+                  <ChevronRight className="w-5 h-5" />
+              </button>
+          )}
       </div>
 
       <div className="flex items-center gap-6 mb-8 px-2">

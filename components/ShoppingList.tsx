@@ -1,8 +1,8 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { MealSlot, Recipe, ShoppingItem, PantryItem, UserProfile } from '../types';
 import { SPANISH_PRICES, EXPIRY_DAYS_BY_CATEGORY } from '../constants';
-import { ShoppingBag, Check, X, Plus, Minus, Loader2, PartyPopper, PlusCircle, ChevronDown, FilterX } from 'lucide-react';
+import { ShoppingBag, Check, X, Plus, Minus, Loader2, PartyPopper, PlusCircle, ChevronDown, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cleanName, subtractIngredient, autoScaleIngredient, formatQuantity, parseLocaleNumber } from '../services/unitService';
 import { ModalPortal } from './ModalPortal';
@@ -22,7 +22,6 @@ interface ShoppingListProps {
   onSyncServings: () => void; 
 }
 
-// Categorías sincronizadas exactamente con Pantry.tsx
 const CATEGORIES = [
     { id: 'vegetables', label: 'Vegetables', emoji: '🥦' },
     { id: 'fruits', label: 'Fruits', emoji: '🍎' },
@@ -69,6 +68,32 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   
   const [editingId, setEditingId] = useState<string | null>(null);
   const [localValue, setLocalValue] = useState("");
+
+  // Lógica para scroll horizontal
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        setCanScrollLeft(scrollLeft > 5);
+        setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [dbItems, plan]);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+        const amount = direction === 'left' ? -200 : 200;
+        scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
 
   const shoppingData = useMemo(() => {
     const calculatedNeeds: Record<string, ShoppingItem> = {};
@@ -296,9 +321,22 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           </form>
       </div>
 
-      {/* BARRA DE FILTROS REPLICADA DE LA DESPENSA */}
-      <div className="mb-8">
-          <div className="flex overflow-x-auto no-scrollbar gap-3 pb-2 -mx-1 px-1">
+      {/* BARRA DE FILTROS CON NAVEGACIÓN ASISTIDA */}
+      <div className="relative group/filters mb-8">
+          {canScrollLeft && (
+              <button 
+                onClick={() => scroll('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-full flex items-center justify-center text-[#147A74] border border-gray-100 animate-fade-in"
+              >
+                  <ChevronLeft className="w-5 h-5" />
+              </button>
+          )}
+
+          <div 
+            ref={scrollRef}
+            onScroll={checkScroll}
+            className="flex overflow-x-auto no-scrollbar gap-3 pb-2 -mx-1 px-1 scroll-smooth"
+          >
               {FILTER_OPTIONS.map(opt => {
                   const isActive = activeFilter === opt.id;
                   const count = opt.id === 'all' 
@@ -324,6 +362,15 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                   );
               })}
           </div>
+
+          {canScrollRight && (
+              <button 
+                onClick={() => scroll('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-full flex items-center justify-center text-[#147A74] border border-gray-100 animate-fade-in"
+              >
+                  <ChevronRight className="w-5 h-5" />
+              </button>
+          )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -392,7 +439,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           )}
       </div>
 
-      {/* POSICIÓN CORREGIDA: Subido a bottom-28 para evitar colisión con menú inferior */}
       <div className={`fixed left-8 right-8 md:left-auto md:right-8 z-[100] transition-all duration-500 ${shoppingData.finalItems.filter(i => i.is_purchased).length > 0 ? 'bottom-28 opacity-100' : 'bottom-[-100px] opacity-0'}`}>
           <button onClick={() => setShowReceipt(true)} className="w-full md:w-auto bg-[#013b33] text-white px-10 h-14 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-teal-900 shadow-xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
               <Check className="w-5 h-5 stroke-[3px]" /> TERMINAR COMPRA
