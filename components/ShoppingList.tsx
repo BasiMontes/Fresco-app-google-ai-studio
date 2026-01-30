@@ -2,9 +2,9 @@
 import React, { useMemo, useState } from 'react';
 import { MealSlot, Recipe, ShoppingItem, PantryItem, UserProfile } from '../types';
 import { SPANISH_PRICES, EXPIRY_DAYS_BY_CATEGORY } from '../constants';
-import { ShoppingBag, Check, X, Plus, Minus, Info, Loader2, PartyPopper } from 'lucide-react';
+import { ShoppingBag, Check, X, Plus, Minus, Loader2, PartyPopper, PlusCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { cleanName, subtractIngredient, autoScaleIngredient, roundSafe, formatQuantity, parseLocaleNumber } from '../services/unitService';
+import { cleanName, subtractIngredient, autoScaleIngredient, formatQuantity, parseLocaleNumber } from '../services/unitService';
 import { ModalPortal } from './ModalPortal';
 import { format, addDays } from 'date-fns';
 
@@ -28,6 +28,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   const [showReceipt, setShowReceipt] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Estado para añadir manual
+  const [manualInput, setManualInput] = useState("");
   
   // Estado local para edición fluida
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -87,6 +90,24 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
     return { finalItems, total, progress };
   }, [plan, recipes, pantry, dbItems]);
 
+  const handleAddManual = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!manualInput.trim()) return;
+    
+    const newItem: ShoppingItem = {
+        id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        name: manualInput.trim(),
+        quantity: 1,
+        unit: 'uds',
+        category: 'other',
+        estimated_price: 0,
+        is_purchased: false
+    };
+    
+    onAddShoppingItem([newItem]);
+    setManualInput("");
+  };
+
   const toggleItem = (item: ShoppingItem) => {
     if (item.id.startsWith('calc-')) {
         onAddShoppingItem([{ ...item, id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, is_purchased: !item.is_purchased }]);
@@ -120,9 +141,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   };
 
   const handleLocalChange = (val: string) => {
-      // Sanitizador: Solo números, una coma o un punto
       const sanitized = val.replace(/[^0-9.,]/g, '');
-      // Evitar múltiples separadores
       const parts = sanitized.split(/[.,]/);
       if (parts.length > 2) return;
       setLocalValue(sanitized);
@@ -186,6 +205,23 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-teal-800 rounded-full blur-3xl opacity-50" />
       </div>
 
+      {/* Input de Añadir Manual - RESTAURADO */}
+      <form onSubmit={handleAddManual} className="mb-8 flex gap-3 px-2">
+          <input 
+              type="text" 
+              placeholder="¿Algo más que necesites? Ej: Leche, Pan..." 
+              className="flex-1 h-14 bg-white border-2 border-gray-50 rounded-2xl px-6 font-bold text-teal-900 outline-none focus:border-teal-500/20 transition-all shadow-sm"
+              value={manualInput}
+              onChange={(e) => setManualInput(e.target.value)}
+          />
+          <button 
+              type="submit"
+              className="w-14 h-14 bg-teal-900 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-all hover:bg-teal-800"
+          >
+              <PlusCircle className="w-6 h-6" />
+          </button>
+      </form>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {shoppingData.finalItems.length === 0 ? (
               <div className="col-span-full py-20 text-center space-y-4 opacity-20">
@@ -194,20 +230,21 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
               </div>
           ) : (
             shoppingData.finalItems.map(item => {
-                const isCalculated = item.id.startsWith('calc-');
                 const isEditing = editingId === item.id;
                 return (
                     <div key={item.id} onClick={() => toggleItem(item)} className={`bg-white p-4 md:p-5 rounded-[2.2rem] flex items-center gap-4 border-2 transition-all cursor-pointer ${item.is_purchased ? 'opacity-40 border-gray-50' : 'border-white shadow-sm hover:border-teal-100 hover:shadow-md'}`}>
-                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${item.is_purchased ? 'bg-green-50 border-green-500' : 'border-gray-100'}`}>
+                        <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-green-50 border-green-500' : 'border-gray-100'}`}>
                             {item.is_purchased && <Check className="w-5 h-5 stroke-[4px] text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className={`font-bold capitalize truncate ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>{item.name}</p>
-                            {isCalculated && !item.is_purchased && <span className="text-[7px] font-black uppercase text-teal-500 tracking-tighter flex items-center gap-1 mt-0.5"><Info className="w-2 h-2" /> Necesario para el plan</span>}
+                            <p className={`font-bold capitalize leading-snug ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>
+                                {item.name}
+                            </p>
                         </div>
-                        <div className="flex items-center bg-gray-50 rounded-2xl p-1 border border-gray-100" onClick={e => e.stopPropagation()}>
-                            <button onClick={(e) => handleAdjust(e, item, -1)} className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"><Minus className="w-3 h-3" /></button>
-                            <div className="px-1 text-center min-w-[70px]">
+                        {/* Selector Compactado y Input de Precisión */}
+                        <div className="flex items-center bg-gray-50 rounded-2xl p-1 border border-gray-100 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                            <button onClick={(e) => handleAdjust(e, item, -1)} className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"><Minus className="w-2.5 h-2.5" /></button>
+                            <div className="px-1 text-center min-w-[50px]">
                                 <input 
                                     type="text"
                                     inputMode="decimal"
@@ -219,9 +256,9 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                     onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                                     onClick={e => (e.target as HTMLInputElement).select()}
                                 />
-                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mt-0.5">{formatUnitLabel(item.unit)}</p>
+                                <p className="text-[6px] font-black text-gray-400 uppercase tracking-widest mt-0.5">{formatUnitLabel(item.unit)}</p>
                             </div>
-                            <button onClick={(e) => handleAdjust(e, item, 1)} className="w-8 h-8 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-3 h-3" /></button>
+                            <button onClick={(e) => handleAdjust(e, item, 1)} className="w-7 h-7 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-2.5 h-2.5" /></button>
                         </div>
                     </div>
                 );
