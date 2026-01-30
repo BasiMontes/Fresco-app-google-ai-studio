@@ -4,7 +4,7 @@ import { MealSlot, Recipe, ShoppingItem, PantryItem, UserProfile } from '../type
 import { SPANISH_PRICES, EXPIRY_DAYS_BY_CATEGORY } from '../constants';
 import { ShoppingBag, Check, X, Plus, Minus, Info, Loader2, PartyPopper } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { cleanName, subtractIngredient } from '../services/unitService';
+import { cleanName, subtractIngredient, autoScaleIngredient, roundSafe } from '../services/unitService';
 import { ModalPortal } from './ModalPortal';
 import { format, addDays } from 'date-fns';
 
@@ -32,7 +32,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   const shoppingData = useMemo(() => {
     const calculatedNeeds: Record<string, ShoppingItem> = {};
     
-    // 1. Necesidades totales según el plan
     plan.forEach(slot => {
         const recipe = recipes.find(r => r.id === slot.recipeId);
         if (!recipe) return;
@@ -55,7 +54,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         });
     });
 
-    // 2. Restar lo que hay en despensa
     Object.keys(calculatedNeeds).forEach(key => {
         const inPantry = pantry.find(p => cleanName(p.name) === key);
         if (inPantry) {
@@ -68,14 +66,14 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         }
     });
 
-    // 3. Fusionar: Items en DB manuales vs Calculados
     const finalItems: ShoppingItem[] = [...dbItems];
-    
     Object.values(calculatedNeeds).forEach(calcItem => {
         if (calcItem.quantity > 0.05) { 
             const existsInDb = dbItems.some(db => cleanName(db.name) === cleanName(calcItem.name));
             if (!existsInDb) {
-                finalItems.push(calcItem);
+                // Auto-escalar al mostrar por primera vez (ej. 1500g -> 1.5kg)
+                const scaled = autoScaleIngredient(calcItem.quantity, calcItem.unit);
+                finalItems.push({ ...calcItem, ...scaled });
             }
         }
     });
@@ -88,23 +86,34 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
   const toggleItem = (item: ShoppingItem) => {
     if (item.id.startsWith('calc-')) {
-        // Al interactuar con un item "calculado", se convierte en persistente en la DB
         onAddShoppingItem([{ ...item, id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, is_purchased: !item.is_purchased }]);
     } else {
         onUpdateShoppingItem({ ...item, is_purchased: !item.is_purchased });
     }
   };
 
-  const handleAdjust = (e: React.MouseEvent, item: ShoppingItem, delta: number) => {
+  const handleAdjust = (e: React.MouseEvent, item: ShoppingItem, direction: number) => {
     e.stopPropagation();
-    const newQty = Math.max(0, item.quantity + delta);
+    
+    // Determinar el paso (delta) según la unidad actual
+    const unit = item.unit.toLowerCase();
+    let delta = 1;
+    if (['g', 'ml'].includes(unit)) delta = 100 * direction;
+    else if (['kg', 'l'].includes(unit)) delta = 0.1 * direction;
+    else delta = direction;
+
+    const rawNewQty = Math.max(0, item.quantity + delta);
+    
+    // Aplicar Auto-escalado (Smart Units)
+    const { quantity: finalQty, unit: finalUnit } = autoScaleIngredient(rawNewQty, unit);
+
     if (item.id.startsWith('calc-')) {
-        onAddShoppingItem([{ ...item, id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, quantity: newQty }]);
+        onAddShoppingItem([{ ...item, id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, quantity: finalQty, unit: finalUnit }]);
     } else {
-        if (newQty === 0) {
+        if (finalQty === 0) {
             onRemoveShoppingItem(item.id);
         } else {
-            onUpdateShoppingItem({ ...item, quantity: newQty });
+            onUpdateShoppingItem({ ...item, quantity: finalQty, unit: finalUnit });
         }
     }
   };
@@ -173,10 +182,10 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                             {isCalculated && !item.is_purchased && <span className="text-[7px] font-black uppercase text-teal-500 tracking-tighter flex items-center gap-1 mt-0.5"><Info className="w-2 h-2" /> Necesario para el plan</span>}
                         </div>
                         <div className="flex items-center bg-gray-50 rounded-2xl p-1 border border-gray-100" onClick={e => e.stopPropagation()}>
-                            <button onClick={(e) => handleAdjust(e, item, -1)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"><Minus className="w-3 h-3" /></button>
-                            <div className="px-2 text-center min-w-[45px]">
+                            <button onClick={(e) => handleAdjust(e, item, -1)} className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"><Minus className="w-3 h-3" /></button>
+                            <div className="px-2 text-center min-w-[50px]">
                                 <p className="font-black text-sm text-teal-900 leading-none">{Number.isInteger(item.quantity) ? item.quantity : item.quantity.toFixed(1)}</p>
-                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">{formatUnitLabel(item.unit)}</p>
+                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mt-0.5">{formatUnitLabel(item.unit)}</p>
                             </div>
                             <button onClick={(e) => handleAdjust(e, item, 1)} className="w-8 h-8 flex items-center justify-center text-teal-600 hover:text-teal-800 transition-colors"><Plus className="w-3 h-3" /></button>
                         </div>
