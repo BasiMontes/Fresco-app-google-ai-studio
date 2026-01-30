@@ -297,7 +297,7 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
                 return (
                     <div key={item.id} className="bg-white p-3 md:p-4 rounded-[2.2rem] flex items-center gap-3 border-2 transition-all border-white shadow-sm hover:border-teal-100 hover:shadow-md animate-fade-in group">
-                        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-xl flex-shrink-0 border border-gray-100">
+                        <div className="w-10 h-10 flex items-center justify-center text-2xl flex-shrink-0">
                             {catInfo.emoji}
                         </div>
                         
