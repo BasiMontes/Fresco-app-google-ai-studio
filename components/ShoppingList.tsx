@@ -304,6 +304,10 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                                 <span className="mr-2 opacity-50">{catInfo.emoji}</span>
                                 {item.name}
                             </p>
+                            {/* REINTEGRACIÓN DE CATEGORÍA */}
+                            <p className="text-[8px] font-black uppercase tracking-widest text-teal-600/40 mt-0.5 ml-6">
+                                {catInfo.label}
+                            </p>
                         </div>
                         <div className="flex items-center bg-gray-50 rounded-xl p-0.5 border border-gray-100 flex-shrink-0 w-[100px] h-9" onClick={e => e.stopPropagation()}>
                             <button 
@@ -335,8 +339,8 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           )}
       </div>
 
-      {/* Botón sincronizado con la jerarquía de botones de acción primarios */}
-      <div className={`fixed left-8 right-8 md:left-auto md:right-8 z-[100] transition-all duration-500 ${shoppingData.finalItems.filter(i => i.is_purchased).length > 0 ? 'bottom-28 opacity-100' : 'bottom-[-100px] opacity-0'}`}>
+      {/* REPOSICIONAMIENTO DEL BOTÓN: BAJADO A bottom-22 */}
+      <div className={`fixed left-8 right-8 md:left-auto md:right-8 z-[100] transition-all duration-500 ${shoppingData.finalItems.filter(i => i.is_purchased).length > 0 ? 'bottom-22 opacity-100' : 'bottom-[-100px] opacity-0'}`}>
           <button onClick={() => setShowReceipt(true)} className="w-full md:w-auto bg-[#013b33] text-white px-10 h-14 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-teal-900 shadow-xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
               <Check className="w-5 h-5 stroke-[3px]" /> TERMINAR COMPRA
           </button>
@@ -359,7 +363,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                             </div>
                         ))}
                     </div>
-                    {/* Botones de modal también sincronizados a la jerarquía de 2xl/h-14 */}
                     <button onClick={confirmFinish} disabled={isProcessing} className="w-full h-14 bg-[#013b33] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95">
                         {isProcessing ? <Loader2 className="w-6 h-6 animate-spin" /> : 'CONFIRMAR Y GUARDAR'}
                     </button>
