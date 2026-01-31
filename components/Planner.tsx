@@ -128,7 +128,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     <span className="block text-xl font-black leading-none">{format(day, 'd')}</span>
                 </div>
                 
-                {/* Contenedor de Comidas: Se reparten el alto total disponible */}
+                {/* Contenedor de Comidas */}
                 <div className="flex-1 flex flex-col gap-2 min-h-0">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
@@ -141,31 +141,32 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           >
                               {recipe ? (
                                   <div className="absolute inset-0 w-full h-full">
-                                      {/* IMAGEN: Full cover con saturación extra en hover */}
+                                      {/* IMAGEN */}
                                       <SmartImage 
                                         src={recipe.image_url} 
                                         alt={recipe.title} 
-                                        className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 group-hover:saturate-[1.2]" 
+                                        className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 group-hover:saturate-[1.1]" 
                                       />
                                       
-                                      {/* GRADIENTE: Suavizado para ocupar solo el área necesaria para el texto */}
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent transition-opacity duration-700" />
+                                      {/* GRADIENTE */}
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent transition-opacity duration-700" />
                                       
                                       {/* CONTENIDO UI */}
                                       <div className="absolute inset-0 flex flex-col justify-between p-4 z-10">
                                           <div className="flex justify-between items-start">
-                                              {/* PÍLDORA REDUCIDA: Minimalista y sutil */}
-                                              <div className="px-2 py-0.5 rounded-lg bg-black/20 backdrop-blur-md border border-white/10 shadow-sm">
-                                                  <span className="text-[6px] font-black uppercase tracking-[0.25em] text-white/80">{type}</span>
+                                              {/* PÍLDORA REDUCIDA AL MÍNIMO: py-0.5 y leading-none para ajustar al texto */}
+                                              <div className="px-1.5 py-0.5 rounded-[4px] bg-black/30 backdrop-blur-md border border-white/10 shadow-sm flex items-center">
+                                                  <span className="text-[6px] font-black uppercase tracking-[0.2em] text-white/90 leading-none">{type}</span>
                                               </div>
-                                              <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-2 bg-white/5 backdrop-blur-md rounded-xl text-white/30 hover:text-white hover:bg-red-500/80 transition-all opacity-0 group-hover:opacity-100">
-                                                  <X className="w-3 h-3" />
+                                              {/* BOTÓN 'X' MÁS PEQUEÑO */}
+                                              <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-1.5 bg-white/5 backdrop-blur-md rounded-lg text-white/40 hover:text-white hover:bg-red-500/80 transition-all opacity-0 group-hover:opacity-100">
+                                                  <X className="w-2.5 h-2.5" />
                                               </button>
                                           </div>
                                           
-                                          {/* TEXTO REPOSICIONADO: Más bajo en la tarjeta */}
+                                          {/* TEXTO */}
                                           <div className="space-y-0.5 pb-1">
-                                              <h5 className="font-black text-[13px] text-white leading-tight uppercase line-clamp-2 transition-all group-hover:text-teal-300 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                                              <h5 className="font-black text-[13px] text-white leading-tight uppercase line-clamp-2 transition-all drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
                                                   {recipe.title}
                                               </h5>
                                               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-1 group-hover:translate-y-0">
@@ -181,7 +182,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                               ) : (
                                   <div className="flex-1 flex flex-col items-center justify-center p-3 text-center">
                                       <div className="flex justify-between items-center w-full mb-auto">
-                                          <span className="text-[6px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md bg-gray-50 text-gray-300 border border-gray-100">{type}</span>
+                                          <span className="text-[6px] font-black uppercase tracking-[0.2em] px-1.5 py-0.5 rounded-[4px] bg-gray-50 text-gray-300 border border-gray-100 leading-none">{type}</span>
                                       </div>
                                       <div className="flex-1 flex flex-col items-center justify-center transition-all duration-500 transform group-hover:scale-110">
                                           <div className="w-10 h-10 rounded-2xl bg-teal-50 flex items-center justify-center mb-2 group-hover:bg-teal-950 group-hover:text-white transition-all border border-teal-100/50">
