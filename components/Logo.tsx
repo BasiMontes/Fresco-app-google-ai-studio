@@ -11,7 +11,8 @@ interface LogoProps {
 export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'default', align = 'left', iconOnly = false }) => {
   const baseColor = variant === 'inverted' ? 'text-white' : 'text-[#013b33]';
   const justify = align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start';
-  const iconColor = variant === 'inverted' ? 'white' : '#013b33';
+  // Color 0F4E0E para fondos claros, blanco para fondos de color
+  const iconColor = variant === 'inverted' ? '#FFFFFF' : '#0F4E0E';
 
   return (
     <div className={`flex items-center gap-3 ${justify} ${className} select-none`}>
