@@ -149,13 +149,20 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
   const handleAdjust = (e: React.MouseEvent, item: PantryItem, direction: number) => {
     e.stopPropagation();
-    const unit = item.unit.toLowerCase();
+    const unit = (item.unit || 'uds').toLowerCase();
+    
+    // DEFINICIÓN DE PASOS LÓGICOS SEGÚN SOLICITUD
     let delta = 1;
-    if (['g', 'ml'].includes(unit)) delta = 100 * direction;
-    else if (['kg', 'l'].includes(unit)) delta = 0.1 * direction;
-    else delta = direction;
+    if (['g', 'ml'].includes(unit)) {
+        delta = 100 * direction;
+    } else if (['kg', 'l'].includes(unit)) {
+        delta = 0.1 * direction;
+    } else {
+        delta = direction;
+    }
 
     const rawNewQty = Math.max(0, item.quantity + delta);
+    // Escalamos si es necesario (ej: 1000g -> 1kg) pero respetamos la base del paso
     const { quantity: finalQty, unit: finalUnit } = autoScaleIngredient(rawNewQty, unit);
     onEdit({ ...item, quantity: finalQty, unit: finalUnit });
   };

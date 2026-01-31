@@ -181,11 +181,17 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
   const handleAdjust = (e: React.MouseEvent, item: ShoppingItem, direction: number) => {
     e.stopPropagation();
-    const unit = item.unit.toLowerCase();
+    const unit = (item.unit || 'uds').toLowerCase();
+    
+    // INCREMENTOS LÓGICOS SEGÚN SOLICITUD
     let delta = 1;
-    if (['g', 'ml'].includes(unit)) delta = 100 * direction;
-    else if (['kg', 'l'].includes(unit)) delta = 0.1 * direction;
-    else delta = direction;
+    if (['g', 'ml'].includes(unit)) {
+        delta = 100 * direction;
+    } else if (['kg', 'l'].includes(unit)) {
+        delta = 0.1 * direction;
+    } else {
+        delta = direction;
+    }
 
     const rawNewQty = Math.max(0, item.quantity + delta);
     const { quantity: finalQty, unit: finalUnit } = autoScaleIngredient(rawNewQty, unit);
