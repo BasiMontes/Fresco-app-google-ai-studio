@@ -43,6 +43,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showLegalModal, setShowLegalModal] = useState<'privacy' | 'terms' | null>(null);
 
+  // Efecto para limpiar mensajes de éxito automáticamente después de 5 segundos
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => {
+        setSuccessMsg('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
+
   useEffect(() => {
       const clearGhostSession = async () => {
           const { data } = await supabase.auth.getSession();
