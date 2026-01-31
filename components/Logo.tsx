@@ -9,9 +9,10 @@ interface LogoProps {
 }
 
 export const Logo: React.FC<LogoProps> = ({ className = "", variant = 'default', align = 'left', iconOnly = false }) => {
-  const baseColor = variant === 'inverted' ? 'text-white' : 'text-[#013b33]';
+  const baseColor = variant === 'inverted' ? 'text-white' : 'text-[#0F4E0E]';
   const justify = align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start';
-  // Color 0F4E0E para fondos claros, blanco para fondos de color
+  
+  // Color 0F4E0E para fondos claros, blanco para fondos de color (como el lateral verde)
   const iconColor = variant === 'inverted' ? '#FFFFFF' : '#0F4E0E';
 
   return (

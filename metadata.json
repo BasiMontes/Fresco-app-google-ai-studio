@@ -5,8 +5,8 @@
   "display": "standalone",
   "orientation": "portrait",
   "start_url": "/",
-  "background_color": "#064e3b",
-  "theme_color": "#064e3b",
+  "background_color": "#0F4E0E",
+  "theme_color": "#0F4E0E",
   "categories": [
     "food",
     "lifestyle",
