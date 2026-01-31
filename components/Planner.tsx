@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MealSlot, Recipe, MealCategory, PantryItem, UserProfile } from '../types';
 import { Plus, X, Loader2, ChevronLeft, ChevronRight, BrainCircuit, Trash2, Sunrise, Sun, Moon, Sparkles, ChefHat, Search, Check } from 'lucide-react';
-import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks } from 'date-fns';
+import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks, isBefore, isAfter } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { generateSmartMenu } from '../services/geminiService';
 import { RecipeDetail } from './RecipeDetail';
@@ -31,6 +31,14 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const days = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(currentWeekStart, i)), [currentWeekStart]);
   
+  // Límites de navegación: 1 semana atrás y 5 adelante desde HOY
+  const absoluteWeekStart = useMemo(() => startOfWeek(new Date(), { weekStartsOn: 1 }), []);
+  const minWeekStart = useMemo(() => subWeeks(absoluteWeekStart, 1), [absoluteWeekStart]);
+  const maxWeekStart = useMemo(() => addWeeks(absoluteWeekStart, 5), [absoluteWeekStart]);
+
+  const canGoBack = isAfter(currentWeekStart, minWeekStart);
+  const canGoForward = isBefore(currentWeekStart, maxWeekStart);
+
   const [selectedWizardDays, setSelectedWizardDays] = useState<string[]>([]);
   const [selectedWizardTypes, setSelectedWizardTypes] = useState<MealCategory[]>(['lunch', 'dinner']);
 
@@ -103,12 +111,31 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
             <p className="text-teal-600/40 font-black uppercase text-[8px] tracking-[0.4em]">Planificación Visual</p>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
+            {/* Navegador de Semanas Limitado */}
             <div className="flex items-center gap-1 bg-gray-50/80 px-3 py-1.5 rounded-2xl border border-gray-100 flex-1 md:flex-none">
-                <button onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} className="p-1 hover:bg-white rounded-lg text-gray-400 transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-                <span className="text-[10px] font-black text-teal-950 mx-2 uppercase tracking-widest whitespace-nowrap">{format(currentWeekStart, 'MMMM yyyy', { locale: es })}</span>
-                <button onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} className="p-1 hover:bg-white rounded-lg text-gray-400 transition-colors"><ChevronRight className="w-4 h-4" /></button>
+                <button 
+                  disabled={!canGoBack}
+                  onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} 
+                  className={`p-1 rounded-lg transition-all ${canGoBack ? 'hover:bg-white text-gray-400 active:scale-90' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                
+                <span className="text-[10px] font-black text-teal-950 mx-2 uppercase tracking-widest whitespace-nowrap min-w-[120px] text-center">
+                  {format(currentWeekStart, 'MMMM yyyy', { locale: es })}
+                </span>
+                
+                <button 
+                  disabled={!canGoForward}
+                  onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} 
+                  className={`p-1 rounded-lg transition-all ${canGoForward ? 'hover:bg-white text-gray-400 active:scale-90' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
             </div>
+            
             <button onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} className="p-2.5 text-red-400 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
+            
             <button onClick={() => setShowPlanWizard(true)} className="flex items-center gap-2 bg-teal-950 text-white px-5 py-2.5 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] shadow-xl hover:bg-teal-900/90 transition-all active:scale-[0.98]">
                 <BrainCircuit className="w-4 h-4 text-orange-400" /> Generar
             </button>
@@ -141,30 +168,21 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           >
                               {recipe ? (
                                   <div className="absolute inset-0 w-full h-full">
-                                      {/* IMAGEN */}
                                       <SmartImage 
                                         src={recipe.image_url} 
                                         alt={recipe.title} 
                                         className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 group-hover:saturate-[1.1]" 
                                       />
-                                      
-                                      {/* GRADIENTE */}
                                       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent transition-opacity duration-700" />
-                                      
-                                      {/* CONTENIDO UI */}
                                       <div className="absolute inset-0 flex flex-col justify-between p-4 z-10">
                                           <div className="flex justify-between items-start">
-                                              {/* PÍLDORA REDUCIDA AL MÍNIMO: py-0.5 y leading-none para ajustar al texto */}
                                               <div className="px-1.5 py-0.5 rounded-[4px] bg-black/30 backdrop-blur-md border border-white/10 shadow-sm flex items-center">
                                                   <span className="text-[6px] font-black uppercase tracking-[0.2em] text-white/90 leading-none">{type}</span>
                                               </div>
-                                              {/* BOTÓN 'X' MÁS PEQUEÑO */}
                                               <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-1.5 bg-white/5 backdrop-blur-md rounded-lg text-white/40 hover:text-white hover:bg-red-500/80 transition-all opacity-0 group-hover:opacity-100">
                                                   <X className="w-2.5 h-2.5" />
                                               </button>
                                           </div>
-                                          
-                                          {/* TEXTO */}
                                           <div className="space-y-0.5 pb-1">
                                               <h5 className="font-black text-[13px] text-white leading-tight uppercase line-clamp-2 transition-all drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
                                                   {recipe.title}
@@ -176,7 +194,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                               </div>
                                           </div>
                                       </div>
-                                      
                                       <div className="absolute inset-0 rounded-[2.2rem] ring-1 ring-inset ring-white/5 pointer-events-none" />
                                   </div>
                               ) : (
