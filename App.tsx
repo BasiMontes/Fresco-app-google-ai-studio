@@ -141,9 +141,12 @@ const App: React.FC = () => {
   };
   const handleUpdatePantryQty = (id: string, delta: number) => {
       if (!userId) return;
-      setPantry(prev => prev.map(p => p.id === id ? { ...p, quantity: Math.max(0, p.quantity + delta) } : p));
-      const item = pantry.find(p => p.id === id);
-      if (item) addToSyncQueue(userId, 'UPDATE_PANTRY', { ...item, quantity: Math.max(0, item.quantity + delta) });
+      const currentItem = pantry.find(p => p.id === id);
+      if (!currentItem) return;
+      
+      const updatedItem = { ...currentItem, quantity: Math.max(0, currentItem.quantity + delta) };
+      setPantry(prev => prev.map(p => p.id === id ? updatedItem : p));
+      addToSyncQueue(userId, 'UPDATE_PANTRY', updatedItem);
   };
   const handleRemovePantry = (id: string) => {
       if (!userId) return;
@@ -154,7 +157,6 @@ const App: React.FC = () => {
   // --- HANDLERS SHOPPING ---
   const handleAddShoppingItem = (items: ShoppingItem[]) => {
       if (!userId) return;
-      // Evitar duplicados por nombre
       setShoppingList(prev => {
           const names = new Set(prev.map(i => i.name.toLowerCase()));
           const newItems = items.filter(i => !names.has(i.name.toLowerCase()));
@@ -177,18 +179,10 @@ const App: React.FC = () => {
 
   const handleFinishShopping = async (itemsToAdd: PantryItem[]) => {
       if (!userId) return;
-      
-      // 1. Añadir los nuevos items a la despensa (estado local)
       setPantry(prev => [...prev, ...itemsToAdd]);
-      
-      // 2. Sincronizar masivamente con la DB
       await db.addPantryItemsBulkDB(userId, itemsToAdd);
-      
-      // 3. Limpiar los items comprados de la lista de la compra (estado local)
       const purchasedIds = shoppingList.filter(i => i.is_purchased).map(i => i.id);
       setShoppingList(prev => prev.filter(i => !i.is_purchased));
-      
-      // 4. Limpiar de la DB
       for (const id of purchasedIds) {
           await db.deleteShoppingItemDB(id);
       }
@@ -213,18 +207,15 @@ const App: React.FC = () => {
 
   const handleAIPlanGenerated = useCallback(async (newPlan: MealSlot[], newRecipes: Recipe[]) => {
       if (!userId) return;
-      
       if (newRecipes.length > 0) {
           setRecipes(prev => [...prev, ...newRecipes]);
           newRecipes.forEach(r => addToSyncQueue(userId, 'SAVE_RECIPE', r));
       }
-
       setMealPlan(prev => {
           const datesToReplace = new Set(newPlan.map(p => p.date));
           const filtered = prev.filter(p => !datesToReplace.has(p.date));
           return [...filtered, ...newPlan];
       });
-
       newPlan.forEach(slot => addToSyncQueue(userId, 'UPDATE_SLOT', slot));
   }, [userId]);
 
@@ -273,7 +264,18 @@ const App: React.FC = () => {
                 <Suspense fallback={<PageLoader message="Cargando vista..." />}>
                     {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
                     {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={handleAIPlanGenerated} onClear={handleClearMealPlan} />}
-                    {activeTab === 'pantry' && <Pantry items={pantry} onRemove={handleRemovePantry} onAdd={handleAddPantry} onUpdateQuantity={handleUpdatePantryQty} onAddMany={items => handleFinishShopping(items)} onEdit={i => addToSyncQueue(userId!, 'UPDATE_PANTRY', i)} />}
+                    {activeTab === 'pantry' && <Pantry 
+                        items={pantry} 
+                        onRemove={handleRemovePantry} 
+                        onAdd={handleAddPantry} 
+                        onUpdateQuantity={handleUpdatePantryQty} 
+                        onAddMany={items => handleFinishShopping(items)} 
+                        onEdit={i => {
+                            // FIX: Actualizar estado local inmediatamente para que la UI reaccione
+                            setPantry(prev => prev.map(p => p.id === i.id ? i : p));
+                            addToSyncQueue(userId!, 'UPDATE_PANTRY', i);
+                        }} 
+                    />}
                     {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={() => {}} onAddToPlan={() => {}} onCookFinish={() => {}} onAddToShoppingList={handleAddShoppingItem} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
                     {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={handleAddShoppingItem} onUpdateShoppingItem={handleUpdateShoppingItem} onRemoveShoppingItem={handleRemoveShoppingItem} onFinishShopping={handleFinishShopping} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
                     {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} onNavigate={setActiveTab} />}
