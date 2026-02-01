@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { PantryItem } from '../types';
-import { Package, Plus, Trash2, X, Camera, Search, MoreVertical, Clock, AlertTriangle, ChevronDown, Minus, Calendar, Scale, ArrowUpDown, CalendarClock, Check, Tag, ChevronLeft, ChevronRight, FilterX } from 'lucide-react';
+import { Package, Plus, Trash2, X, Camera, Search, MoreVertical, Clock, AlertTriangle, ChevronDown, Minus, Calendar, Scale, ArrowUpDown, CalendarClock, Tag, ChevronLeft, ChevronRight, FilterX } from 'lucide-react';
 import { differenceInDays, startOfDay, format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TicketScanner } from './TicketScanner';
@@ -151,7 +151,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
     e.stopPropagation();
     const unit = (item.unit || 'uds').toLowerCase();
     
-    // DEFINICIÓN DE PASOS LÓGICOS SEGÚN SOLICITUD
     let delta = 1;
     if (['g', 'ml'].includes(unit)) {
         delta = 100 * direction;
@@ -162,7 +161,6 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
     }
 
     const rawNewQty = Math.max(0, item.quantity + delta);
-    // Escalamos si es necesario (ej: 1000g -> 1kg) pero respetamos la base del paso
     const { quantity: finalQty, unit: finalUnit } = autoScaleIngredient(rawNewQty, unit);
     onEdit({ ...item, quantity: finalQty, unit: finalUnit });
   };
@@ -279,7 +277,9 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
 
       <div className="flex items-center gap-6 mb-8 px-2">
           <div className="flex items-center gap-1 group">
-              <button onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')} className="p-1 hover:bg-gray-100 rounded-lg transition-colors"><ArrowUpDown className={`w-4 h-4 text-[#4a5f6b] transition-transform duration-300 ${sortDirection === 'desc' ? 'rotate-180' : ''}`} /></button>
+              <button onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                  <ArrowUpDown className={`w-4 h-4 transition-all duration-500 origin-center ${sortDirection === 'desc' ? 'rotate-180 text-orange-500' : 'text-[#4a5f6b]'}`} />
+              </button>
               <button onClick={() => setSortBy(prev => prev === 'name' ? 'expiry' : prev === 'expiry' ? 'quantity' : 'name')} className="flex items-center gap-2 text-[#4a5f6b] hover:text-[#013b33] transition-colors">
                   <span className="text-[12px] font-bold uppercase tracking-wider">Sort by: <span className="text-[#013b33] capitalize">{sortBy === 'expiry' ? 'Caducidad' : sortBy === 'quantity' ? 'Cantidad' : 'Nombre'}</span></span>
               </button>

@@ -1,6 +1,6 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { X, Upload, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Calendar, Scale, ChevronDown, FileText, Camera, ShoppingBag, Loader2, Key, ExternalLink, ArrowRight, Info } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Sparkles, Trash2, AlertCircle, CheckCircle2, RefreshCw, PenLine, Plus, Minus, ChevronDown, FileText, Camera, Loader2, ArrowRight } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { EXPIRY_DAYS_BY_CATEGORY } from '../constants';
@@ -11,16 +11,6 @@ import { Logo } from './Logo';
 interface TicketScannerProps {
   onClose: () => void;
   onAddItems: (items: PantryItem[]) => void;
-}
-
-declare global {
-  interface AIStudio {
-    hasSelectedApiKey: () => Promise<boolean>;
-    openSelectKey: () => Promise<void>;
-  }
-  interface Window {
-    aistudio?: AIStudio;
-  }
 }
 
 const CATEGORIES = [
@@ -48,31 +38,10 @@ const UNIT_OPTIONS = [
 const INPUT_STYLE = "w-full h-[58px] px-5 bg-gray-50 rounded-2xl font-black text-[11px] text-[#013b33] uppercase tracking-widest outline-none border-2 border-transparent focus:border-teal-500/20 transition-all flex items-center appearance-none";
 
 export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItems }) => {
-  const [step, setStep] = useState<'idle' | 'processing' | 'review' | 'error' | 'need-key'>('idle');
+  const [step, setStep] = useState<'idle' | 'processing' | 'review' | 'error'>('idle');
   const [items, setItems] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const checkKey = async () => {
-        if (window.aistudio) {
-            try {
-                const hasKey = await window.aistudio.hasSelectedApiKey();
-                if (!hasKey) setStep('need-key');
-            } catch (e) {
-                setStep('need-key');
-            }
-        }
-    };
-    checkKey();
-  }, []);
-
-  const handleOpenKeySelector = async () => {
-    if (window.aistudio) {
-        await window.aistudio.openSelectKey();
-        setStep('idle');
-    }
-  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,14 +77,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             setStep('error');
         }
       } catch (err: any) {
-          const errorMsg = err.message || "";
-          console.error("Fresco Vision Error Intercepted:", errorMsg);
-          
-          if (errorMsg.includes("API Key") || errorMsg.includes("Requested entity")) {
-              setStep('need-key');
-          } else {
-              setStep('error');
-          }
+          console.error("Fresco Vision Error:", err);
+          setStep('error');
       }
     };
     
@@ -186,53 +149,6 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
-          {step === 'need-key' && (
-              <div className="h-full flex flex-col items-center justify-center gap-8 max-w-sm mx-auto text-center animate-slide-up">
-                  <div className="w-24 h-24 bg-orange-500/20 rounded-[2.5rem] flex items-center justify-center">
-                      <Key className="w-12 h-12 text-orange-500" />
-                  </div>
-                  <div>
-                      <h3 className="text-3xl font-black text-white leading-none">Activar Motor IA</h3>
-                      <p className="text-teal-200/60 mt-4 text-sm leading-relaxed">
-                          Para que Fresco pueda "leer" tus tickets, necesitas vincular una API Key de Gemini.
-                      </p>
-                  </div>
-
-                  <div className="w-full bg-white/5 rounded-[2rem] p-6 text-left space-y-4 border border-white/5">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-orange-400 mb-2 flex items-center gap-2">
-                          <Info className="w-3 h-3" /> Pasos para empezar gratis:
-                      </h4>
-                      <ol className="text-white/70 text-xs space-y-3 font-medium">
-                          <li className="flex gap-3">
-                              <span className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center text-[10px] font-black text-white flex-shrink-0">1</span>
-                              <span>Crea tu clave en <a href="https://aistudio.google.com/" target="_blank" className="text-orange-400 underline">AI Studio</a>.</span>
-                          </li>
-                          <li className="flex gap-3">
-                              <span className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center text-[10px] font-black text-white flex-shrink-0">2</span>
-                              <span>Vincula un proyecto con facturación (gratis hasta 15 escaneos/min).</span>
-                          </li>
-                          <li className="flex gap-3">
-                              <span className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center text-[10px] font-black text-white flex-shrink-0">3</span>
-                              <span>Pulsa el botón naranja de abajo y selecciónala.</span>
-                          </li>
-                      </ol>
-                  </div>
-                  
-                  <div className="w-full space-y-3">
-                      <button onClick={handleOpenKeySelector} className="w-full py-6 bg-orange-500 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl active:scale-95 transition-all">
-                          Seleccionar Clave
-                      </button>
-                      <button onClick={addItemManual} className="w-full py-4 text-teal-400 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
-                          Usar entrada manual sin IA <ArrowRight className="w-3 h-3" />
-                      </button>
-                  </div>
-
-                  <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="inline-flex items-center gap-2 text-teal-500 text-[9px] font-black uppercase tracking-widest mt-2 opacity-50">
-                      Saber más sobre facturación <ExternalLink className="w-3 h-3" />
-                  </a>
-              </div>
-          )}
-
           {step === 'idle' && (
             <div className="h-full flex flex-col items-center justify-center gap-8 max-w-sm mx-auto animate-slide-up">
               <div className="text-center">
