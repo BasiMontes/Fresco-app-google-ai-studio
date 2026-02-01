@@ -104,72 +104,87 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   return (
     <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden bg-[#F8F9FA]">
-      <header className="px-4 md:px-8 py-5 flex flex-col gap-5 bg-white/90 backdrop-blur-xl border-b border-gray-100 flex-shrink-0 z-20">
-        <div className="flex justify-between items-center w-full">
-            <div>
+      {/* HEADER: UNA SOLA LÍNEA COMPACTA EN DESKTOP */}
+      <header className="px-6 md:px-10 py-5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border-b border-gray-100 flex-shrink-0 z-20">
+        <div className="flex justify-between items-center md:items-start md:w-1/4">
+            <div className="space-y-1">
                 <h1 className="text-2xl md:text-3xl font-black text-[#0F4E0E] tracking-tight leading-none mb-1">Calendario</h1>
-                <p className="text-[#0F4E0E]/40 font-black uppercase text-[9px] tracking-[0.3em]">Planificación Semanal</p>
+                <p className="text-[#0F4E0E]/30 font-black uppercase text-[8px] md:text-[9px] tracking-[0.4em] hidden md:block">Planificación Semanal</p>
             </div>
             
-            {/* Action Group: Trash + Generate (Unified) */}
-            <div className="flex items-center gap-3">
+            {/* Botones rápidos móvil */}
+            <div className="flex md:hidden items-center gap-2">
                 <button 
                   onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
-                  className="w-12 h-12 md:w-14 md:h-14 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-2xl transition-all shadow-sm flex items-center justify-center"
-                  title="Limpiar calendario"
+                  className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center"
                 >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" />
                 </button>
                 <button 
                     onClick={() => setShowPlanWizard(true)} 
-                    className="h-12 md:h-14 px-5 md:px-8 bg-[#0F4E0E] text-white rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-[#062606] transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+                    className="h-10 px-4 bg-[#0F4E0E] text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
                 >
-                    <BrainCircuit className="w-5 h-5 text-orange-400" />
-                    <span>GENERAR IA</span>
+                    <BrainCircuit className="w-4 h-4 text-orange-400" />
+                    <span>IA</span>
                 </button>
             </div>
         </div>
 
-        <div className="flex items-center justify-center w-full">
-            {/* Navegador de Semanas - Centrado para mejor balance */}
-            <div className="flex items-center gap-2 bg-gray-50/80 px-3 py-2 rounded-2xl border border-gray-100">
-                <button 
-                  disabled={!canGoBack}
-                  onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} 
-                  className={`p-2 rounded-xl transition-all ${canGoBack ? 'bg-white text-[#0F4E0E] shadow-sm hover:scale-110 active:scale-90' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                
-                <span className="text-[11px] font-black text-[#0F4E0E] mx-4 uppercase tracking-[0.25em] whitespace-nowrap">
-                  {format(currentWeekStart, 'MMMM yyyy', { locale: es })}
-                </span>
-                
-                <button 
-                  disabled={!canGoForward}
-                  onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} 
-                  className={`p-2 rounded-xl transition-all ${canGoForward ? 'bg-white text-[#0F4E0E] shadow-sm hover:scale-110 active:scale-90' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-            </div>
+        {/* NAVEGADOR SEMANAL CENTRADO */}
+        <div className="flex items-center gap-1 bg-gray-50/80 p-1 rounded-2xl border border-gray-100 w-full md:w-auto justify-between md:justify-center">
+            <button 
+                disabled={!canGoBack}
+                onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} 
+                className={`p-2 md:p-3 rounded-xl transition-all ${canGoBack ? 'bg-white text-[#0F4E0E] shadow-sm hover:scale-105 active:scale-95' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
+            >
+                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
+            </button>
+            
+            <span className="text-[10px] md:text-xs font-black text-[#0F4E0E] px-6 uppercase tracking-[0.3em] whitespace-nowrap text-center min-w-[140px] md:min-w-[180px]">
+                {format(currentWeekStart, 'MMMM yyyy', { locale: es })}
+            </span>
+            
+            <button 
+                disabled={!canGoForward}
+                onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} 
+                className={`p-2 md:p-3 rounded-xl transition-all ${canGoForward ? 'bg-white text-[#0F4E0E] shadow-sm hover:scale-105 active:scale-95' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
+            >
+                <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+            </button>
+        </div>
+
+        {/* ACCIONES DERECHA (DESKTOP) */}
+        <div className="hidden md:flex items-center gap-3 md:w-1/4 md:justify-end">
+            <button 
+                onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
+                className="w-12 h-12 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-2xl transition-all shadow-sm flex items-center justify-center group"
+            >
+                <Trash2 className="w-5 h-5" />
+            </button>
+            <button 
+                onClick={() => setShowPlanWizard(true)} 
+                className="h-12 px-6 bg-[#0F4E0E] text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] shadow-xl hover:bg-[#062606] transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+            >
+                <BrainCircuit className="w-5 h-5 text-orange-400" />
+                <span>GENERAR IA</span>
+            </button>
         </div>
       </header>
 
-      {/* Grid de días con scroll horizontal */}
+      {/* Grid de días (Restaurado el padding original p-5 para mantener la altura original de las cards) */}
       <div ref={scrollContainerRef} className="flex-1 overflow-x-auto no-scrollbar flex gap-5 p-5 h-full min-h-0">
         {days.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd');
           const isToday = isSameDay(day, new Date());
           return (
             <div key={dateStr} className="min-w-[290px] max-w-[340px] flex-1 flex flex-col gap-4 h-full">
-                {/* Indicador de Día Premium */}
+                {/* Indicador de Día Original */}
                 <div className={`text-center py-4 px-4 rounded-[2rem] border transition-all duration-700 flex-shrink-0 ${isToday ? 'bg-[#0F4E0E] text-white border-[#0F4E0E] shadow-2xl scale-[1.02]' : 'bg-white text-[#0F4E0E] border-gray-100 shadow-sm'}`}>
                     <span className={`block text-[8px] font-black uppercase tracking-[0.4em] mb-1 ${isToday ? 'text-orange-400' : 'text-[#0F4E0E]/30'}`}>{format(day, 'EEEE', { locale: es })}</span>
                     <span className="block text-2xl font-black leading-none">{format(day, 'd')}</span>
                 </div>
                 
-                {/* Contenedor de Comidas */}
+                {/* Contenedor de Comidas Original */}
                 <div className="flex-1 flex flex-col gap-3 min-h-0">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
@@ -231,7 +246,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         })}
       </div>
 
-      {/* Modal Selector de Recetas */}
+      {/* Modales existentes */}
       {showRecipeSelector && (
           <ModalPortal>
               <div className="fixed inset-0 z-[5000] bg-[#0F4E0E]/90 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setShowRecipeSelector(null)}>
@@ -283,7 +298,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           </ModalPortal>
       )}
 
-      {/* Modal Plan IA */}
       {showPlanWizard && (
         <ModalPortal>
           <div className="fixed inset-0 z-[5000] bg-[#0F4E0E]/90 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setShowPlanWizard(false)}>

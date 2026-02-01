@@ -29,22 +29,20 @@ const StatCard = ({ label, value, subValue, icon: Icon, colorClass, progress }: 
     colorClass: string,
     progress?: number 
 }) => (
-    <div className="bg-white p-5 md:p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-44 md:h-48 transition-all hover:shadow-md">
+    <div className="bg-white p-5 rounded-[2rem] border border-gray-50 shadow-sm flex flex-col h-40 transition-all hover:shadow-md">
         <div className="flex justify-between items-start">
-            <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">{label}</p>
-            <div className={`p-2.5 md:p-3 rounded-2xl ${colorClass}`}><Icon className="w-4 h-4 md:w-5 md:h-5" /></div>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-300">{label}</p>
+            <div className={`p-2.5 rounded-xl ${colorClass}`}><Icon className="w-4 h-4" /></div>
         </div>
         <div className="mt-auto">
             <div className="flex items-end gap-1">
-                <p className="text-2xl md:text-3xl font-black text-teal-950 leading-none tracking-tight">{value}</p>
-                {subValue && <p className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-gray-300 mb-0.5 md:mb-1">{subValue}</p>}
+                <p className="text-2xl font-black text-teal-950 leading-none tracking-tight">{value}</p>
+                {subValue && <p className="text-[8px] font-black uppercase tracking-widest text-gray-300 mb-0.5">{subValue}</p>}
             </div>
-            {progress !== undefined ? (
-                <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden mt-3 md:mt-4">
+            {progress !== undefined && (
+                <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden mt-3">
                     <div className={`h-full rounded-full transition-all duration-1000 ${progress > 100 ? 'bg-red-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, progress)}%` }} />
                 </div>
-            ) : (
-                <div className="h-1 mt-3 md:mt-4 invisible" aria-hidden="true" />
             )}
         </div>
     </div>
@@ -149,7 +147,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
 
   if (currentView === 'notifications') {
     return (
-        <div className="space-y-10 md:space-y-12 animate-fade-in pb-10 max-w-5xl mx-auto px-2 md:px-0">
+        <div className="space-y-10 animate-fade-in pb-10 max-w-5xl mx-auto px-2 md:px-0">
             <div className="flex items-center gap-6">
                 <button onClick={() => setCurrentView('dashboard')} className="w-12 h-12 flex items-center justify-center bg-white hover:bg-gray-100 rounded-full shadow-sm transition-colors text-[#0F4E0E]">
                     <ArrowLeft className="w-6 h-6" />
@@ -180,53 +178,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
     );
   }
 
-  if (currentView === 'favorites') {
-      return (
-          <div className="space-y-10 md:space-y-12 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0">
-              <div className="flex items-center gap-6">
-                  <button onClick={() => setCurrentView('dashboard')} className="w-12 h-12 flex items-center justify-center bg-white hover:bg-gray-100 rounded-full shadow-sm transition-colors text-[#0F4E0E]">
-                      <ArrowLeft className="w-6 h-6" />
-                  </button>
-                  <div>
-                      <h1 className="text-3xl font-black text-[#0F4E0E] tracking-tight">Tus Favoritos</h1>
-                      <p className="text-gray-400 font-bold text-sm uppercase tracking-widest mt-1">Tu selección personal</p>
-                  </div>
-              </div>
-              {favoriteRecipes.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                      {favoriteRecipes.map(recipe => (
-                          <UnifiedRecipeCard key={recipe.id} recipe={recipe} isFav={true} onNavigate={onNavigate} onToggleFavorite={onToggleFavorite} />
-                      ))}
-                  </div>
-              ) : (
-                  <div className="text-center py-24 opacity-30">
-                      <Heart className="w-20 h-20 mx-auto mb-6" />
-                      <p className="font-black text-2xl text-[#0F4E0E]">Sin favoritos todavía</p>
-                      <p className="text-sm font-bold uppercase tracking-widest mt-2">Explora la biblioteca para añadir</p>
-                  </div>
-              )}
-          </div>
-      );
-  }
-
   return (
-    <div className="space-y-10 md:space-y-14 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0">
-      {/* Sugerencia Inteligente de IA (Layout horizontal estilo desktop en móvil) */}
-      <div className="bg-gradient-to-r from-[#0F4E0E] to-[#062606] p-5 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
-          <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-all duration-700" />
-          <div className="flex flex-row items-center gap-4 md:gap-8 relative z-10">
-              <div className="w-12 h-12 md:w-20 md:h-20 bg-white/10 rounded-2xl md:rounded-[1.8rem] flex items-center justify-center text-orange-400 shrink-0">
-                  <Sparkles className={`w-6 h-6 md:w-10 md:h-10 ${isLoadingTip ? 'animate-pulse' : ''}`} />
+    <div className="space-y-8 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0">
+      {/* PÍLDORA IA - DISEÑO EXACTO A LA REFERENCIA */}
+      <div className="bg-[#0F4E0E] p-2.5 md:p-6 rounded-full md:rounded-[2.5rem] shadow-xl relative overflow-hidden group">
+          <div className="flex flex-row items-center justify-between gap-3 md:gap-8 relative z-10">
+              <div className="w-9 h-9 md:w-16 md:h-16 bg-white/10 rounded-xl md:rounded-2xl flex items-center justify-center text-orange-400 shrink-0">
+                  <Sparkles className={`w-5 h-5 md:w-8 md:h-8 ${isLoadingTip ? 'animate-pulse' : ''}`} />
               </div>
               <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-black text-sm md:text-2xl leading-none uppercase md:normal-case tracking-tighter md:tracking-tight">Sugerencia IA</h3>
-                  <p className={`text-teal-100/70 font-bold text-[11px] md:text-lg mt-1 italic line-clamp-1 md:line-clamp-none ${isLoadingTip ? 'animate-pulse' : ''}`}>
+                  <h3 className="text-white font-black text-[10px] md:text-xl leading-none uppercase tracking-widest md:tracking-tight">Sugerencia IA</h3>
+                  <p className={`text-teal-100/60 font-medium text-[9px] md:text-base mt-0.5 italic truncate md:line-clamp-none ${isLoadingTip ? 'animate-pulse' : ''}`}>
                       "{aiTip}"
                   </p>
               </div>
               <button 
                 onClick={() => onNavigate('planner')}
-                className="h-11 md:h-16 px-4 md:px-10 bg-orange-500 text-white rounded-xl md:rounded-2xl font-black text-[9px] md:text-sm uppercase tracking-[0.15em] shadow-xl hover:bg-orange-600 transition-all active:scale-95 shrink-0"
+                className="h-8 md:h-14 px-4 md:px-8 bg-orange-500 text-white rounded-full md:rounded-xl font-black text-[8px] md:text-xs uppercase tracking-[0.15em] shadow-lg hover:bg-orange-600 transition-all active:scale-95 shrink-0"
               >
                   Ver Plan
               </button>
@@ -252,20 +220,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
           </div>
       </header>
 
-      {/* Grid de Stats: 2 columnas con más aire */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      {/* Grid de Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-2">
           <StatCard label="Recetas" value={recipes.length} icon={BookOpen} colorClass="bg-orange-50 text-orange-500" />
           <StatCard label="Gasto Semanal" value={`${budgetStats.spent.toFixed(0)}€`} subValue={`/ ${budgetStats.limit}€`} icon={TrendingUp} colorClass={budgetStats.spent > budgetStats.limit ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'} progress={budgetStats.percentage} />
           <StatCard label="Ahorro Total" value={`${user.total_savings.toFixed(0)}€`} icon={PiggyBank} colorClass="bg-teal-50 text-teal-600" />
           <StatCard label="Recuperado" value={`${Math.round(safeTimeSaved / 60)}h`} icon={Timer} colorClass="bg-purple-50 text-purple-500" />
       </div>
 
-      <section className="space-y-8 md:space-y-10 px-1">
-          <div className="flex justify-between items-center px-1">
+      <section className="space-y-6 px-2">
+          <div className="flex justify-between items-center">
               <h2 className="text-2xl md:text-3xl font-black text-[#0F4E0E] tracking-tight">Últimas del Chef</h2>
               <button onClick={() => onNavigate('recipes')} className="text-[10px] md:text-xs font-black uppercase tracking-widest text-teal-600 flex items-center gap-2 hover:gap-3 transition-all">Ver todas <ArrowRight className="w-4 h-4" /></button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {latestRecipes.map((recipe) => (
                     <UnifiedRecipeCard key={recipe.id} recipe={recipe} isFav={favoriteIds.includes(recipe.id)} onNavigate={onNavigate} onToggleFavorite={onToggleFavorite} />
                 ))}
