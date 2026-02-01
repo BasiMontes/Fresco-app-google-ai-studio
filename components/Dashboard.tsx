@@ -1,7 +1,7 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { UserProfile, Recipe, PantryItem, MealSlot, MealCategory } from '../types';
-import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp, ArrowLeft, Clock, Users, Check, X, CheckCircle2, CalendarPlus } from 'lucide-react';
+import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp, ArrowLeft, Clock, Users, Check, X, CheckCircle2, CalendarPlus, Key } from 'lucide-react';
 import { getHours, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 import { SmartImage } from './SmartImage';
 
@@ -20,12 +20,6 @@ interface DashboardProps {
   onToggleFavorite?: (id: string) => void;
 }
 
-const MOCK_NOTIFICATIONS = [
-    { id: 1, type: 'cooking', title: '¡Hora de cocinar!', desc: 'Es momento de preparar tu pasta primavera para la cena', time: 'Hoy, 20:41', isNew: true, icon: ChefHat, color: 'bg-orange-100 text-orange-600' },
-    { id: 2, type: 'shopping', title: 'Lista de compras lista', desc: 'Tu lista para esta semana está preparada. ¡Ve al súper!', time: 'Hoy, 19:11', isNew: true, icon: ShoppingCart, color: 'bg-green-100 text-green-600' },
-];
-
-// Componente para las tarjetas de estadísticas con alineación forzada de línea de base
 const StatCard = ({ label, value, subValue, icon: Icon, colorClass, progress }: { 
     label: string, 
     value: string | number, 
@@ -44,7 +38,6 @@ const StatCard = ({ label, value, subValue, icon: Icon, colorClass, progress }: 
                 <p className="text-4xl font-black text-teal-900 leading-none">{value}</p>
                 {subValue && <p className="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-1">{subValue}</p>}
             </div>
-            {/* Si hay progreso mostramos la barra, si no, un espaciador de la misma altura exacta */}
             {progress !== undefined ? (
                 <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mt-3">
                     <div className={`h-full rounded-full transition-all duration-1000 ${progress > 100 ? 'bg-red-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, progress)}%` }} />
@@ -56,7 +49,6 @@ const StatCard = ({ label, value, subValue, icon: Icon, colorClass, progress }: 
     </div>
 );
 
-// Fix: Explicitly type UnifiedRecipeCard as React.FC to properly handle the 'key' prop when rendered in lists
 const UnifiedRecipeCard: React.FC<{ 
     recipe: Recipe; 
     isFav: boolean; 
@@ -98,7 +90,24 @@ const UnifiedRecipeCard: React.FC<{
 
 export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true, favoriteIds = [], onToggleFavorite }) => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'favorites' | 'notifications'>('dashboard');
+  const [hasApiKey, setHasApiKey] = useState(true);
   
+  useEffect(() => {
+    const checkKey = async () => {
+        const isSet = !!(process.env.API_KEY || (window as any).process?.env?.API_KEY);
+        setHasApiKey(isSet);
+    };
+    checkKey();
+    const interval = setInterval(checkKey, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleLinkKey = async () => {
+      if ((window as any).aistudio) {
+          await (window as any).aistudio.openSelectKey();
+      }
+  };
+
   const timeGreeting = useMemo(() => {
       const h = getHours(new Date());
       if (h < 12) return { text: "Buenos Días", icon: Sunrise };
@@ -156,34 +165,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       );
   }
 
-  if (currentView === 'notifications') {
-    return (
-        <div className="space-y-8 animate-fade-in pb-10">
-            <div className="flex items-center gap-4">
-                <button onClick={() => setCurrentView('dashboard')} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-teal-900"><ArrowLeft className="w-6 h-6" /></button>
-                <div>
-                    <h1 className="text-3xl font-black text-teal-900">Notificaciones</h1>
-                    <p className="text-gray-500 font-medium">Mantente al día con tus comidas y recordatorios.</p>
-                </div>
-            </div>
-            <div className="space-y-4">
-                {MOCK_NOTIFICATIONS.map(notif => (
-                    <div key={notif.id} className="bg-white border border-gray-50 p-6 rounded-3xl shadow-sm flex items-start gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${notif.color}`}><notif.icon className="w-6 h-6" /></div>
-                        <div className="flex-1">
-                            <h4 className="font-bold text-teal-950">{notif.title}</h4>
-                            <p className="text-gray-500 text-xs mt-1 leading-relaxed">{notif.desc}</p>
-                            <p className="text-[10px] font-black uppercase tracking-widest mt-3 text-gray-300">{notif.time}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-  }
-
   return (
     <div className="space-y-12 animate-fade-in pb-10">
+      {!hasApiKey && (
+          <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4 animate-slide-up">
+              <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                      <Key className="w-6 h-6" />
+                  </div>
+                  <div>
+                      <h4 className="font-black text-teal-900 text-sm">IA Desconectada</h4>
+                      <p className="text-[10px] text-teal-900/60 font-medium">Vincula tu llave de Google para activar el escáner y planes inteligentes.</p>
+                  </div>
+              </div>
+              <button 
+                onClick={handleLinkKey}
+                className="px-6 py-3 bg-orange-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-orange-600 transition-all active:scale-95"
+              >
+                  Conectar IA
+              </button>
+          </div>
+      )}
+
       <header className="flex items-start justify-between">
           <div className="space-y-1">
               <div className="flex items-center gap-3">
@@ -203,7 +206,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
           </div>
       </header>
 
-      {/* Métricas con alineación de línea de base perfecta */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Recetas" value={recipes.length} icon={BookOpen} colorClass="bg-orange-50 text-orange-500" />
           <StatCard label="Gasto Semanal" value={`${budgetStats.spent.toFixed(0)}€`} subValue={`/ ${budgetStats.limit}€`} icon={TrendingUp} colorClass={budgetStats.spent > budgetStats.limit ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'} progress={budgetStats.percentage} />

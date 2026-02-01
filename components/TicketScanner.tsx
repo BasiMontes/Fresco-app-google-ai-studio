@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { X, Camera, FileText, Loader2, CheckCircle2, RefreshCw, Plus, Minus, Trash2, ChevronDown, AlertCircle, ShoppingCart } from 'lucide-react';
+import { X, Camera, FileText, Loader2, CheckCircle2, RefreshCw, Plus, Minus, Trash2, ChevronDown, AlertCircle, Key, ExternalLink, Info } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { format, addDays } from 'date-fns';
@@ -32,6 +32,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const [supermarket, setSupermarket] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [errorType, setErrorType] = useState<'general' | 'auth'>('general');
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,11 +62,24 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setProgress(100);
         setTimeout(() => setStep('review'), 500);
       } catch (err: any) {
-        setErrorMessage(err.message || "Error al leer el ticket.");
+        if (err.message === "MISSING_API_KEY") {
+            setErrorType('auth');
+            setErrorMessage("Necesitas vincular una 'llave' de Google para que la IA pueda leer tus tickets.");
+        } else {
+            setErrorType('general');
+            setErrorMessage(err.message || "Error al leer el ticket.");
+        }
         setStep('error');
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleOpenSelector = async () => {
+    if ((window as any).aistudio) {
+        await (window as any).aistudio.openSelectKey();
+        setStep('idle');
+    }
   };
 
   const handleSave = async () => {
@@ -145,16 +159,51 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
 
           {step === 'error' && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-8 animate-slide-up">
-              <div className="w-24 h-24 bg-red-500/20 rounded-[2.5rem] flex items-center justify-center">
-                 <AlertCircle className="w-12 h-12 text-red-500" />
+              <div className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center ${errorType === 'auth' ? 'bg-orange-500/20' : 'bg-red-500/20'}`}>
+                 {errorType === 'auth' ? <Key className="w-12 h-12 text-orange-400" /> : <AlertCircle className="w-12 h-12 text-red-500" />}
               </div>
-              <div className="max-w-xs">
-                <h3 className="text-3xl font-black text-white">Lectura fallida</h3>
+              <div className="max-w-xs px-6">
+                <h3 className="text-3xl font-black text-white leading-tight">
+                    {errorType === 'auth' ? 'Paso necesario' : 'Lectura fallida'}
+                </h3>
                 <p className="text-teal-100/60 font-medium mt-3 text-sm">{errorMessage}</p>
               </div>
-              <button onClick={() => setStep('idle')} className="px-10 py-5 bg-white text-[#0F4E0E] rounded-[1.8rem] font-black text-xs uppercase tracking-widest">
-                 REINTENTAR
-              </button>
+              
+              {errorType === 'auth' && (
+                  <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] max-w-xs text-left space-y-3">
+                      <div className="flex gap-3">
+                          <Info className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
+                          <p className="text-[11px] text-teal-50/70 leading-relaxed">
+                            <strong className="text-white">¿Tiene coste?</strong> Para un uso normal, Google ofrece un nivel gratuito muy amplio. <span className="text-teal-300">No pagarás nada</span> si solo escaneas unos cuantos tickets al día.
+                          </p>
+                      </div>
+                  </div>
+              )}
+
+              <div className="w-full max-w-sm flex flex-col gap-3 px-6">
+                {errorType === 'auth' ? (
+                    <>
+                    <button 
+                        onClick={handleOpenSelector}
+                        className="w-full py-6 bg-orange-500 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                    >
+                        VINCULAR LLAVE (GRATIS)
+                    </button>
+                    <a 
+                        href="https://ai.google.dev/gemini-api/docs/billing" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-[10px] font-black text-teal-400 uppercase tracking-widest flex items-center justify-center gap-2 mt-4 hover:text-white transition-colors"
+                    >
+                        Ver límites gratuitos de Google <ExternalLink className="w-3 h-3" />
+                    </a>
+                    </>
+                ) : (
+                    <button onClick={() => setStep('idle')} className="w-full py-6 bg-white text-[#0F4E0E] rounded-[1.8rem] font-black text-sm uppercase tracking-widest active:scale-95 transition-all">
+                        REINTENTAR
+                    </button>
+                )}
+              </div>
             </div>
           )}
 
