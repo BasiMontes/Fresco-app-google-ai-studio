@@ -23,17 +23,6 @@ interface RecipesProps {
 
 const ITEMS_PER_PAGE = 16;
 
-const RecipeSkeleton = () => (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex flex-col h-full min-h-[280px]">
-        <div className="aspect-[3/2] w-full skeleton-bg relative" />
-        <div className="p-4 flex-1 flex flex-col gap-2">
-            <div className="w-16 h-3 rounded-md skeleton-bg" />
-            <div className="w-full h-4 rounded-md skeleton-bg" />
-            <div className="w-2/3 h-4 rounded-md skeleton-bg" />
-        </div>
-    </div>
-);
-
 export const Recipes: React.FC<RecipesProps> = ({ 
     recipes, user, pantry, onAddRecipes, onAddToPlan, onCookFinish, 
     onAddToShoppingList, isOnline = true, initialRecipeId,
@@ -110,14 +99,14 @@ export const Recipes: React.FC<RecipesProps> = ({
     <div className="space-y-6 animate-fade-in pb-48">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl md:text-xl font-black text-teal-900 tracking-tight leading-none mb-1">Biblioteca</h1>
+          <h1 className="text-3xl md:text-xl font-black text-[#0F4E0E] tracking-tight leading-none mb-1">Biblioteca</h1>
           <p className="text-gray-400 font-bold uppercase text-[10px] md:text-[9px] tracking-widest">Inspiración basada en tu stock</p>
         </div>
         
         <div className="flex gap-2">
             <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center justify-center gap-2 bg-teal-900 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-teal-800 transition-all active:scale-95"
+                className="flex items-center justify-center gap-2 bg-[#0F4E0E] text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-[#062606] transition-all active:scale-95"
             >
                 <PlusCircle className="w-4 h-4" /> <span>Crear Propia</span>
             </button>
@@ -126,13 +115,13 @@ export const Recipes: React.FC<RecipesProps> = ({
 
       <div className="space-y-3">
           <div className="relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4 group-focus-within:text-teal-600 transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4 group-focus-within:text-[#0F4E0E] transition-colors" />
               <input
                   type="text"
                   placeholder="Buscar receta, ingrediente..."
                   value={searchTerm}
                   onChange={(e) => { setSearchTerm(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
-                  className="w-full pl-10 pr-4 py-3 md:py-2 rounded-full bg-white border border-gray-100 focus:border-teal-500 focus:outline-none text-sm md:text-xs shadow-sm focus:shadow-md transition-all font-bold placeholder-gray-300"
+                  className="w-full pl-10 pr-4 py-3 md:py-2 rounded-full bg-white border border-gray-100 focus:border-teal-500 focus:outline-none text-sm md:text-xs shadow-sm focus:shadow-md transition-all font-bold placeholder:text-gray-300 text-[#0F4E0E]"
               />
           </div>
           
@@ -144,8 +133,8 @@ export const Recipes: React.FC<RecipesProps> = ({
                       onClick={() => { setActiveCategory(cat); setVisibleCount(ITEMS_PER_PAGE); }}
                       className={`px-4 py-1.5 md:px-3 md:py-1 rounded-lg whitespace-nowrap capitalize font-black text-[10px] md:text-[9px] tracking-widest transition-all ${
                           activeCategory === cat 
-                          ? 'bg-teal-900 text-white shadow-sm' 
-                          : 'text-gray-400 hover:text-teal-600 hover:bg-gray-50'
+                          ? 'bg-[#0F4E0E] text-white shadow-sm' 
+                          : 'text-gray-400 hover:text-[#0F4E0E] hover:bg-teal-50'
                       }`}
                       >
                       {cat === 'all' ? 'Todo' : cat === 'breakfast' ? 'Desayuno' : cat === 'lunch' ? 'Comida' : 'Cena'}
@@ -156,7 +145,7 @@ export const Recipes: React.FC<RecipesProps> = ({
               <button 
                   onClick={() => { setShowOnlyCookable(!showOnlyCookable); setVisibleCount(ITEMS_PER_PAGE); }}
                   className={`px-4 py-2 md:py-1.5 rounded-xl font-black text-[10px] md:text-[9px] uppercase tracking-widest flex items-center gap-2 transition-all shadow-sm border ${
-                      showOnlyCookable ? 'bg-orange-500 text-white border-orange-500 shadow-md' : 'bg-white text-gray-400 border-gray-100 hover:bg-teal-50 hover:text-teal-900'
+                      showOnlyCookable ? 'bg-orange-500 text-white border-orange-500 shadow-md' : 'bg-white text-gray-400 border-gray-100 hover:bg-teal-50 hover:text-[#0F4E0E]'
                   }`}
               >
                   <Zap className={`w-3 h-3 ${showOnlyCookable ? 'fill-white' : ''}`} />
@@ -202,7 +191,7 @@ export const Recipes: React.FC<RecipesProps> = ({
                     </div>
                     
                     <div className="p-3 flex-1 flex flex-col">
-                        <h3 className="text-sm md:text-xs font-bold text-gray-900 leading-tight mb-2 line-clamp-2 group-hover:text-teal-700 transition-colors">
+                        <h3 className="text-sm md:text-xs font-bold text-gray-900 leading-tight mb-2 line-clamp-2 group-hover:text-[#0F4E0E] transition-colors">
                             {recipe.title}
                         </h3>
                         <div className="mt-auto flex items-center gap-2 pt-2 border-t border-gray-50">
@@ -216,7 +205,7 @@ export const Recipes: React.FC<RecipesProps> = ({
                                     setInitialMode('plan');
                                     setSelectedRecipe(recipe);
                                 }}
-                                className="w-8 h-8 md:w-7 md:h-7 bg-teal-50 text-teal-700 rounded-lg flex items-center justify-center hover:bg-teal-900 hover:text-white transition-all active:scale-90 flex-shrink-0"
+                                className="w-8 h-8 md:w-7 md:h-7 bg-teal-50 text-[#0F4E0E] rounded-lg flex items-center justify-center hover:bg-[#0F4E0E] hover:text-white transition-all active:scale-90 flex-shrink-0"
                             >
                                 <CalendarPlus className="w-4 h-4 md:w-3.5 md:h-3.5" />
                             </button>
@@ -234,10 +223,10 @@ export const Recipes: React.FC<RecipesProps> = ({
                 className="group flex items-center gap-5 px-10 py-5 bg-white border border-gray-100 rounded-[2rem] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
               >
                   <div className="flex flex-col text-left">
-                      <span className="fresco-label !text-teal-900 !text-[10px] mb-1">Cargar más inspiración</span>
+                      <span className="fresco-label !text-[#0F4E0E] !text-[10px] mb-1">Cargar más inspiración</span>
                       <span className="text-[10px] font-black uppercase tracking-widest text-gray-300">Explorado {visibleCount} de {filteredRecipes.length}</span>
                   </div>
-                  <div className="w-10 h-10 bg-teal-900 rounded-2xl flex items-center justify-center text-white group-hover:rotate-180 transition-transform duration-700">
+                  <div className="w-10 h-10 bg-[#0F4E0E] rounded-2xl flex items-center justify-center text-white group-hover:rotate-180 transition-transform duration-700">
                       <ChevronDown className="w-5 h-5" />
                   </div>
               </button>
