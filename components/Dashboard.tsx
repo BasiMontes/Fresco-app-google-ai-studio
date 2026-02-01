@@ -210,30 +210,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
   }
 
   return (
-    <div className="space-y-10 md:space-y-14 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0">
-      {/* Sugerencia Inteligente de IA (Layout horizontal estilo desktop en móvil) */}
-      <div className="bg-gradient-to-r from-[#0F4E0E] to-[#062606] p-5 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+    <div className="space-y-10 md:space-y-16 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0">
+      {/* PÍLDORA IA - REDISEÑO TOTAL PARA PWA MÓVIL BASADO EN REFERENCIA */}
+      <div className="bg-[#0F4E0E] p-3 md:p-8 rounded-full md:rounded-[3rem] shadow-2xl relative overflow-hidden group">
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-all duration-700" />
-          <div className="flex flex-row items-center gap-4 md:gap-8 relative z-10">
-              <div className="w-12 h-12 md:w-20 md:h-20 bg-white/10 rounded-2xl md:rounded-[1.8rem] flex items-center justify-center text-orange-400 shrink-0">
-                  <Sparkles className={`w-6 h-6 md:w-10 md:h-10 ${isLoadingTip ? 'animate-pulse' : ''}`} />
+          <div className="flex flex-row items-center justify-between gap-3 md:gap-8 relative z-10">
+              <div className="w-10 h-10 md:w-20 md:h-20 bg-white/10 rounded-2xl md:rounded-[1.8rem] flex items-center justify-center text-orange-400 shrink-0">
+                  <Sparkles className={`w-5 h-5 md:w-10 md:h-10 ${isLoadingTip ? 'animate-pulse' : ''}`} />
               </div>
               <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-black text-sm md:text-2xl leading-none uppercase md:normal-case tracking-tighter md:tracking-tight">Sugerencia IA</h3>
-                  <p className={`text-teal-100/70 font-bold text-[11px] md:text-lg mt-1 italic line-clamp-1 md:line-clamp-none ${isLoadingTip ? 'animate-pulse' : ''}`}>
+                  <h3 className="text-white font-black text-[10px] md:text-2xl leading-none uppercase tracking-widest md:tracking-tight">Sugerencia IA</h3>
+                  <p className={`text-teal-100/60 font-medium text-[10px] md:text-lg mt-1 italic truncate md:line-clamp-none ${isLoadingTip ? 'animate-pulse' : ''}`}>
                       "{aiTip}"
                   </p>
               </div>
               <button 
                 onClick={() => onNavigate('planner')}
-                className="h-11 md:h-16 px-4 md:px-10 bg-orange-500 text-white rounded-xl md:rounded-2xl font-black text-[9px] md:text-sm uppercase tracking-[0.15em] shadow-xl hover:bg-orange-600 transition-all active:scale-95 shrink-0"
+                className="h-9 md:h-16 px-4 md:px-10 bg-orange-500 text-white rounded-full md:rounded-2xl font-black text-[8px] md:text-sm uppercase tracking-[0.15em] shadow-xl hover:bg-orange-600 transition-all active:scale-95 shrink-0"
               >
                   Ver Plan
               </button>
           </div>
       </div>
 
-      <header className="flex items-center justify-between px-2">
+      <header className="flex items-center justify-between px-4">
           <div className="space-y-1">
               <div className="flex items-center gap-3">
                   <span className="text-3xl md:text-4xl">{timeGreeting.text.includes('Días') ? '👋' : timeGreeting.text.includes('Tardes') ? '☀️' : '🌙'}</span>
@@ -252,20 +252,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
           </div>
       </header>
 
-      {/* Grid de Stats: 2 columnas con más aire */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      {/* Grid de Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 px-4">
           <StatCard label="Recetas" value={recipes.length} icon={BookOpen} colorClass="bg-orange-50 text-orange-500" />
           <StatCard label="Gasto Semanal" value={`${budgetStats.spent.toFixed(0)}€`} subValue={`/ ${budgetStats.limit}€`} icon={TrendingUp} colorClass={budgetStats.spent > budgetStats.limit ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'} progress={budgetStats.percentage} />
           <StatCard label="Ahorro Total" value={`${user.total_savings.toFixed(0)}€`} icon={PiggyBank} colorClass="bg-teal-50 text-teal-600" />
           <StatCard label="Recuperado" value={`${Math.round(safeTimeSaved / 60)}h`} icon={Timer} colorClass="bg-purple-50 text-purple-500" />
       </div>
 
-      <section className="space-y-8 md:space-y-10 px-1">
-          <div className="flex justify-between items-center px-1">
+      <section className="space-y-8 md:space-y-12 px-4">
+          <div className="flex justify-between items-center">
               <h2 className="text-2xl md:text-3xl font-black text-[#0F4E0E] tracking-tight">Últimas del Chef</h2>
               <button onClick={() => onNavigate('recipes')} className="text-[10px] md:text-xs font-black uppercase tracking-widest text-teal-600 flex items-center gap-2 hover:gap-3 transition-all">Ver todas <ArrowRight className="w-4 h-4" /></button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
                 {latestRecipes.map((recipe) => (
                     <UnifiedRecipeCard key={recipe.id} recipe={recipe} isFav={favoriteIds.includes(recipe.id)} onNavigate={onNavigate} onToggleFavorite={onToggleFavorite} />
                 ))}
