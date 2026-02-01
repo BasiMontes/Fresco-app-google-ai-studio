@@ -29,22 +29,22 @@ const StatCard = ({ label, value, subValue, icon: Icon, colorClass, progress }: 
     colorClass: string,
     progress?: number 
 }) => (
-    <div className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-48">
+    <div className="bg-white p-4 md:p-6 rounded-[2rem] md:rounded-[2.5rem] border border-gray-50 shadow-sm flex flex-col h-40 md:h-48 transition-all">
         <div className="flex justify-between items-start">
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{label}</p>
-            <div className={`p-3 rounded-2xl ${colorClass}`}><Icon className="w-6 h-6" /></div>
+            <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">{label}</p>
+            <div className={`p-2 md:p-3 rounded-xl md:rounded-2xl ${colorClass}`}><Icon className="w-4 h-4 md:w-6 md:h-6" /></div>
         </div>
         <div className="mt-auto">
             <div className="flex items-end gap-1">
-                <p className="text-4xl font-black text-teal-900 leading-none">{value}</p>
-                {subValue && <p className="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-1">{subValue}</p>}
+                <p className="text-2xl md:text-4xl font-black text-teal-900 leading-none">{value}</p>
+                {subValue && <p className="text-[7px] md:text-[10px] font-black uppercase tracking-widest text-gray-300 mb-0.5 md:mb-1">{subValue}</p>}
             </div>
             {progress !== undefined ? (
-                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mt-3">
+                <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden mt-2 md:mt-3">
                     <div className={`h-full rounded-full transition-all duration-1000 ${progress > 100 ? 'bg-red-500' : 'bg-green-500'}`} style={{ width: `${Math.min(100, progress)}%` }} />
                 </div>
             ) : (
-                <div className="h-1.5 mt-3 invisible" aria-hidden="true" />
+                <div className="h-1 mt-2 md:mt-3 invisible" aria-hidden="true" />
             )}
         </div>
     </div>
@@ -95,7 +95,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
   const [isLoadingTip, setIsLoadingTip] = useState(true);
   
   useEffect(() => {
-    // Cargar consejo de la IA directamente, asumiendo conexión o manejando el error internamente
     const loadTip = async () => {
         setIsLoadingTip(true);
         try {
@@ -168,25 +167,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
   }
 
   return (
-    <div className="space-y-10 animate-fade-in pb-10">
-      {/* Sugerencia Inteligente de IA (Ahora siempre visible y protagonista) */}
-      <div className="bg-gradient-to-r from-[#0F4E0E] to-[#062606] p-6 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+    <div className="space-y-8 md:space-y-10 animate-fade-in pb-10">
+      {/* Sugerencia Inteligente de IA (Layout horizontal estilo desktop en móvil) */}
+      <div className="bg-gradient-to-r from-[#0F4E0E] to-[#062606] p-4 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
           <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-all duration-700" />
-          <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center text-orange-400 shrink-0">
-                  <Sparkles className={`w-8 h-8 ${isLoadingTip ? 'animate-pulse' : ''}`} />
+          <div className="flex flex-row items-center gap-3 md:gap-6 relative z-10">
+              <div className="w-10 h-10 md:w-16 md:h-16 bg-white/10 rounded-xl md:rounded-2xl flex items-center justify-center text-orange-400 shrink-0">
+                  <Sparkles className={`w-5 h-5 md:w-8 md:h-8 ${isLoadingTip ? 'animate-pulse' : ''}`} />
               </div>
-              <div className="flex-1 text-center md:text-left">
-                  <h3 className="text-white font-black text-lg md:text-xl leading-tight">Sugerencia Fresco Pro</h3>
-                  <p className={`text-teal-100/70 font-bold text-sm md:text-base mt-1 italic ${isLoadingTip ? 'animate-pulse' : ''}`}>
+              <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-black text-xs md:text-xl leading-tight uppercase tracking-tighter md:normal-case md:tracking-normal">Sugerencia Fresco Pro</h3>
+                  <p className={`text-teal-100/70 font-bold text-[10px] md:text-base mt-0.5 md:mt-1 italic line-clamp-1 md:line-clamp-none ${isLoadingTip ? 'animate-pulse' : ''}`}>
                       "{aiTip}"
                   </p>
               </div>
               <button 
                 onClick={() => onNavigate('planner')}
-                className="h-14 px-8 bg-orange-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-orange-600 transition-all active:scale-95"
+                className="h-10 md:h-14 px-3 md:px-8 bg-orange-500 text-white rounded-lg md:rounded-2xl font-black text-[8px] md:text-[10px] uppercase tracking-widest md:tracking-[0.2em] shadow-xl hover:bg-orange-600 transition-all active:scale-95 shrink-0"
               >
-                  Ver mi Plan
+                  Ver Plan
               </button>
           </div>
       </div>
@@ -194,32 +193,33 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       <header className="flex items-start justify-between">
           <div className="space-y-1">
               <div className="flex items-center gap-3">
-                  <span className="text-4xl md:text-3xl">{timeGreeting.text.includes('Días') ? '👋' : timeGreeting.text.includes('Tardes') ? '☀️' : '🌙'}</span>
-                  <h1 className="text-4xl md:text-3xl font-black text-[#0F4E0E] tracking-tight leading-none">¡{timeGreeting.text}, {user.name.split(' ')[0]}!</h1>
+                  <span className="text-3xl md:text-3xl">{timeGreeting.text.includes('Días') ? '👋' : timeGreeting.text.includes('Tardes') ? '☀️' : '🌙'}</span>
+                  <h1 className="text-3xl md:text-3xl font-black text-[#0F4E0E] tracking-tight leading-none">¡{timeGreeting.text}, {user.name.split(' ')[0]}!</h1>
               </div>
-              <p className="text-lg md:text-base font-bold text-[#0F4E0E]/60 pl-1">¿Qué vas a cocinar hoy? Organiza tu semana y ahorra.</p>
+              <p className="text-base md:text-base font-bold text-[#0F4E0E]/60 pl-1 line-clamp-1">Organiza tu semana y ahorra hoy.</p>
           </div>
-          <div className="flex items-center gap-3 pt-1">
-              <button onClick={() => setCurrentView('favorites')} className="w-12 h-12 bg-white rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm group">
-                  <Heart className="w-6 h-6 group-hover:fill-current" />
+          <div className="flex items-center gap-2 pt-1">
+              <button onClick={() => setCurrentView('favorites')} className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm group">
+                  <Heart className="w-5 h-5 md:w-6 md:h-6 group-hover:fill-current" />
               </button>
-              <button onClick={() => setCurrentView('notifications')} className="w-12 h-12 bg-white rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#0F4E0E] hover:bg-teal-50 transition-all shadow-sm relative">
-                  <Bell className="w-6 h-6" />
-                  <span className="absolute top-3 right-3 w-2 h-2 bg-orange-500 rounded-full border-2 border-white"></span>
+              <button onClick={() => setCurrentView('notifications')} className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#0F4E0E] hover:bg-teal-50 transition-all shadow-sm relative">
+                  <Bell className="w-5 h-5 md:w-6 md:h-6" />
+                  <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-orange-500 rounded-full border-2 border-white"></span>
               </button>
           </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Grid de Stats: 2 columnas en móvil */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <StatCard label="Recetas" value={recipes.length} icon={BookOpen} colorClass="bg-orange-50 text-orange-500" />
           <StatCard label="Gasto Semanal" value={`${budgetStats.spent.toFixed(0)}€`} subValue={`/ ${budgetStats.limit}€`} icon={TrendingUp} colorClass={budgetStats.spent > budgetStats.limit ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'} progress={budgetStats.percentage} />
           <StatCard label="Ahorro Total" value={`${user.total_savings.toFixed(0)}€`} icon={PiggyBank} colorClass="bg-teal-50 text-teal-600" />
           <StatCard label="Recuperado" value={`${Math.round(safeTimeSaved / 60)}h`} icon={Timer} colorClass="bg-purple-50 text-purple-500" />
       </div>
 
-      <section className="space-y-8">
+      <section className="space-y-6 md:space-y-8">
           <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-black text-[#0F4E0E] tracking-tight">Últimas del Chef</h2>
+              <h2 className="text-xl md:text-2xl font-black text-[#0F4E0E] tracking-tight">Últimas del Chef</h2>
               <button onClick={() => onNavigate('recipes')} className="text-[10px] font-black uppercase tracking-widest text-teal-600 flex items-center gap-2 hover:gap-3 transition-all">Ver todas <ArrowRight className="w-4 h-4" /></button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
