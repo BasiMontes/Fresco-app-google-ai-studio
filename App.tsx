@@ -27,7 +27,7 @@ const PageLoader = ({ message = "Abriendo cocina...", onReset }: { message?: str
   <div className="h-screen w-full flex flex-col items-center justify-center bg-[#FDFDFD] p-6 text-center">
     <div className="w-12 h-12 border-4 border-teal-100 border-t-teal-600 rounded-full animate-spin mb-4" />
     <Logo className="animate-pulse scale-90" />
-    <p className="text-teal-800 font-black uppercase tracking-widest text-[10px] mt-4">{message}</p>
+    <p className="text-[#0F4E0E] font-black uppercase tracking-widest text-[10px] mt-4">{message}</p>
     {onReset && (
         <button 
             onClick={onReset}
@@ -133,7 +133,6 @@ const App: React.FC = () => {
     } catch (e) { setView('onboarding'); }
   };
 
-  // --- HANDLERS PANTRY ---
   const handleAddPantry = (item: PantryItem) => {
       if (!userId) return;
       setPantry(prev => [...prev, item]);
@@ -154,7 +153,6 @@ const App: React.FC = () => {
       addToSyncQueue(userId, 'DELETE_PANTRY', { id });
   };
 
-  // --- HANDLERS SHOPPING ---
   const handleAddShoppingItem = (items: ShoppingItem[]) => {
       if (!userId) return;
       setShoppingList(prev => {
@@ -188,7 +186,6 @@ const App: React.FC = () => {
       }
   };
 
-  // --- HANDLERS PLANNER ---
   const handleUpdateMealSlot = useCallback(async (date: string, type: MealCategory, recipeId: string | undefined) => {
     if (!userId) return;
     const newSlot: MealSlot = { date, type, recipeId, servings: user?.household_size || 2, isCooked: false };
@@ -240,7 +237,7 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={() => setView('app')} /> :
          <>
-          <aside className="hidden md:flex flex-col w-64 bg-teal-900 text-white h-full z-50 flex-shrink-0 overflow-hidden">
+          <aside className="hidden md:flex flex-col w-64 bg-[#0F4E0E] text-white h-full z-50 flex-shrink-0 overflow-hidden">
             <div className="p-8"><Logo variant="inverted" /></div>
             <nav className="flex-1 px-4 space-y-2 mt-4 overflow-hidden">
                 {[
@@ -251,8 +248,8 @@ const App: React.FC = () => {
                   {id:'shopping', icon:ShoppingBag, label:'Lista'}, 
                   {id:'profile', icon:User, label:'Perfil'}
                 ].map(item => (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-4 px-5 py-3 rounded-xl transition-all ${activeTab === item.id || (['settings', 'faq'].includes(activeTab) && item.id === 'profile') ? 'bg-white text-teal-900 font-bold shadow-lg' : 'text-teal-100 hover:bg-white/10'}`}>
-                    <item.icon className={`w-4 h-4 ${activeTab === item.id || (['settings', 'faq'].includes(activeTab) && item.id === 'profile') ? 'text-teal-900' : 'text-teal-400'}`} /> 
+                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-4 px-5 py-3 rounded-xl transition-all ${activeTab === item.id || (['settings', 'faq'].includes(activeTab) && item.id === 'profile') ? 'bg-white text-[#0F4E0E] font-bold shadow-lg' : 'text-teal-100 hover:bg-white/10'}`}>
+                    <item.icon className={`w-4 h-4 ${activeTab === item.id || (['settings', 'faq'].includes(activeTab) && item.id === 'profile') ? 'text-[#0F4E0E]' : 'text-teal-400'}`} /> 
                     <span className="text-sm font-medium tracking-wide">{item.label}</span>
                   </button>
                 ))}
@@ -271,7 +268,6 @@ const App: React.FC = () => {
                         onUpdateQuantity={handleUpdatePantryQty} 
                         onAddMany={items => handleFinishShopping(items)} 
                         onEdit={i => {
-                            // FIX: Actualizar estado local inmediatamente para que la UI reaccione
                             setPantry(prev => prev.map(p => p.id === i.id ? i : p));
                             addToSyncQueue(userId!, 'UPDATE_PANTRY', i);
                         }} 
@@ -284,9 +280,9 @@ const App: React.FC = () => {
                 </Suspense>
             </div>
           </main>
-          <nav className={`md:hidden fixed left-4 right-4 z-[800] bg-teal-900/95 backdrop-blur-3xl p-2 rounded-[2rem] shadow-2xl flex gap-1 safe-pb border border-white/5 transition-all duration-300 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-6 opacity-100'}`}>
+          <nav className={`md:hidden fixed left-4 right-4 z-[800] bg-[#0F4E0E]/95 backdrop-blur-3xl p-2 rounded-[2rem] shadow-2xl flex gap-1 safe-pb border border-white/5 transition-all duration-300 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-6 opacity-100'}`}>
               {[ {id:'dashboard', icon:Home}, {id:'planner', icon:Calendar}, {id:'pantry', icon:Package}, {id:'recipes', icon:BookOpen}, {id:'shopping', icon:ShoppingBag}, {id:'profile', icon:User} ].map(item => (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3.5 rounded-2xl transition-all ${activeTab === item.id || (['settings', 'faq'].includes(activeTab) && item.id === 'profile') ? 'bg-white text-teal-900 shadow-lg' : 'text-teal-100 opacity-40 hover:opacity-70'}`}><item.icon className="w-5 h-5" /></button>
+                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3.5 rounded-2xl transition-all ${activeTab === item.id || (['settings', 'faq'].includes(activeTab) && item.id === 'profile') ? 'bg-white text-[#0F4E0E] shadow-lg' : 'text-teal-100 opacity-40 hover:opacity-70'}`}><item.icon className="w-5 h-5" /></button>
               ))}
           </nav>
          </>
