@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { X, Camera, FileText, Loader2, CheckCircle2, RefreshCw, Plus, Minus, Trash2, ChevronDown, AlertCircle, Key, ExternalLink, Info } from 'lucide-react';
+import { X, Camera, FileText, Loader2, CheckCircle2, RefreshCw, Plus, Minus, Trash2, ChevronDown, AlertCircle, Key, ExternalLink, Info, CreditCard } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { format, addDays } from 'date-fns';
@@ -32,7 +32,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const [supermarket, setSupermarket] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [errorType, setErrorType] = useState<'general' | 'auth'>('general');
+  const [errorType, setErrorType] = useState<'general' | 'auth' | 'billing'>('general');
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -64,7 +64,10 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       } catch (err: any) {
         if (err.message === "MISSING_API_KEY") {
             setErrorType('auth');
-            setErrorMessage("Necesitas vincular una 'llave' de Google para que la IA pueda leer tus tickets.");
+            setErrorMessage("Necesitas vincular una 'llave' de Google para activar el escaneo.");
+        } else if (err.message === "BILLING_LIMIT_REACHED") {
+            setErrorType('billing');
+            setErrorMessage("Has alcanzado el límite de presupuesto o cuota que configuraste en Google Cloud.");
         } else {
             setErrorType('general');
             setErrorMessage(err.message || "Error al leer el ticket.");
@@ -127,7 +130,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="max-w-xs">
                 <h3 className="text-3xl font-black text-white leading-tight">Digitaliza tu compra</h3>
-                <p className="text-teal-100/60 font-medium mt-3 text-sm">Escanea tu ticket y deja que la IA organice tu despensa automáticamente.</p>
+                <p className="text-teal-100/60 font-medium mt-3 text-sm">Escanea tu ticket y deja que la IA organice tu despensa.</p>
               </div>
               <button 
                 onClick={() => fileInputRef.current?.click()}
@@ -159,22 +162,22 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
 
           {step === 'error' && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-8 animate-slide-up">
-              <div className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center ${errorType === 'auth' ? 'bg-orange-500/20' : 'bg-red-500/20'}`}>
-                 {errorType === 'auth' ? <Key className="w-12 h-12 text-orange-400" /> : <AlertCircle className="w-12 h-12 text-red-500" />}
+              <div className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center ${errorType === 'auth' || errorType === 'billing' ? 'bg-orange-500/20' : 'bg-red-500/20'}`}>
+                 {errorType === 'auth' ? <Key className="w-12 h-12 text-orange-400" /> : errorType === 'billing' ? <CreditCard className="w-12 h-12 text-orange-400" /> : <AlertCircle className="w-12 h-12 text-red-500" />}
               </div>
               <div className="max-w-xs px-6">
                 <h3 className="text-3xl font-black text-white leading-tight">
-                    {errorType === 'auth' ? 'Paso necesario' : 'Lectura fallida'}
+                    {errorType === 'auth' ? 'Paso necesario' : errorType === 'billing' ? 'Límite alcanzado' : 'Lectura fallida'}
                 </h3>
                 <p className="text-teal-100/60 font-medium mt-3 text-sm">{errorMessage}</p>
               </div>
               
-              {errorType === 'auth' && (
+              {errorType === 'billing' && (
                   <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] max-w-xs text-left space-y-3">
                       <div className="flex gap-3">
                           <Info className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
                           <p className="text-[11px] text-teal-50/70 leading-relaxed">
-                            <strong className="text-white">¿Tiene coste?</strong> Para un uso normal, Google ofrece un nivel gratuito muy amplio. <span className="text-teal-300">No pagarás nada</span> si solo escaneas unos cuantos tickets al día.
+                            <strong className="text-white">Presupuesto en Google Cloud:</strong> Si has configurado un límite de gasto, Google detiene las peticiones para evitar cargos inesperados. Puedes ajustarlo en tu consola de facturación.
                           </p>
                       </div>
                   </div>
@@ -182,22 +185,21 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
 
               <div className="w-full max-w-sm flex flex-col gap-3 px-6">
                 {errorType === 'auth' ? (
-                    <>
                     <button 
                         onClick={handleOpenSelector}
                         className="w-full py-6 bg-orange-500 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
                     >
-                        VINCULAR LLAVE (GRATIS)
+                        VINCULAR LLAVE
                     </button>
+                ) : errorType === 'billing' ? (
                     <a 
-                        href="https://ai.google.dev/gemini-api/docs/billing" 
+                        href="https://console.cloud.google.com/billing" 
                         target="_blank" 
                         rel="noreferrer"
-                        className="text-[10px] font-black text-teal-400 uppercase tracking-widest flex items-center justify-center gap-2 mt-4 hover:text-white transition-colors"
+                        className="w-full py-6 bg-orange-500 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
                     >
-                        Ver límites gratuitos de Google <ExternalLink className="w-3 h-3" />
+                        IR A FACTURACIÓN <ExternalLink className="w-4 h-4" />
                     </a>
-                    </>
                 ) : (
                     <button onClick={() => setStep('idle')} className="w-full py-6 bg-white text-[#0F4E0E] rounded-[1.8rem] font-black text-sm uppercase tracking-widest active:scale-95 transition-all">
                         REINTENTAR
@@ -208,6 +210,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
           )}
 
           {step === 'review' && (
+            /* ... (resto del código igual) ... */
             <div className="space-y-6 pb-40 animate-slide-up">
               <div className="flex justify-between items-end px-2">
                 <div>

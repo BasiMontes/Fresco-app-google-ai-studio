@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
-import { ArrowLeft, User, Shield, Eye, EyeOff, Lock, LogOut, Trash2, Pencil, Check, RefreshCw } from 'lucide-react';
+import { ArrowLeft, User, Shield, Eye, EyeOff, Lock, LogOut, Trash2, Pencil, Check, RefreshCw, Cpu, CreditCard, ExternalLink, Info } from 'lucide-react';
 import { triggerDialog } from './Dialog';
 
 interface SettingsProps {
@@ -18,6 +18,15 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
   const [apellido, setApellido] = useState(user.name.split(' ').slice(1).join(' ') || '');
   const [email, setEmail] = useState(user.email || '');
   const [isSavingUser, setIsSavingUser] = useState(false);
+
+  // Monitor de IA
+  const [scansCount, setScansCount] = useState(0);
+
+  useEffect(() => {
+    setScansCount(parseInt(localStorage.getItem('fresco_api_usage') || '0'));
+  }, []);
+
+  const estimatedCost = (scansCount * 0.0004).toFixed(4);
 
   // Seguridad
   const [showPass, setShowPass] = useState(false);
@@ -42,7 +51,6 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
         return;
     }
     setIsUpdatingPass(true);
-    // Simulación de cambio de contraseña con Supabase
     setTimeout(() => {
         setIsUpdatingPass(false);
         setNewPass('');
@@ -92,38 +100,75 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-fade-in pb-40">
-      {/* Header */}
       <header className="flex items-start gap-4">
           <button onClick={onBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors text-gray-900">
               <ArrowLeft className="w-6 h-6" />
           </button>
           <div className="space-y-1">
               <h1 className="text-4xl font-black text-teal-900 tracking-tight leading-none">Configuración</h1>
-              <p className="text-gray-500 font-medium text-lg opacity-70">Gestiona tu información personal y de la cuenta</p>
+              <p className="text-gray-500 font-medium text-lg opacity-70">Gestiona tu información y costes de IA</p>
           </div>
       </header>
 
-      {/* Tarjeta Información Personal */}
+      {/* Monitor de IA y Costes */}
+      <section className="bg-[#0F4E0E] p-8 md:p-10 rounded-[2.5rem] shadow-2xl text-white space-y-8 relative overflow-hidden">
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-3xl" />
+          
+          <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-4">
+                  <div className="p-3 bg-white/10 rounded-2xl">
+                      <Cpu className="w-6 h-6 text-orange-400" />
+                  </div>
+                  <div>
+                      <h2 className="text-xl font-black">Motor de IA Gemini</h2>
+                      <p className="text-teal-400 text-[10px] font-black uppercase tracking-widest">Estado: Facturación Activa</p>
+                  </div>
+              </div>
+              <div className="text-right">
+                  <p className="text-[10px] font-black uppercase text-teal-400 tracking-widest leading-none mb-1">Inversión Estimada</p>
+                  <span className="text-3xl font-black">{estimatedCost}€</span>
+              </div>
+          </div>
+
+          <div className="bg-white/5 border border-white/10 p-6 rounded-3xl space-y-4 relative z-10">
+              <div className="flex justify-between items-center text-sm">
+                  <span className="font-bold opacity-60">Tickets Escaneados</span>
+                  <span className="font-black text-orange-400">{scansCount}</span>
+              </div>
+              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-orange-500 transition-all duration-1000" style={{ width: `${Math.min((scansCount/100)*100, 100)}%` }} />
+              </div>
+              <div className="flex items-start gap-3 mt-4">
+                  <Info className="w-4 h-4 text-teal-300 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-teal-100/60 leading-relaxed italic">
+                    Este coste es una estimación basada en el volumen de tickets procesados. Google Cloud aplicará el coste real a final de mes.
+                  </p>
+              </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-3 relative z-10">
+              <a 
+                href="https://console.cloud.google.com/billing" 
+                target="_blank" 
+                rel="noreferrer"
+                className="flex-1 h-14 bg-white text-[#0F4E0E] rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-teal-50 transition-all"
+              >
+                  <CreditCard className="w-4 h-4" /> Ajustar Límite en Google
+              </a>
+              <button 
+                onClick={() => triggerDialog({ title: 'Uso de IA', message: `Has realizado ${scansCount} peticiones a la IA. El coste aproximado por cada 1000 tickets es de 0,40€.`, type: 'info' })}
+                className="h-14 px-6 bg-white/10 border border-white/10 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all"
+              >
+                  Detalles
+              </button>
+          </div>
+      </section>
+
+      {/* Información Personal */}
       <section className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-8">
           <div className="flex items-center gap-3 text-teal-900">
               <User className="w-6 h-6 text-teal-500" />
               <h2 className="text-xl font-black">Información Personal</h2>
-          </div>
-
-          {/* Profile Picture Mockup */}
-          <div className="flex items-center gap-6">
-              <div className="relative group">
-                  <div className="w-24 h-24 rounded-full border-4 border-gray-50 shadow-xl overflow-hidden bg-teal-50 flex items-center justify-center">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Fresco" className="w-full h-full object-cover" alt="User Avatar" />
-                  </div>
-                  <button className="absolute bottom-0 right-0 w-9 h-9 bg-white rounded-full shadow-lg border-2 border-gray-50 flex items-center justify-center text-gray-500 hover:text-teal-600 transition-colors">
-                      <Pencil className="w-4 h-4" />
-                  </button>
-              </div>
-              <div className="space-y-1">
-                  <h3 className="text-2xl font-black text-gray-900">{user.name}</h3>
-                  <p className="text-gray-400 font-bold text-sm">@{user.name.toLowerCase().replace(' ', '.')}</p>
-              </div>
           </div>
 
           <div className="space-y-5">
@@ -137,7 +182,7 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
           </div>
       </section>
 
-      {/* Tarjeta Seguridad */}
+      {/* Seguridad */}
       <section className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-8">
           <div className="flex items-center gap-3 text-teal-900">
               <Shield className="w-6 h-6 text-teal-500" />
@@ -180,10 +225,9 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
                   </ActionButton>
               </div>
 
-              {/* Botones Globales */}
               <div className="space-y-4 pt-4">
                   <button 
-                    onClick={() => triggerDialog({ title: '¿Cerrar Sesión?', message: 'Tendrás que volver a introducir tus credenciales la próxima vez.', type: 'confirm', onConfirm: onLogout })}
+                    onClick={() => triggerDialog({ title: '¿Cerrar Sesión?', message: 'Tendrás que volver a introducir tus credenciales.', type: 'confirm', onConfirm: onLogout })}
                     className="w-full h-16 bg-white border-2 border-gray-100 hover:border-teal-100 rounded-2xl flex items-center justify-center gap-4 group transition-all"
                   >
                       <LogOut className="w-5 h-5 text-gray-400 group-hover:text-teal-600" />
@@ -191,7 +235,7 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
                   </button>
 
                   <button 
-                    onClick={() => triggerDialog({ title: '¿ELIMINAR CUENTA?', message: 'Esta acción es irreversible y borrará todos tus menús, stock y ahorros.', type: 'alert', onConfirm: onReset })}
+                    onClick={() => triggerDialog({ title: '¿ELIMINAR CUENTA?', message: 'Esta acción es irreversible.', type: 'alert', onConfirm: onReset })}
                     className="w-full h-16 bg-white border-2 border-red-50 hover:bg-red-50 rounded-2xl flex items-center justify-center gap-4 group transition-all"
                   >
                       <Trash2 className="w-5 h-5 text-red-300 group-hover:text-red-500" />

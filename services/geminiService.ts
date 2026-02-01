@@ -3,7 +3,6 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../types";
 
 const getApiKey = () => {
-  // Prioridad absoluta a la variable de Vite que el usuario ya tiene configurada
   // @ts-ignore
   return import.meta.env?.VITE_API_KEY || process.env.API_KEY || (window as any).process?.env?.API_KEY || '';
 };
@@ -12,79 +11,63 @@ const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const cleanJson = (text: string | undefined): string => {
     if (!text) return '{"items":[]}';
-    // Buscamos el primer { y el último } por si la IA mete texto extra
     const match = text.match(/\{[\s\S]*\}/);
     if (match) return match[0];
     return '{"items":[]}';
 };
 
-const EXTRACTION_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    supermarket: { type: Type.STRING },
-    items: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          name: { type: Type.STRING, description: "Nombre normalizado sin abreviaturas." },
-          quantity: { type: Type.NUMBER },
-          unit: { type: Type.STRING, description: "uds, kg, l, g, ml" },
-          category: { type: Type.STRING, description: "vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other" },
-          estimated_expiry_days: { type: Type.INTEGER }
-        },
-        required: ["name", "quantity", "unit", "category", "estimated_expiry_days"]
-      }
+/**
+ * Genera un consejo de aprovechamiento basado en productos próximos a caducar.
+ */
+export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
+    const apiKey = getApiKey();
+    if (!apiKey || pantry.length === 0) return "¡Tu despensa está lista! Añade productos para recibir consejos.";
+    
+    const expiringItems = pantry
+        .filter(i => i.expires_at)
+        .sort((a, b) => new Date(a.expires_at!).getTime() - new Date(b.expires_at!).getTime())
+        .slice(0, 3);
+
+    const ai = new GoogleGenAI({ apiKey });
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: `Tengo estos productos a punto de caducar: ${expiringItems.map(i => i.name).join(", ")}. Dame un consejo de cocina de 15 palabras máximo para aprovecharlos hoy. Sé motivador.`,
+            config: { temperature: 0.7 }
+        });
+        return response.text || "Cocina algo creativo con lo que tienes hoy.";
+    } catch {
+        return "Aprovecha tus productos frescos antes de que caduquen.";
     }
-  },
-  required: ["items"]
 };
 
-/**
- * Extrae productos de un ticket con lógica de reintento para cuotas gratuitas.
- */
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string, retries = 2): Promise<any> => {
   const apiKey = getApiKey();
-  
-  if (!apiKey) {
-    throw new Error("MISSING_API_KEY");
-  }
+  if (!apiKey) throw new Error("MISSING_API_KEY");
 
   const ai = new GoogleGenAI({ apiKey });
-  
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Extrae los productos de este ticket de supermercado español. Normaliza nombres. Ignora precios. Calcula días de caducidad lógica según el producto." }
+          { text: "Extrae productos de este ticket. JSON formato: supermarket, items[name, quantity, unit, category, estimated_expiry_days]" }
         ] 
       },
       config: { 
-        systemInstruction: "Eres Fresco Vision. Tu misión es digitalizar tickets. Devuelve EXCLUSIVAMENTE un objeto JSON que cumpla el esquema. No añadas explicaciones.",
+        systemInstruction: "Digitalizador de tickets Fresco. Responde solo JSON.",
         responseMimeType: "application/json",
-        responseSchema: EXTRACTION_SCHEMA,
         temperature: 0.1,
       }
     });
-    
     return JSON.parse(cleanJson(response.text));
   } catch (error: any) {
-    console.error("Fresco Vision Error:", error);
-
-    // Si es error de cuota (Rate Limit) y tenemos reintentos
-    if ((error.message?.includes("429") || error.message?.includes("quota")) && retries > 0) {
-        console.log(`⚠️ Límite alcanzado. Reintentando en 3s... (${retries} restantes)`);
-        await wait(3000);
+    if ((error.message?.includes("429") || error.message?.includes("limit")) && retries > 0) {
+        await wait(2000);
         return extractItemsFromTicket(base64Data, mimeType, retries - 1);
     }
-
-    if (error.message?.includes("API Key") || error.message?.includes("Requested entity was not found")) {
-        throw new Error("MISSING_API_KEY");
-    }
-    
-    throw new Error("No se pudo procesar el ticket. Verifica que la foto sea clara y que la configuración sea correcta.");
+    throw error;
   }
 };
 
@@ -93,30 +76,34 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
     if (!apiKey) throw new Error("MISSING_API_KEY");
     
     const ai = new GoogleGenAI({ apiKey });
-    const plan: MealSlot[] = [];
     
-    // Aquí iría la lógica de IA para seleccionar recetas óptimas basadas en stock
-    targetDates.forEach(date => {
-        targetTypes.forEach(type => {
-            const pool = availableRecipes.filter(r => r.meal_category === (type === 'breakfast' ? 'breakfast' : r.meal_category));
-            const selected = pool[Math.floor(Math.random() * pool.length)] || availableRecipes[0];
-            plan.push({ date, type, recipeId: selected.id, servings: user.household_size, isCooked: false });
-        });
-    });
-    return { plan, newRecipes: [] };
-};
+    // Ahora usamos la IA para decidir qué recetas del pool encajan mejor con el stock actual
+    const pantrySummary = pantry.map(p => p.name).join(", ");
+    const recipeOptions = availableRecipes.map(r => ({ id: r.id, title: r.title, ingredients: r.ingredients.map(i => i.name).join(",") }));
 
-export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[], count: number = 3): Promise<Recipe[]> => {
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error("MISSING_API_KEY");
-    
-    const ai = new GoogleGenAI({ apiKey });
     try {
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
-            contents: `Genera ${count} recetas deliciosas usando principalmente estos ingredientes de mi despensa: ${pantry.map(p => p.name).join(",")}.`,
+            contents: `Basado en esta despensa: ${pantrySummary}. Selecciona las mejores IDs de estas recetas para un plan de ${targetDates.length} días: ${JSON.stringify(recipeOptions)}. Devuelve JSON con el mapeo.`,
             config: { responseMimeType: "application/json" }
         });
-        return JSON.parse(cleanJson(response.text));
-    } catch { return []; }
+        
+        // Lógica de fallback por si la IA falla en el formato
+        const selections = JSON.parse(cleanJson(response.text));
+        const plan: MealSlot[] = [];
+        
+        targetDates.forEach(date => {
+            targetTypes.forEach(type => {
+                const recipeId = selections[date]?.[type] || availableRecipes[Math.floor(Math.random()*availableRecipes.length)].id;
+                plan.push({ date, type, recipeId, servings: user.household_size, isCooked: false });
+            });
+        });
+        return { plan, newRecipes: [] };
+    } catch {
+        // Fallback básico si hay error
+        const plan = targetDates.flatMap(date => 
+            targetTypes.map(type => ({ date, type, recipeId: availableRecipes[0].id, servings: user.household_size, isCooked: false }))
+        );
+        return { plan, newRecipes: [] };
+    }
 };

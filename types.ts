@@ -49,6 +49,7 @@ export interface UserProfile {
   meals_cooked: number;
   time_saved_mins: number;
   history_savings: { date: string; amount: number }[];
+  api_scans_count?: number; // Contador de escaneos para estimación de coste
 }
 
 export interface MealSlot {

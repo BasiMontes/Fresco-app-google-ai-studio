@@ -1,9 +1,10 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { UserProfile, Recipe, PantryItem, MealSlot, MealCategory } from '../types';
-import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp, ArrowLeft, Clock, Users, Check, X, CheckCircle2, CalendarPlus, Key } from 'lucide-react';
+import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp, ArrowLeft, Clock, Users, Check, X, CheckCircle2, CalendarPlus, Key, Zap, Lightbulb } from 'lucide-react';
 import { getHours, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 import { SmartImage } from './SmartImage';
+import { getWastePreventionTip } from '../services/geminiService';
 
 interface DashboardProps {
   user: UserProfile;
@@ -91,6 +92,8 @@ const UnifiedRecipeCard: React.FC<{
 export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true, favoriteIds = [], onToggleFavorite }) => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'favorites' | 'notifications'>('dashboard');
   const [hasApiKey, setHasApiKey] = useState(true);
+  const [aiTip, setAiTip] = useState<string>("Cargando tu consejo de hoy...");
+  const [isLoadingTip, setIsLoadingTip] = useState(true);
   
   useEffect(() => {
     const checkKey = async () => {
@@ -98,9 +101,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
         setHasApiKey(isSet);
     };
     checkKey();
-    const interval = setInterval(checkKey, 2000);
-    return () => clearInterval(interval);
-  }, []);
+    
+    // Cargar consejo de la IA
+    const loadTip = async () => {
+        setIsLoadingTip(true);
+        const tip = await getWastePreventionTip(pantry);
+        setAiTip(tip);
+        setIsLoadingTip(false);
+    };
+    loadTip();
+  }, [pantry]);
 
   const handleLinkKey = async () => {
       if ((window as any).aistudio) {
@@ -166,7 +176,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
   }
 
   return (
-    <div className="space-y-12 animate-fade-in pb-10">
+    <div className="space-y-10 animate-fade-in pb-10">
+      {/* Alerta de IA no conectada */}
       {!hasApiKey && (
           <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4 animate-slide-up">
               <div className="flex items-center gap-4">
@@ -184,6 +195,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
               >
                   Conectar IA
               </button>
+          </div>
+      )}
+
+      {/* Sugerencia Inteligente de IA */}
+      {hasApiKey && (
+          <div className="bg-gradient-to-r from-teal-900 to-teal-800 p-6 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-all duration-700" />
+              <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
+                  <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center text-orange-400 shrink-0">
+                      <Sparkles className={`w-8 h-8 ${isLoadingTip ? 'animate-pulse' : ''}`} />
+                  </div>
+                  <div className="flex-1 text-center md:text-left">
+                      <h3 className="text-white font-black text-lg md:text-xl leading-tight">Sugerencia Fresco Pro</h3>
+                      <p className={`text-teal-100/70 font-bold text-sm md:text-base mt-1 italic ${isLoadingTip ? 'animate-pulse' : ''}`}>
+                          "{aiTip}"
+                      </p>
+                  </div>
+                  <button 
+                    onClick={() => onNavigate('planner')}
+                    className="h-14 px-8 bg-orange-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-orange-600 transition-all active:scale-95"
+                  >
+                      Ver mi Plan
+                  </button>
+              </div>
           </div>
       )}
 
