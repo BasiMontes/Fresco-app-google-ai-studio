@@ -4,11 +4,8 @@ import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../type
 
 const cleanJson = (text: string | undefined): string => {
     if (!text) return '{"items":[]}';
-    // Buscamos el primer '{' y el último '}' para extraer solo el bloque JSON
     const match = text.match(/\{[\s\S]*\}/);
-    if (match) {
-        return match[0];
-    }
+    if (match) return match[0];
     return '{"items":[]}';
 };
 
@@ -20,10 +17,10 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: Type.OBJECT,
         properties: {
-          name: { type: Type.STRING, description: "Nombre legible del producto sin abreviaturas raras" },
-          quantity: { type: Type.NUMBER, description: "Cantidad numérica" },
-          unit: { type: Type.STRING, description: "Unidad normalizada: uds, kg, l, g, ml" },
-          category: { type: Type.STRING, description: "Categoría más probable: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry" }
+          name: { type: Type.STRING, description: "Nombre limpio y legible del producto (ej: 'Leche Entera' en lugar de 'LCH ENT')." },
+          quantity: { type: Type.NUMBER, description: "Cantidad numérica comprada." },
+          unit: { type: Type.STRING, description: "Unidad detectada (uds, kg, l, g, ml)." },
+          category: { type: Type.STRING, description: "Categoría: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other." }
         },
         required: ["name", "quantity", "unit", "category"]
       }
@@ -41,36 +38,33 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Analiza este ticket de supermercado. TU MISIÓN: Extraer EXCLUSIVAMENTE los productos comprados. \n\nREGLAS ORO:\n1. Ignora logos, fechas, IVAs, subtotales, formas de pago y descuentos.\n2. Traduce abreviaturas (ej: 'HAC.' a 'Hacendado', 'LCH' a 'Leche').\n3. Identifica la cantidad real (si hay '2 x 1.50', la cantidad es 2).\n4. Devuelve un JSON limpio siguiendo el esquema proporcionado." }
+          { text: "Analiza este ticket de compra. Extrae CADA producto. Traduce abreviaturas comerciales a nombres naturales. Si el ticket dice 'P.V.P' o importes, ignóralos, solo quiero cantidades y nombres. Devuelve el JSON estructurado." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres el motor 'Fresco Vision'. Tu especialidad es leer tickets de supermercado (especialmente Mercadona, Carrefour, Lidl) y convertirlos en inventario digital. Eres extremadamente preciso con las cantidades y unidades. Si un producto es ambiguo, asígnale la categoría 'pantry'.",
+        systemInstruction: "Eres 'Fresco Vision', el motor OCR de una app de cocina inteligente. Tu objetivo es transformar fotos de tickets de supermercados (Mercadona, Lidl, Carrefour, Aldi, etc.) en datos de inventario. Eres experto en identificar productos incluso con nombres acortados. Ignora siempre el precio, el IVA, el total y la información del establecimiento.",
         responseMimeType: "application/json",
         responseSchema: EXTRACTION_SCHEMA,
-        temperature: 0, // Máxima precisión, cero creatividad
+        temperature: 0.1,
       }
     });
     
     const text = response.text;
-    const cleaned = cleanJson(text);
-    const parsed = JSON.parse(cleaned);
+    const parsed = JSON.parse(cleanJson(text));
     return parsed.items || [];
   } catch (error) {
-    console.error("Fresco Vision OCR Critical Error:", error);
-    throw new Error("No se pudo procesar el ticket. Asegúrate de que la foto esté bien iluminada.");
+    console.error("Fresco Vision OCR Error:", error);
+    throw new Error("No se pudo procesar la imagen del ticket.");
   }
 };
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const plan: MealSlot[] = [];
-    
     targetDates.forEach(date => {
         targetTypes.forEach(type => {
-            let pool = availableRecipes.filter(r => r.meal_category === (type === 'breakfast' ? 'breakfast' : r.meal_category));
-            if (pool.length === 0) pool = availableRecipes;
-            const selected = pool[Math.floor(Math.random() * pool.length)];
+            const pool = availableRecipes.filter(r => r.meal_category === (type === 'breakfast' ? 'breakfast' : r.meal_category));
+            const selected = pool[Math.floor(Math.random() * pool.length)] || availableRecipes[0];
             plan.push({ date, type, recipeId: selected.id, servings: user.household_size, isCooked: false });
         });
     });
