@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Recipe, UserProfile, PantryItem, MealSlot, BatchSession, MealCategory } from "../types";
+import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../types";
 
 const cleanJson = (text: string | undefined): string => {
     if (!text) return '{"items":[]}';
@@ -22,9 +22,9 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: Type.OBJECT,
         properties: {
-          name: { type: Type.STRING, description: "Descripción completa del producto" },
-          quantity: { type: Type.NUMBER, description: "Cantidad numérica" },
-          unit: { type: Type.STRING, description: "Unidad (uds, kg, l)" },
+          name: { type: Type.STRING, description: "Nombre claro del producto (ej: Leche Entera)" },
+          quantity: { type: Type.NUMBER, description: "Cantidad numérica comprada" },
+          unit: { type: Type.STRING, description: "Unidad (uds, kg, l, g, ml)" },
           category: { type: Type.STRING, description: "Categoría: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other" }
         },
         required: ["name", "quantity", "unit", "category"]
@@ -34,7 +34,6 @@ const EXTRACTION_SCHEMA = {
   required: ["items"]
 };
 
-// Fix: Always use process.env.API_KEY directly when initializing GoogleGenAI client
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any[]> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
@@ -44,11 +43,11 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Analiza este ticket de Mercadona. La estructura es: [CANTIDAD] [DESCRIPCIÓN] [PRECIO UNITARIO] [IMPORTE]. Ejemplo: '1 QUESO DADOS ENSALADA 1,15' -> cantidad: 1, nombre: 'QUESO DADOS ENSALADA'. Ignora 'BOLSA PLASTICO'." }
+          { text: "Analiza este ticket de supermercado. Extrae la lista de productos comprados. Busca la columna de cantidad y la descripción. Ignora importes, impuestos, números de tarjeta, descuentos o bolsas de plástico. Traduce nombres crípticos a nombres amigables si es posible." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres un OCR especializado en tickets de Mercadona. El primer dígito de cada línea es la cantidad. El texto que sigue es el nombre. No inventes productos. Ignora bolsas de plástico.",
+        systemInstruction: "Eres un experto en tickets de compra españoles. Tu objetivo es devolver un JSON puro con los productos. Identifica correctamente si es fruta (fruits), verdura (vegetables), carne (meat), pescado (fish), lácteos (dairy), etc. Si no estás seguro de la cantidad, pon 1.",
         responseMimeType: "application/json",
         responseSchema: EXTRACTION_SCHEMA,
         temperature: 0.1,
@@ -65,11 +64,14 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 };
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const plan: MealSlot[] = [];
+    
+    // Fallback lógico simple por ahora para evitar delays
     targetDates.forEach(date => {
         targetTypes.forEach(type => {
             let pool = availableRecipes.filter(r => r.meal_category === (type === 'breakfast' ? 'breakfast' : r.meal_category));
-            if (pool.length === 0) return;
+            if (pool.length === 0) pool = availableRecipes;
             const selected = pool[Math.floor(Math.random() * pool.length)];
             plan.push({ date, type, recipeId: selected.id, servings: user.household_size, isCooked: false });
         });
@@ -77,7 +79,6 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
     return { plan, newRecipes: [] };
 };
 
-// Fix: Always use process.env.API_KEY directly when initializing GoogleGenAI client
 export const generateRecipesAI = async (user: UserProfile, pantry: PantryItem[], count: number = 3): Promise<Recipe[]> => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     try {
