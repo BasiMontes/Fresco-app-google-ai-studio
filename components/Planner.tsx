@@ -104,67 +104,73 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   return (
     <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden bg-[#F8F9FA]">
-      <header className="px-4 md:px-6 py-4 flex flex-col gap-4 bg-white/90 backdrop-blur-xl border-b border-gray-100 flex-shrink-0 z-20">
+      <header className="px-4 md:px-8 py-5 flex flex-col gap-5 bg-white/90 backdrop-blur-xl border-b border-gray-100 flex-shrink-0 z-20">
         <div className="flex justify-between items-center w-full">
             <div>
-                <h1 className="text-xl font-black text-[#0F4E0E] tracking-tighter leading-none mb-1">Calendario</h1>
-                <p className="text-[#0F4E0E]/40 font-black uppercase text-[8px] tracking-[0.4em]">Planificación Visual</p>
+                <h1 className="text-2xl md:text-3xl font-black text-[#0F4E0E] tracking-tight leading-none mb-1">Calendario</h1>
+                <p className="text-[#0F4E0E]/40 font-black uppercase text-[9px] tracking-[0.3em]">Planificación Semanal</p>
             </div>
-            <button onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} className="p-2.5 text-red-400 hover:bg-red-50 rounded-xl transition-all">
-                <Trash2 className="w-4 h-4" />
-            </button>
+            
+            {/* Action Group: Trash + Generate (Unified) */}
+            <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
+                  className="w-12 h-12 md:w-14 md:h-14 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-2xl transition-all shadow-sm flex items-center justify-center"
+                  title="Limpiar calendario"
+                >
+                    <Trash2 className="w-5 h-5" />
+                </button>
+                <button 
+                    onClick={() => setShowPlanWizard(true)} 
+                    className="h-12 md:h-14 px-5 md:px-8 bg-[#0F4E0E] text-white rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-[#062606] transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+                >
+                    <BrainCircuit className="w-5 h-5 text-orange-400" />
+                    <span>GENERAR IA</span>
+                </button>
+            </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2 w-full flex-nowrap overflow-x-hidden">
-            {/* Navegador de Semanas */}
-            <div className="flex items-center gap-1 bg-gray-50/80 px-2 py-2 rounded-2xl border border-gray-100 flex-shrink min-w-0 max-w-[200px] md:max-w-none">
+        <div className="flex items-center justify-center w-full">
+            {/* Navegador de Semanas - Centrado para mejor balance */}
+            <div className="flex items-center gap-2 bg-gray-50/80 px-3 py-2 rounded-2xl border border-gray-100">
                 <button 
                   disabled={!canGoBack}
                   onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} 
-                  className={`p-1.5 rounded-lg transition-all ${canGoBack ? 'hover:bg-white text-[#0F4E0E] active:scale-90' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
+                  className={`p-2 rounded-xl transition-all ${canGoBack ? 'bg-white text-[#0F4E0E] shadow-sm hover:scale-110 active:scale-90' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
                 
-                <span className="text-[10px] font-black text-[#0F4E0E] mx-1 md:mx-2 uppercase tracking-widest whitespace-nowrap truncate text-center flex-1">
-                  {format(currentWeekStart, 'MMM yyyy', { locale: es })}
+                <span className="text-[11px] font-black text-[#0F4E0E] mx-4 uppercase tracking-[0.25em] whitespace-nowrap">
+                  {format(currentWeekStart, 'MMMM yyyy', { locale: es })}
                 </span>
                 
                 <button 
                   disabled={!canGoForward}
                   onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} 
-                  className={`p-1.5 rounded-lg transition-all ${canGoForward ? 'hover:bg-white text-[#0F4E0E] active:scale-90' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
+                  className={`p-2 rounded-xl transition-all ${canGoForward ? 'bg-white text-[#0F4E0E] shadow-sm hover:scale-110 active:scale-90' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-5 h-5" />
                 </button>
             </div>
-            
-            {/* Botón Generar - Fix para que no se corte */}
-            <button 
-                onClick={() => setShowPlanWizard(true)} 
-                className="flex items-center justify-center gap-2 bg-[#0F4E0E] text-white px-4 md:px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#062606] transition-all active:scale-[0.98] flex-shrink-0 min-w-[120px]"
-            >
-                <BrainCircuit className="w-4 h-4 text-orange-400" />
-                <span>Generar</span>
-            </button>
         </div>
       </header>
 
       {/* Grid de días con scroll horizontal */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-x-auto no-scrollbar flex gap-4 p-4 h-full min-h-0">
+      <div ref={scrollContainerRef} className="flex-1 overflow-x-auto no-scrollbar flex gap-5 p-5 h-full min-h-0">
         {days.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd');
           const isToday = isSameDay(day, new Date());
           return (
-            <div key={dateStr} className="min-w-[280px] max-w-[320px] flex-1 flex flex-col gap-3 h-full">
-                {/* Indicador de Día Compacto */}
-                <div className={`text-center py-2 px-3 rounded-[1.5rem] border transition-all duration-500 flex-shrink-0 ${isToday ? 'bg-[#0F4E0E] text-white border-[#0F4E0E] shadow-lg' : 'bg-white text-[#0F4E0E] border-gray-100 shadow-sm'}`}>
-                    <span className={`block text-[7px] font-black uppercase tracking-[0.3em] mb-0.5 ${isToday ? 'text-orange-400' : 'text-[#0F4E0E]/30'}`}>{format(day, 'EEEE', { locale: es })}</span>
-                    <span className="block text-xl font-black leading-none">{format(day, 'd')}</span>
+            <div key={dateStr} className="min-w-[290px] max-w-[340px] flex-1 flex flex-col gap-4 h-full">
+                {/* Indicador de Día Premium */}
+                <div className={`text-center py-4 px-4 rounded-[2rem] border transition-all duration-700 flex-shrink-0 ${isToday ? 'bg-[#0F4E0E] text-white border-[#0F4E0E] shadow-2xl scale-[1.02]' : 'bg-white text-[#0F4E0E] border-gray-100 shadow-sm'}`}>
+                    <span className={`block text-[8px] font-black uppercase tracking-[0.4em] mb-1 ${isToday ? 'text-orange-400' : 'text-[#0F4E0E]/30'}`}>{format(day, 'EEEE', { locale: es })}</span>
+                    <span className="block text-2xl font-black leading-none">{format(day, 'd')}</span>
                 </div>
                 
                 {/* Contenedor de Comidas */}
-                <div className="flex-1 flex flex-col gap-2 min-h-0">
+                <div className="flex-1 flex flex-col gap-3 min-h-0">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
                       const recipe = recipes.find(r => r.id === slot?.recipeId);
@@ -172,7 +178,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <div 
                             key={type} 
                             onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} 
-                            className={`relative flex-1 rounded-[2.2rem] transition-all duration-700 cursor-pointer flex flex-col overflow-hidden group shadow-sm border-2 ${recipe ? 'border-white hover:shadow-2xl hover:-translate-y-1' : 'bg-white border-dashed border-gray-100 hover:border-teal-200 hover:bg-teal-50/20'}`}
+                            className={`relative flex-1 rounded-[2.5rem] transition-all duration-700 cursor-pointer flex flex-col overflow-hidden group shadow-sm border-2 ${recipe ? 'border-white hover:shadow-2xl hover:-translate-y-1' : 'bg-white border-dashed border-gray-100 hover:border-teal-200 hover:bg-teal-50/20'}`}
                           >
                               {recipe ? (
                                   <div className="absolute inset-0 w-full h-full">
@@ -182,37 +188,37 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                         className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 group-hover:saturate-[1.1]" 
                                       />
                                       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent transition-opacity duration-700" />
-                                      <div className="absolute inset-0 flex flex-col justify-between p-4 z-10">
+                                      <div className="absolute inset-0 flex flex-col justify-between p-5 z-10">
                                           <div className="flex justify-between items-start">
-                                              <div className="px-1.5 py-0.5 rounded-[4px] bg-black/30 backdrop-blur-md border border-white/10 shadow-sm flex items-center">
-                                                  <span className="text-[6px] font-black uppercase tracking-[0.2em] text-white/90 leading-none">{type}</span>
+                                              <div className="px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 shadow-sm flex items-center">
+                                                  <span className="text-[7px] font-black uppercase tracking-[0.2em] text-white/90 leading-none">{type}</span>
                                               </div>
-                                              <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-1.5 bg-white/5 backdrop-blur-md rounded-lg text-white/40 hover:text-white hover:bg-red-500/80 transition-all opacity-0 group-hover:opacity-100">
-                                                  <X className="w-2.5 h-2.5" />
+                                              <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-2 bg-white/10 backdrop-blur-md rounded-xl text-white/60 hover:text-white hover:bg-red-500/80 transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100">
+                                                  <X className="w-3.5 h-3.5" />
                                               </button>
                                           </div>
-                                          <div className="space-y-0.5 pb-1">
-                                              <h5 className="font-black text-[13px] text-white leading-tight uppercase line-clamp-2 transition-all drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
+                                          <div className="space-y-1 pb-1">
+                                              <h5 className="font-black text-[14px] text-white leading-tight uppercase line-clamp-2 transition-all drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
                                                   {recipe.title}
                                               </h5>
-                                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-1 group-hover:translate-y-0">
-                                                  <span className="text-[7px] font-black text-orange-400 uppercase tracking-widest">{recipe.prep_time} MIN</span>
-                                                  <div className="w-0.5 h-0.5 rounded-full bg-white/20" />
-                                                  <span className="text-[7px] font-black text-white/40 uppercase tracking-widest">{recipe.difficulty}</span>
+                                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-2 group-hover:translate-y-0">
+                                                  <span className="text-[8px] font-black text-orange-400 uppercase tracking-widest">{recipe.prep_time} MIN</span>
+                                                  <div className="w-1 h-1 rounded-full bg-white/20" />
+                                                  <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">{recipe.difficulty}</span>
                                               </div>
                                           </div>
                                       </div>
                                   </div>
                               ) : (
-                                  <div className="flex-1 flex flex-col items-center justify-center p-3 text-center">
+                                  <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
                                       <div className="flex justify-between items-center w-full mb-auto">
-                                          <span className="text-[6px] font-black uppercase tracking-[0.2em] px-1.5 py-0.5 rounded-[4px] bg-gray-50 text-gray-300 border border-gray-100 leading-none">{type}</span>
+                                          <span className="text-[7px] font-black uppercase tracking-[0.3em] px-2 py-1 rounded-lg bg-gray-50 text-gray-400 border border-gray-100 leading-none">{type}</span>
                                       </div>
                                       <div className="flex-1 flex flex-col items-center justify-center transition-all duration-500 transform group-hover:scale-110">
-                                          <div className="w-10 h-10 rounded-2xl bg-teal-50 flex items-center justify-center mb-2 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all border border-teal-100/50">
-                                            <Plus className="w-5 h-5 text-[#0F4E0E] group-hover:text-white" />
+                                          <div className="w-12 h-12 rounded-[1.5rem] bg-teal-50 flex items-center justify-center mb-3 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all border border-teal-100/50 shadow-inner">
+                                            <Plus className="w-6 h-6 text-[#0F4E0E] group-hover:text-white" />
                                           </div>
-                                          <span className="text-[8px] font-black uppercase tracking-[0.4em] text-gray-200 group-hover:text-[#0F4E0E] transition-colors">Añadir</span>
+                                          <span className="text-[9px] font-black uppercase tracking-[0.5em] text-gray-200 group-hover:text-[#0F4E0E] transition-colors">Añadir</span>
                                       </div>
                                   </div>
                               )}

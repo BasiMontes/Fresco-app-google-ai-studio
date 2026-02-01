@@ -200,7 +200,7 @@ const App: React.FC = () => {
           </aside>
 
           <main className="flex-1 h-full overflow-hidden flex flex-col relative bg-[#FDFDFD]">
-            <div className={`flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 ${isKeyboardOpen ? 'pb-4' : 'pb-32'} md:pb-8 h-full overflow-y-auto no-scrollbar`}>
+            <div className={`flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 ${isKeyboardOpen ? 'pb-4' : 'pb-36'} md:pb-8 h-full overflow-y-auto no-scrollbar`}>
                 <Suspense fallback={<PageLoader message="Cargando vista..." />}>
                     {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
                     {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={(p, r) => { setRecipes(prev => [...prev, ...r]); setMealPlan(prev => [...prev, ...p]); }} onClear={() => setMealPlan([])} />}
@@ -221,7 +221,7 @@ const App: React.FC = () => {
             </div>
           </main>
           
-          <nav className={`md:hidden fixed left-4 right-4 z-[800] bg-[#0F4E0E] p-1.5 rounded-[2.5rem] shadow-2xl flex gap-1 safe-pb border border-white/10 transition-all duration-300 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-6 opacity-100'}`}>
+          <nav className={`md:hidden fixed left-6 right-6 z-[800] bg-[#0F4E0E] p-1.5 rounded-[2.2rem] shadow-2xl flex gap-1 safe-pb border border-white/5 transition-all duration-500 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-8 opacity-100'}`}>
               {[ 
                 {id:'dashboard', icon:Home}, 
                 {id:'planner', icon:Calendar}, 
@@ -232,9 +232,9 @@ const App: React.FC = () => {
               ].map(item => {
                   const isActive = activeTab === item.id || (item.id === 'profile' && isProfileActive);
                   return (
-                    <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3.5 rounded-2xl transition-all duration-300 relative ${isActive ? 'text-[#0F4E0E] z-10' : 'text-teal-100/30'}`}>
-                        {isActive && <div className="absolute inset-0 bg-white rounded-[1.2rem] -z-10 shadow-lg scale-90" />}
-                        <item.icon className={`w-5 h-5 ${isActive ? 'stroke-[3px]' : ''}`} />
+                    <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-4 rounded-[1.8rem] transition-all duration-500 relative ${isActive ? 'text-[#0F4E0E] z-10 scale-105' : 'text-teal-100/25'}`}>
+                        {isActive && <div className="absolute inset-0 bg-white rounded-[1.6rem] -z-10 shadow-lg" style={{ margin: '1px' }} />}
+                        <item.icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : ''}`} />
                     </button>
                   );
               })}
