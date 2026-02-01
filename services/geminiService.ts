@@ -12,24 +12,26 @@ const cleanJson = (text: string | undefined): string => {
 const EXTRACTION_SCHEMA = {
   type: Type.OBJECT,
   properties: {
+    supermarket: { type: Type.STRING },
     items: {
       type: Type.ARRAY,
       items: {
         type: Type.OBJECT,
         properties: {
-          name: { type: Type.STRING, description: "Nombre limpio y legible del producto (ej: 'Leche Entera' en lugar de 'LCH ENT')." },
-          quantity: { type: Type.NUMBER, description: "Cantidad numérica comprada." },
-          unit: { type: Type.STRING, description: "Unidad detectada (uds, kg, l, g, ml)." },
-          category: { type: Type.STRING, description: "Categoría: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other." }
+          name: { type: Type.STRING, description: "Nombre normalizado sin abreviaturas (ej: Leche Entera en lugar de LCH ENT)." },
+          quantity: { type: Type.NUMBER },
+          unit: { type: Type.STRING, description: "uds, kg, l, g, ml" },
+          category: { type: Type.STRING, description: "vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other" },
+          estimated_expiry_days: { type: Type.INTEGER }
         },
-        required: ["name", "quantity", "unit", "category"]
+        required: ["name", "quantity", "unit", "category", "estimated_expiry_days"]
       }
     }
   },
   required: ["items"]
 };
 
-export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any[]> => {
+export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   try {
@@ -38,23 +40,21 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Analiza este ticket de compra. Extrae CADA producto. Traduce abreviaturas comerciales a nombres naturales. Si el ticket dice 'P.V.P' o importes, ignóralos, solo quiero cantidades y nombres. Devuelve el JSON estructurado." }
+          { text: "Analiza este ticket de compra. Extrae CADA producto. Traduce abreviaturas comerciales a nombres naturales. Ignora importes monetarios. Calcula los días estimados de caducidad según el tipo de producto (Fresco: 2-5, Seco: 180+)." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres 'Fresco Vision', el motor OCR de una app de cocina inteligente. Tu objetivo es transformar fotos de tickets de supermercados (Mercadona, Lidl, Carrefour, Aldi, etc.) en datos de inventario. Eres experto en identificar productos incluso con nombres acortados. Ignora siempre el precio, el IVA, el total y la información del establecimiento.",
+        systemInstruction: "Eres 'Fresco Vision Elite'. Tu misión es digitalizar inventarios de cocina. Eres experto en supermercados españoles. Devuelve siempre JSON puro siguiendo el esquema.",
         responseMimeType: "application/json",
         responseSchema: EXTRACTION_SCHEMA,
         temperature: 0.1,
       }
     });
     
-    const text = response.text;
-    const parsed = JSON.parse(cleanJson(text));
-    return parsed.items || [];
+    return JSON.parse(cleanJson(response.text));
   } catch (error) {
     console.error("Fresco Vision OCR Error:", error);
-    throw new Error("No se pudo procesar la imagen del ticket.");
+    throw new Error("No se pudo procesar el ticket. Prueba con otra foto.");
   }
 };
 

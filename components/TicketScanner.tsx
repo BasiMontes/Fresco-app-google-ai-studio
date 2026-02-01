@@ -1,9 +1,8 @@
 
 import React, { useState, useRef } from 'react';
-import { X, Camera, FileText, Loader2, CheckCircle2, RefreshCw, PenLine, Plus, Minus, Trash2, ChevronDown, AlertCircle } from 'lucide-react';
+import { X, Camera, FileText, Loader2, CheckCircle2, RefreshCw, Plus, Minus, Trash2, ChevronDown, AlertCircle, ShoppingCart } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
-import { EXPIRY_DAYS_BY_CATEGORY } from '../constants';
 import { format, addDays } from 'date-fns';
 import { ModalPortal } from './ModalPortal';
 import { Logo } from './Logo';
@@ -27,18 +26,12 @@ const CATEGORIES = [
     { id: 'other', label: 'Otros', emoji: '📦' },
 ];
 
-const UNIT_OPTIONS = [
-    { id: 'uds', label: 'UNIDADES' },
-    { id: 'kg', label: 'KILOGRAMOS' },
-    { id: 'l', label: 'LITROS' },
-    { id: 'g', label: 'GRAMOS' },
-    { id: 'ml', label: 'MILILITROS' }
-];
-
 export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItems }) => {
   const [step, setStep] = useState<'idle' | 'processing' | 'review' | 'error'>('idle');
   const [items, setItems] = useState<any[]>([]);
+  const [supermarket, setSupermarket] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,23 +40,28 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (!file) return;
 
     setStep('processing');
+    setProgress(20);
     const reader = new FileReader();
     reader.onload = async () => {
       try {
+        setProgress(40);
         const base64Data = (reader.result as string).split(',')[1];
-        const extracted = await extractItemsFromTicket(base64Data, file.type);
+        const data = await extractItemsFromTicket(base64Data, file.type);
         
-        const processed = extracted.map((i, idx) => ({
+        setProgress(80);
+        setSupermarket(data.supermarket || 'Supermercado');
+        const processed = data.items.map((i: any, idx: number) => ({
             ...i,
             tempId: `item-${Date.now()}-${idx}`,
             added_at: format(new Date(), 'yyyy-MM-dd'),
-            expires_at: format(addDays(new Date(), EXPIRY_DAYS_BY_CATEGORY[i.category] || 14), 'yyyy-MM-dd')
+            expires_at: format(addDays(new Date(), i.estimated_expiry_days || 14), 'yyyy-MM-dd')
         }));
         
         setItems(processed);
-        setStep('review');
-      } catch (err) {
-        setErrorMessage("Vaya, no hemos podido leer bien ese ticket. ¿Pruebas con otra foto?");
+        setProgress(100);
+        setTimeout(() => setStep('review'), 500);
+      } catch (err: any) {
+        setErrorMessage(err.message || "Error al leer el ticket.");
         setStep('error');
       }
     };
@@ -71,67 +69,76 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   };
 
   const handleSave = async () => {
+    if (isSaving) return;
     setIsSaving(true);
-    const finalItems: PantryItem[] = items.map(item => ({
-      id: `scr-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-      name: item.name,
-      quantity: Number(item.quantity),
-      unit: item.unit,
-      category: item.category,
-      added_at: new Date().toISOString(),
-      expires_at: item.expires_at ? new Date(item.expires_at).toISOString() : undefined
-    }));
-    await onAddItems(finalItems);
-    onClose();
+    try {
+        const finalItems: PantryItem[] = items.map(item => ({
+          id: `scr-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          name: item.name,
+          quantity: Number(item.quantity),
+          unit: item.unit,
+          category: item.category,
+          added_at: new Date().toISOString(),
+          expires_at: item.expires_at ? new Date(item.expires_at).toISOString() : undefined
+        }));
+        await onAddItems(finalItems);
+        onClose();
+    } finally {
+        setIsSaving(false);
+    }
   };
 
   return (
     <ModalPortal>
       <div className="fixed inset-0 z-[5000] bg-[#0F4E0E] flex flex-col animate-fade-in overflow-hidden safe-pb">
-        {/* Top bar */}
         <div className="p-6 flex items-center justify-between border-b border-white/5 bg-black/10 backdrop-blur-md">
           <div className="flex items-center gap-3">
              <div className="p-2 bg-white/10 rounded-xl">
                 <Logo variant="inverted" iconOnly className="scale-75" />
              </div>
              <div>
-                <h2 className="text-white font-black text-lg leading-none">Escáner Vision</h2>
-                <p className="text-teal-400 text-[9px] font-black uppercase tracking-widest mt-1">Motor de Stock Inteligente</p>
+                <h2 className="text-white font-black text-lg leading-none">Fresco Vision</h2>
+                <p className="text-teal-400 text-[9px] font-black uppercase tracking-widest mt-1">IA de Reconocimiento</p>
              </div>
           </div>
           <button onClick={onClose} className="p-3 bg-white/5 text-white rounded-2xl hover:bg-white/10 transition-all"><X className="w-6 h-6" /></button>
         </div>
 
-        {/* Main Area */}
         <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
           {step === 'idle' && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-8 animate-slide-up">
-              <div className="w-24 h-24 bg-white/10 rounded-[2.5rem] flex items-center justify-center shadow-2xl">
+              <div className="w-24 h-24 bg-white/10 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative">
                  <Camera className="w-10 h-10 text-teal-400" />
+                 <div className="absolute -bottom-2 -right-2 bg-orange-500 p-2 rounded-full border-4 border-[#0F4E0E]"><Plus className="w-4 h-4 text-white" /></div>
               </div>
               <div className="max-w-xs">
                 <h3 className="text-3xl font-black text-white leading-tight">Digitaliza tu compra</h3>
-                <p className="text-teal-100/60 font-medium mt-3 text-sm">Sube una foto de tu ticket de supermercado y actualizaremos tu despensa por ti.</p>
+                <p className="text-teal-100/60 font-medium mt-3 text-sm">Escanea tu ticket y deja que la IA organice tu despensa automáticamente.</p>
               </div>
               <button 
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full max-w-sm py-6 bg-white text-[#0F4E0E] rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
               >
-                <Camera className="w-5 h-5" /> HACER FOTO O SUBIR
+                HACER FOTO O SUBIR
               </button>
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={handleFileChange} />
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
           )}
 
           {step === 'processing' && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-10 animate-fade-in">
               <div className="relative">
-                 <div className="w-32 h-32 border-4 border-teal-500/20 border-t-orange-500 rounded-full animate-spin" />
+                 <div className="w-40 h-40 border-4 border-teal-500/20 rounded-full flex items-center justify-center">
+                    <div className="w-32 h-32 border-4 border-teal-500/10 border-t-orange-500 rounded-full animate-spin" />
+                 </div>
                  <FileText className="absolute inset-0 m-auto w-12 h-12 text-white animate-pulse" />
               </div>
-              <div>
-                <h3 className="text-3xl font-black text-white">Analizando ticket...</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em] mt-3 animate-pulse">La IA está detectando productos</p>
+              <div className="w-full max-w-xs space-y-4">
+                <h3 className="text-3xl font-black text-white">Extrayendo datos...</h3>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-orange-500 transition-all duration-500" style={{ width: `${progress}%` }} />
+                </div>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Normalizando productos</p>
               </div>
             </div>
           )}
@@ -142,27 +149,31 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <AlertCircle className="w-12 h-12 text-red-500" />
               </div>
               <div className="max-w-xs">
-                <h3 className="text-3xl font-black text-white">¡Vaya! Algo falló</h3>
+                <h3 className="text-3xl font-black text-white">Lectura fallida</h3>
                 <p className="text-teal-100/60 font-medium mt-3 text-sm">{errorMessage}</p>
               </div>
-              <button onClick={() => setStep('idle')} className="px-10 py-5 bg-white text-[#0F4E0E] rounded-[1.8rem] font-black text-xs uppercase tracking-widest flex items-center gap-3">
-                 <RefreshCw className="w-5 h-5" /> REINTENTAR
+              <button onClick={() => setStep('idle')} className="px-10 py-5 bg-white text-[#0F4E0E] rounded-[1.8rem] font-black text-xs uppercase tracking-widest">
+                 REINTENTAR
               </button>
             </div>
           )}
 
           {step === 'review' && (
             <div className="space-y-6 pb-40 animate-slide-up">
-              <div className="flex justify-between items-center px-2">
-                <h3 className="text-white font-black text-2xl tracking-tight">Revisar Productos</h3>
-                <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">{items.length} Detectados</span>
+              <div className="flex justify-between items-end px-2">
+                <div>
+                  <p className="text-orange-400 text-[9px] font-black uppercase tracking-widest mb-1">{supermarket}</p>
+                  <h3 className="text-white font-black text-2xl tracking-tight">Revisar Stock</h3>
+                </div>
+                <span className="bg-white/10 text-teal-300 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border border-white/5">{items.length} items</span>
               </div>
-              <div className="grid gap-4">
+              
+              <div className="grid gap-3">
                 {items.map((item, idx) => (
-                  <div key={item.tempId} className="bg-white rounded-[2rem] p-6 shadow-2xl flex flex-col gap-4 border border-white/5 relative group animate-fade-in" style={{ animationDelay: `${idx * 0.05}s` }}>
-                    <div className="flex justify-between items-start">
+                  <div key={item.tempId} className="bg-white rounded-[2rem] p-5 shadow-2xl flex flex-col gap-4 border border-white/5 animate-fade-in" style={{ animationDelay: `${idx * 0.05}s` }}>
+                    <div className="flex justify-between items-start gap-3">
                       <div className="flex-1">
-                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block">Producto</label>
+                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block">Producto Detectado</label>
                         <input 
                           className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-black text-lg text-[#0F4E0E] outline-none capitalize"
                           value={item.name}
@@ -171,37 +182,30 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                       </div>
                       <button 
                         onClick={() => setItems(items.filter(i => i.tempId !== item.tempId))}
-                        className="mt-6 ml-3 p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all"
+                        className="mt-6 p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <div>
+                      <div className="relative">
                         <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block">Categoría</label>
-                        <div className="relative">
-                          <select 
-                            className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-xs text-[#0F4E0E] outline-none appearance-none cursor-pointer"
-                            value={item.category}
-                            onChange={(e) => setItems(items.map(i => i.tempId === item.tempId ? {...i, category: e.target.value} : i))}
-                          >
-                            {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label.toUpperCase()}</option>)}
-                          </select>
-                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
-                        </div>
+                        <select 
+                          className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-xs text-[#0F4E0E] outline-none appearance-none"
+                          value={item.category}
+                          onChange={(e) => setItems(items.map(i => i.tempId === item.tempId ? {...i, category: e.target.value} : i))}
+                        >
+                          {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label.toUpperCase()}</option>)}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-[65%] -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
                       </div>
                       <div>
                         <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block">Cantidad</label>
-                        <div className="flex items-center bg-[#0F4E0E] rounded-xl px-2 py-2 shadow-inner">
-                           <button onClick={() => setItems(items.map(i => i.tempId === item.tempId ? {...i, quantity: Math.max(0, i.quantity - 1)} : i))} className="p-1 text-white/50 hover:text-white"><Minus className="w-4 h-4" /></button>
-                           <input 
-                             type="number" 
-                             className="flex-1 bg-transparent text-white font-black text-center outline-none text-sm"
-                             value={item.quantity}
-                             onChange={(e) => setItems(items.map(i => i.tempId === item.tempId ? {...i, quantity: parseFloat(e.target.value) || 0} : i))}
-                           />
-                           <button onClick={() => setItems(items.map(i => i.tempId === item.tempId ? {...i, quantity: i.quantity + 1} : i))} className="p-1 text-white/50 hover:text-white"><Plus className="w-4 h-4" /></button>
+                        <div className="flex items-center bg-[#0F4E0E] rounded-xl px-2 py-2 h-[48px]">
+                           <button onClick={() => setItems(items.map(i => i.tempId === item.tempId ? {...i, quantity: Math.max(0, i.quantity - 0.5)} : i))} className="p-1 text-white/50 hover:text-white"><Minus className="w-4 h-4" /></button>
+                           <input type="number" className="flex-1 bg-transparent text-white font-black text-center outline-none text-xs" value={item.quantity} onChange={(e) => setItems(items.map(i => i.tempId === item.tempId ? {...i, quantity: parseFloat(e.target.value) || 0} : i))} />
+                           <button onClick={() => setItems(items.map(i => i.tempId === item.tempId ? {...i, quantity: i.quantity + 0.5} : i))} className="p-1 text-white/50 hover:text-white"><Plus className="w-4 h-4" /></button>
                         </div>
                       </div>
                     </div>
@@ -212,15 +216,14 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
           )}
         </div>
 
-        {/* Footer Actions */}
         {step === 'review' && (
-          <div className="p-8 bg-gradient-to-t from-[#0F4E0E] via-[#0F4E0E] to-transparent sticky bottom-0">
+          <div className="p-8 bg-gradient-to-t from-[#0F4E0E] via-[#0F4E0E] to-transparent sticky bottom-0 flex justify-center">
             <button 
               onClick={handleSave}
               disabled={isSaving || items.length === 0}
-              className="w-full py-6 bg-orange-500 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+              className="w-full max-w-md py-6 bg-orange-500 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
             >
-              {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CheckCircle2 className="w-6 h-6" /> CONFIRMAR Y AÑADIR STOCK</>}
+              {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CheckCircle2 className="w-6 h-6" /> INYECTAR EN DESPENSA</>}
             </button>
           </div>
         )}
