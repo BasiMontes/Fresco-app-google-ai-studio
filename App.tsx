@@ -221,7 +221,7 @@ const App: React.FC = () => {
             </div>
           </main>
           
-          <nav className={`md:hidden fixed left-4 right-4 z-[800] bg-[#0F4E0E] p-1.5 rounded-full shadow-2xl flex gap-1 safe-pb border border-white/10 transition-all duration-300 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-6 opacity-100'}`}>
+          <nav className={`md:hidden fixed left-4 right-4 z-[800] bg-[#0F4E0E] p-1.5 rounded-[2.5rem] shadow-2xl flex gap-1 safe-pb border border-white/10 transition-all duration-300 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-6 opacity-100'}`}>
               {[ 
                 {id:'dashboard', icon:Home}, 
                 {id:'planner', icon:Calendar}, 
@@ -232,8 +232,8 @@ const App: React.FC = () => {
               ].map(item => {
                   const isActive = activeTab === item.id || (item.id === 'profile' && isProfileActive);
                   return (
-                    <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3.5 rounded-full transition-all duration-300 relative ${isActive ? 'text-[#0F4E0E] z-10' : 'text-teal-100/30'}`}>
-                        {isActive && <div className="absolute inset-0 bg-white rounded-full -z-10 shadow-lg scale-90" />}
+                    <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-3.5 rounded-2xl transition-all duration-300 relative ${isActive ? 'text-[#0F4E0E] z-10' : 'text-teal-100/30'}`}>
+                        {isActive && <div className="absolute inset-0 bg-white rounded-[1.2rem] -z-10 shadow-lg scale-90" />}
                         <item.icon className={`w-5 h-5 ${isActive ? 'stroke-[3px]' : ''}`} />
                     </button>
                   );

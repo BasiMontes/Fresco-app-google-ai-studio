@@ -2,7 +2,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { MealSlot, Recipe, ShoppingItem, PantryItem, UserProfile } from '../types';
 import { SPANISH_PRICES, EXPIRY_DAYS_BY_CATEGORY } from '../constants';
-import { ShoppingBag, Check, X, Plus, Minus, Loader2, PartyPopper, PlusCircle, ChevronDown, FilterX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Check, X, Plus, Minus, Loader2, PartyPopper, PlusCircle, ChevronDown, FilterX, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { cleanName, subtractIngredient, autoScaleIngredient, formatQuantity, parseLocaleNumber } from '../services/unitService';
 import { ModalPortal } from './ModalPortal';
@@ -58,6 +58,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
   const [showCelebration, setShowCelebration] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [isManualFormOpen, setIsManualFormOpen] = useState(false);
   
   const [manualItem, setManualItem] = useState({
       name: "",
@@ -134,7 +135,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
     const finalItems: ShoppingItem[] = [...dbItems];
     Object.values(calculatedNeeds).forEach(calcItem => {
         if (calcItem.quantity > 0.005) { 
-            const existsInDb = dbItems.some(db => cleanName(db.name) === cleanName(calcItem.name));
+            const existsInDb = dbItems.find(db => cleanName(db.name) === cleanName(calcItem.name));
             if (!existsInDb) {
                 const scaled = autoScaleIngredient(calcItem.quantity, calcItem.unit);
                 finalItems.push({ ...calcItem, ...scaled });
@@ -169,11 +170,14 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
     
     onAddShoppingItem([newItem]);
     setManualItem({ name: "", quantity: 1, unit: "uds", category: "other" });
+    setIsManualFormOpen(false);
   };
 
-  const toggleItem = (item: ShoppingItem) => {
+  const toggleItem = (e: React.MouseEvent, item: ShoppingItem) => {
+    // Si es un item calculado, primero lo añadimos a la base de datos como "comprado"
     if (item.id.startsWith('calc-')) {
-        onAddShoppingItem([{ ...item, id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, is_purchased: !item.is_purchased }]);
+        const newItem = { ...item, id: `db-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, is_purchased: !item.is_purchased };
+        onAddShoppingItem([newItem]);
     } else {
         onUpdateShoppingItem({ ...item, is_purchased: !item.is_purchased });
     }
@@ -248,7 +252,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
   return (
     <div className="max-w-4xl mx-auto pb-48 animate-fade-in px-1 md:px-4">
-      {/* BANNER PRINCIPAL ACTUALIZADO CON #0F4E0E */}
+      {/* BANNER PRINCIPAL */}
       <div className="bg-[#0F4E0E] rounded-[2.5rem] p-6 md:p-8 text-white shadow-2xl mb-8 relative overflow-hidden">
         <div className="relative z-10">
             <div className="flex justify-between items-start mb-6">
@@ -272,58 +276,70 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-teal-800 rounded-full blur-3xl opacity-50" />
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-[2.5rem] p-6 md:p-8 mb-8 shadow-sm">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-teal-600 mb-6 flex items-center gap-2">
-              <PlusCircle className="w-3 h-3" /> Añadir Producto Manualmente
-          </h3>
-          <form onSubmit={handleAddManual} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                  <div className="md:col-span-6">
-                      <input 
-                          type="text" 
-                          placeholder="Nombre del producto (ej: Leche)" 
-                          className="w-full h-14 bg-gray-50 border-2 border-transparent rounded-2xl px-6 font-bold text-[#0F4E0E] outline-none focus:border-teal-500/20 transition-all"
-                          value={manualItem.name}
-                          onChange={(e) => setManualItem({...manualItem, name: e.target.value})}
-                      />
+      {/* SECCIÓN AÑADIR - AHORA COLAPSABLE */}
+      <div className="bg-white border border-gray-100 rounded-[2.5rem] p-6 md:p-8 mb-8 shadow-sm transition-all duration-500">
+          <button 
+            onClick={() => setIsManualFormOpen(!isManualFormOpen)}
+            className="w-full flex items-center justify-between group"
+          >
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-teal-600 flex items-center gap-2">
+                <PlusCircle className="w-3 h-3" /> Añadir Producto Manualmente
+            </h3>
+            <div className={`p-2 bg-gray-50 rounded-full transition-transform duration-300 ${isManualFormOpen ? 'rotate-180 bg-teal-50 text-teal-600' : 'text-gray-300'}`}>
+                <ChevronDown className="w-4 h-4" />
+            </div>
+          </button>
+          
+          <div className={`transition-all duration-500 overflow-hidden ${isManualFormOpen ? 'max-h-[500px] mt-6 opacity-100' : 'max-h-0 opacity-0'}`}>
+              <form onSubmit={handleAddManual} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                      <div className="md:col-span-6">
+                          <input 
+                              type="text" 
+                              placeholder="Nombre del producto (ej: Leche)" 
+                              className="w-full h-14 bg-gray-50 border-2 border-transparent rounded-2xl px-6 font-bold text-[#0F4E0E] outline-none focus:border-teal-500/20 transition-all"
+                              value={manualItem.name}
+                              onChange={(e) => setManualItem({...manualItem, name: e.target.value})}
+                          />
+                      </div>
+                      <div className="md:col-span-3 flex bg-gray-50 rounded-2xl overflow-hidden border-2 border-transparent focus-within:border-teal-500/20">
+                          <input 
+                              type="number" 
+                              step="0.1"
+                              placeholder="Cant." 
+                              className="w-1/2 h-14 bg-transparent px-4 font-black text-center text-[#0F4E0E] outline-none"
+                              value={manualItem.quantity}
+                              onChange={(e) => setManualItem({...manualItem, quantity: parseFloat(e.target.value) || 0})}
+                          />
+                          <div className="w-px h-8 bg-gray-200 self-center" />
+                          <select 
+                              className="w-1/2 h-14 bg-transparent px-2 font-black text-[10px] text-teal-600 outline-none appearance-none text-center cursor-pointer"
+                              value={manualItem.unit}
+                              onChange={(e) => setManualItem({...manualItem, unit: e.target.value})}
+                          >
+                              {UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
+                          </select>
+                      </div>
+                      <div className="md:col-span-3 relative">
+                          <select 
+                              className="w-full h-14 bg-gray-50 border-2 border-transparent rounded-2xl px-5 font-black text-[10px] text-[#0F4E0E] outline-none appearance-none cursor-pointer"
+                              value={manualItem.category}
+                              onChange={(e) => setManualItem({...manualItem, category: e.target.value})}
+                          >
+                              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label.toUpperCase()}</option>)}
+                          </select>
+                          <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
+                      </div>
                   </div>
-                  <div className="md:col-span-3 flex bg-gray-50 rounded-2xl overflow-hidden border-2 border-transparent focus-within:border-teal-500/20">
-                      <input 
-                          type="number" 
-                          step="0.1"
-                          placeholder="Cant." 
-                          className="w-1/2 h-14 bg-transparent px-4 font-black text-center text-[#0F4E0E] outline-none"
-                          value={manualItem.quantity}
-                          onChange={(e) => setManualItem({...manualItem, quantity: parseFloat(e.target.value) || 0})}
-                      />
-                      <div className="w-px h-8 bg-gray-200 self-center" />
-                      <select 
-                          className="w-1/2 h-14 bg-transparent px-2 font-black text-[10px] text-teal-600 outline-none appearance-none text-center cursor-pointer"
-                          value={manualItem.unit}
-                          onChange={(e) => setManualItem({...manualItem, unit: e.target.value})}
-                      >
-                          {UNIT_OPTIONS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
-                      </select>
-                  </div>
-                  <div className="md:col-span-3 relative">
-                      <select 
-                          className="w-full h-14 bg-gray-50 border-2 border-transparent rounded-2xl px-5 font-black text-[10px] text-[#0F4E0E] outline-none appearance-none cursor-pointer"
-                          value={manualItem.category}
-                          onChange={(e) => setManualItem({...manualItem, category: e.target.value})}
-                      >
-                          {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label.toUpperCase()}</option>)}
-                      </select>
-                      <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
-                  </div>
-              </div>
-              <button 
-                  type="submit"
-                  disabled={!manualItem.name.trim()}
-                  className="w-full h-14 bg-[#0F4E0E] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg active:scale-[0.98] transition-all hover:bg-[#062606] flex items-center justify-center gap-3 disabled:opacity-30"
-              >
-                  <PlusCircle className="w-4 h-4" /> AÑADIR A LA LISTA
-              </button>
-          </form>
+                  <button 
+                      type="submit"
+                      disabled={!manualItem.name.trim()}
+                      className="w-full h-14 bg-[#0F4E0E] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg active:scale-[0.98] transition-all hover:bg-[#062606] flex items-center justify-center gap-3 disabled:opacity-30"
+                  >
+                      <PlusCircle className="w-4 h-4" /> AÑADIR A LA LISTA
+                  </button>
+              </form>
+          </div>
       </div>
 
       <div className="relative group/filters mb-8">
@@ -400,13 +416,13 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                 const canDecrement = item.quantity > 0;
                 
                 return (
-                    <div key={item.id} onClick={() => toggleItem(item)} className={`bg-white p-3 md:p-4 rounded-[2.2rem] flex items-center gap-3 border-2 transition-all cursor-pointer ${item.is_purchased ? 'opacity-40 border-gray-50' : 'border-white shadow-sm hover:border-teal-100 hover:shadow-md'}`}>
-                        <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-green-50 border-green-500' : 'border-gray-100'}`}>
-                            {item.is_purchased && <Check className="w-3.5 h-3.5 stroke-[4px] text-white" />}
+                    <div key={item.id} onClick={(e) => toggleItem(e, item)} className={`bg-white p-3 md:p-4 rounded-[2.2rem] flex items-center gap-3 border-2 transition-all cursor-pointer ${item.is_purchased ? 'opacity-40 border-gray-50' : 'border-white shadow-sm hover:border-teal-100 hover:shadow-md'}`}>
+                        <div className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-green-500 border-green-500 shadow-md scale-110' : 'bg-gray-50 border-gray-100 hover:border-teal-200'}`}>
+                            {item.is_purchased && <Check className="w-4 h-4 stroke-[4px] text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className={`font-bold capitalize leading-tight text-[15px] ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>
-                                <span className="mr-2 opacity-60">{catInfo.emoji}</span>
+                            <p className={`font-black capitalize leading-tight text-[15px] ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>
+                                <span className="mr-2 opacity-60 text-lg">{catInfo.emoji}</span>
                                 {item.name}
                             </p>
                         </div>
@@ -440,7 +456,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           )}
       </div>
 
-      <div className={`fixed left-8 right-8 md:left-auto md:right-8 z-[100] transition-all duration-500 ${shoppingData.finalItems.filter(i => i.is_purchased).length > 0 ? 'bottom-28 opacity-100' : 'bottom-[-100px] opacity-0'}`}>
+      <div className={`fixed left-8 right-8 md:left-auto md:right-8 z-[100] transition-all duration-500 ${shoppingData.finalItems.filter(i => i.is_purchased).length > 0 ? 'bottom-32 opacity-100' : 'bottom-[-100px] opacity-0'}`}>
           <button onClick={() => setShowReceipt(true)} className="w-full md:w-auto bg-[#0F4E0E] text-white px-10 h-14 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-[#062606] shadow-xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
               <Check className="w-5 h-5 stroke-[3px]" /> TERMINAR COMPRA
           </button>

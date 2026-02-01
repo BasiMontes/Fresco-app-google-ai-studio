@@ -1,8 +1,8 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { UserProfile, Recipe, PantryItem, MealSlot, MealCategory } from '../types';
-import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp, ArrowLeft, Clock, Users, Check, X, CheckCircle2, CalendarPlus, Key, Zap, Lightbulb } from 'lucide-react';
-import { getHours, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
+import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp, ArrowLeft, Clock, Users, Check, X, CheckCircle2, CalendarPlus, Key, Zap, Lightbulb, Info } from 'lucide-react';
+import { getHours, startOfWeek, endOfWeek, isWithinInterval, parseISO, differenceInDays } from 'date-fns';
 import { SmartImage } from './SmartImage';
 import { getWastePreventionTip } from '../services/geminiService';
 
@@ -116,6 +116,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       return { text: "Buenas Noches", icon: Moon };
   }, []);
 
+  const alerts = useMemo(() => {
+      const list = [];
+      const expiringSoon = pantry.filter(i => i.expires_at && differenceInDays(new Date(i.expires_at), new Date()) <= 3);
+      if (expiringSoon.length > 0) list.push({ type: 'expiry', title: 'Productos por caducar', msg: `Tienes ${expiringSoon.length} items que caducan pronto.`, icon: AlertCircle, color: 'text-orange-500' });
+      
+      const emptyStock = pantry.filter(i => i.quantity <= 0);
+      if (emptyStock.length > 3) list.push({ type: 'stock', title: 'Stock Agotado', msg: 'Varios básicos se han agotado. Revisa tu lista.', icon: ShoppingCart, color: 'text-red-500' });
+      
+      return list;
+  }, [pantry]);
+
   const budgetStats = useMemo(() => {
       const BUDGET_LIMIT = 50; 
       const today = new Date();
@@ -135,6 +146,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       const val = Number(user.time_saved_mins);
       return isNaN(val) ? 0 : val;
   }, [user.time_saved_mins]);
+
+  if (currentView === 'notifications') {
+    return (
+        <div className="space-y-8 animate-fade-in pb-10">
+            <div className="flex items-center gap-4">
+                <button onClick={() => setCurrentView('dashboard')} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-[#0F4E0E]">
+                    <ArrowLeft className="w-6 h-6" />
+                </button>
+                <div>
+                    <h1 className="text-3xl font-black text-[#0F4E0E]">Centro de Avisos</h1>
+                    <p className="text-gray-500 font-medium text-sm">Gestiona tus alertas de cocina y stock.</p>
+                </div>
+            </div>
+            <div className="space-y-4">
+                {alerts.length > 0 ? alerts.map((alert, i) => (
+                    <div key={i} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex gap-4 items-start animate-slide-up">
+                        <div className={`p-3 rounded-2xl bg-gray-50 ${alert.color}`}><alert.icon className="w-6 h-6" /></div>
+                        <div>
+                            <h3 className="font-black text-lg text-teal-950">{alert.title}</h3>
+                            <p className="text-gray-500 text-sm font-medium mt-1">{alert.msg}</p>
+                        </div>
+                    </div>
+                )) : (
+                    <div className="text-center py-20 opacity-30">
+                        <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-500" />
+                        <p className="font-bold text-lg">Todo bajo control.</p>
+                        <p className="text-sm">No hay alertas críticas en tu cocina.</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+  }
 
   if (currentView === 'favorites') {
       return (
@@ -168,7 +212,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
 
   return (
     <div className="space-y-8 md:space-y-10 animate-fade-in pb-10">
-      {/* Sugerencia Inteligente de IA (Layout horizontal estilo desktop en móvil) */}
+      {/* Sugerencia Inteligente de IA */}
       <div className="bg-gradient-to-r from-[#0F4E0E] to-[#062606] p-4 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
           <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-all duration-700" />
           <div className="flex flex-row items-center gap-3 md:gap-6 relative z-10">
@@ -204,12 +248,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
               </button>
               <button onClick={() => setCurrentView('notifications')} className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl md:rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#0F4E0E] hover:bg-teal-50 transition-all shadow-sm relative">
                   <Bell className="w-5 h-5 md:w-6 md:h-6" />
-                  <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-orange-500 rounded-full border-2 border-white"></span>
+                  {alerts.length > 0 && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-orange-500 rounded-full border-2 border-white animate-pulse"></span>}
               </button>
           </div>
       </header>
 
-      {/* Grid de Stats: 2 columnas en móvil */}
+      {/* Grid de Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <StatCard label="Recetas" value={recipes.length} icon={BookOpen} colorClass="bg-orange-50 text-orange-500" />
           <StatCard label="Gasto Semanal" value={`${budgetStats.spent.toFixed(0)}€`} subValue={`/ ${budgetStats.limit}€`} icon={TrendingUp} colorClass={budgetStats.spent > budgetStats.limit ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'} progress={budgetStats.percentage} />
