@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
-import { ArrowLeft, User, Shield, Eye, EyeOff, Lock, LogOut, Trash2, Pencil, Check, RefreshCw, Cpu, CreditCard, ExternalLink, Info } from 'lucide-react';
+import { ArrowLeft, User, Shield, Eye, EyeOff, Lock, LogOut, Trash2, Pencil, Check, RefreshCw, Cpu, CreditCard, ExternalLink, Info, Key, ShieldCheck, ShieldX } from 'lucide-react';
 import { triggerDialog } from './Dialog';
+import { validateApiKey } from '../services/geminiService';
 
 interface SettingsProps {
   user: UserProfile;
@@ -21,12 +22,37 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
 
   // Monitor de IA
   const [scansCount, setScansCount] = useState(0);
+  const [manualKey, setManualKey] = useState(localStorage.getItem('fresco_manual_api_key') || '');
+  const [isValidatingKey, setIsValidatingKey] = useState(false);
+  const [keyStatus, setKeyStatus] = useState<'none' | 'valid' | 'invalid'>(manualKey ? 'valid' : 'none');
 
   useEffect(() => {
     setScansCount(parseInt(localStorage.getItem('fresco_api_usage') || '0'));
   }, []);
 
   const estimatedCost = (scansCount * 0.0004).toFixed(4);
+
+  const handleSaveKey = async () => {
+      if (!manualKey) {
+          localStorage.removeItem('fresco_manual_api_key');
+          setKeyStatus('none');
+          triggerDialog({ title: 'Clave Eliminada', message: 'Se usará la clave del sistema si existe.', type: 'info' });
+          return;
+      }
+
+      setIsValidatingKey(true);
+      const isValid = await validateApiKey(manualKey);
+      setIsValidatingKey(false);
+
+      if (isValid) {
+          localStorage.setItem('fresco_manual_api_key', manualKey);
+          setKeyStatus('valid');
+          triggerDialog({ title: '¡Éxito!', message: 'Tu clave personal ha sido vinculada correctamente.', type: 'success' });
+      } else {
+          setKeyStatus('invalid');
+          triggerDialog({ title: 'Clave Inválida', message: 'La clave introducida no funciona. Verifica que sea la clave actual de Google AI Studio.', type: 'alert' });
+      }
+  };
 
   // Seguridad
   const [showPass, setShowPass] = useState(false);
@@ -110,6 +136,55 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
           </div>
       </header>
 
+      {/* Gestión de Llave Personal (SOLUCIÓN AL FILTRADO) */}
+      <section className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border-2 border-orange-100 space-y-8">
+          <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-orange-600">
+                  <Key className="w-6 h-6" />
+                  <h2 className="text-xl font-black">Tu Llave de Google (Privada)</h2>
+              </div>
+              {keyStatus === 'valid' && <div className="flex items-center gap-2 text-green-600 font-black text-[10px] uppercase tracking-widest bg-green-50 px-3 py-1.5 rounded-lg"><ShieldCheck className="w-4 h-4" /> Activa</div>}
+              {keyStatus === 'invalid' && <div className="flex items-center gap-2 text-red-600 font-black text-[10px] uppercase tracking-widest bg-red-50 px-3 py-1.5 rounded-lg"><ShieldX className="w-4 h-4" /> Error</div>}
+          </div>
+
+          <div className="space-y-4">
+              <p className="text-xs text-gray-500 font-medium leading-relaxed">
+                  Para evitar que Google bloquee tu clave al subirla a GitHub, **pégala aquí directamente**. Esta clave se guardará solo en este dispositivo y nunca se filtrará.
+              </p>
+              
+              <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Clave de API Gemini</label>
+                  <div className="relative">
+                      <input 
+                          type="password"
+                          value={manualKey}
+                          onChange={e => setManualKey(e.target.value)}
+                          placeholder="Pega aquí tu clave AIza..."
+                          className="w-full h-14 px-5 bg-gray-50 border-2 border-transparent rounded-2xl font-mono text-sm text-teal-900 outline-none focus:border-orange-500/20 transition-all placeholder:text-gray-300"
+                      />
+                  </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-3 pt-2">
+                  <button 
+                    onClick={handleSaveKey}
+                    disabled={isValidatingKey}
+                    className="flex-1 h-14 bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-lg active:scale-95"
+                  >
+                      {isValidatingKey ? <RefreshCw className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" /> VINCULAR CLAVE</>}
+                  </button>
+                  <a 
+                    href="https://aistudio.google.com/app/apikey" 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="h-14 px-6 bg-gray-100 text-gray-600 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-gray-200 transition-all"
+                  >
+                      <ExternalLink className="w-4 h-4" /> Obtener Clave
+                  </a>
+              </div>
+          </div>
+      </section>
+
       {/* Monitor de IA y Costes */}
       <section className="bg-[#0F4E0E] p-8 md:p-10 rounded-[2.5rem] shadow-2xl text-white space-y-8 relative overflow-hidden">
           <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-3xl" />
@@ -120,8 +195,8 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
                       <Cpu className="w-6 h-6 text-orange-400" />
                   </div>
                   <div>
-                      <h2 className="text-xl font-black">Motor de IA Gemini</h2>
-                      <p className="text-teal-400 text-[10px] font-black uppercase tracking-widest">Estado: Facturación Activa</p>
+                      <h2 className="text-xl font-black">Consumo Acumulado</h2>
+                      <p className="text-teal-400 text-[10px] font-black uppercase tracking-widest">IA en tiempo real</p>
                   </div>
               </div>
               <div className="text-right">
@@ -132,17 +207,11 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
 
           <div className="bg-white/5 border border-white/10 p-6 rounded-3xl space-y-4 relative z-10">
               <div className="flex justify-between items-center text-sm">
-                  <span className="font-bold opacity-60">Tickets Escaneados</span>
+                  <span className="font-bold opacity-60">Peticiones Realizadas</span>
                   <span className="font-black text-orange-400">{scansCount}</span>
               </div>
               <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                   <div className="h-full bg-orange-500 transition-all duration-1000" style={{ width: `${Math.min((scansCount/100)*100, 100)}%` }} />
-              </div>
-              <div className="flex items-start gap-3 mt-4">
-                  <Info className="w-4 h-4 text-teal-300 shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-teal-100/60 leading-relaxed italic">
-                    Este coste es una estimación basada en el volumen de tickets procesados. Google Cloud aplicará el coste real a final de mes.
-                  </p>
               </div>
           </div>
 
@@ -153,14 +222,8 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
                 rel="noreferrer"
                 className="flex-1 h-14 bg-white text-[#0F4E0E] rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-teal-50 transition-all"
               >
-                  <CreditCard className="w-4 h-4" /> Ajustar Límite en Google
+                  <CreditCard className="w-4 h-4" /> Facturación Google
               </a>
-              <button 
-                onClick={() => triggerDialog({ title: 'Uso de IA', message: `Has realizado ${scansCount} peticiones a la IA. El coste aproximado por cada 1000 tickets es de 0,40€.`, type: 'info' })}
-                className="h-14 px-6 bg-white/10 border border-white/10 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all"
-              >
-                  Detalles
-              </button>
           </div>
       </section>
 
@@ -190,41 +253,6 @@ export const Settings: React.FC<SettingsProps> = ({ user, onBack, onUpdateUser, 
           </div>
 
           <div className="space-y-6">
-              <div className="space-y-4">
-                  <h3 className="text-[17px] font-black text-gray-900">Cambiar contraseña</h3>
-                  <InputField 
-                    label="Nueva contraseña" 
-                    value={newPass} 
-                    onChange={setNewPass} 
-                    placeholder="Tu nueva contraseña" 
-                    type="password" 
-                    showToggle 
-                    onToggle={() => setShowPass(!showPass)} 
-                    isToggled={showPass} 
-                  />
-                  <InputField 
-                    label="Confirmar nueva contraseña" 
-                    value={confirmPass} 
-                    onChange={setConfirmPass} 
-                    placeholder="Confirma tu nueva contraseña" 
-                    type="password" 
-                    showToggle 
-                    onToggle={() => setShowConfirmPass(!showConfirmPass)} 
-                    isToggled={showConfirmPass} 
-                  />
-              </div>
-
-              <div className="flex justify-end pt-2 border-b border-gray-50 pb-8">
-                  <ActionButton 
-                    onClick={handleUpdatePassword} 
-                    loading={isUpdatingPass} 
-                    icon={Lock}
-                    disabled={!newPass || newPass !== confirmPass}
-                  >
-                    Actualizar contraseña
-                  </ActionButton>
-              </div>
-
               <div className="space-y-4 pt-4">
                   <button 
                     onClick={() => triggerDialog({ title: '¿Cerrar Sesión?', message: 'Tendrás que volver a introducir tus credenciales.', type: 'confirm', onConfirm: onLogout })}

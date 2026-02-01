@@ -3,6 +3,11 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../types";
 
 const getApiKey = () => {
+  // 1. Prioridad Máxima: Clave inyectada manualmente por el usuario en la app (Local Storage)
+  const manualKey = localStorage.getItem('fresco_manual_api_key');
+  if (manualKey) return manualKey;
+
+  // 2. Fallback: Variable de entorno de compilación
   // @ts-ignore
   return import.meta.env?.VITE_API_KEY || process.env.API_KEY || (window as any).process?.env?.API_KEY || '';
 };
@@ -14,6 +19,23 @@ const cleanJson = (text: string | undefined): string => {
     const match = text.match(/\{[\s\S]*\}/);
     if (match) return match[0];
     return '{"items":[]}';
+};
+
+/**
+ * Prueba si una clave es válida realizando una petición mínima.
+ */
+export const validateApiKey = async (testKey: string): Promise<boolean> => {
+    try {
+        const ai = new GoogleGenAI({ apiKey: testKey });
+        const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: "hi",
+        });
+        return !!response.text;
+    } catch (e) {
+        console.error("Validation failed:", e);
+        return false;
+    }
 };
 
 /**
@@ -36,7 +58,8 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
             config: { temperature: 0.7 }
         });
         return response.text || "Cocina algo creativo con lo que tienes hoy.";
-    } catch {
+    } catch (error: any) {
+        if (error.message?.includes("leaked") || error.message?.includes("reported as leaked")) throw new Error("API_KEY_LEAKED");
         return "Aprovecha tus productos frescos antes de que caduquen.";
     }
 };
@@ -61,8 +84,17 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
         temperature: 0.1,
       }
     });
+    
+    // Incrementar contador de uso
+    const current = parseInt(localStorage.getItem('fresco_api_usage') || '0');
+    localStorage.setItem('fresco_api_usage', (current + 1).toString());
+
     return JSON.parse(cleanJson(response.text));
   } catch (error: any) {
+    if (error.message?.includes("leaked") || error.message?.includes("reported as leaked")) {
+        throw new Error("API_KEY_LEAKED");
+    }
+
     if ((error.message?.includes("429") || error.message?.includes("limit")) && retries > 0) {
         await wait(2000);
         return extractItemsFromTicket(base64Data, mimeType, retries - 1);
@@ -76,8 +108,6 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
     if (!apiKey) throw new Error("MISSING_API_KEY");
     
     const ai = new GoogleGenAI({ apiKey });
-    
-    // Ahora usamos la IA para decidir qué recetas del pool encajan mejor con el stock actual
     const pantrySummary = pantry.map(p => p.name).join(", ");
     const recipeOptions = availableRecipes.map(r => ({ id: r.id, title: r.title, ingredients: r.ingredients.map(i => i.name).join(",") }));
 
@@ -88,7 +118,6 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
             config: { responseMimeType: "application/json" }
         });
         
-        // Lógica de fallback por si la IA falla en el formato
         const selections = JSON.parse(cleanJson(response.text));
         const plan: MealSlot[] = [];
         
@@ -99,8 +128,8 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
             });
         });
         return { plan, newRecipes: [] };
-    } catch {
-        // Fallback básico si hay error
+    } catch (error: any) {
+        if (error.message?.includes("leaked") || error.message?.includes("reported as leaked")) throw new Error("API_KEY_LEAKED");
         const plan = targetDates.flatMap(date => 
             targetTypes.map(type => ({ date, type, recipeId: availableRecipes[0].id, servings: user.household_size, isCooked: false }))
         );
