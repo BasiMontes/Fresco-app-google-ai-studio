@@ -191,8 +191,8 @@ const App: React.FC = () => {
                   {id:'shopping', icon:ShoppingBag, label:'Lista'}, 
                   {id:'profile', icon:User, label:'Perfil'}
                 ].map(item => (
-                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-4 px-5 py-3 rounded-xl transition-all ${activeTab === item.id || (item.id === 'profile' && isProfileActive) ? 'bg-white text-[#0F4E0E] font-bold shadow-lg' : 'text-teal-100/60 hover:bg-white/10 hover:text-white'}`}>
-                    <item.icon className={`w-4 h-4 ${(activeTab === item.id || (item.id === 'profile' && isProfileActive)) ? 'text-[#0F4E0E]' : 'text-teal-400'}`} /> 
+                  <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full flex items-center gap-4 px-5 py-3 rounded-xl transition-all ${activeTab === item.id || (item.id === 'profile' && isProfileActive) ? 'bg-white text-[#0F4E0E] font-bold shadow-lg' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}>
+                    <item.icon className={`w-4 h-4 ${(activeTab === item.id || (item.id === 'profile' && isProfileActive)) ? 'text-[#0F4E0E]' : 'text-white/40'}`} /> 
                     <span className="text-sm font-medium tracking-wide">{item.label}</span>
                   </button>
                 ))}
@@ -221,7 +221,6 @@ const App: React.FC = () => {
             </div>
           </main>
           
-          {/* NAVBAR PWA ULTRA-SMOOTH - INDICADOR REDONDEADO Y FLOTANTE */}
           <nav className={`md:hidden fixed left-8 right-8 z-[800] bg-[#0F4E0E] p-2 rounded-[3rem] shadow-2xl flex gap-1 safe-pb border border-white/5 transition-all duration-500 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-10 opacity-100'}`}>
               {[ 
                 {id:'dashboard', icon:Home}, 
@@ -233,11 +232,11 @@ const App: React.FC = () => {
               ].map(item => {
                   const isActive = activeTab === item.id || (item.id === 'profile' && isProfileActive);
                   return (
-                    <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-4 rounded-full transition-all duration-500 relative ${isActive ? 'text-[#0F4E0E] z-10' : 'text-teal-100/20 hover:text-teal-100/40'}`}>
+                    <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex-1 flex flex-col items-center justify-center py-4 rounded-full transition-all duration-500 relative ${isActive ? 'text-[#0F4E0E] z-10' : 'text-white/40 hover:text-white/60'}`}>
                         {isActive && (
                           <div className="absolute inset-2 bg-white rounded-full -z-10 shadow-[0_4px_20px_rgba(0,0,0,0.1)] animate-slide-up" />
                         )}
-                        <item.icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'stroke-[2.5px] scale-110' : 'scale-90 opacity-60'}`} />
+                        <item.icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'stroke-[2.5px] scale-110' : 'scale-90 opacity-50'}`} />
                     </button>
                   );
               })}
