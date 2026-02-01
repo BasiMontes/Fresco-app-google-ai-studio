@@ -124,7 +124,6 @@ const App: React.FC = () => {
     const email = session.user.email;
     setUserId(uid);
     try {
-      // FIX: Changed 'id' to string literal 'id' to correctly query by column name.
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
       if (profile && profile.onboarding_completed) {
         setUser({ ...profile, name: profile.full_name || profile.name || email.split('@')[0] });

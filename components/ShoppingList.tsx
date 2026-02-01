@@ -183,7 +183,6 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
     e.stopPropagation();
     const unit = (item.unit || 'uds').toLowerCase();
     
-    // INCREMENTOS LÓGICOS SEGÚN SOLICITUD
     let delta = 1;
     if (['g', 'ml'].includes(unit)) {
         delta = 100 * direction;
@@ -249,7 +248,8 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
   return (
     <div className="max-w-4xl mx-auto pb-48 animate-fade-in px-1 md:px-4">
-      <div className="bg-[#013b33] rounded-[2.5rem] p-6 md:p-8 text-white shadow-2xl mb-8 relative overflow-hidden">
+      {/* BANNER PRINCIPAL ACTUALIZADO CON #0F4E0E */}
+      <div className="bg-[#0F4E0E] rounded-[2.5rem] p-6 md:p-8 text-white shadow-2xl mb-8 relative overflow-hidden">
         <div className="relative z-10">
             <div className="flex justify-between items-start mb-6">
                 <div>
@@ -282,7 +282,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                       <input 
                           type="text" 
                           placeholder="Nombre del producto (ej: Leche)" 
-                          className="w-full h-14 bg-gray-50 border-2 border-transparent rounded-2xl px-6 font-bold text-teal-900 outline-none focus:border-teal-500/20 transition-all"
+                          className="w-full h-14 bg-gray-50 border-2 border-transparent rounded-2xl px-6 font-bold text-[#0F4E0E] outline-none focus:border-teal-500/20 transition-all"
                           value={manualItem.name}
                           onChange={(e) => setManualItem({...manualItem, name: e.target.value})}
                       />
@@ -292,7 +292,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                           type="number" 
                           step="0.1"
                           placeholder="Cant." 
-                          className="w-1/2 h-14 bg-transparent px-4 font-black text-center text-teal-900 outline-none"
+                          className="w-1/2 h-14 bg-transparent px-4 font-black text-center text-[#0F4E0E] outline-none"
                           value={manualItem.quantity}
                           onChange={(e) => setManualItem({...manualItem, quantity: parseFloat(e.target.value) || 0})}
                       />
@@ -307,7 +307,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                   </div>
                   <div className="md:col-span-3 relative">
                       <select 
-                          className="w-full h-14 bg-gray-50 border-2 border-transparent rounded-2xl px-5 font-black text-[10px] text-teal-900 outline-none appearance-none cursor-pointer"
+                          className="w-full h-14 bg-gray-50 border-2 border-transparent rounded-2xl px-5 font-black text-[10px] text-[#0F4E0E] outline-none appearance-none cursor-pointer"
                           value={manualItem.category}
                           onChange={(e) => setManualItem({...manualItem, category: e.target.value})}
                       >
@@ -319,7 +319,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
               <button 
                   type="submit"
                   disabled={!manualItem.name.trim()}
-                  className="w-full h-14 bg-teal-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg active:scale-[0.98] transition-all hover:bg-teal-800 flex items-center justify-center gap-3 disabled:opacity-30"
+                  className="w-full h-14 bg-[#0F4E0E] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg active:scale-[0.98] transition-all hover:bg-[#062606] flex items-center justify-center gap-3 disabled:opacity-30"
               >
                   <PlusCircle className="w-4 h-4" /> AÑADIR A LA LISTA
               </button>
@@ -441,7 +441,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
       </div>
 
       <div className={`fixed left-8 right-8 md:left-auto md:right-8 z-[100] transition-all duration-500 ${shoppingData.finalItems.filter(i => i.is_purchased).length > 0 ? 'bottom-28 opacity-100' : 'bottom-[-100px] opacity-0'}`}>
-          <button onClick={() => setShowReceipt(true)} className="w-full md:w-auto bg-[#013b33] text-white px-10 h-14 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-teal-900 shadow-xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
+          <button onClick={() => setShowReceipt(true)} className="w-full md:w-auto bg-[#0F4E0E] text-white px-10 h-14 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-[#062606] shadow-xl active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
               <Check className="w-5 h-5 stroke-[3px]" /> TERMINAR COMPRA
           </button>
       </div>
@@ -463,7 +463,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                             </div>
                         ))}
                     </div>
-                    <button onClick={confirmFinish} disabled={isProcessing} className="w-full h-14 bg-[#013b33] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-teal-800 transition-all active:scale-95">
+                    <button onClick={confirmFinish} disabled={isProcessing} className="w-full h-14 bg-[#0F4E0E] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-[#062606] transition-all active:scale-95">
                         {isProcessing ? <Loader2 className="w-6 h-6 animate-spin" /> : 'CONFIRMAR Y GUARDAR'}
                     </button>
                   </div>
@@ -473,11 +473,11 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
 
       {showCelebration && (
           <ModalPortal>
-            <div className="fixed inset-0 z-[5001] bg-[#013b33] flex flex-col items-center justify-center p-8 text-white text-center animate-fade-in">
+            <div className="fixed inset-0 z-[5001] bg-[#0F4E0E] flex flex-col items-center justify-center p-8 text-white text-center animate-fade-in">
                 <PartyPopper className="w-32 h-32 mb-8 text-orange-400 animate-bounce" />
                 <h2 className="text-4xl font-black mb-4">¡Compra Lista!</h2>
                 <p className="text-teal-200/60 font-medium mb-12 max-w-xs">Tu despensa ha sido actualizada automáticamente.</p>
-                <button onClick={() => setShowCelebration(false)} className="px-12 h-14 bg-white text-[#013b33] rounded-2xl font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all">VOLVER AL PANEL</button>
+                <button onClick={() => setShowCelebration(false)} className="px-12 h-14 bg-white text-[#0F4E0E] rounded-2xl font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all">VOLVER AL PANEL</button>
             </div>
           </ModalPortal>
       )}

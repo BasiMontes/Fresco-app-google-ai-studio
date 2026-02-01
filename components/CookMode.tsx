@@ -258,7 +258,8 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
   if (showReview) {
       return (
         <ModalPortal>
-          <div className="fixed inset-0 z-[5000] bg-teal-900 flex flex-col items-center justify-center p-6 animate-fade-in text-white overflow-y-auto">
+          {/* FONDO ACTUALIZADO CON #0F4E0E */}
+          <div className="fixed inset-0 z-[5000] bg-[#0F4E0E] flex flex-col items-center justify-center p-6 animate-fade-in text-white overflow-y-auto">
               <datalist id="pantry-suggestions">
                   {pantry?.map(item => (
                       <option key={item.id} value={item.name} />
@@ -315,7 +316,7 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
                       ))}
                   </div>
 
-                  <button onClick={confirmFinish} className="w-full py-6 bg-white text-teal-900 rounded-[2rem] font-black text-lg shadow-2xl active:scale-95 transition-all">Confirmar y Guardar</button>
+                  <button onClick={confirmFinish} className="w-full py-6 bg-white text-[#0F4E0E] rounded-[2rem] font-black text-lg shadow-2xl active:scale-95 transition-all">Confirmar y Guardar</button>
                   <button onClick={() => setShowReview(false)} className="w-full py-4 text-teal-300 font-bold text-sm uppercase tracking-widest hover:text-white">Volver a la receta</button>
               </div>
           </div>
@@ -325,8 +326,9 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
 
   return (
     <ModalPortal>
+      {/* FONDO PRINCIPAL ACTUALIZADO CON #0F4E0E */}
       <div 
-          className="fixed inset-0 z-[5000] bg-teal-900 text-white flex flex-col animate-fade-in touch-manipulation"
+          className="fixed inset-0 z-[5000] bg-[#0F4E0E] text-white flex flex-col animate-fade-in touch-manipulation"
           style={{ touchAction: 'none' }} 
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
@@ -352,7 +354,7 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
               <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end" onClick={() => setShowIngredients(false)}>
                   <div className="w-3/4 max-w-sm h-full bg-white text-gray-900 p-8 flex flex-col shadow-2xl animate-slide-left" onClick={e => e.stopPropagation()}>
                       <div className="flex justify-between items-center mb-8">
-                          <h3 className="font-black text-2xl text-teal-900">Ingredientes</h3>
+                          <h3 className="font-black text-2xl text-[#0F4E0E]">Ingredientes</h3>
                           <button onClick={() => setShowIngredients(false)} className="p-2 bg-gray-100 rounded-xl"><X className="w-5 h-5" /></button>
                       </div>
                       <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar">
@@ -422,7 +424,7 @@ export const CookMode: React.FC<CookModeProps> = ({ recipe, pantry, onClose, onF
               )}
           </div>
 
-          <div className="p-8 border-t border-white/10 bg-teal-900/50 backdrop-blur-lg pb-safe select-none">
+          <div className="p-8 border-t border-white/10 bg-[#0F4E0E]/50 backdrop-blur-lg pb-safe select-none">
               <div className="w-full bg-white/10 h-2 rounded-full mb-8 p-0.5 cursor-pointer flex gap-1">
                    {recipe.instructions.map((_, idx) => (
                       <div key={idx} className={`h-full rounded-full transition-all duration-300 flex-1 ${idx <= currentStep ? 'bg-orange-500' : 'bg-transparent'}`} />

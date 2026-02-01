@@ -14,7 +14,6 @@ interface AuthPageProps {
 const translateAuthError = (error: any): string => {
     const msg = (error?.message || '').toLowerCase();
     
-    // Detección de errores de red o configuración
     if (msg.includes('fetch') || msg.includes('network') || msg.includes('load failed')) {
         return 'Error de conexión: No se puede contactar con el servidor. Revisa tu conexión o configuración.';
     }
@@ -43,7 +42,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showLegalModal, setShowLegalModal] = useState<'privacy' | 'terms' | null>(null);
 
-  // Efecto para limpiar mensajes de éxito automáticamente después de 5 segundos
   useEffect(() => {
     if (successMsg) {
       const timer = setTimeout(() => {
@@ -75,7 +73,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         } else if (isLogin) {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
-            // La sesión se maneja en el listener de App.tsx
         } else {
             if (!acceptedTerms) throw new Error('Debes aceptar las condiciones legales.');
             const { data, error } = await supabase.auth.signUp({
@@ -108,11 +105,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
           <div className="h-screen w-full flex items-center justify-center bg-[#f8f9fa] p-6 animate-fade-in font-sans overflow-hidden">
               <div className="w-full max-w-md bg-white p-10 rounded-[2.5rem] shadow-xl text-center">
                   <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Send className="w-8 h-8 text-[#013b33]" />
+                      <Send className="w-8 h-8 text-[#0F4E0E]" />
                   </div>
-                  <h2 className="text-2xl font-black text-[#013b33] mb-2">Revisa tu correo</h2>
+                  <h2 className="text-2xl font-black text-[#0F4E0E] mb-2">Revisa tu correo</h2>
                   <p className="text-gray-500 mb-8">Enlace enviado a <span className="font-bold">{email}</span>.</p>
-                  <button onClick={() => { setVerificationSent(false); setIsLogin(true); }} className="w-full py-4 bg-[#013b33] text-white font-bold rounded-xl">Volver</button>
+                  <button onClick={() => { setVerificationSent(false); setIsLogin(true); }} className="w-full py-4 bg-[#0F4E0E] text-white font-bold rounded-xl">Volver</button>
               </div>
           </div>
       );
@@ -122,7 +119,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
     <div className="h-screen w-full flex bg-[#f8f9fa] overflow-hidden font-sans">
       {showLegalModal && <LegalModal type={showLegalModal} onClose={() => setShowLegalModal(null)} />}
 
-      <div className="hidden lg:flex lg:w-1/2 lg:shrink-0 bg-[#013b33] h-full flex-col justify-center px-20 relative text-white">
+      {/* PANEL IZQUIERDO ACTUALIZADO CON #0F4E0E */}
+      <div className="hidden lg:flex lg:w-1/2 lg:shrink-0 bg-[#0F4E0E] h-full flex-col justify-center px-20 relative text-white">
         <div className="absolute top-12 left-12">
             <Logo variant="inverted" />
         </div>
@@ -149,7 +147,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 <button 
                     onClick={() => { setIsLogin(true); setError(''); }}
                     className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200 uppercase tracking-wide ${
-                        isLogin ? 'bg-white text-[#013b33] shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                        isLogin ? 'bg-white text-[#0F4E0E] shadow-sm' : 'text-gray-400 hover:text-gray-600'
                     }`}
                 >
                     Iniciar Sesión
@@ -157,7 +155,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                 <button 
                     onClick={() => { setIsLogin(false); setError(''); }}
                     className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200 uppercase tracking-wide ${
-                        !isLogin ? 'bg-white text-[#013b33] shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                        !isLogin ? 'bg-white text-[#0F4E0E] shadow-sm' : 'text-gray-400 hover:text-gray-600'
                     }`}
                 >
                     Registrarse
@@ -172,7 +170,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                             <div className="relative">
                                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                 <input type="text" required placeholder="Tu nombre" value={name} onChange={(e) => setName(e.target.value)} 
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-50/50 border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#013b33]/10 focus:border-[#013b33] transition-all placeholder-gray-300" 
+                                    className="w-full pl-10 pr-4 py-3 bg-gray-50/50 border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0F4E0E]/10 focus:border-[#0F4E0E] transition-all placeholder:text-gray-300" 
                                 />
                             </div>
                         </div>
@@ -183,7 +181,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                         <div className="relative">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                             <input type="email" required placeholder="hola@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} 
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50/50 border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#013b33]/10 focus:border-[#013b33] transition-all placeholder-gray-300" 
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50/50 border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0F4E0E]/10 focus:border-[#0F4E0E] transition-all placeholder:text-gray-300" 
                             />
                         </div>
                     </div>
@@ -194,7 +192,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                                 <input type="password" required placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} 
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-50/50 border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#013b33]/10 focus:border-[#013b33] transition-all placeholder-gray-300" 
+                                    className="w-full pl-10 pr-4 py-3 bg-gray-50/50 border border-gray-100 rounded-xl font-bold text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0F4E0E]/10 focus:border-[#0F4E0E] transition-all placeholder:text-gray-300" 
                                 />
                             </div>
                         </div>
@@ -202,11 +200,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
                     {!isLogin && !isRecovery && (
                         <div className="flex items-start gap-3 pt-2 px-1 group cursor-pointer" onClick={() => setAcceptedTerms(!acceptedTerms)}>
-                            <div className={`mt-0.5 w-6 h-6 flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${acceptedTerms ? 'bg-[#013b33] border-[#013b33]' : 'bg-white border-gray-200 group-hover:border-gray-300'}`}>
+                            <div className={`mt-0.5 w-6 h-6 flex-shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${acceptedTerms ? 'bg-[#0F4E0E] border-[#0F4E0E]' : 'bg-white border-gray-200 group-hover:border-gray-300'}`}>
                                 {acceptedTerms && <Check className="w-4 h-4 text-white stroke-[3.5px]" />}
                             </div>
                             <label className="text-[10px] text-gray-400 font-medium leading-relaxed select-none">
-                                Al crear una cuenta, aceptas nuestros <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={(e) => { e.stopPropagation(); setShowLegalModal('terms'); }}>Términos de Servicio</button> y nuestra <button type="button" className="font-bold text-[#013b33] hover:underline" onClick={(e) => { e.stopPropagation(); setShowLegalModal('privacy'); }}>Política de Privacidad</button>.
+                                Al crear una cuenta, aceptas nuestros <button type="button" className="font-bold text-[#0F4E0E] hover:underline" onClick={(e) => { e.stopPropagation(); setShowLegalModal('terms'); }}>Términos de Servicio</button> y nuestra <button type="button" className="font-bold text-[#0F4E0E] hover:underline" onClick={(e) => { e.stopPropagation(); setShowLegalModal('privacy'); }}>Política de Privacidad</button>.
                             </label>
                         </div>
                     )}
@@ -232,8 +230,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                         disabled={loading || !isFormValid}
                         className={`w-full font-black py-5 rounded-2xl shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-xs uppercase tracking-[0.2em] border-2 ${
                             isFormValid
-                            ? 'bg-[#013b33] text-white border-[#013b33] hover:bg-[#012e28]' 
-                            : 'bg-white text-[#013b33] border-[#013b33] cursor-not-allowed opacity-60'
+                            ? 'bg-[#0F4E0E] text-white border-[#0F4E0E] hover:bg-[#062606]' 
+                            : 'bg-white text-[#0F4E0E] border-[#0F4E0E] cursor-not-allowed opacity-60'
                         }`}
                     >
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
@@ -246,14 +244,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
 
                     {isLogin && !isRecovery && (
                         <div className="text-center">
-                            <button type="button" onClick={() => setIsRecovery(true)} className="text-[10px] font-bold uppercase tracking-wider text-gray-300 hover:text-[#013b33] transition-colors">
+                            <button type="button" onClick={() => setIsRecovery(true)} className="text-[10px] font-bold uppercase tracking-wider text-gray-300 hover:text-[#0F4E0E] transition-colors">
                                 ¿Olvidaste tu contraseña?
                             </button>
                         </div>
                     )}
 
                     {isRecovery && (
-                        <button type="button" onClick={() => setIsRecovery(false)} className="w-full text-center text-[10px] font-bold uppercase tracking-wider text-gray-300 hover:text-[#013b33]">
+                        <button type="button" onClick={() => setIsRecovery(false)} className="w-full text-center text-[10px] font-bold uppercase tracking-wider text-gray-300 hover:text-[#0F4E0E]">
                             Cancelar
                         </button>
                     )}

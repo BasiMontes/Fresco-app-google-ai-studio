@@ -49,23 +49,18 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   }, [step, profile]);
 
   const setBaseDiet = (base: DietPreference) => {
-    // Si elegimos una base específica, limpiamos 'none'
-    // Si elegimos 'none', limpiamos las otras bases
     const currentRestrictions = (profile.dietary_preferences || []).filter(
         p => !DIET_BASES.map(b => b.id).includes(p)
     );
     
     const newPreferences = [...currentRestrictions];
-    newPreferences.push(base); // 'none' es una base válida aquí
+    newPreferences.push(base);
     
     setProfile(p => ({ ...p, dietary_preferences: newPreferences as DietPreference[] }));
   };
 
   const toggleRestriction = (restriction: DietPreference) => {
     let newList = [...(profile.dietary_preferences || [])];
-    
-    // Al activar una restricción, por seguridad quitamos 'none' si estaba, 
-    // aunque técnicamente 'none' es una base, es mejor ser explícito.
     newList = newList.filter(i => i !== 'none');
 
     if (newList.includes(restriction)) {
@@ -74,7 +69,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         newList.push(restriction);
     }
     
-    // Si nos quedamos sin nada, volvemos a poner 'none' por defecto (base implícita)
     if (newList.length === 0) newList.push('none');
 
     setProfile(p => ({ ...p, dietary_preferences: newList as DietPreference[] }));
@@ -150,8 +144,8 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   return (
     <div className="h-screen w-full flex bg-[#f8f9fa] overflow-hidden font-sans">
       
-      {/* LEFT PANEL */}
-      <div className="hidden lg:flex lg:w-1/2 lg:shrink-0 bg-[#013b33] h-full flex-col justify-center px-16 xl:px-20 relative text-white transition-colors duration-500">
+      {/* LEFT PANEL - ACTUALIZADO CON #0F4E0E */}
+      <div className="hidden lg:flex lg:w-1/2 lg:shrink-0 bg-[#0F4E0E] h-full flex-col justify-center px-16 xl:px-20 relative text-white transition-colors duration-500">
         <div className="absolute top-12 left-12">
             <Logo variant="inverted" />
         </div>
@@ -164,23 +158,18 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         <div className="absolute -right-20 -bottom-20 w-[500px] h-[500px] bg-teal-800 rounded-full blur-[120px] opacity-30 animate-pulse-slow pointer-events-none" />
       </div>
 
-      {/* RIGHT PANEL - FIXED CONTAINER FOR MODAL */}
       <div className="w-full lg:w-1/2 lg:shrink-0 h-full flex items-center justify-center p-4 relative bg-[#f8f9fa]">
-        
-        {/* CARD CONTAINER */}
         <div className="w-full max-w-[500px] bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/40 relative animate-slide-up flex flex-col max-h-[85vh] h-auto">
-            
-            {/* Header Area (Sticky) */}
             <div className="p-8 pb-2 flex-shrink-0">
                 <div className="lg:hidden mb-4 flex justify-center">
                     <Logo align="center" />
                 </div>
                 <div className="lg:hidden w-full bg-gray-100 h-1 rounded-full mb-6 overflow-hidden">
-                    <div className="bg-teal-900 h-full transition-all duration-500" style={{ width: `${(step / 3) * 100}%` }} />
+                    <div className="bg-[#0F4E0E] h-full transition-all duration-500" style={{ width: `${(step / 3) * 100}%` }} />
                 </div>
                 <div className="flex justify-between items-center h-8">
                     {step > 1 ? (
-                        <button onClick={handleBack} className="flex items-center gap-2 text-gray-400 hover:text-teal-900 font-bold text-[10px] uppercase tracking-widest transition-colors group">
+                        <button onClick={handleBack} className="flex items-center gap-2 text-gray-400 hover:text-[#0F4E0E] font-bold text-[10px] uppercase tracking-widest transition-colors group">
                             <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-teal-50 transition-colors">
                                 <ChevronLeft className="w-4 h-4" />
                             </div>
@@ -191,16 +180,14 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 </div>
             </div>
 
-            {/* Scrollable Content Area - EXTRA BOTTOM PADDING & MIN-H-0 Fix */}
             <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar p-6 pt-4 pb-8">
                 {step === 1 && (
                     <div className="animate-fade-in space-y-8">
                         <div className="px-2">
-                            <h2 className="text-3xl font-black text-teal-900 mb-2">Tu Dieta</h2>
+                            <h2 className="text-3xl font-black text-[#0F4E0E] mb-2">Tu Dieta</h2>
                             <p className="text-gray-500 font-medium leading-relaxed text-sm">Primero, elige tu estilo base.</p>
                         </div>
                         
-                        {/* SECCIÓN 1: BASE (Radio Behavior) */}
                         <div className="space-y-3 px-1">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-teal-600 ml-1">Estilo Principal (Elige uno)</h3>
                             <div className="grid grid-cols-2 gap-3">
@@ -212,15 +199,15 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                                             onClick={() => setBaseDiet(base.id)}
                                             className={`p-4 rounded-2xl border-2 text-left transition-all ${
                                                 isSelected
-                                                ? 'border-[#013b33] bg-teal-50 shadow-md ring-1 ring-[#013b33]'
+                                                ? 'border-[#0F4E0E] bg-teal-50 shadow-md ring-1 ring-[#0F4E0E]'
                                                 : 'border-gray-100 bg-white text-gray-600 hover:border-gray-300'
                                             }`}
                                         >
                                             <div className="flex justify-between items-start mb-1">
                                                 <span className="text-2xl">{base.emoji}</span>
-                                                {isSelected && <div className="w-4 h-4 bg-[#013b33] rounded-full flex items-center justify-center"><Check className="w-2.5 h-2.5 text-white" /></div>}
+                                                {isSelected && <div className="w-4 h-4 bg-[#0F4E0E] rounded-full flex items-center justify-center"><Check className="w-2.5 h-2.5 text-white" /></div>}
                                             </div>
-                                            <div className={`font-bold text-sm ${isSelected ? 'text-[#013b33]' : 'text-gray-700'}`}>{base.label}</div>
+                                            <div className={`font-bold text-sm ${isSelected ? 'text-[#0F4E0E]' : 'text-gray-700'}`}>{base.label}</div>
                                             <div className="text-[10px] text-gray-400 font-medium leading-tight mt-0.5">{base.desc}</div>
                                         </button>
                                     );
@@ -228,7 +215,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                             </div>
                         </div>
 
-                        {/* SECCIÓN 2: RESTRICCIONES (Checkbox Behavior) */}
                         <div className="space-y-3 px-1">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-teal-600 ml-1">Filtros Extra (Opcional)</h3>
                             <div className="flex flex-wrap gap-2">
@@ -255,11 +241,10 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                     </div>
                 )}
                 
-                {/* Steps 2 and 3 omitted for brevity as they are unchanged from previous fix */}
                 {step === 2 && (
                     <div className="animate-fade-in space-y-6">
                         <div className="px-2">
-                            <h2 className="text-3xl font-black text-teal-900 mb-2">Tus Gustos</h2>
+                            <h2 className="text-3xl font-black text-[#0F4E0E] mb-2">Tus Gustos</h2>
                             <p className="text-gray-500 font-medium leading-relaxed text-sm">¿Qué tipo de cocina te inspira más?</p>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-2 pb-6">
@@ -289,11 +274,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 {step === 3 && (
                     <div className="animate-fade-in space-y-8 py-4 px-2">
                         <div className="text-center space-y-4">
-                            <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto text-[#013b33] shadow-inner">
+                            <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto text-[#0F4E0E] shadow-inner">
                                 <ChefHat className="w-8 h-8" />
                             </div>
                             <div>
-                                <h2 className="text-3xl font-black text-teal-900 mb-2">Raciones</h2>
+                                <h2 className="text-3xl font-black text-[#0F4E0E] mb-2">Raciones</h2>
                                 <p className="text-gray-500 font-medium text-sm">¿Para cuántas personas cocinas habitualmente?</p>
                             </div>
                         </div>
@@ -301,15 +286,15 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                         <div className="flex items-center justify-center gap-6 py-4">
                             <button 
                                 onClick={() => setProfile(p => ({ ...p, household_size: Math.max(1, (p.household_size || 1) - 1) }))} 
-                                className="w-14 h-14 rounded-2xl border-2 border-gray-100 text-2xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-teal-900 shadow-sm active:scale-90 flex items-center justify-center"
+                                className="w-14 h-14 rounded-2xl border-2 border-gray-100 text-2xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-[#0F4E0E] shadow-sm active:scale-90 flex items-center justify-center"
                             >-</button>
                             <div className="text-center w-24">
-                                <span className="text-6xl font-black text-[#013b33] tracking-tighter">{profile.household_size}</span>
+                                <span className="text-6xl font-black text-[#0F4E0E] tracking-tighter">{profile.household_size}</span>
                                 <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mt-1">Personas</p>
                             </div>
                             <button 
                                 onClick={() => setProfile(p => ({ ...p, household_size: (p.household_size || 1) + 1 }))} 
-                                className="w-14 h-14 rounded-2xl border-2 border-gray-100 text-2xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-teal-900 shadow-sm active:scale-90 flex items-center justify-center"
+                                className="w-14 h-14 rounded-2xl border-2 border-gray-100 text-2xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all text-gray-400 hover:text-[#0F4E0E] shadow-sm active:scale-90 flex items-center justify-center"
                             >+</button>
                         </div>
                         
@@ -325,14 +310,13 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                 )}
             </div>
 
-            {/* Footer Action (Sticky) */}
             <div className="p-8 pt-4 flex-shrink-0">
                 <button
                 onClick={handleNext}
                 disabled={!isValid && step < 3}
                 className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg uppercase tracking-widest ${
                     isValid || step === 3 
-                    ? 'bg-[#013b33] text-white hover:bg-[#012e28] active:scale-[0.98]' 
+                    ? 'bg-[#0F4E0E] text-white hover:bg-[#062606] active:scale-[0.98]' 
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
                 >
