@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { UserProfile, Recipe, PantryItem, MealSlot, MealCategory } from '../types';
-import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp, ArrowLeft, Clock, Users, Check, X, CheckCircle2, CalendarPlus, Key, Zap, Lightbulb, Info } from 'lucide-react';
+import { ChefHat, Sparkles, ArrowRight, PiggyBank, Timer, Sunrise, Sun, Moon, Calendar, ShoppingCart, BookOpen, Heart, Bell, AlertCircle, TrendingUp, ArrowLeft, Clock, Users, Check, X, CheckCircle2, CalendarPlus } from 'lucide-react';
 import { getHours, startOfWeek, endOfWeek, isWithinInterval, parseISO, differenceInDays } from 'date-fns';
 import { SmartImage } from './SmartImage';
 import { getWastePreventionTip } from '../services/geminiService';
@@ -151,6 +151,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       return isNaN(val) ? 0 : val;
   }, [user.time_saved_mins]);
 
+  // VISTA: NOTIFICACIONES
   if (currentView === 'notifications') {
     return (
         <div className="space-y-10 animate-fade-in pb-10 max-w-5xl mx-auto px-2 md:px-0">
@@ -184,6 +185,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
     );
   }
 
+  // VISTA: FAVORITOS
   if (currentView === 'favorites') {
     return (
         <div className="space-y-10 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0">
@@ -198,7 +200,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {favoriteRecipes.length > 0 ? favoriteRecipes.map((recipe) => (
-                    <UnifiedRecipeCard key={recipe.id} recipe={recipe} isFav={true} onDetail={(r, m) => setSelectedRecipe({recipe: r, mode: m})} onToggleFavorite={onToggleFavorite} />
+                    <UnifiedRecipeCard 
+                        key={recipe.id} 
+                        recipe={recipe} 
+                        isFav={true} 
+                        onDetail={(r, m) => setSelectedRecipe({recipe: r, mode: m})} 
+                        onToggleFavorite={onToggleFavorite} 
+                    />
                 )) : (
                     <div className="col-span-full py-24 text-center opacity-30">
                         <Heart className="w-20 h-20 mx-auto mb-6 text-red-500" />
@@ -218,6 +226,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
     );
   }
 
+  // VISTA: DASHBOARD PRINCIPAL
   return (
     <div className="space-y-8 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0">
       {/* PÍLDORA IA */}
@@ -250,10 +259,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
               <p className="text-base md:text-xl font-bold text-[#0F4E0E]/50 pl-1">Organiza tu semana y ahorra hoy.</p>
           </div>
           <div className="flex items-center gap-3">
-              <button onClick={() => setCurrentView('favorites')} className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl border flex items-center justify-center transition-all shadow-sm group ${currentView === 'favorites' ? 'bg-[#0F4E0E] text-white border-[#0F4E0E]' : 'bg-white border-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50'}`}>
-                  <Heart className={`w-6 h-6 ${currentView === 'favorites' ? 'fill-current' : 'group-hover:fill-current'}`} />
+              <button 
+                onClick={() => setCurrentView('favorites')} 
+                className="w-12 h-12 md:w-14 md:h-14 rounded-2xl border bg-white border-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-all shadow-sm group"
+              >
+                  <Heart className="w-6 h-6 group-hover:fill-current" />
               </button>
-              <button onClick={() => setCurrentView('notifications')} className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl border flex items-center justify-center transition-all shadow-sm relative ${currentView === 'notifications' ? 'bg-[#0F4E0E] text-white border-[#0F4E0E]' : 'bg-white border-gray-100 text-gray-400 hover:text-[#0F4E0E] hover:bg-teal-50'}`}>
+              <button 
+                onClick={() => setCurrentView('notifications')} 
+                className="w-12 h-12 md:w-14 md:h-14 rounded-2xl border bg-white border-gray-100 text-gray-400 hover:text-[#0F4E0E] hover:bg-teal-50 flex items-center justify-center transition-all shadow-sm relative"
+              >
                   <Bell className="w-6 h-6" />
                   {alerts.length > 0 && <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-orange-500 rounded-full border-2 border-white animate-pulse"></span>}
               </button>
@@ -275,7 +290,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {latestRecipes.map((recipe) => (
-                    <UnifiedRecipeCard key={recipe.id} recipe={recipe} isFav={favoriteIds.includes(recipe.id)} onDetail={(r, m) => setSelectedRecipe({recipe: r, mode: m})} onToggleFavorite={onToggleFavorite} />
+                    <UnifiedRecipeCard 
+                        key={recipe.id} 
+                        recipe={recipe} 
+                        isFav={favoriteIds.includes(recipe.id)} 
+                        onDetail={(r, m) => setSelectedRecipe({recipe: r, mode: m})} 
+                        onToggleFavorite={onToggleFavorite} 
+                    />
                 ))}
           </div>
       </section>
