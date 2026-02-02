@@ -276,7 +276,7 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-teal-800 rounded-full blur-3xl opacity-50" />
       </div>
 
-      {/* SECCIÓN AÑADIR - AHORA COLAPSABLE */}
+      {/* SECCIÓN AÑADIR - COLAPSABLE */}
       <div className="bg-white border border-gray-100 rounded-[2.5rem] p-6 md:p-8 mb-8 shadow-sm transition-all duration-500">
           <button 
             onClick={() => setIsManualFormOpen(!isManualFormOpen)}
@@ -415,15 +415,26 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
                 const canDecrement = item.quantity > 0;
                 
                 return (
-                    <div key={item.id} onClick={(e) => toggleItem(e, item)} className={`bg-white p-3 md:p-4 rounded-[2.2rem] flex items-center gap-3 border-2 transition-all cursor-pointer ${item.is_purchased ? 'opacity-40 border-gray-50' : 'border-white shadow-sm hover:border-teal-100 hover:shadow-md'}`}>
-                        <div className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-100 hover:border-teal-200'}`}>
-                            {item.is_purchased && <Check className="w-4 h-4 stroke-[4px] text-white" />}
+                    <div key={item.id} onClick={(e) => toggleItem(e, item)} className={`bg-white p-4 md:p-5 rounded-[2.2rem] flex items-center gap-4 border-2 transition-all cursor-pointer ${item.is_purchased ? 'border-gray-50' : 'border-white shadow-sm hover:border-teal-100 hover:shadow-md'}`}>
+                        {/* CHECKBOX REDISEÑADO: CÍRCULO PERFECTO CON ALTO CONTRASTE */}
+                        <div className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 shadow-sm ${
+                            item.is_purchased 
+                            ? 'bg-[#0F4E0E] border-[#0F4E0E] shadow-inner scale-105' 
+                            : 'bg-white border-gray-200 group-hover:border-teal-300'
+                        }`}>
+                            {item.is_purchased && <Check className="w-5 h-5 stroke-[4px] text-white animate-fade-in" />}
                         </div>
+                        
                         <div className="flex-1 min-w-0">
-                            <p className={`font-black capitalize leading-tight text-[15px] ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>
+                            <p className={`font-black capitalize leading-tight text-[16px] transition-all ${
+                                item.is_purchased 
+                                ? 'line-through text-gray-400 opacity-60' 
+                                : 'text-teal-950'
+                            }`}>
                                 {item.name}
                             </p>
                         </div>
+
                         <div className="flex items-center bg-gray-50 rounded-xl p-0.5 border border-gray-100 flex-shrink-0 w-[110px] h-10" onClick={e => e.stopPropagation()}>
                             <button 
                                 onClick={(e) => canDecrement && handleAdjust(e, item, -1)} 
