@@ -83,12 +83,15 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
     setIsGenerating(true);
     try {
         const result = await generateSmartMenu(user, pantry, selectedWizardDays, selectedWizardTypes, recipes);
-        if (result.plan) {
+        if (result && result.plan) {
             onAIPlanGenerated(result.plan, result.newRecipes);
             setShowPlanWizard(false);
+        } else {
+            throw new Error("Invalid structure returned");
         }
     } catch (e) {
-        triggerDialog({ title: 'Error', message: 'No se pudo generar el menú.', type: 'alert' });
+        console.error("Smart Plan failed:", e);
+        triggerDialog({ title: 'Error', message: 'No se pudo generar el menú semanal. Inténtalo de nuevo en unos segundos.', type: 'alert' });
     } finally {
         setIsGenerating(false);
     }
@@ -125,7 +128,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     className="h-10 px-4 bg-[#0F4E0E] text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
                 >
                     <BrainCircuit className="w-4 h-4 text-orange-400" />
-                    <span>IA</span>
+                    <span>GENERAR IA</span>
                 </button>
             </div>
         </div>

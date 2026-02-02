@@ -297,20 +297,15 @@ export const Pantry: React.FC<PantryProps> = ({ items, onRemove, onAdd, onUpdate
           ) : (
             visibleItems.map(item => {
                 const status = getExpiryStatus(item);
-                const catInfo = CATEGORIES_LIST.find(c => c.id === item.category) || CATEGORIES_LIST[0];
                 const isEditing = editingId === item.id;
                 const canDecrement = item.quantity > 0;
                 const StatusIcon = status.icon;
 
                 return (
-                    <div key={item.id} className="bg-white p-3 md:p-4 rounded-[2.2rem] flex items-center gap-3 border-2 transition-all border-white shadow-sm hover:border-teal-100 hover:shadow-md animate-fade-in group">
-                        <div className="w-10 h-10 flex items-center justify-center text-2xl flex-shrink-0">
-                            {catInfo.emoji}
-                        </div>
-                        
+                    <div key={item.id} className="bg-white p-3 md:p-5 rounded-[2.2rem] flex items-center gap-4 border-2 transition-all border-white shadow-sm hover:border-teal-100 hover:shadow-md animate-fade-in group">
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-[15px] text-[#0F4E0E] font-black leading-tight truncate capitalize">{item.name}</h3>
-                            <div className={`flex items-center gap-1.5 mt-0.5 font-black text-[9px] tracking-tight ${status.color}`}>
+                            <h3 className="text-[16px] text-[#0F4E0E] font-black leading-tight truncate capitalize">{item.name}</h3>
+                            <div className={`flex items-center gap-1.5 mt-1 font-black text-[9px] tracking-tight ${status.color}`}>
                                 <StatusIcon className="w-2.5 h-2.5 stroke-[3.5px]" />
                                 <span className="uppercase">{status.label}</span>
                             </div>

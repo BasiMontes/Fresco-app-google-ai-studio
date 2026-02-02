@@ -3,11 +3,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../types";
 
 const getApiKey = () => {
-  // 1. Prioridad Máxima: Clave inyectada manualmente por el usuario en la app (Local Storage)
   const manualKey = localStorage.getItem('fresco_manual_api_key');
   if (manualKey) return manualKey;
-
-  // 2. Fallback: Variable de entorno de compilación
   // @ts-ignore
   return import.meta.env?.VITE_API_KEY || process.env.API_KEY || (window as any).process?.env?.API_KEY || '';
 };
@@ -15,15 +12,16 @@ const getApiKey = () => {
 const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const cleanJson = (text: string | undefined): string => {
-    if (!text) return '{"items":[]}';
-    const match = text.match(/\{[\s\S]*\}/);
-    if (match) return match[0];
-    return '{"items":[]}';
+    if (!text) return '{}';
+    // Buscar el primer '{' y el último '}'
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start !== -1 && end !== -1 && end > start) {
+        return text.substring(start, end + 1);
+    }
+    return '{}';
 };
 
-/**
- * Prueba si una clave es válida realizando una petición mínima.
- */
 export const validateApiKey = async (testKey: string): Promise<boolean> => {
     try {
         const ai = new GoogleGenAI({ apiKey: testKey });
@@ -33,14 +31,10 @@ export const validateApiKey = async (testKey: string): Promise<boolean> => {
         });
         return !!response.text;
     } catch (e) {
-        console.error("Validation failed:", e);
         return false;
     }
 };
 
-/**
- * Genera un consejo de aprovechamiento basado en productos próximos a caducar.
- */
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
     const apiKey = getApiKey();
     if (!apiKey || pantry.length === 0) return "¡Tu despensa está lista! Añade productos para recibir consejos.";
@@ -59,7 +53,6 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
         });
         return response.text || "Cocina algo creativo con lo que tienes hoy.";
     } catch (error: any) {
-        if (error.message?.includes("leaked") || error.message?.includes("reported as leaked")) throw new Error("API_KEY_LEAKED");
         return "Aprovecha tus productos frescos antes de que caduquen.";
     }
 };
@@ -84,17 +77,8 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
         temperature: 0.1,
       }
     });
-    
-    // Incrementar contador de uso
-    const current = parseInt(localStorage.getItem('fresco_api_usage') || '0');
-    localStorage.setItem('fresco_api_usage', (current + 1).toString());
-
     return JSON.parse(cleanJson(response.text));
   } catch (error: any) {
-    if (error.message?.includes("leaked") || error.message?.includes("reported as leaked")) {
-        throw new Error("API_KEY_LEAKED");
-    }
-
     if ((error.message?.includes("429") || error.message?.includes("limit")) && retries > 0) {
         await wait(2000);
         return extractItemsFromTicket(base64Data, mimeType, retries - 1);
@@ -109,13 +93,18 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
     
     const ai = new GoogleGenAI({ apiKey });
     const pantrySummary = pantry.map(p => p.name).join(", ");
-    const recipeOptions = availableRecipes.map(r => ({ id: r.id, title: r.title, ingredients: r.ingredients.map(i => i.name).join(",") }));
+    // Solo enviamos IDs y Títulos para no saturar el contexto
+    const recipeOptions = availableRecipes.map(r => ({ id: r.id, title: r.title }));
 
     try {
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
-            contents: `Basado en esta despensa: ${pantrySummary}. Selecciona las mejores IDs de estas recetas para un plan de ${targetDates.length} días: ${JSON.stringify(recipeOptions)}. Devuelve JSON con el mapeo.`,
-            config: { responseMimeType: "application/json" }
+            contents: `Genera un plan para estas fechas: ${targetDates.join(", ")} y estas comidas: ${targetTypes.join(", ")}. Despensa: ${pantrySummary}. Recetas disponibles: ${JSON.stringify(recipeOptions)}. Devuelve UN OBJETO donde las llaves sean las FECHAS y el valor sea otro objeto con las COMIDAS y sus RECETA_ID.`,
+            config: { 
+                systemInstruction: "Eres un planificador experto. Responde EXCLUSIVAMENTE con el objeto JSON solicitado, sin explicaciones ni Markdown extra.",
+                responseMimeType: "application/json",
+                temperature: 0.2
+            }
         });
         
         const selections = JSON.parse(cleanJson(response.text));
@@ -129,9 +118,10 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
         });
         return { plan, newRecipes: [] };
     } catch (error: any) {
-        if (error.message?.includes("leaked") || error.message?.includes("reported as leaked")) throw new Error("API_KEY_LEAKED");
+        console.error("Gemini Selection Error:", error);
+        // Fallback: Asignación aleatoria si falla la IA
         const plan = targetDates.flatMap(date => 
-            targetTypes.map(type => ({ date, type, recipeId: availableRecipes[0].id, servings: user.household_size, isCooked: false }))
+            targetTypes.map(type => ({ date, type, recipeId: availableRecipes[Math.floor(Math.random() * availableRecipes.length)].id, servings: user.household_size, isCooked: false }))
         );
         return { plan, newRecipes: [] };
     }
