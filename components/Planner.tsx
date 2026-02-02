@@ -69,6 +69,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
     );
   };
 
+  // Fix: changed 't' to 'type' in the array spread to resolve the "Cannot find name 't'" error.
   const toggleWizardType = (type: MealCategory) => {
     setSelectedWizardTypes(prev => 
       prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
@@ -128,7 +129,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     className="h-10 px-4 bg-[#0F4E0E] text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
                 >
                     <BrainCircuit className="w-4 h-4 text-orange-400" />
-                    <span>GENERAR IA</span>
+                    <span>Generar</span>
                 </button>
             </div>
         </div>
@@ -169,25 +170,25 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 className="h-12 px-6 bg-[#0F4E0E] text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] shadow-xl hover:bg-[#062606] transition-all active:scale-[0.98] flex items-center justify-center gap-3"
             >
                 <BrainCircuit className="w-5 h-5 text-orange-400" />
-                <span>GENERAR IA</span>
+                <span>Generar</span>
             </button>
         </div>
       </header>
 
-      {/* Grid de días (Restaurado el padding original p-5 para mantener la altura original de las cards) */}
+      {/* Grid de días */}
       <div ref={scrollContainerRef} className="flex-1 overflow-x-auto no-scrollbar flex gap-5 p-5 h-full min-h-0">
         {days.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd');
           const isToday = isSameDay(day, new Date());
           return (
             <div key={dateStr} className="min-w-[290px] max-w-[340px] flex-1 flex flex-col gap-4 h-full">
-                {/* Indicador de Día Original */}
-                <div className={`text-center py-4 px-4 rounded-[2rem] border transition-all duration-700 flex-shrink-0 ${isToday ? 'bg-[#0F4E0E] text-white border-[#0F4E0E] shadow-2xl scale-[1.02]' : 'bg-white text-[#0F4E0E] border-gray-100 shadow-sm'}`}>
-                    <span className={`block text-[8px] font-black uppercase tracking-[0.4em] mb-1 ${isToday ? 'text-orange-400' : 'text-[#0F4E0E]/30'}`}>{format(day, 'EEEE', { locale: es })}</span>
-                    <span className="block text-2xl font-black leading-none">{format(day, 'd')}</span>
+                {/* Header de Día Rediseñado a una sola línea */}
+                <div className={`flex items-center justify-center gap-3 py-2.5 px-4 rounded-[2rem] border transition-all duration-700 flex-shrink-0 ${isToday ? 'bg-[#0F4E0E] text-white border-[#0F4E0E] shadow-2xl scale-[1.02]' : 'bg-white text-[#0F4E0E] border-gray-100 shadow-sm'}`}>
+                    <span className={`text-[10px] font-black uppercase tracking-[0.3em] whitespace-nowrap ${isToday ? 'text-orange-400' : 'text-[#0F4E0E]/30'}`}>{format(day, 'EEEE', { locale: es })}</span>
+                    <span className="text-xl font-black leading-none">{format(day, 'd')}</span>
                 </div>
                 
-                {/* Contenedor de Comidas Original */}
+                {/* Contenedor de Comidas con más espacio vertical */}
                 <div className="flex-1 flex flex-col gap-3 min-h-0">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
@@ -341,7 +342,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                   </div>
                 </div>
                 <button onClick={executeSmartPlan} disabled={isGenerating} className="w-full h-16 bg-[#0F4E0E] text-white rounded-[1.8rem] font-black uppercase tracking-[0.25em] shadow-2xl flex items-center justify-center gap-4 hover:bg-[#062606] transition-all active:scale-[0.97] hover:-translate-y-1">
-                  {isGenerating ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Sparkles className="w-5 h-5 text-orange-400" /> Generar Menú</>}
+                  {isGenerating ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Sparkles className="w-5 h-5 text-orange-400" /> Generar</>}
                 </button>
               </div>
             </div>

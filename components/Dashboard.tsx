@@ -228,7 +228,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
 
   // VISTA: DASHBOARD PRINCIPAL
   return (
-    <div className="space-y-8 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0">
+    <div className="space-y-12 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0">
       {/* PÍLDORA IA */}
       <div className="bg-[#0F4E0E] p-2.5 md:p-6 rounded-full md:rounded-[2.5rem] shadow-xl relative overflow-hidden group">
           <div className="flex flex-row items-center justify-between gap-3 md:gap-8 relative z-10">
@@ -251,14 +251,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       </div>
 
       <header className="flex items-center justify-between px-2">
-          <div className="space-y-1">
+          <div className="space-y-4">
               <div className="flex items-center gap-3">
-                  <span className="text-3xl md:text-4xl">{timeGreeting.text.includes('Días') ? '👋' : timeGreeting.text.includes('Tardes') ? '☀️' : '🌙'}</span>
-                  <h1 className="text-3xl md:text-4xl font-black text-[#0F4E0E] tracking-tight leading-none">¡{timeGreeting.text}, {user.name.split(' ')[0]}!</h1>
+                  <span className="text-4xl md:text-5xl">{timeGreeting.text.includes('Días') ? '👋' : timeGreeting.text.includes('Tardes') ? '☀️' : '🌙'}</span>
+                  <h1 className="text-3xl md:text-5xl font-black text-[#0F4E0E] tracking-tight leading-none">¡{timeGreeting.text}, {user.name.split(' ')[0]}!</h1>
               </div>
-              <p className="text-base md:text-xl font-bold text-[#0F4E0E]/50 pl-1">Organiza tu semana y ahorra hoy.</p>
+              <p className="text-base md:text-2xl font-bold text-[#0F4E0E]/40 pl-1 leading-relaxed">Organiza tu semana y ahorra hoy.</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 self-start mt-1">
               <button 
                 onClick={() => setCurrentView('favorites')} 
                 className="w-12 h-12 md:w-14 md:h-14 rounded-2xl border bg-white border-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-all shadow-sm group"
