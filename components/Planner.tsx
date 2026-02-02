@@ -69,7 +69,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
     );
   };
 
-  // Fix: changed 't' to 'type' in the array spread to resolve the "Cannot find name 't'" error.
   const toggleWizardType = (type: MealCategory) => {
     setSelectedWizardTypes(prev => 
       prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
@@ -234,10 +233,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                           <span className="text-[7px] font-black uppercase tracking-[0.3em] px-2 py-1 rounded-lg bg-gray-50 text-gray-400 border border-gray-100 leading-none">{type}</span>
                                       </div>
                                       <div className="flex-1 flex flex-col items-center justify-center transition-all duration-500 transform group-hover:scale-110">
-                                          <div className="w-12 h-12 rounded-[1.5rem] bg-teal-50 flex items-center justify-center mb-3 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all border border-teal-100/50 shadow-inner">
+                                          <div className="w-12 h-12 rounded-[1.5rem] bg-teal-50 flex items-center justify-center mb-6 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all border border-teal-100/50 shadow-inner">
                                             <Plus className="w-6 h-6 text-[#0F4E0E] group-hover:text-white" />
                                           </div>
-                                          <span className="text-[9px] font-black uppercase tracking-[0.5em] text-gray-200 group-hover:text-[#0F4E0E] transition-colors">Añadir</span>
+                                          <span className="text-[9px] font-black uppercase tracking-[0.5em] text-gray-300 group-hover:text-[#0F4E0E] transition-colors mt-2">Añadir</span>
                                       </div>
                                   </div>
                               )}

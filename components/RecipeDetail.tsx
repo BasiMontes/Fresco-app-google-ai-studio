@@ -91,6 +91,16 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
       setTimeout(() => setIsAddedToList(false), 2000);
   };
 
+  const handleClosePlan = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    // Si entramos directamente para planificar, cerramos TODO el modal al cancelar
+    if (initialMode === 'plan') {
+      onClose();
+    } else {
+      setShowPlanningMode(false);
+    }
+  };
+
   if (isCooking && onCookFinish) {
       return (
           <CookMode 
@@ -107,14 +117,14 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
       <div className="fixed inset-0 z-[2000] bg-black/40 backdrop-blur-md animate-fade-in flex justify-center items-center p-3 md:p-6" onClick={onClose}>
           {/* Planning Overlay */}
           {showPlanningMode && (
-              <div className="fixed inset-0 z-[3000] bg-teal-900/10 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in" onClick={(e) => { e.stopPropagation(); setShowPlanningMode(false); }}>
+              <div className="fixed inset-0 z-[3000] bg-teal-900/10 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in" onClick={handleClosePlan}>
                   <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-teal-50 space-y-8 animate-slide-up" onClick={e => e.stopPropagation()}>
                       <div className="flex justify-between items-center">
                           <div>
                               <h3 className="text-2xl font-black text-teal-900 tracking-tight">Planificar Comida</h3>
                               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1">¿Cuándo vas a cocinar esto?</p>
                           </div>
-                          <button onClick={() => setShowPlanningMode(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-all"><X className="w-5 h-5 text-gray-400" /></button>
+                          <button onClick={handleClosePlan} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-all"><X className="w-5 h-5 text-gray-400" /></button>
                       </div>
 
                       <div className="space-y-6">
