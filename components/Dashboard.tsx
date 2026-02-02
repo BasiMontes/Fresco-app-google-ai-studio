@@ -113,13 +113,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
     loadTip();
   }, [pantry]);
 
-  const timeGreeting = useMemo(() => {
-      const h = getHours(new Date());
-      if (h < 12) return { text: "Buenos Días", icon: Sunrise };
-      if (h < 20) return { text: "Buenas Tardes", icon: Sun };
-      return { text: "Buenas Noches", icon: Moon };
-  }, []);
-
   const alerts = useMemo(() => {
       const list = [];
       const expiringSoon = pantry.filter(i => i.expires_at && differenceInDays(new Date(i.expires_at), new Date()) <= 3);
@@ -251,12 +244,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       </div>
 
       <header className="flex items-center justify-between px-2">
-          <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                  <span className="text-4xl md:text-5xl">{timeGreeting.text.includes('Días') ? '👋' : timeGreeting.text.includes('Tardes') ? '☀️' : '🌙'}</span>
-                  <h1 className="text-3xl md:text-5xl font-black text-[#0F4E0E] tracking-tight leading-none">¡{timeGreeting.text}, {user.name.split(' ')[0]}!</h1>
-              </div>
-              <p className="text-base md:text-2xl font-bold text-[#0F4E0E]/40 pl-1 leading-relaxed mt-2">Organiza tu semana y ahorra hoy.</p>
+          <div className="space-y-4">
+              <h1 className="text-3xl md:text-5xl font-black text-[#0F4E0E] tracking-tight leading-none">
+                  ¡Hola, {user.name.split(' ')[0]}! 👋
+              </h1>
+              <p className="text-base md:text-2xl font-bold text-[#0F4E0E]/40 pl-1 leading-relaxed">Organiza tu semana y ahorra hoy.</p>
           </div>
           <div className="flex items-center gap-3 self-start mt-1">
               <button 
