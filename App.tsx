@@ -181,7 +181,7 @@ const App: React.FC = () => {
          view === 'onboarding' ? <Onboarding onComplete={() => setView('app')} /> :
          <>
           <aside className="hidden md:flex flex-col w-64 bg-[#0F4E0E] text-white h-full z-50 flex-shrink-0 overflow-hidden">
-            <div className="p-8"><Logo variant="inverted" /></div>
+            <div className="p-8 pt-[calc(2rem+var(--safe-area-inset-top))] md:pt-8"><Logo variant="inverted" /></div>
             <nav className="flex-1 px-4 space-y-2 mt-4 overflow-hidden">
                 {[
                   {id:'dashboard', icon:Home, label:'Home'},
@@ -200,23 +200,26 @@ const App: React.FC = () => {
           </aside>
 
           <main className="flex-1 h-full overflow-hidden flex flex-col relative bg-[#FDFDFD]">
-            <div className={`flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 ${isKeyboardOpen ? 'pb-4' : 'pb-48'} md:pb-8 h-full overflow-y-auto no-scrollbar`}>
+            {/* Contenedor principal sin padding exterior para permitir diseño edge-to-edge */}
+            <div className={`flex-1 w-full max-w-7xl mx-auto ${isKeyboardOpen ? 'pb-4' : 'pb-48'} md:pb-0 h-full overflow-y-auto no-scrollbar`}>
                 <Suspense fallback={<PageLoader message="Cargando vista..." />}>
-                    {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
-                    {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={(p, r) => { setRecipes(prev => [...prev, ...r]); setMealPlan(prev => [...prev, ...p]); }} onClear={() => setMealPlan([])} />}
-                    {activeTab === 'pantry' && <Pantry 
-                        items={pantry} 
-                        onRemove={handleRemovePantry} 
-                        onAdd={handleAddPantry} 
-                        onUpdateQuantity={handleUpdatePantryQty} 
-                        onAddMany={items => { setPantry(prev => [...prev, ...items]); }} 
-                        onEdit={i => setPantry(prev => prev.map(p => p.id === i.id ? i : p))} 
-                    />}
-                    {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(p => [...p, ...r])} onAddToPlan={() => {}} onCookFinish={() => {}} onAddToShoppingList={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
-                    {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={i => setShoppingList(p => [...p, ...i])} onUpdateShoppingItem={i => setShoppingList(p => p.map(x => x.id === i.id ? i : x))} onRemoveShoppingItem={id => setShoppingList(p => p.filter(x => x.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
-                    {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} onNavigate={setActiveTab} />}
-                    {activeTab === 'settings' && user && <Settings user={user} onBack={() => setActiveTab('profile')} onUpdateUser={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} />}
-                    {activeTab === 'faq' && <FAQ onBack={() => setActiveTab('profile')} />}
+                    <div className="pt-[var(--safe-area-inset-top)] md:pt-0">
+                        {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
+                        {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={(p, r) => { setRecipes(prev => [...prev, ...r]); setMealPlan(prev => [...prev, ...p]); }} onClear={() => setMealPlan([])} />}
+                        {activeTab === 'pantry' && <Pantry 
+                            items={pantry} 
+                            onRemove={handleRemovePantry} 
+                            onAdd={handleAddPantry} 
+                            onUpdateQuantity={handleUpdatePantryQty} 
+                            onAddMany={items => { setPantry(prev => [...prev, ...items]); }} 
+                            onEdit={i => setPantry(prev => prev.map(p => p.id === i.id ? i : p))} 
+                        />}
+                        {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(p => [...p, ...r])} onAddToPlan={() => {}} onCookFinish={() => {}} onAddToShoppingList={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
+                        {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={i => setShoppingList(p => [...p, ...i])} onUpdateShoppingItem={i => setShoppingList(p => p.map(x => x.id === i.id ? i : x))} onRemoveShoppingItem={id => setShoppingList(p => p.filter(x => x.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
+                        {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} onNavigate={setActiveTab} />}
+                        {activeTab === 'settings' && user && <Settings user={user} onBack={() => setActiveTab('profile')} onUpdateUser={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} />}
+                        {activeTab === 'faq' && <FAQ onBack={() => setActiveTab('profile')} />}
+                    </div>
                 </Suspense>
             </div>
           </main>
