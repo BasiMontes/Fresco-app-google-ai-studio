@@ -165,7 +165,16 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
               </div>
           )}
 
-          <div className="bg-white w-full max-w-5xl max-h-[92vh] rounded-[3rem] overflow-hidden flex flex-col relative shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+          <div className="bg-white w-full max-w-5xl max-h-[88vh] rounded-[3rem] overflow-hidden flex flex-col relative shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+              {/* Botón X Flotante para asegurar cierre siempre */}
+              <button 
+                  onClick={onClose} 
+                  className="absolute top-6 right-6 z-[2500] p-3 bg-white/90 backdrop-blur-md text-gray-400 border border-gray-100 rounded-full hover:bg-red-50 hover:text-red-500 transition-all shadow-xl active:scale-90"
+                  aria-label="Cerrar receta"
+              >
+                  <X className="w-6 h-6" />
+              </button>
+
               <div className="flex-1 overflow-y-auto no-scrollbar grid grid-cols-1 md:grid-cols-12 h-full">
                   {/* Left Side: Photo & Quick Info */}
                   <div className="md:col-span-4 p-5 md:p-8 flex flex-col gap-6 bg-gray-50/50 border-r border-gray-100">
@@ -205,9 +214,9 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
 
                   {/* Right Side: Navigation & Content */}
                   <div className="md:col-span-8 p-6 md:p-10 flex flex-col h-full bg-white">
-                      <div className="flex justify-between items-start gap-4 mb-6">
+                      <div className="flex justify-between items-start gap-4 mb-6 pt-10 md:pt-0">
                           <h2 className="text-2xl md:text-3xl font-black text-teal-900 leading-tight flex-1">{recipe.title}</h2>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 mr-12 md:mr-0">
                               {onToggleFavorite && (
                                   <button 
                                       onClick={() => onToggleFavorite(recipe.id)} 
@@ -218,7 +227,6 @@ export const RecipeDetail: React.FC<RecipeDetailProps> = ({
                               )}
                               {onRemoveFromPlan && <button onClick={onRemoveFromPlan} className="p-3 bg-red-50 text-red-500 border border-red-100 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 className="w-5 h-5" /></button>}
                               {onChangeSlot && <button onClick={onChangeSlot} className="p-3 bg-green-50 text-green-600 border border-green-100 rounded-xl hover:bg-green-500 hover:text-white transition-all shadow-sm"><RefreshCw className="w-5 h-5" /></button>}
-                              <button onClick={onClose} className="p-3 bg-gray-50 text-gray-400 border border-gray-100 rounded-xl hover:bg-gray-100 transition-all"><X className="w-5 h-5" /></button>
                           </div>
                       </div>
 

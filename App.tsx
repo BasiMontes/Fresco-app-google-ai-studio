@@ -221,7 +221,7 @@ const App: React.FC = () => {
             </div>
           </main>
           
-          <nav className={`md:hidden fixed left-8 right-8 z-[800] bg-[#0F4E0E] p-2 rounded-[3rem] shadow-2xl flex gap-1 safe-pb border border-white/5 transition-all duration-500 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-10 opacity-100'}`}>
+          <nav className={`md:hidden fixed left-8 right-8 z-[800] bg-[#0F4E0E] p-2 rounded-[3rem] shadow-2xl flex gap-1 safe-pb border border-white/5 transition-all duration-500 ${isKeyboardOpen ? 'bottom-[-100px] opacity-0 pointer-events-none' : 'bottom-4 opacity-100'}`}>
               {[ 
                 {id:'dashboard', icon:Home}, 
                 {id:'planner', icon:Calendar}, 

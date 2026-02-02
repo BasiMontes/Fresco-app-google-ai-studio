@@ -412,17 +412,15 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ plan, recipes, pantr
           ) : (
             filteredItems.map(item => {
                 const isEditing = editingId === item.id;
-                const catInfo = CATEGORIES.find(c => c.id === item.category) || CATEGORIES[0];
                 const canDecrement = item.quantity > 0;
                 
                 return (
                     <div key={item.id} onClick={(e) => toggleItem(e, item)} className={`bg-white p-3 md:p-4 rounded-[2.2rem] flex items-center gap-3 border-2 transition-all cursor-pointer ${item.is_purchased ? 'opacity-40 border-gray-50' : 'border-white shadow-sm hover:border-teal-100 hover:shadow-md'}`}>
-                        <div className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-green-500 border-green-500 shadow-md scale-110' : 'bg-gray-50 border-gray-100 hover:border-teal-200'}`}>
+                        <div className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all flex-shrink-0 ${item.is_purchased ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-100 hover:border-teal-200'}`}>
                             {item.is_purchased && <Check className="w-4 h-4 stroke-[4px] text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className={`font-black capitalize leading-tight text-[15px] ${item.is_purchased ? 'line-through text-gray-400' : 'text-teal-950'}`}>
-                                <span className="mr-2 opacity-60 text-lg">{catInfo.emoji}</span>
                                 {item.name}
                             </p>
                         </div>
