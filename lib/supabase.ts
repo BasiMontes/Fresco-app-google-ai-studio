@@ -1,39 +1,45 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Helper robusto para leer variables de entorno en Vite/React
-const getEnvVar = (key: string) => {
-  // 1. Intentar con el prefijo VITE_ (Estándar de Vite para el cliente)
+/**
+ * Recuperador de variables de entorno con resiliencia extrema.
+ * Protege contra errores de 'undefined' en import.meta.env.
+ */
+const getEnvVar = (key: string): string => {
   const viteKey = `VITE_${key}`;
   
-  // @ts-ignore
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[viteKey]) {
-    // @ts-ignore
-    return import.meta.env[viteKey];
+  // 1. Probar en window.process.env (Donde nuestro puente inyecta las cosas)
+  if (typeof window !== 'undefined' && (window as any).process?.env) {
+    const val = (window as any).process.env[viteKey] || (window as any).process.env[key];
+    if (val) return val;
   }
 
-  // 2. Probar en process.env (Standard/Browser-shim)
-  if (typeof process !== 'undefined' && process.env && (process.env[viteKey] || process.env[key])) {
-    return process.env[viteKey] || process.env[key];
+  // 2. Probar en import.meta.env de forma segura
+  try {
+    const meta = (import.meta as any);
+    if (meta && meta.env && meta.env[viteKey]) {
+      return meta.env[viteKey];
+    }
+  } catch (e) {
+    // Ignorar errores de acceso a import.meta
   }
-  
-  // 3. Probar en window.process.env
-  if (typeof window !== 'undefined' && (window as any).process?.env) {
-      return (window as any).process.env[viteKey] || (window as any).process.env[key];
+
+  // 3. Probar en process.env tradicional
+  try {
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env[viteKey] || process.env[key] || '';
+    }
+  } catch (e) {
+    // Ignorar
   }
   
   return '';
 };
 
-// Mapeo directo de tus variables de .env
 const supabaseUrl = getEnvVar('SUPABASE_URL');
 const supabaseAnonKey = getEnvVar('SUPABASE_ANON_KEY');
 
 export const isConfigured = !!supabaseUrl && !!supabaseAnonKey && !supabaseUrl.includes('placeholder');
-
-if (!isConfigured && typeof window !== 'undefined') {
-    console.warn('⚠️ FRESCO: Configuración de Supabase no detectada. Revisa tu archivo .env o las variables de entorno en tu hosting.');
-}
 
 export const supabase = createClient(
     supabaseUrl || 'https://placeholder.supabase.co',

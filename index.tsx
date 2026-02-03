@@ -2,29 +2,34 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
-// --- PUENTE DE SEGURIDAD PARA VITE / VERCEL ---
-// Debe ejecutarse antes de cualquier otro import que pueda usar Gemini
+/**
+ * PUENTE DE SEGURIDAD PARA VARIABLES DE ENTORNO
+ * Evitamos el error "Cannot read properties of undefined (reading 'VITE_API_KEY')"
+ * mediante una comprobación defensiva profunda.
+ */
 if (typeof window !== 'undefined') {
-    // @ts-ignore
-    window.process = window.process || { env: {} };
-    // @ts-ignore
-    window.process.env = window.process.env || {};
+  // Inicializamos process.env si no existe
+  (window as any).process = (window as any).process || { env: {} };
+  (window as any).process.env = (window as any).process.env || {};
+
+  try {
+    // Acceso ultra-seguro a import.meta.env
+    const meta = (import.meta as any);
+    const vKey = meta && meta.env ? meta.env.VITE_API_KEY : undefined;
     
-    // Capturamos la variable de Vite y la inyectamos en el objeto que espera el SDK
-    // @ts-ignore
-    const viteKey = import.meta.env?.VITE_API_KEY;
-    if (viteKey) {
-        // @ts-ignore
-        window.process.env.API_KEY = viteKey;
-        console.debug("Fresco: API_KEY vinculada desde VITE_ env.");
+    if (vKey) {
+      (window as any).process.env.API_KEY = vKey;
+      console.log("Fresco: API_KEY vinculada exitosamente.");
     }
+  } catch (e) {
+    // Si import.meta no es accesible, no hacemos nada y dejamos que la app maneje el error de config más tarde
+    console.warn("Fresco: No se pudo acceder a import.meta de forma nativa.");
+  }
 }
 
-// Ahora importamos el resto de la app
 import App from './App';
 
 const rootElement = document.getElementById('root');
-
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
@@ -32,6 +37,4 @@ if (rootElement) {
       <App />
     </React.StrictMode>
   );
-} else {
-  console.error("Fresco Error: No se pudo encontrar el elemento #root en el DOM.");
 }
