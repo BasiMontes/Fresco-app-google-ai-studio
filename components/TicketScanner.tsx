@@ -31,7 +31,6 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const [step, setStep] = useState<'idle' | 'uploading' | 'analyzing' | 'review' | 'error'>('idle');
   const [items, setItems] = useState<any[]>([]);
   const [supermarket, setSupermarket] = useState('');
-  const [progress, setProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -47,17 +46,14 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (!file) return;
 
     setStep('uploading');
-    setProgress(20);
-
     const reader = new FileReader();
     reader.onload = async () => {
       try {
-        setProgress(50);
         setStep('analyzing');
         const base64Data = (reader.result as string).split(',')[1];
         const data = await extractItemsFromTicket(base64Data, file.type);
         
-        setSupermarket(data.supermarket || 'Supermercado');
+        setSupermarket(data.supermarket || 'Ticket de Compra');
         const processed = (data.items || []).map((i: any, idx: number) => ({
             ...i,
             tempId: `item-${Date.now()}-${idx}`,
@@ -71,11 +67,11 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setItems(processed);
         setStep('review');
       } catch (err: any) {
-        console.error("Scanner UI Error:", err);
+        console.error("Scanner Error Details:", err);
         if (err.message === "MISSING_API_KEY") {
-            setErrorMessage("Google no detecta tu clave vinculada a este proyecto o hay un error 404 en el modelo. Pulsa el botón para re-vincularla.");
+            setErrorMessage("Error de conexión (404). Google no detecta tu clave o el modelo estable. Pulsa el botón para re-configurar.");
         } else {
-            setErrorMessage("No hemos podido leer este ticket. Por favor, intenta con una foto más nítida.");
+            setErrorMessage("No se pudo procesar la imagen. Intenta con una foto más enfocada y con luz.");
         }
         setStep('error');
       }
@@ -131,13 +127,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-3xl font-black text-white">Escanear Ticket</h3>
-                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Detectaremos automáticamente los productos usando Gemini 3.</p>
+                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Usaremos el motor estable de Gemini para leer tu compra.</p>
               </div>
               <button 
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full py-5 bg-white text-[#0F4E0E] rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
               >
-                HACER FOTO
+                HACER FOTO / ELEGIR ARCHIVO
               </button>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
@@ -150,8 +146,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <FileText className="absolute inset-0 m-auto w-12 h-12 text-white animate-pulse" />
               </div>
               <div className="w-full max-w-xs space-y-4">
-                <h3 className="text-2xl font-black text-white">Procesando...</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse italic">Analizando ticket multimodal</p>
+                <h3 className="text-2xl font-black text-white">Analizando Ticket</h3>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse italic">Conectando con el motor estable...</p>
               </div>
             </div>
           )}
@@ -164,12 +160,11 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               <div className="space-y-4">
                 <h3 className="text-2xl font-black text-white leading-none">Error de Escaneo</h3>
                 <p className="text-teal-100/60 font-medium text-sm leading-relaxed">{errorMessage}</p>
-                <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="text-orange-400 font-bold text-[10px] uppercase underline flex items-center justify-center gap-1">Ver documentación de facturación <ExternalLink className="w-3 h-3" /></a>
               </div>
               <div className="w-full space-y-3">
                 <button onClick={handleRetryKey} className="w-full py-5 bg-orange-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">SELECCIONAR API KEY</button>
                 <button onClick={resetScanner} className="w-full py-4 text-teal-300 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
-                    <RefreshCw className="w-3 h-3" /> CANCELAR Y REINTENTAR
+                    <RefreshCw className="w-3 h-3" /> REINTENTAR AHORA
                 </button>
               </div>
             </div>

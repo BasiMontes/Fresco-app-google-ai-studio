@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../types";
 
 const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -11,17 +11,27 @@ const cleanJson = (text: string | undefined): string => {
     return text.trim();
 };
 
-const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets. Analiza la imagen y extrae en JSON:
-1. supermarket: Nombre de la tienda.
-2. items: Lista de productos con name, quantity, unit, category (vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other) y estimated_expiry_days.
-Normaliza nombres raros y estima caducidad lógica.`;
+const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets de supermercado. 
+Analiza la imagen y extrae los productos en este formato JSON exacto:
+{
+  "supermarket": "Nombre de la tienda",
+  "items": [
+    {
+      "name": "Nombre claro del producto",
+      "quantity": 1,
+      "unit": "uds",
+      "category": "vegetables/fruits/dairy/meat/fish/pasta/legumes/bakery/drinks/pantry/other",
+      "estimated_expiry_days": 7
+    }
+  ]
+}
+Normas: Normaliza nombres, extrae cantidades reales y estima días de caducidad lógicos.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string, retries = 1): Promise<any> => {
-  // Siempre creamos una instancia fresca con la clave del proceso actual
+  // Inicializamos con la clave del proceso actual
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
 
   try {
-    // ESTRUCTURA CORRECTA SEGÚN GUÍAS GEMINI 3 MULTIMODAL
     const imagePart = {
       inlineData: {
         mimeType: mimeType,
@@ -30,12 +40,12 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     };
 
     const textPart = {
-      text: "Extrae los productos de este ticket en formato JSON siguiendo las instrucciones del sistema."
+      text: "Extrae los productos de este ticket de compra."
     };
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview", // El modelo más compatible con facturación activa
-      contents: { parts: [imagePart, textPart] }, // Estructura de partes obligatoria
+      model: "gemini-flash-latest", // EL MODELO MÁS ESTABLE Y COMPATIBLE
+      contents: [{ parts: [imagePart, textPart] }],
       config: { 
         systemInstruction: AI_TICKET_PROMPT,
         responseMimeType: "application/json",
@@ -48,9 +58,9 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     
     return JSON.parse(cleanJson(text));
   } catch (error: any) {
-    console.error("Error técnico Gemini:", error);
+    console.error("Gemini Service Error:", error);
     
-    // Si el error es 404 o relacionado con la clave, lo propagamos para que la UI lo maneje
+    // Si es un error de cuota o clave, informamos a la UI
     if (error.message?.includes("not found") || error.message?.includes("API key") || error.message?.includes("404")) {
         throw new Error("MISSING_API_KEY");
     }
@@ -74,10 +84,10 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
 
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: `Dame un consejo de 10 palabras para usar esto pronto: ${expiringItems.map(i => i.name).join(", ")}.`,
+            model: "gemini-flash-latest",
+            contents: `Dame un consejo de 10 palabras para aprovechar: ${expiringItems.map(i => i.name).join(", ")}.`,
         });
-        return response.text || "Aprovecha tus frescos hoy.";
+        return response.text || "Cocina con tus productos frescos hoy.";
     } catch (error: any) {
         return "Planifica tu menú para evitar desperdicios.";
     }
@@ -89,8 +99,8 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
 
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: `Genera plan JSON para: ${targetDates.join(", ")}. Recetas: ${JSON.stringify(recipeOptions)}.`,
+            model: "gemini-flash-latest",
+            contents: `Genera un plan de comidas JSON para: ${targetDates.join(", ")}. Opciones: ${JSON.stringify(recipeOptions)}.`,
             config: { 
                 responseMimeType: "application/json",
                 temperature: 0.2
