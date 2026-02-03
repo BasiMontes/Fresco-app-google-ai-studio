@@ -4,27 +4,25 @@ import ReactDOM from 'react-dom/client';
 
 /**
  * PUENTE DE SEGURIDAD PARA VARIABLES DE ENTORNO
- * Este bloque asegura que process.env esté disponible en el navegador
- * y mapea las variables de Vite de forma segura.
+ * Vite requiere que las variables se escriban de forma literal 
+ * (import.meta.env.NOMBRE) para que se inyecten durante el build de Vercel.
  */
 if (typeof window !== 'undefined') {
-  // Aseguramos que el objeto process.env exista
+  // Inicializamos el objeto global process.env
   (window as any).process = (window as any).process || { env: {} };
-  (window as any).process.env = (window as any).process.env || {};
+  const env = (window as any).process.env;
 
-  try {
-    // Acceso defensivo a import.meta.env
-    const metaEnv = (import.meta as any).env;
-    if (metaEnv) {
-      if (metaEnv.VITE_API_KEY) {
-        (window as any).process.env.API_KEY = metaEnv.VITE_API_KEY;
-      }
-      // Log de diagnóstico silencioso
-      console.log("Fresco: Variables de entorno sincronizadas.");
-    }
-  } catch (e) {
-    console.warn("Fresco: No se pudo acceder a import.meta.env, usando respaldo global.");
-  }
+  // Fix: Cast import.meta to any to suppress "Property 'env' does not exist" errors in TypeScript
+  env.VITE_API_KEY = (import.meta as any).env.VITE_API_KEY;
+  env.VITE_SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL;
+  env.VITE_SUPABASE_ANON_KEY = (import.meta as any).env.VITE_SUPABASE_ANON_KEY;
+
+  // Creamos los alias que usa la aplicación y el SDK
+  env.API_KEY = env.VITE_API_KEY;
+  env.SUPABASE_URL = env.VITE_SUPABASE_URL;
+  env.SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY;
+
+  console.log("Fresco Core: Variables inyectadas.");
 }
 
 import App from './App';
