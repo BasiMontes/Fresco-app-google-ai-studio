@@ -1,40 +1,42 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Helper robusto para leer variables de entorno en Vite/React
-const getEnvVar = (key: string) => {
-  // 1. Intentar con el prefijo VITE_ (Estándar de Vite para el cliente)
+/**
+ * Recuperador de variables de entorno con máxima resiliencia.
+ * Prueba en cascada: Vite Meta -> Process Env -> Window Process
+ */
+const getEnvVar = (key: string): string => {
   const viteKey = `VITE_${key}`;
   
-  // @ts-ignore
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[viteKey]) {
-    // @ts-ignore
-    return import.meta.env[viteKey];
+  // 1. Intentar Meta Env (Vite) de forma segura
+  try {
+    const meta = (import.meta as any).env;
+    if (meta && meta[viteKey]) return meta[viteKey];
+    if (meta && meta[key]) return meta[key];
+  } catch (e) {}
+
+  // 2. Intentar Process Env Global
+  if (typeof process !== 'undefined' && process.env) {
+    if (process.env[viteKey]) return process.env[viteKey];
+    if (process.env[key]) return process.env[key];
   }
 
-  // 2. Probar en process.env (Standard/Browser-shim)
-  if (typeof process !== 'undefined' && process.env && (process.env[viteKey] || process.env[key])) {
-    return process.env[viteKey] || process.env[key];
-  }
-  
-  // 3. Probar en window.process.env
+  // 3. Intentar Shim de ventana
   if (typeof window !== 'undefined' && (window as any).process?.env) {
-      return (window as any).process.env[viteKey] || (window as any).process.env[key];
+    const pEnv = (window as any).process.env;
+    if (pEnv[viteKey]) return pEnv[viteKey];
+    if (pEnv[key]) return pEnv[key];
   }
   
   return '';
 };
 
-// Mapeo directo de tus variables de .env
 const supabaseUrl = getEnvVar('SUPABASE_URL');
 const supabaseAnonKey = getEnvVar('SUPABASE_ANON_KEY');
 
 export const isConfigured = !!supabaseUrl && !!supabaseAnonKey && !supabaseUrl.includes('placeholder');
 
-if (!isConfigured && typeof window !== 'undefined') {
-    console.warn('⚠️ FRESCO: Configuración de Supabase no detectada. Revisa tu archivo .env o las variables de entorno en tu hosting.');
-}
-
+// Inicializamos el cliente. Si no hay claves, usará placeholders para no romper el JS.
 export const supabase = createClient(
     supabaseUrl || 'https://placeholder.supabase.co',
     supabaseAnonKey || 'placeholder'
