@@ -11,26 +11,31 @@ const cleanJson = (text: string | undefined): string => {
     return text.trim();
 };
 
-const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets. Analiza la imagen y extrae: 
-1. supermarket: Nombre comercial.
-2. items: Array de objetos con name, quantity (número), unit (uds/kg/g/l/ml), category (vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other) y estimated_expiry_days (número).
-Normas: Normaliza "HAC. LECHE" a "Leche Hacendado". Estima caducidad lógica (carne 2, lácteos 7, verduras 5, conservas 365).`;
+const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets. Analiza la imagen y extrae en JSON:
+1. supermarket: Nombre de la tienda.
+2. items: Lista de productos con name, quantity, unit, category (vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other) y estimated_expiry_days.
+Normaliza nombres raros y estima caducidad lógica.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string, retries = 1): Promise<any> => {
-  // CRITICAL: New instance inside to catch the most recent API KEY from window environment
+  // Siempre creamos una instancia fresca con la clave del proceso actual
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
 
   try {
+    // ESTRUCTURA CORRECTA SEGÚN GUÍAS GEMINI 3 MULTIMODAL
+    const imagePart = {
+      inlineData: {
+        mimeType: mimeType,
+        data: base64Data,
+      },
+    };
+
+    const textPart = {
+      text: "Extrae los productos de este ticket en formato JSON siguiendo las instrucciones del sistema."
+    };
+
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview", // Usamos Flash para evitar el error 404 de cuota del modelo Pro
-      contents: [
-        {
-          parts: [
-            { inlineData: { mimeType, data: base64Data } },
-            { text: "Analiza este ticket y devuelve los productos en formato JSON según las instrucciones." }
-          ]
-        }
-      ],
+      model: "gemini-3-flash-preview", // El modelo más compatible con facturación activa
+      contents: { parts: [imagePart, textPart] }, // Estructura de partes obligatoria
       config: { 
         systemInstruction: AI_TICKET_PROMPT,
         responseMimeType: "application/json",
@@ -43,10 +48,10 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     
     return JSON.parse(cleanJson(text));
   } catch (error: any) {
-    console.error("Fresco Gemini Error:", error);
+    console.error("Error técnico Gemini:", error);
     
-    // Si el error indica que no se encuentra el modelo o la entidad (404)
-    if (error.message?.includes("not found") || error.message?.includes("API key")) {
+    // Si el error es 404 o relacionado con la clave, lo propagamos para que la UI lo maneje
+    if (error.message?.includes("not found") || error.message?.includes("API key") || error.message?.includes("404")) {
         throw new Error("MISSING_API_KEY");
     }
     
@@ -60,7 +65,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
-    if (pantry.length === 0) return "Tu despensa está vacía.";
+    if (pantry.length === 0) return "Tu despensa está lista.";
     
     const expiringItems = pantry
         .filter(i => i.expires_at)
@@ -70,9 +75,9 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
     try {
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
-            contents: `Dame un consejo de 10 palabras para aprovechar estos productos: ${expiringItems.map(i => i.name).join(", ")}.`,
+            contents: `Dame un consejo de 10 palabras para usar esto pronto: ${expiringItems.map(i => i.name).join(", ")}.`,
         });
-        return response.text || "Cocina con lo que tienes hoy.";
+        return response.text || "Aprovecha tus frescos hoy.";
     } catch (error: any) {
         return "Planifica tu menú para evitar desperdicios.";
     }
@@ -85,7 +90,7 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
     try {
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
-            contents: `Genera un plan de comidas JSON para: ${targetDates.join(", ")}. Recetas disponibles: ${JSON.stringify(recipeOptions)}.`,
+            contents: `Genera plan JSON para: ${targetDates.join(", ")}. Recetas: ${JSON.stringify(recipeOptions)}.`,
             config: { 
                 responseMimeType: "application/json",
                 temperature: 0.2
@@ -101,7 +106,6 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
         });
         return { plan, newRecipes: [] };
     } catch (error: any) {
-        // Fallback básico en caso de error
         const plan = targetDates.flatMap(date => 
             targetTypes.map(type => ({ date, type, recipeId: availableRecipes[Math.floor(Math.random() * availableRecipes.length)].id, servings: user.household_size, isCooked: false }))
         );

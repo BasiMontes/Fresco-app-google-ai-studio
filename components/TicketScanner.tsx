@@ -35,6 +35,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const resetScanner = () => {
+    setStep('idle');
+    setItems([]);
+    setErrorMessage('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -66,9 +73,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       } catch (err: any) {
         console.error("Scanner UI Error:", err);
         if (err.message === "MISSING_API_KEY") {
-            setErrorMessage("Google no detecta tu Clave API o tu proyecto tiene restricciones de modelo. Pulsa el botón naranja para seleccionarla de nuevo.");
+            setErrorMessage("Google no detecta tu clave vinculada a este proyecto o hay un error 404 en el modelo. Pulsa el botón para re-vincularla.");
         } else {
-            setErrorMessage("No hemos podido leer este ticket. ¿Podrías intentar con una foto más clara y de cerca?");
+            setErrorMessage("No hemos podido leer este ticket. Por favor, intenta con una foto más nítida.");
         }
         setStep('error');
       }
@@ -102,8 +109,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if ((window as any).aistudio) {
         await (window as any).aistudio.openSelectKey();
     }
-    setStep('idle');
-    setErrorMessage('');
+    resetScanner();
   };
 
   return (
@@ -125,13 +131,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-3xl font-black text-white">Escanear Ticket</h3>
-                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Usa la cámara para actualizar tu stock. Optimizado para el motor Flash 3 de Gemini.</p>
+                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Detectaremos automáticamente los productos usando Gemini 3.</p>
               </div>
               <button 
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full py-5 bg-white text-[#0F4E0E] rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
               >
-                HACER FOTO AHORA
+                HACER FOTO
               </button>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
@@ -144,8 +150,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <FileText className="absolute inset-0 m-auto w-12 h-12 text-white animate-pulse" />
               </div>
               <div className="w-full max-w-xs space-y-4">
-                <h3 className="text-2xl font-black text-white">Procesando Ticket</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse italic">Motor de alta disponibilidad activo</p>
+                <h3 className="text-2xl font-black text-white">Procesando...</h3>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse italic">Analizando ticket multimodal</p>
               </div>
             </div>
           )}
@@ -156,14 +162,14 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <AlertCircle className="w-10 h-10 text-red-400" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-2xl font-black text-white leading-none">Ajuste Requerido</h3>
+                <h3 className="text-2xl font-black text-white leading-none">Error de Escaneo</h3>
                 <p className="text-teal-100/60 font-medium text-sm leading-relaxed">{errorMessage}</p>
-                <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="text-orange-400 font-bold text-[10px] uppercase underline flex items-center justify-center gap-1">Documentación de Facturación <ExternalLink className="w-3 h-3" /></a>
+                <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="text-orange-400 font-bold text-[10px] uppercase underline flex items-center justify-center gap-1">Ver documentación de facturación <ExternalLink className="w-3 h-3" /></a>
               </div>
               <div className="w-full space-y-3">
-                <button onClick={handleRetryKey} className="w-full py-5 bg-orange-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">SELECCIONAR CLAVE API</button>
-                <button onClick={() => { setStep('idle'); setErrorMessage(''); }} className="w-full py-4 text-teal-300 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
-                    <RefreshCw className="w-3 h-3" /> VOLVER A INTENTAR FOTO
+                <button onClick={handleRetryKey} className="w-full py-5 bg-orange-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">SELECCIONAR API KEY</button>
+                <button onClick={resetScanner} className="w-full py-4 text-teal-300 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
+                    <RefreshCw className="w-3 h-3" /> CANCELAR Y REINTENTAR
                 </button>
               </div>
             </div>
@@ -173,8 +179,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             <div className="space-y-6 pb-40 max-w-2xl mx-auto animate-slide-up">
               <div className="px-2">
                 <p className="text-orange-400 text-[10px] font-black uppercase tracking-widest mb-1">{supermarket}</p>
-                <h3 className="text-white font-black text-3xl">Revisar Compra</h3>
-                <p className="text-teal-100/40 text-xs mt-2">La IA ha detectado {items.length} productos.</p>
+                <h3 className="text-white font-black text-3xl">Revisar Productos</h3>
               </div>
               
               <div className="grid gap-3">
@@ -182,7 +187,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                     <div key={item.tempId} className="bg-white rounded-[2rem] p-5 shadow-2xl flex flex-col gap-4 border border-white/5 relative group">
                       <button onClick={() => handleDeleteItem(item.tempId)} className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 transition-all"><Trash2 className="w-4 h-4" /></button>
                       <div className="flex-1">
-                        <label className="text-[8px] font-black text-gray-300 uppercase tracking-widest mb-1 ml-1 block">Nombre Producto</label>
+                        <label className="text-[8px] font-black text-gray-300 uppercase tracking-widest mb-1 ml-1 block">Producto</label>
                         <input className="w-full h-12 bg-gray-50 rounded-xl px-4 font-black text-[15px] text-[#0F4E0E] outline-none border-2 border-transparent focus:border-teal-500/10 transition-all capitalize" value={item.name} onChange={(e) => handleUpdateItem(item.tempId, { name: e.target.value })} />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
