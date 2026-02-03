@@ -73,7 +73,7 @@
       }
 
       body { 
-        background-color: #fcfcfc; 
+        background-color: #F4F4F4; /* Fondo base para el "gap" */
         -webkit-tap-highlight-color: transparent;
         font-family: 'Satoshi', sans-serif;
         overflow: hidden;
@@ -87,7 +87,8 @@
         height: 100%;
         width: 100%;
         overflow: hidden;
-        padding-top: var(--safe-area-inset-top);
+        /* Reducimos la intrusión del notch para que el diseño sea más inmersivo */
+        padding-top: max(0px, var(--safe-area-inset-top));
       }
 
       /* Estilo específico para móviles: barra inferior con padding extra */
