@@ -28,11 +28,17 @@ Analiza la imagen y extrae los productos en este formato JSON exacto:
 Normas: Normaliza nombres y estima días de caducidad lógicos.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string, retries = 1): Promise<any> => {
-  // CRITICAL: Use process.env.API_KEY directly as per guidelines. 
-  // No fallback to "" to allow the SDK/Environment to handle the missing key error correctly.
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey) {
+      console.error("Fresco: API_KEY no configurada en process.env");
+      throw new Error("MISSING_API_KEY");
+  }
 
   try {
+    // Instanciamos justo antes de la llamada como dictan las guías
+    const ai = new GoogleGenAI({ apiKey });
+
     const imagePart = {
       inlineData: {
         mimeType: mimeType,
@@ -44,9 +50,10 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       text: "Extrae los productos de este ticket de compra en el formato JSON solicitado."
     };
 
+    // Usamos gemini-3-flash-preview y el formato de contents recomendado para multimodal
     const response = await ai.models.generateContent({
-      model: "gemini-flash-latest", 
-      contents: [{ parts: [imagePart, textPart] }],
+      model: "gemini-3-flash-preview", 
+      contents: { parts: [imagePart, textPart] },
       config: { 
         systemInstruction: AI_TICKET_PROMPT,
         responseMimeType: "application/json",
@@ -59,10 +66,10 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     
     return JSON.parse(cleanJson(text));
   } catch (error: any) {
-    console.error("Gemini Error:", error);
+    console.error("Gemini Technical Error:", error);
     
     const errorMsg = error.message?.toLowerCase() || "";
-    // Si falta la clave o el modelo no se encuentra
+    // Capturamos específicamente el error de "must be set" del SDK
     if (errorMsg.includes("api key") || errorMsg.includes("not found") || errorMsg.includes("404")) {
         throw new Error("MISSING_API_KEY");
     }
@@ -76,8 +83,8 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 };
 
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
-    if (!process.env.API_KEY) return "Configura tu clave para recibir consejos.";
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) return "Configura tu clave para recibir consejos.";
     
     if (pantry.length === 0) return "Tu despensa está lista.";
     
@@ -87,24 +94,29 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
         .slice(0, 3);
 
     try {
+        const ai = new GoogleGenAI({ apiKey });
+        // Usamos gemini-3-flash-preview para tareas de texto básicas
         const response = await ai.models.generateContent({
-            model: "gemini-flash-latest",
+            model: "gemini-3-flash-preview",
             contents: `Dame un consejo de 10 palabras para aprovechar: ${expiringItems.map(i => i.name).join(", ")}.`,
         });
         return response.text || "Aprovecha tus frescos hoy.";
     } catch (error: any) {
-        return "Organiza tu cocina para ahorrar.";
+        return "Planifica tu menú para ahorrar hoy.";
     }
 };
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    if (!process.env.API_KEY) throw new Error("MISSING_API_KEY");
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) throw new Error("MISSING_API_KEY");
+    
+    const ai = new GoogleGenAI({ apiKey });
     const recipeOptions = availableRecipes.map(r => ({ id: r.id, title: r.title }));
 
     try {
+        // Usamos gemini-3-flash-preview para razonamiento y generación de JSON
         const response = await ai.models.generateContent({
-            model: "gemini-flash-latest",
+            model: "gemini-3-flash-preview",
             contents: `Genera un plan de comidas JSON para: ${targetDates.join(", ")}. Opciones: ${JSON.stringify(recipeOptions)}.`,
             config: { 
                 responseMimeType: "application/json",

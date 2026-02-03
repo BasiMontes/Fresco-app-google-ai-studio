@@ -42,17 +42,19 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   };
 
   const checkAndOpenKeySelector = async (): Promise<boolean> => {
+    // Si la clave ya está en process.env (por nuestro puente de Vercel), no pedimos nada
+    if (process.env.API_KEY) return true;
+
     const aiStudio = (window as any).aistudio;
     if (aiStudio) {
       const hasKey = await aiStudio.hasSelectedApiKey();
       if (!hasKey) {
         await aiStudio.openSelectKey();
-        // Según las guías, debemos asumir éxito tras abrir el diálogo
         return true;
       }
       return true;
     }
-    return true; // Si no estamos en entorno de AI Studio, asumimos que la clave está en el .env
+    return true; 
   };
 
   const handleStartScan = async () => {
@@ -90,9 +92,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       } catch (err: any) {
         console.error("Scanner Error Details:", err);
         if (err.message === "MISSING_API_KEY") {
-            setErrorMessage("No hay una clave vinculada o Google no la reconoce. Pulsa 'VINCULAR CLAVE' para activarla.");
+            setErrorMessage("No detectamos tu VITE_API_KEY. Si estás en Vercel, asegúrate de que el nombre sea exacto y hayas redeplegado.");
         } else {
-            setErrorMessage("No hemos podido procesar la imagen. ¿Podrías intentar con una foto más enfocada?");
+            setErrorMessage("No hemos podido procesar la imagen. Intenta con una foto más clara.");
         }
         setStep('error');
       }
@@ -125,6 +127,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const handleRetryKey = async () => {
     if ((window as any).aistudio) {
         await (window as any).aistudio.openSelectKey();
+    } else {
+        window.location.reload(); // En Vercel, refrescar para intentar pillar la variable de nuevo
     }
     resetScanner();
   };
@@ -148,7 +152,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-3xl font-black text-white">Escanear Ticket</h3>
-                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Detectaremos tus productos automáticamente. Asegúrate de tener tu clave API vinculada.</p>
+                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Detectaremos tus productos automáticamente con IA.</p>
               </div>
               <button 
                 onClick={handleStartScan}
@@ -168,7 +172,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="w-full max-w-xs space-y-4">
                 <h3 className="text-2xl font-black text-white">Procesando...</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse italic">Verificando clave y analizando imagen</p>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse italic">Analizando imagen y extrayendo datos</p>
               </div>
             </div>
           )}
@@ -179,14 +183,21 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <AlertCircle className="w-10 h-10 text-red-400" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-2xl font-black text-white leading-none">Error de Escaneo</h3>
+                <h3 className="text-2xl font-black text-white leading-none">Error de Configuración</h3>
                 <p className="text-teal-100/60 font-medium text-sm leading-relaxed">{errorMessage}</p>
-                <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="text-orange-400 font-bold text-[10px] uppercase underline flex items-center justify-center gap-1">Docs de Facturación <ExternalLink className="w-3 h-3" /></a>
+                <div className="bg-black/20 p-4 rounded-xl text-left border border-white/5">
+                    <p className="text-[9px] text-teal-400 font-black uppercase tracking-widest mb-2 underline">Checklist para Vercel:</p>
+                    <ul className="text-[10px] text-teal-100/60 space-y-1 font-bold">
+                        <li>• Variable: <span className="text-orange-400">VITE_API_KEY</span></li>
+                        <li>• Valor: Tu clave de Google AI Studio</li>
+                        <li>• Entorno: Production / Preview</li>
+                    </ul>
+                </div>
               </div>
               <div className="w-full space-y-3">
-                <button onClick={handleRetryKey} className="w-full py-5 bg-orange-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">VINCULAR API KEY</button>
+                <button onClick={handleRetryKey} className="w-full py-5 bg-orange-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">REINTENTAR / ACTUALIZAR</button>
                 <button onClick={resetScanner} className="w-full py-4 text-teal-300 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
-                    <RefreshCw className="w-3 h-3" /> REINTENTAR FOTO
+                    <RefreshCw className="w-3 h-3" /> CANCELAR
                 </button>
               </div>
             </div>
