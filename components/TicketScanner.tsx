@@ -41,6 +41,27 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const checkAndOpenKeySelector = async (): Promise<boolean> => {
+    const aiStudio = (window as any).aistudio;
+    if (aiStudio) {
+      const hasKey = await aiStudio.hasSelectedApiKey();
+      if (!hasKey) {
+        await aiStudio.openSelectKey();
+        // Según las guías, debemos asumir éxito tras abrir el diálogo
+        return true;
+      }
+      return true;
+    }
+    return true; // Si no estamos en entorno de AI Studio, asumimos que la clave está en el .env
+  };
+
+  const handleStartScan = async () => {
+    const ready = await checkAndOpenKeySelector();
+    if (ready) {
+      fileInputRef.current?.click();
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -69,9 +90,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       } catch (err: any) {
         console.error("Scanner Error Details:", err);
         if (err.message === "MISSING_API_KEY") {
-            setErrorMessage("Error de conexión (404). Google no detecta tu clave o el modelo estable. Pulsa el botón para re-configurar.");
+            setErrorMessage("No hay una clave vinculada o Google no la reconoce. Pulsa 'VINCULAR CLAVE' para activarla.");
         } else {
-            setErrorMessage("No se pudo procesar la imagen. Intenta con una foto más enfocada y con luz.");
+            setErrorMessage("No hemos podido procesar la imagen. ¿Podrías intentar con una foto más enfocada?");
         }
         setStep('error');
       }
@@ -127,13 +148,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-3xl font-black text-white">Escanear Ticket</h3>
-                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Usaremos el motor estable de Gemini para leer tu compra.</p>
+                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Detectaremos tus productos automáticamente. Asegúrate de tener tu clave API vinculada.</p>
               </div>
               <button 
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handleStartScan}
                 className="w-full py-5 bg-white text-[#0F4E0E] rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
               >
-                HACER FOTO / ELEGIR ARCHIVO
+                HACER FOTO / SUBIR
               </button>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
@@ -146,8 +167,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <FileText className="absolute inset-0 m-auto w-12 h-12 text-white animate-pulse" />
               </div>
               <div className="w-full max-w-xs space-y-4">
-                <h3 className="text-2xl font-black text-white">Analizando Ticket</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse italic">Conectando con el motor estable...</p>
+                <h3 className="text-2xl font-black text-white">Procesando...</h3>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse italic">Verificando clave y analizando imagen</p>
               </div>
             </div>
           )}
@@ -160,11 +181,12 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               <div className="space-y-4">
                 <h3 className="text-2xl font-black text-white leading-none">Error de Escaneo</h3>
                 <p className="text-teal-100/60 font-medium text-sm leading-relaxed">{errorMessage}</p>
+                <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="text-orange-400 font-bold text-[10px] uppercase underline flex items-center justify-center gap-1">Docs de Facturación <ExternalLink className="w-3 h-3" /></a>
               </div>
               <div className="w-full space-y-3">
-                <button onClick={handleRetryKey} className="w-full py-5 bg-orange-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">SELECCIONAR API KEY</button>
+                <button onClick={handleRetryKey} className="w-full py-5 bg-orange-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">VINCULAR API KEY</button>
                 <button onClick={resetScanner} className="w-full py-4 text-teal-300 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
-                    <RefreshCw className="w-3 h-3" /> REINTENTAR AHORA
+                    <RefreshCw className="w-3 h-3" /> REINTENTAR FOTO
                 </button>
               </div>
             </div>

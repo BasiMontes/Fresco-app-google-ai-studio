@@ -25,11 +25,12 @@ Analiza la imagen y extrae los productos en este formato JSON exacto:
     }
   ]
 }
-Normas: Normaliza nombres, extrae cantidades reales y estima días de caducidad lógicos.`;
+Normas: Normaliza nombres y estima días de caducidad lógicos.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string, retries = 1): Promise<any> => {
-  // Inicializamos con la clave del proceso actual
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+  // CRITICAL: Use process.env.API_KEY directly as per guidelines. 
+  // No fallback to "" to allow the SDK/Environment to handle the missing key error correctly.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
   try {
     const imagePart = {
@@ -40,11 +41,11 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     };
 
     const textPart = {
-      text: "Extrae los productos de este ticket de compra."
+      text: "Extrae los productos de este ticket de compra en el formato JSON solicitado."
     };
 
     const response = await ai.models.generateContent({
-      model: "gemini-flash-latest", // EL MODELO MÁS ESTABLE Y COMPATIBLE
+      model: "gemini-flash-latest", 
       contents: [{ parts: [imagePart, textPart] }],
       config: { 
         systemInstruction: AI_TICKET_PROMPT,
@@ -58,10 +59,11 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     
     return JSON.parse(cleanJson(text));
   } catch (error: any) {
-    console.error("Gemini Service Error:", error);
+    console.error("Gemini Error:", error);
     
-    // Si es un error de cuota o clave, informamos a la UI
-    if (error.message?.includes("not found") || error.message?.includes("API key") || error.message?.includes("404")) {
+    const errorMsg = error.message?.toLowerCase() || "";
+    // Si falta la clave o el modelo no se encuentra
+    if (errorMsg.includes("api key") || errorMsg.includes("not found") || errorMsg.includes("404")) {
         throw new Error("MISSING_API_KEY");
     }
     
@@ -74,7 +76,9 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 };
 
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+    if (!process.env.API_KEY) return "Configura tu clave para recibir consejos.";
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    
     if (pantry.length === 0) return "Tu despensa está lista.";
     
     const expiringItems = pantry
@@ -87,14 +91,15 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
             model: "gemini-flash-latest",
             contents: `Dame un consejo de 10 palabras para aprovechar: ${expiringItems.map(i => i.name).join(", ")}.`,
         });
-        return response.text || "Cocina con tus productos frescos hoy.";
+        return response.text || "Aprovecha tus frescos hoy.";
     } catch (error: any) {
-        return "Planifica tu menú para evitar desperdicios.";
+        return "Organiza tu cocina para ahorrar.";
     }
 };
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+    if (!process.env.API_KEY) throw new Error("MISSING_API_KEY");
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
     const recipeOptions = availableRecipes.map(r => ({ id: r.id, title: r.title }));
 
     try {
