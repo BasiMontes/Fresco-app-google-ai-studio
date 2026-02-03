@@ -10,7 +10,7 @@ import { initSyncListener, addToSyncQueue } from './services/syncService';
 import { STATIC_RECIPES } from './constants';
 import { Dialog, DialogOptions } from './components/Dialog';
 import { Logo } from './components/Logo';
-import { Home, Calendar, ShoppingBag, BookOpen, Package, User, RotateCcw } from 'lucide-react';
+import { Home, Calendar, ShoppingBag, BookOpen, Package, User, RotateCcw, Loader2 } from 'lucide-react';
 
 const Dashboard = React.lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
 const Planner = React.lazy(() => import('./components/Planner').then(module => ({ default: module.Planner })));
@@ -21,7 +21,7 @@ const Profile = React.lazy(() => import('./components/Profile').then(module => (
 const Settings = React.lazy(() => import('./components/Settings').then(module => ({ default: module.Settings })));
 const FAQ = React.lazy(() => import('./components/FAQ').then(module => ({ default: module.FAQ })));
 
-type ViewState = 'loading' | 'auth' | 'onboarding' | 'app' | 'error-config' | 'stuck';
+type ViewState = 'loading' | 'auth' | 'onboarding' | 'app' | 'error-config';
 
 const PageLoader = ({ message = "Abriendo cocina...", onReset }: { message?: string, onReset?: () => void }) => (
   <div className="h-screen w-full flex flex-col items-center justify-center bg-[#FDFDFD] p-6 text-center">
@@ -62,14 +62,8 @@ const App: React.FC = () => {
         setIsKeyboardOpen(isCurrentlyOpen);
       }
     };
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleVisualViewportResize);
-    }
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleVisualViewportResize);
-      }
-    };
+    if (window.visualViewport) { window.visualViewport.addEventListener('resize', handleVisualViewportResize); }
+    return () => { if (window.visualViewport) { window.visualViewport.removeEventListener('resize', handleVisualViewportResize); } };
   }, []);
 
   useEffect(() => { localStorage.setItem('fresco_favorites', JSON.stringify(favoriteIds)); }, [favoriteIds]);
@@ -97,60 +91,50 @@ const App: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (!isConfigured) { setView('error-config'); return; }
-    initSyncListener();
-    const checkSession = async () => {
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) await handleSessionChange(session);
-            else setView('auth');
-        } catch (e) { setView('auth'); }
-    };
-    checkSession();
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        setView('auth'); setUser(null); setUserId(null);
+  const handleSessionChange = useCallback(async (session: any) => {
+    if (!session?.user) {
+        setView('auth');
         return;
-      }
-      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') { await handleSessionChange(session); }
-    });
-    return () => authListener.subscription.unsubscribe();
-  }, []);
-
-  const handleSessionChange = async (session: any) => {
-    if (!session?.user) return;
+    }
     const uid = session.user.id;
     const email = session.user.email;
     setUserId(uid);
     try {
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
       if (profile && profile.onboarding_completed) {
-        setUser({ ...profile, name: profile.full_name || profile.name || email.split('@')[0] });
+        const userProfile = { ...profile, name: profile.full_name || profile.name || email.split('@')[0] };
+        setUser(userProfile);
         await loadUserData(uid);
         setView('app');
-      } else { setView('onboarding'); }
-    } catch (e) { setView('onboarding'); }
-  };
+      } else { 
+        setView('onboarding'); 
+      }
+    } catch (e) { 
+      setView('onboarding'); 
+    }
+  }, []);
 
-  const handleAddPantry = (item: PantryItem) => {
-      if (!userId) return;
-      setPantry(prev => [...prev, item]);
-      addToSyncQueue(userId, 'ADD_PANTRY', item);
-  };
-  const handleUpdatePantryQty = (id: string, delta: number) => {
-      if (!userId) return;
-      const currentItem = pantry.find(p => p.id === id);
-      if (!currentItem) return;
-      const updatedItem = { ...currentItem, quantity: Math.max(0, currentItem.quantity + delta) };
-      setPantry(prev => prev.map(p => p.id === id ? updatedItem : p));
-      addToSyncQueue(userId, 'UPDATE_PANTRY', updatedItem);
-  };
-  const handleRemovePantry = (id: string) => {
-      if (!userId) return;
-      setPantry(prev => prev.filter(p => p.id !== id));
-      addToSyncQueue(userId, 'DELETE_PANTRY', { id });
-  };
+  useEffect(() => {
+    if (!isConfigured) { setView('error-config'); return; }
+    initSyncListener();
+    
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) handleSessionChange(session);
+      else setView('auth');
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        setView('auth'); setUser(null); setUserId(null);
+        return;
+      }
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') { 
+        await handleSessionChange(session); 
+      }
+    });
+
+    return () => authListener.subscription.unsubscribe();
+  }, [handleSessionChange]);
 
   const handleUpdateMealSlot = useCallback(async (date: string, type: MealCategory, recipeId: string | undefined) => {
     if (!userId) return;
@@ -169,7 +153,8 @@ const App: React.FC = () => {
       window.location.reload();
   };
 
-  if (view === 'loading') return <PageLoader />;
+  if (view === 'loading') return <PageLoader onReset={handleForceReset} />;
+  if (view === 'error-config') return <div className="h-screen bg-red-900 text-white flex items-center justify-center p-8 text-center">Falta configuración de Supabase.</div>;
 
   const isProfileActive = ['settings', 'faq'].includes(activeTab) || activeTab === 'profile';
 
@@ -200,26 +185,20 @@ const App: React.FC = () => {
           </aside>
 
           <main className="flex-1 h-full overflow-hidden flex flex-col relative bg-[#F4F4F4]">
-            {/* Padding razonable: p-2 en móvil, p-4 en desktop */}
             <div className={`flex-1 w-full max-w-7xl mx-auto p-2 md:p-4 ${isKeyboardOpen ? 'pb-4' : 'pb-40'} md:pb-4 h-full overflow-y-auto no-scrollbar`}>
                 <div className="h-full w-full rounded-[2.5rem] overflow-hidden bg-[#FDFDFD] shadow-inner border border-gray-100/50">
-                    <Suspense fallback={<PageLoader message="Cargando vista..." />}>
-                        {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
-                        {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={(p, r) => { setRecipes(prev => [...prev, ...r]); setMealPlan(prev => [...prev, ...p]); }} onClear={() => setMealPlan([])} />}
-                        {activeTab === 'pantry' && <Pantry 
-                            items={pantry} 
-                            onRemove={handleRemovePantry} 
-                            onAdd={handleAddPantry} 
-                            onUpdateQuantity={handleUpdatePantryQty} 
-                            onAddMany={items => { setPantry(prev => [...prev, ...items]); }} 
-                            onEdit={i => setPantry(prev => prev.map(p => p.id === i.id ? i : p))} 
-                        />}
-                        {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(p => [...p, ...r])} onAddToPlan={() => {}} onCookFinish={() => {}} onAddToShoppingList={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
-                        {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={i => setShoppingList(p => [...p, ...i])} onUpdateShoppingItem={i => setShoppingList(p => p.map(x => x.id === i.id ? i : x))} onRemoveShoppingItem={id => setShoppingList(p => p.filter(x => x.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
-                        {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} onNavigate={setActiveTab} />}
-                        {activeTab === 'settings' && user && <Settings user={user} onBack={() => setActiveTab('profile')} onUpdateUser={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} />}
-                        {activeTab === 'faq' && <FAQ onBack={() => setActiveTab('profile')} />}
-                    </Suspense>
+                    {!user ? <PageLoader message="Identificando chef..." onReset={handleForceReset} /> : (
+                      <Suspense fallback={<PageLoader message="Cargando vista..." />}>
+                          {activeTab === 'dashboard' && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}
+                          {activeTab === 'planner' && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={(p, r) => { setRecipes(prev => [...prev, ...r]); setMealPlan(prev => [...prev, ...p]); }} onClear={() => setMealPlan([])} />}
+                          {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => { setPantry(p => p.filter(x => x.id !== id)); addToSyncQueue(userId!, 'DELETE_PANTRY', {id}); }} onAdd={i => { setPantry(p => [...p, i]); addToSyncQueue(userId!, 'ADD_PANTRY', i); }} onUpdateQuantity={(id, d) => { setPantry(p => p.map(x => x.id === id ? {...x, quantity: Math.max(0, x.quantity + d)} : x)); }} onAddMany={items => { setPantry(prev => [...prev, ...items]); }} onEdit={i => { setPantry(prev => prev.map(p => p.id === i.id ? i : p)); addToSyncQueue(userId!, 'UPDATE_PANTRY', i); }} />}
+                          {activeTab === 'recipes' && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => { setRecipes(p => [...p, ...r]); r.forEach(rec => addToSyncQueue(userId!, 'SAVE_RECIPE', rec)); }} onAddToPlan={() => {}} onCookFinish={() => {}} onAddToShoppingList={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
+                          {activeTab === 'shopping' && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={i => { setShoppingList(p => [...p, ...i]); i.forEach(si => addToSyncQueue(userId!, 'ADD_SHOPPING', si)); }} onUpdateShoppingItem={i => { setShoppingList(p => p.map(x => x.id === i.id ? i : x)); addToSyncQueue(userId!, 'UPDATE_SHOPPING', i); }} onRemoveShoppingItem={id => { setShoppingList(p => p.filter(x => x.id !== id)); addToSyncQueue(userId!, 'DELETE_SHOPPING', {id}); }} onFinishShopping={items => { setPantry(p => [...p, ...items]); items.forEach(i => addToSyncQueue(userId!, 'ADD_PANTRY', i)); }} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
+                          {activeTab === 'profile' && <Profile user={user} onUpdate={u => { setUser(u); addToSyncQueue(userId!, 'UPDATE_PROFILE', u); }} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} onNavigate={setActiveTab} />}
+                          {activeTab === 'settings' && <Settings user={user} onBack={() => setActiveTab('profile')} onUpdateUser={u => { setUser(u); addToSyncQueue(userId!, 'UPDATE_PROFILE', u); }} onLogout={() => supabase.auth.signOut()} onReset={handleForceReset} />}
+                          {activeTab === 'faq' && <FAQ onBack={() => setActiveTab('profile')} />}
+                      </Suspense>
+                    )}
                 </div>
             </div>
           </main>

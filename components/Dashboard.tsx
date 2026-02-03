@@ -92,7 +92,7 @@ const UnifiedRecipeCard: React.FC<{
     </div>
 );
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true, favoriteIds = [], onToggleFavorite }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ user, pantry = [], mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true, favoriteIds = [], onToggleFavorite }) => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'favorites' | 'notifications'>('dashboard');
   const [aiTip, setAiTip] = useState<string>("Cargando tu consejo de hoy...");
   const [isLoadingTip, setIsLoadingTip] = useState(true);
@@ -110,15 +110,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
             setIsLoadingTip(false);
         }
     };
-    loadTip();
+    if (pantry && pantry.length >= 0) loadTip();
   }, [pantry]);
 
   const alerts = useMemo(() => {
       const list = [];
-      const expiringSoon = pantry.filter(i => i.expires_at && differenceInDays(new Date(i.expires_at), new Date()) <= 3);
+      const expiringSoon = (pantry || []).filter(i => i.expires_at && differenceInDays(new Date(i.expires_at), new Date()) <= 3);
       if (expiringSoon.length > 0) list.push({ type: 'expiry', title: 'Productos por caducar', msg: `Tienes ${expiringSoon.length} items que caducan pronto.`, icon: AlertCircle, color: 'text-orange-500' });
       
-      const emptyStock = pantry.filter(i => i.quantity <= 0);
+      const emptyStock = (pantry || []).filter(i => i.quantity <= 0);
       if (emptyStock.length > 3) list.push({ type: 'stock', title: 'Stock Agotado', msg: 'Varios básicos se han agotado. Revisa tu lista.', icon: ShoppingCart, color: 'text-red-500' });
       
       return list;
@@ -129,7 +129,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       const today = new Date();
       const start = startOfWeek(today, { weekStartsOn: 1 });
       const end = endOfWeek(today, { weekStartsOn: 1 });
-      const weeklySlots = mealPlan.filter(slot => {
+      const weeklySlots = (mealPlan || []).filter(slot => {
           try { return isWithinInterval(parseISO(slot.date), { start, end }); } catch { return false; }
       });
       const estimatedSpent = weeklySlots.length * 3.5; 
@@ -137,14 +137,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       return { limit: BUDGET_LIMIT, spent: estimatedSpent, percentage };
   }, [mealPlan]);
 
-  const latestRecipes = useMemo(() => [...recipes].reverse().slice(0, 8), [recipes]);
-  const favoriteRecipes = useMemo(() => recipes.filter(r => favoriteIds.includes(r.id)), [recipes, favoriteIds]);
+  const latestRecipes = useMemo(() => [...(recipes || [])].reverse().slice(0, 8), [recipes]);
+  const favoriteRecipes = useMemo(() => (recipes || []).filter(r => (favoriteIds || []).includes(r.id)), [recipes, favoriteIds]);
+  
   const safeTimeSaved = useMemo(() => {
-      const val = Number(user.time_saved_mins);
+      const val = Number(user?.time_saved_mins || 0);
       return isNaN(val) ? 0 : val;
-  }, [user.time_saved_mins]);
+  }, [user]);
 
-  // VISTA: NOTIFICACIONES
+  const safeSavings = useMemo(() => {
+      return Number(user?.total_savings || 0);
+  }, [user]);
+
+  const safeName = useMemo(() => {
+      return (user?.name || "Chef").split(' ')[0];
+  }, [user]);
+
   if (currentView === 'notifications') {
     return (
         <div className="space-y-10 animate-fade-in pb-10 max-w-5xl mx-auto px-2 md:px-0">
@@ -178,7 +186,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
     );
   }
 
-  // VISTA: FAVORITOS
   if (currentView === 'favorites') {
     return (
         <div className="space-y-10 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0">
@@ -219,10 +226,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
     );
   }
 
-  // VISTA: DASHBOARD PRINCIPAL
   return (
     <div className="space-y-12 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0 pt-6">
-      {/* PÍLDORA IA */}
       <div className="bg-[#0F4E0E] p-2.5 md:p-6 rounded-full md:rounded-[2.5rem] shadow-xl relative overflow-hidden group">
           <div className="flex flex-row items-center justify-between gap-3 md:gap-8 relative z-10">
               <div className="w-9 h-9 md:w-16 md:h-16 bg-white/10 rounded-xl md:rounded-2xl flex items-center justify-center text-orange-400 shrink-0">
@@ -246,7 +251,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
       <header className="flex items-center justify-between px-2">
           <div className="space-y-4">
               <h1 className="text-3xl md:text-5xl font-black text-[#0F4E0E] tracking-tight leading-none">
-                  ¡Hola, {user.name.split(' ')[0]}! 👋
+                  ¡Hola, {safeName}! 👋
               </h1>
               <p className="text-base md:text-2xl font-bold text-[#0F4E0E]/40 pl-1 leading-relaxed">Organiza tu semana y ahorra hoy.</p>
           </div>
@@ -267,11 +272,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
           </div>
       </header>
 
-      {/* Grid de Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-2">
-          <StatCard label="Recetas" value={recipes.length} icon={BookOpen} colorClass="bg-orange-50 text-orange-500" />
+          <StatCard label="Recetas" value={recipes?.length || 0} icon={BookOpen} colorClass="bg-orange-50 text-orange-500" />
           <StatCard label="Gasto Semanal" value={`${budgetStats.spent.toFixed(0)}€`} subValue={`/ ${budgetStats.limit}€`} icon={TrendingUp} colorClass={budgetStats.spent > budgetStats.limit ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'} progress={budgetStats.percentage} />
-          <StatCard label="Ahorro Total" value={`${user.total_savings.toFixed(0)}€`} icon={PiggyBank} colorClass="bg-teal-50 text-teal-600" />
+          <StatCard label="Ahorro Total" value={`${safeSavings.toFixed(0)}€`} icon={PiggyBank} colorClass="bg-teal-50 text-teal-600" />
           <StatCard label="Recuperado" value={`${Math.round(safeTimeSaved / 60)}h`} icon={Timer} colorClass="bg-purple-50 text-purple-500" />
       </div>
 
@@ -285,7 +289,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
                     <UnifiedRecipeCard 
                         key={recipe.id} 
                         recipe={recipe} 
-                        isFav={favoriteIds.includes(recipe.id)} 
+                        isFav={(favoriteIds || []).includes(recipe.id)} 
                         onDetail={(r, m) => setSelectedRecipe({recipe: r, mode: m})} 
                         onToggleFavorite={onToggleFavorite} 
                     />
@@ -297,7 +301,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
         <RecipeDetail 
             recipe={selectedRecipe.recipe} pantry={pantry} userProfile={user} initialMode={selectedRecipe.mode} onClose={() => setSelectedRecipe(null)} 
             onAddToPlan={(serv, date, type) => { onAddToPlan?.(selectedRecipe.recipe, serv, date, type); setSelectedRecipe(null); }}
-            isFavorite={favoriteIds.includes(selectedRecipe.recipe.id)} onToggleFavorite={onToggleFavorite}
+            isFavorite={(favoriteIds || []).includes(selectedRecipe.recipe.id)} onToggleFavorite={onToggleFavorite}
         />
       )}
     </div>
