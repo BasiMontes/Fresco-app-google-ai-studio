@@ -1,22 +1,27 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
 
-// Puente de seguridad para entornos de producción (Vercel/Vite)
-// Vite requiere el prefijo VITE_ para exponer variables al cliente
+// --- PUENTE DE SEGURIDAD PARA VITE / VERCEL ---
+// Debe ejecutarse antes de cualquier otro import que pueda usar Gemini
 if (typeof window !== 'undefined') {
-    // Definimos process en el objeto window para que coincida con la expectativa de process.env en el resto de la app.
-    // Usamos casting a 'any' para evitar que TypeScript se queje de que 'process' no existe en el tipo Window estándar.
-    (window as any).process = (window as any).process || {};
-    (window as any).process.env = (window as any).process.env || {};
+    // @ts-ignore
+    window.process = window.process || { env: {} };
+    // @ts-ignore
+    window.process.env = window.process.env || {};
     
-    // @ts-ignore - Vite inyecta variables en import.meta.env
-    const viteKey = (import.meta as any).env?.VITE_API_KEY;
+    // Capturamos la variable de Vite y la inyectamos en el objeto que espera el SDK
+    // @ts-ignore
+    const viteKey = import.meta.env?.VITE_API_KEY;
     if (viteKey) {
-        (window as any).process.env.API_KEY = viteKey;
+        // @ts-ignore
+        window.process.env.API_KEY = viteKey;
+        console.debug("Fresco: API_KEY vinculada desde VITE_ env.");
     }
 }
+
+// Ahora importamos el resto de la app
+import App from './App';
 
 const rootElement = document.getElementById('root');
 

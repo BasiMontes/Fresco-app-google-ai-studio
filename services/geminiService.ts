@@ -28,15 +28,16 @@ Analiza la imagen y extrae los productos en este formato JSON exacto:
 Normas: Normaliza nombres y estima días de caducidad lógicos.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string, retries = 1): Promise<any> => {
-  const apiKey = process.env.API_KEY;
+  // CRITICAL: Must obtain key from process.env.API_KEY as per guidelines.
+  // We use type casting to ensure it's treated as a string even if the polyfill is still mounting.
+  const apiKey = (process.env.API_KEY as string);
   
-  if (!apiKey) {
-      console.error("Fresco: API_KEY no configurada en process.env");
+  if (!apiKey || apiKey === "undefined") {
+      console.error("Fresco Error: API_KEY is missing in process.env");
       throw new Error("MISSING_API_KEY");
   }
 
   try {
-    // Instanciamos justo antes de la llamada como dictan las guías
     const ai = new GoogleGenAI({ apiKey });
 
     const imagePart = {
@@ -47,10 +48,9 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     };
 
     const textPart = {
-      text: "Extrae los productos de este ticket de compra en el formato JSON solicitado."
+      text: "Analiza este ticket y devuelve el JSON de productos."
     };
 
-    // Usamos gemini-3-flash-preview y el formato de contents recomendado para multimodal
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview", 
       contents: { parts: [imagePart, textPart] },
@@ -69,8 +69,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     console.error("Gemini Technical Error:", error);
     
     const errorMsg = error.message?.toLowerCase() || "";
-    // Capturamos específicamente el error de "must be set" del SDK
-    if (errorMsg.includes("api key") || errorMsg.includes("not found") || errorMsg.includes("404")) {
+    if (errorMsg.includes("api key") || errorMsg.includes("404") || errorMsg.includes("not found")) {
         throw new Error("MISSING_API_KEY");
     }
     
@@ -83,8 +82,8 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 };
 
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) return "Configura tu clave para recibir consejos.";
+    const apiKey = (process.env.API_KEY as string);
+    if (!apiKey || apiKey === "undefined") return "Configura tu clave para consejos IA.";
     
     if (pantry.length === 0) return "Tu despensa está lista.";
     
@@ -95,26 +94,24 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
 
     try {
         const ai = new GoogleGenAI({ apiKey });
-        // Usamos gemini-3-flash-preview para tareas de texto básicas
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: `Dame un consejo de 10 palabras para aprovechar: ${expiringItems.map(i => i.name).join(", ")}.`,
         });
         return response.text || "Aprovecha tus frescos hoy.";
     } catch (error: any) {
-        return "Planifica tu menú para ahorrar hoy.";
+        return "Organiza tu cocina hoy.";
     }
 };
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) throw new Error("MISSING_API_KEY");
+    const apiKey = (process.env.API_KEY as string);
+    if (!apiKey || apiKey === "undefined") throw new Error("MISSING_API_KEY");
     
     const ai = new GoogleGenAI({ apiKey });
     const recipeOptions = availableRecipes.map(r => ({ id: r.id, title: r.title }));
 
     try {
-        // Usamos gemini-3-flash-preview para razonamiento y generación de JSON
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: `Genera un plan de comidas JSON para: ${targetDates.join(", ")}. Opciones: ${JSON.stringify(recipeOptions)}.`,
