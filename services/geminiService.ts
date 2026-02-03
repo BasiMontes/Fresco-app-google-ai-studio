@@ -6,68 +6,52 @@ const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const cleanJson = (text: string | undefined): string => {
     if (!text) return '{}';
-    const match = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) || text.match(/\{[\s\S]*\}/);
-    if (match) return match[1] || match[0];
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) return match[0];
     return text.trim();
 };
 
-const AI_TICKET_PROMPT = `Analiza este ticket de supermercado.
-IGNORA: logos, CIF, dirección, totales, cupones.
-NORMALIZA: "HAC. LECHE ENT." → "Leche Entera Hacendado".
-CATEGORÍAS: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other.
-CADUCIDAD ESTIMADA (días): pescado/carne: 2, lácteos: 7, verduras/frutas: 5, otros: 30.`;
+const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets. Analiza la imagen y extrae: 
+1. supermarket: Nombre comercial.
+2. items: Array de objetos con name, quantity (número), unit (uds/kg/g/l/ml), category (vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other) y estimated_expiry_days (número).
+Normas: Normaliza "HAC. LECHE" a "Leche Hacendado". Estima caducidad lógica (carne 2, lácteos 7, verduras 5, conservas 365).`;
 
-export const extractItemsFromTicket = async (base64Data: string, mimeType: string, retries = 2): Promise<any> => {
-  // Instancia nueva en cada llamada para capturar la clave actual del proceso
+export const extractItemsFromTicket = async (base64Data: string, mimeType: string, retries = 1): Promise<any> => {
+  // CRITICAL: New instance inside to catch the most recent API KEY from window environment
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview", // Volvemos al modelo rápido y compatible
-      contents: { 
-        parts: [
-          { inlineData: { mimeType, data: base64Data } },
-          { text: "Extrae los productos en este JSON." }
-        ] 
-      },
+      model: "gemini-3-flash-preview", // Usamos Flash para evitar el error 404 de cuota del modelo Pro
+      contents: [
+        {
+          parts: [
+            { inlineData: { mimeType, data: base64Data } },
+            { text: "Analiza este ticket y devuelve los productos en formato JSON según las instrucciones." }
+          ]
+        }
+      ],
       config: { 
         systemInstruction: AI_TICKET_PROMPT,
         responseMimeType: "application/json",
-        responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-                supermarket: { type: Type.STRING },
-                items: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            name: { type: Type.STRING },
-                            quantity: { type: Type.NUMBER },
-                            unit: { type: Type.STRING },
-                            category: { type: Type.STRING },
-                            estimated_expiry_days: { type: Type.INTEGER }
-                        },
-                        required: ["name", "quantity", "unit", "category", "estimated_expiry_days"]
-                    }
-                }
-            },
-            required: ["supermarket", "items"]
-        },
         temperature: 0.1,
       }
     });
     
     const text = response.text;
     if (!text) throw new Error("EMPTY_RESPONSE");
-    return JSON.parse(text);
+    
+    return JSON.parse(cleanJson(text));
   } catch (error: any) {
-    console.error("Error en extractItemsFromTicket:", error);
-    if (error.message?.includes("Requested entity was not found") || error.message?.includes("API key")) {
+    console.error("Fresco Gemini Error:", error);
+    
+    // Si el error indica que no se encuentra el modelo o la entidad (404)
+    if (error.message?.includes("not found") || error.message?.includes("API key")) {
         throw new Error("MISSING_API_KEY");
     }
+    
     if (retries > 0) {
-        await wait(1500);
+        await wait(1000);
         return extractItemsFromTicket(base64Data, mimeType, retries - 1);
     }
     throw error;
@@ -75,10 +59,8 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 };
 
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) return "Organiza tu cocina hoy para ahorrar mañana.";
-    const ai = new GoogleGenAI({ apiKey });
-    if (pantry.length === 0) return "¡Tu despensa está lista!";
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+    if (pantry.length === 0) return "Tu despensa está vacía.";
     
     const expiringItems = pantry
         .filter(i => i.expires_at)
@@ -88,31 +70,28 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
     try {
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
-            contents: `Dame un consejo de 10 palabras para aprovechar: ${expiringItems.map(i => i.name).join(", ")}.`,
-            config: { temperature: 0.7 }
+            contents: `Dame un consejo de 10 palabras para aprovechar estos productos: ${expiringItems.map(i => i.name).join(", ")}.`,
         });
         return response.text || "Cocina con lo que tienes hoy.";
     } catch (error: any) {
-        return "Aprovecha tus productos frescos antes de que caduquen.";
+        return "Planifica tu menú para evitar desperdicios.";
     }
 };
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    const apiKey = process.env.API_KEY;
-    const ai = new GoogleGenAI({ apiKey: apiKey || "" });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
     const recipeOptions = availableRecipes.map(r => ({ id: r.id, title: r.title }));
 
     try {
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
-            contents: `Genera un plan JSON para estas fechas: ${targetDates.join(", ")}. Recetas: ${JSON.stringify(recipeOptions)}.`,
+            contents: `Genera un plan de comidas JSON para: ${targetDates.join(", ")}. Recetas disponibles: ${JSON.stringify(recipeOptions)}.`,
             config: { 
-                systemInstruction: "Responde solo con el objeto JSON solicitado.",
                 responseMimeType: "application/json",
                 temperature: 0.2
             }
         });
-        const selections = JSON.parse(response.text || '{}');
+        const selections = JSON.parse(cleanJson(response.text) || '{}');
         const plan: MealSlot[] = [];
         targetDates.forEach(date => {
             targetTypes.forEach(type => {
@@ -122,6 +101,7 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
         });
         return { plan, newRecipes: [] };
     } catch (error: any) {
+        // Fallback básico en caso de error
         const plan = targetDates.flatMap(date => 
             targetTypes.map(type => ({ date, type, recipeId: availableRecipes[Math.floor(Math.random() * availableRecipes.length)].id, servings: user.household_size, isCooked: false }))
         );
