@@ -6,62 +6,68 @@ const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const cleanJson = (text: string | undefined): string => {
     if (!text) return '{}';
-    // Buscar bloques de código markdown o simplemente el primer {
     const match = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) || text.match(/\{[\s\S]*\}/);
     if (match) return match[1] || match[0];
     return text.trim();
 };
 
-const AI_TICKET_PROMPT = `Analiza tickets de supermercados españoles (Mercadona, Carrefour, Lidl, Aldi, Dia, Eroski).
-IGNORA: logos, CIF, dirección, ticket#, fecha, pago, IVA, totales, cupones de descuento.
-NORMALIZA NOMBRES: "HAC. LECHE ENT." → "Leche Entera Hacendado", "PIMT. VERDE KG" → "Pimiento Verde", "FTE SALMON" → "Filete de Salmón", "PECHUG. POLLO" → "Pechuga de Pollo".
-CANTIDADES Y UNIDADES: 
-- "2 x 1,50€" → quantity: 2.0, unit: "uds".
-- "0,540 kg x 2€/kg" → quantity: 0.540, unit: "kg".
-- "PACK 6 YOGUR" → quantity: 6.0, unit: "uds".
-UNIDADES PERMITIDAS: uds, kg, g, l, ml, pack.
+const AI_TICKET_PROMPT = `Analiza tickets de supermercados españoles.
+IGNORA: logos, CIF, dirección, totales, cupones.
+NORMALIZA: "HAC. LECHE ENT." → "Leche Entera Hacendado".
 CATEGORÍAS: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other.
-CADUCIDAD ESTIMADA (estimated_expiry_days): 
-- pescado/carne: 2-4 días.
-- lácteos: 7-14 días.
-- verduras/frutas: 5-7 días.
-- pan: 3-5 días.
-- congelados: 180-365 días.
-- conservas/pasta/pantry: 365-730 días.
-
-RESPONDE EXCLUSIVAMENTE UN OBJETO JSON CON ESTE FORMATO:
-{"supermarket":"Nombre del Supermercado","items":[{"name":"Producto Normalizado","quantity":1.0,"unit":"uds","category":"category_id","estimated_expiry_days":7}]}`;
+CADUCIDAD ESTIMADA: pescado/carne: 2-4 días, lácteos: 7-14, verduras/frutas: 5-7, pan: 3-5, conservas/pantry: 365.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string, retries = 2): Promise<any> => {
+  // Obtenemos la clave directamente de process.env
   const apiKey = process.env.API_KEY;
-  if (!apiKey) throw new Error("MISSING_API_KEY");
-
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: apiKey || "" });
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3-pro-preview",
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Analiza este ticket de compra detalladamente. Responde SOLO con el JSON." }
+          { text: "Analiza este ticket y devuelve los productos en JSON." }
         ] 
       },
       config: { 
         systemInstruction: AI_TICKET_PROMPT,
         responseMimeType: "application/json",
+        responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+                supermarket: { type: Type.STRING, description: "Nombre del supermercado" },
+                items: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            name: { type: Type.STRING },
+                            quantity: { type: Type.NUMBER },
+                            unit: { type: Type.STRING, description: "uds, kg, g, l, ml, pack" },
+                            category: { type: Type.STRING },
+                            estimated_expiry_days: { type: Type.INTEGER }
+                        },
+                        required: ["name", "quantity", "unit", "category", "estimated_expiry_days"]
+                    }
+                }
+            },
+            required: ["supermarket", "items"]
+        },
         temperature: 0.1,
       }
     });
     
     const text = response.text;
     if (!text) throw new Error("La IA no devolvió contenido.");
-    
-    const cleaned = cleanJson(text);
-    return JSON.parse(cleaned);
+    return JSON.parse(text);
   } catch (error: any) {
     console.error("Error en extractItemsFromTicket:", error);
-    if (error.message?.includes("Requested entity was not found")) throw new Error("MISSING_API_KEY");
+    // Error específico de AI Studio cuando no hay clave o el proyecto no existe
+    if (error.message?.includes("Requested entity was not found") || !apiKey) {
+        throw new Error("MISSING_API_KEY");
+    }
     if ((error.message?.includes("429") || error.message?.includes("limit")) && retries > 0) {
         await wait(2000);
         return extractItemsFromTicket(base64Data, mimeType, retries - 1);
@@ -72,7 +78,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) return "Cocina con lo que tienes y ahorra hoy.";
+    if (!apiKey) return "Organiza tu cocina hoy para ahorrar mañana.";
     const ai = new GoogleGenAI({ apiKey });
     if (pantry.length === 0) return "¡Tu despensa está lista! Añade productos para empezar.";
     
@@ -95,23 +101,20 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) throw new Error("MISSING_API_KEY");
-    const ai = new GoogleGenAI({ apiKey });
-    const pantrySummary = pantry.map(p => p.name).join(", ");
+    const ai = new GoogleGenAI({ apiKey: apiKey || "" });
     const recipeOptions = availableRecipes.map(r => ({ id: r.id, title: r.title }));
 
     try {
         const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
-            contents: `Genera un plan para estas fechas: ${targetDates.join(", ")} y estas comidas: ${targetTypes.join(", ")}. Despensa: ${pantrySummary}. Recetas disponibles: ${JSON.stringify(recipeOptions)}. Devuelve UN OBJETO donde las llaves sean las FECHAS y el valor sea otro objeto con las COMIDAS y sus RECETA_ID.`,
+            contents: `Genera un plan para estas fechas: ${targetDates.join(", ")}. Recetas: ${JSON.stringify(recipeOptions)}.`,
             config: { 
-                systemInstruction: "Eres un planificador experto de dietas mediterráneas. Responde EXCLUSIVAMENTE con el objeto JSON solicitado.",
+                systemInstruction: "Responde EXCLUSIVAMENTE con un objeto JSON donde las llaves sean las fechas y los valores objetos con las comidas.",
                 responseMimeType: "application/json",
                 temperature: 0.2
             }
         });
-        const cleaned = cleanJson(response.text);
-        const selections = JSON.parse(cleaned);
+        const selections = JSON.parse(response.text || '{}');
         const plan: MealSlot[] = [];
         targetDates.forEach(date => {
             targetTypes.forEach(type => {
@@ -121,7 +124,7 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
         });
         return { plan, newRecipes: [] };
     } catch (error: any) {
-        if (error.message?.includes("Requested entity was not found")) throw new Error("MISSING_API_KEY");
+        if (error.message?.includes("Requested entity was not found") || !apiKey) throw new Error("MISSING_API_KEY");
         const plan = targetDates.flatMap(date => 
             targetTypes.map(type => ({ date, type, recipeId: availableRecipes[Math.floor(Math.random() * availableRecipes.length)].id, servings: user.household_size, isCooked: false }))
         );
