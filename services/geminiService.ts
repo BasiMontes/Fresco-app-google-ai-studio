@@ -20,8 +20,10 @@ const cleanJson = (text: string | undefined): string => {
  * Generates a waste prevention tip based on current pantry items.
  */
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
-    // Initializing with process.env.API_KEY as per instructions
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) return "Configura tu API Key para recibir consejos personalizados.";
+
+    const ai = new GoogleGenAI({ apiKey });
     if (pantry.length === 0) return "¡Tu despensa está lista! Añade productos para recibir consejos.";
     
     const expiringItems = pantry
@@ -35,7 +37,6 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
             contents: `Tengo estos productos a punto de caducar: ${expiringItems.map(i => i.name).join(", ")}. Dame un consejo de cocina de 15 palabras máximo para aprovecharlos hoy. Sé motivador.`,
             config: { temperature: 0.7 }
         });
-        // Correct usage of .text property
         return response.text || "Cocina algo creativo con lo que tienes hoy.";
     } catch (error: any) {
         return "Aprovecha tus productos frescos antes de que caduquen.";
@@ -46,8 +47,12 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
  * Extracts product items from a grocery ticket image.
  */
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string, retries = 2): Promise<any> => {
-  // Initializing with process.env.API_KEY as per instructions
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+      throw new Error("MISSING_API_KEY");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
     const response = await ai.models.generateContent({
@@ -55,18 +60,26 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Extrae productos de este ticket. Devuelve un objeto JSON con: supermarket, items[name, quantity, unit, category, estimated_expiry_days]" }
+          { text: "Extrae productos de este ticket de supermercado. Devuelve un objeto JSON con: supermarket (nombre), items (lista de objetos con: name, quantity (número), unit (uds, kg, l, g, ml), category, estimated_expiry_days (número de días desde hoy)). Responde solo el JSON." }
         ] 
       },
       config: { 
-        systemInstruction: "Eres Fresco, un digitalizador de tickets experto. Responde estrictamente con JSON.",
+        systemInstruction: "Eres Fresco, un asistente experto en digitalización de tickets. Tu objetivo es normalizar nombres de productos y categorías para una despensa inteligente.",
         responseMimeType: "application/json",
         temperature: 0.1,
       }
     });
-    // Access response text using .text property
-    return JSON.parse(cleanJson(response.text));
+    
+    const text = response.text;
+    if (!text) throw new Error("La IA no devolvió contenido.");
+    
+    return JSON.parse(cleanJson(text));
   } catch (error: any) {
+    // Si la entidad no existe, es probable que la API Key sea inválida o haya expirado el proyecto
+    if (error.message?.includes("Requested entity was not found")) {
+        throw new Error("MISSING_API_KEY");
+    }
+
     if ((error.message?.includes("429") || error.message?.includes("limit")) && retries > 0) {
         await wait(2000);
         return extractItemsFromTicket(base64Data, mimeType, retries - 1);
@@ -79,8 +92,10 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
  * Generates a smart meal plan based on user preferences and pantry stock.
  */
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    // Initializing with process.env.API_KEY as per instructions
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) throw new Error("MISSING_API_KEY");
+
+    const ai = new GoogleGenAI({ apiKey });
     
     const pantrySummary = pantry.map(p => p.name).join(", ");
     const recipeOptions = availableRecipes.map(r => ({ id: r.id, title: r.title }));
@@ -96,7 +111,6 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
             }
         });
         
-        // Access response text using .text property
         const selections = JSON.parse(cleanJson(response.text));
         const plan: MealSlot[] = [];
         
@@ -109,6 +123,8 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
         return { plan, newRecipes: [] };
     } catch (error: any) {
         console.error("Gemini Selection Error:", error);
+        if (error.message?.includes("Requested entity was not found")) throw new Error("MISSING_API_KEY");
+        
         const plan = targetDates.flatMap(date => 
             targetTypes.map(type => ({ date, type, recipeId: availableRecipes[Math.floor(Math.random() * availableRecipes.length)].id, servings: user.household_size, isCooked: false }))
         );

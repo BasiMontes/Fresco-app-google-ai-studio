@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Camera, FileText, Loader2, CheckCircle2, RefreshCw, Plus, Minus, Trash2, ChevronDown, AlertCircle, Key, ExternalLink, Info, CreditCard, ShieldAlert } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
@@ -36,6 +36,19 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Comprobación inicial de API Key al abrir el escáner
+  useEffect(() => {
+    const checkKey = async () => {
+        const hasKey = await (window as any).aistudio?.hasSelectedApiKey();
+        if (!hasKey && !process.env.API_KEY) {
+            setErrorType('auth');
+            setErrorMessage("Necesitas vincular una llave de Google AI Studio para activar el escaneo inteligente.");
+            setStep('error');
+        }
+    };
+    checkKey();
+  }, []);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -64,16 +77,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       } catch (err: any) {
         if (err.message === "MISSING_API_KEY") {
             setErrorType('auth');
-            setErrorMessage("Necesitas vincular una 'llave' de Google para activar el escaneo.");
-        } else if (err.message === "API_KEY_LEAKED") {
-            setErrorType('leaked');
-            setErrorMessage("Google ha desactivado tu clave porque se ha filtrado públicamente. Debes generar una NUEVA.");
-        } else if (err.message === "BILLING_LIMIT_REACHED") {
-            setErrorType('billing');
-            setErrorMessage("Has alcanzado el límite de presupuesto o cuota configurado.");
+            setErrorMessage("La llave de acceso ha caducado o no está configurada. Por favor, vincúlala de nuevo.");
+        } else if (err.message?.includes("403") || err.message?.includes("API_KEY_INVALID")) {
+            setErrorType('auth');
+            setErrorMessage("La llave actual no es válida. Prueba a seleccionar una diferente.");
         } else {
             setErrorType('general');
-            setErrorMessage(err.message || "Error al leer el ticket.");
+            setErrorMessage(err.message || "Error al leer el ticket. Asegúrate de que la imagen sea nítida.");
         }
         setStep('error');
       }
@@ -84,7 +94,10 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const handleOpenSelector = async () => {
     if ((window as any).aistudio) {
         await (window as any).aistudio.openSelectKey();
+        // Asumimos éxito inmediato y permitimos reintentar
         setStep('idle');
+        setErrorType('general');
+        setErrorMessage('');
     }
   };
 
@@ -165,65 +178,39 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
 
           {step === 'error' && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-8 animate-slide-up">
-              <div className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center ${errorType === 'leaked' ? 'bg-orange-600/30' : errorType === 'auth' || errorType === 'billing' ? 'bg-orange-500/20' : 'bg-red-500/20'}`}>
-                 {errorType === 'leaked' ? <ShieldAlert className="w-12 h-12 text-orange-400" /> : errorType === 'auth' ? <Key className="w-12 h-12 text-orange-400" /> : errorType === 'billing' ? <CreditCard className="w-12 h-12 text-orange-400" /> : <AlertCircle className="w-12 h-12 text-red-500" />}
+              <div className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center ${errorType === 'auth' ? 'bg-orange-500/20' : 'bg-red-500/20'}`}>
+                 {errorType === 'auth' ? <Key className="w-12 h-12 text-orange-400" /> : <AlertCircle className="w-12 h-12 text-red-500" />}
               </div>
               <div className="max-w-xs px-6">
                 <h3 className="text-3xl font-black text-white leading-tight">
-                    {errorType === 'leaked' ? 'Clave Inválida' : errorType === 'auth' ? 'Paso necesario' : errorType === 'billing' ? 'Límite alcanzado' : 'Lectura fallida'}
+                    {errorType === 'auth' ? 'Llave requerida' : 'Lectura fallida'}
                 </h3>
                 <p className="text-teal-100/60 font-medium mt-3 text-sm">{errorMessage}</p>
               </div>
-              
-              {errorType === 'leaked' && (
-                  <div className="bg-orange-500/10 border border-orange-500/20 p-5 rounded-[2rem] max-w-xs text-left space-y-3">
-                      <div className="flex gap-3">
-                          <Info className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
-                          <p className="text-[11px] text-teal-50/70 leading-relaxed">
-                            Google ha bloqueado esta clave porque se ha detectado en un sitio público. **Por tu seguridad**, debes crear una clave nueva en tu panel de Google AI Studio y borrar la antigua.
-                          </p>
-                      </div>
-                  </div>
-              )}
 
               <div className="w-full max-w-sm flex flex-col gap-3 px-6">
-                {errorType === 'leaked' ? (
-                    <>
-                        <a 
-                            href="https://aistudio.google.com/app/apikey" 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="w-full py-6 bg-white text-[#0F4E0E] rounded-[1.8rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
-                        >
-                            CREAR CLAVE NUEVA <ExternalLink className="w-4 h-4" />
-                        </a>
-                        <button 
-                            onClick={handleOpenSelector}
-                            className="w-full py-5 bg-orange-500 text-white rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all"
-                        >
-                            VINCULAR NUEVA LLAVE
-                        </button>
-                    </>
-                ) : errorType === 'auth' ? (
+                {errorType === 'auth' ? (
                     <button 
                         onClick={handleOpenSelector}
                         className="w-full py-6 bg-orange-500 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
                     >
                         VINCULAR LLAVE
                     </button>
-                ) : errorType === 'billing' ? (
-                    <a 
-                        href="https://console.cloud.google.com/billing" 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="w-full py-6 bg-orange-500 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
-                    >
-                        IR A FACTURACIÓN <ExternalLink className="w-4 h-4" />
-                    </a>
                 ) : (
                     <button onClick={() => setStep('idle')} className="w-full py-6 bg-white text-[#0F4E0E] rounded-[1.8rem] font-black text-sm uppercase tracking-widest active:scale-95 transition-all">
                         REINTENTAR
                     </button>
+                )}
+                
+                {errorType === 'auth' && (
+                    <a 
+                      href="https://ai.google.dev/gemini-api/docs/billing" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 text-teal-300 text-[10px] font-bold uppercase tracking-widest hover:text-white"
+                    >
+                        <Info className="w-3 h-3" /> Ver documentación de facturación
+                    </a>
                 )}
               </div>
             </div>
