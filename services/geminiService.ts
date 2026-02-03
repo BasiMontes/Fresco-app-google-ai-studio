@@ -12,12 +12,8 @@ const cleanJson = (text: string | undefined): string => {
 const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets de supermercado. 
 Extrae productos en el formato JSON especificado. Sé preciso con los nombres, cantidades y categorías de los productos.`;
 
-// Siempre usamos process.env.API_KEY según las directrices del SDK.
+// Cumplimos estrictamente con la directriz: usar process.env.API_KEY directamente.
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
-  if (!process.env.API_KEY) {
-      throw new Error("MISSING_API_KEY");
-  }
-
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const imagePart = {
@@ -27,7 +23,6 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     },
   };
 
-  // Se utiliza gemini-3-flash-preview para tareas de extracción por su precisión multimodal y velocidad.
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: { parts: [imagePart, { text: "Analiza este ticket de compra y extrae todos los productos detectados." }] },
@@ -58,17 +53,14 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     }
   });
   
-  // Acceso directo a .text según las directrices (no llamar como método).
   return JSON.parse(response.text || '{}');
 };
 
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
     if (pantry.length === 0) return "Tu despensa está lista.";
-    if (!process.env.API_KEY) return "Configura tu API Key para consejos personalizados.";
-
+    
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     try {
-        // Tarea básica de texto: gemini-3-flash-preview es el modelo recomendado.
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: `Dame un consejo corto y accionable para aprovechar estos productos que van a caducar pronto: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
@@ -80,11 +72,8 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
 };
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    if (!process.env.API_KEY) throw new Error("API Key missing");
-
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     try {
-        // Tarea compleja de razonamiento: gemini-3-pro-preview es el modelo recomendado.
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: `Genera un plan de comidas optimizado para ${targetDates.length} días. 
@@ -119,7 +108,6 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
         const data = JSON.parse(response.text || '{}');
         const plan = data.plan || [];
         
-        // Validamos que los IDs devueltos por la IA correspondan a recetas reales de la biblioteca.
         const validatedPlan = plan.map((slot: any) => ({
             ...slot,
             isCooked: false,
