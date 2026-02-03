@@ -1,6 +1,6 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { X, Camera, FileText, Loader2, CheckCircle2, RefreshCw, Plus, Minus, Trash2, ChevronDown, AlertCircle, Key, ExternalLink, Info, CreditCard, ShieldAlert, WifiOff } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import { X, Camera, FileText, Loader2, CheckCircle2, Plus, Minus, Trash2, ChevronDown, AlertCircle, WifiOff, ShoppingBag } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { format, addDays } from 'date-fns';
@@ -27,12 +27,10 @@ const CATEGORIES = [
 ];
 
 export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItems }) => {
-  const [step, setStep] = useState<'idle' | 'processing' | 'review' | 'error'>('idle');
+  const [step, setStep] = useState<'idle' | 'uploading' | 'analyzing' | 'syncing' | 'review' | 'error'>('idle');
   const [items, setItems] = useState<any[]>([]);
   const [supermarket, setSupermarket] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [errorType, setErrorType] = useState<'general' | 'connection'>('general');
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,16 +38,26 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setStep('processing');
-    setProgress(20);
+    // Validación básica de tipo
+    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+        setErrorMessage("Solo se admiten imágenes JPG, PNG o WebP.");
+        setStep('error');
+        return;
+    }
+
+    setStep('uploading');
+    setProgress(10);
+
     const reader = new FileReader();
     reader.onload = async () => {
       try {
-        setProgress(40);
+        setProgress(30);
+        setStep('analyzing');
         const base64Data = (reader.result as string).split(',')[1];
         const data = await extractItemsFromTicket(base64Data, file.type);
         
-        setProgress(80);
+        setProgress(70);
+        setStep('syncing');
         setSupermarket(data.supermarket || 'Supermercado');
         const processed = data.items.map((i: any, idx: number) => ({
             ...i,
@@ -63,14 +71,16 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setTimeout(() => setStep('review'), 500);
       } catch (err: any) {
         if (err.message === "MISSING_API_KEY") {
-            setErrorType('connection');
-            setErrorMessage("El servicio de reconocimiento no está disponible en este momento. Por favor, reintenta la conexión.");
+            setErrorMessage("El servicio de IA no está disponible. Reintenta la conexión.");
         } else {
-            setErrorType('general');
-            setErrorMessage("No hemos podido leer el ticket correctamente. Prueba con una foto más nítida.");
+            setErrorMessage("No hemos podido leer el ticket. Prueba con una foto más nítida.");
         }
         setStep('error');
       }
+    };
+    reader.onerror = () => {
+        setErrorMessage("Error al cargar el archivo.");
+        setStep('error');
     };
     reader.readAsDataURL(file);
   };
@@ -79,28 +89,22 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if ((window as any).aistudio) {
         await (window as any).aistudio.openSelectKey();
         setStep('idle');
-        setErrorType('general');
     }
   };
 
   const handleSave = async () => {
-    if (isSaving) return;
-    setIsSaving(true);
-    try {
-        const finalItems: PantryItem[] = items.map(item => ({
-          id: `scr-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          name: item.name,
-          quantity: Number(item.quantity),
-          unit: item.unit,
-          category: item.category,
-          added_at: new Date().toISOString(),
-          expires_at: item.expires_at ? new Date(item.expires_at).toISOString() : undefined
-        }));
-        await onAddItems(finalItems);
-        onClose();
-    } finally {
-        setIsSaving(false);
-    }
+    if (items.length === 0) return;
+    const finalItems: PantryItem[] = items.map(item => ({
+      id: `scr-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      name: item.name,
+      quantity: Number(item.quantity),
+      unit: item.unit,
+      category: item.category,
+      added_at: new Date().toISOString(),
+      expires_at: item.expires_at ? new Date(item.expires_at).toISOString() : undefined
+    }));
+    await onAddItems(finalItems);
+    onClose();
   };
 
   return (
@@ -108,12 +112,10 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       <div className="fixed inset-0 z-[5000] bg-[#0F4E0E] flex flex-col animate-fade-in overflow-hidden safe-pb">
         <div className="p-6 flex items-center justify-between border-b border-white/5 bg-black/10 backdrop-blur-md">
           <div className="flex items-center gap-3">
-             <div className="p-2 bg-white/10 rounded-xl">
-                <Logo variant="inverted" iconOnly className="scale-75" />
-             </div>
+             <Logo variant="inverted" iconOnly className="scale-75" />
              <div>
                 <h2 className="text-white font-black text-lg leading-none">Fresco Vision</h2>
-                <p className="text-teal-400 text-[9px] font-black uppercase tracking-widest mt-1">Reconocimiento Inteligente</p>
+                <p className="text-teal-400 text-[9px] font-black uppercase tracking-widest mt-1">IA SCANNER</p>
              </div>
           </div>
           <button onClick={onClose} className="p-3 bg-white/5 text-white rounded-2xl hover:bg-white/10 transition-all"><X className="w-6 h-6" /></button>
@@ -127,8 +129,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <div className="absolute -bottom-2 -right-2 bg-orange-500 p-2 rounded-full border-4 border-[#0F4E0E]"><Plus className="w-4 h-4 text-white" /></div>
               </div>
               <div className="max-w-xs">
-                <h3 className="text-3xl font-black text-white leading-tight">Digitaliza tu compra</h3>
-                <p className="text-teal-100/60 font-medium mt-3 text-sm">Escanea tu ticket y deja que Fresco organice tu despensa automáticamente.</p>
+                <h3 className="text-3xl font-black text-white leading-tight">Sincroniza tu compra</h3>
+                <p className="text-teal-100/60 font-medium mt-3 text-sm">Escanea el ticket para actualizar tu stock automáticamente.</p>
               </div>
               <button 
                 onClick={() => fileInputRef.current?.click()}
@@ -140,7 +142,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             </div>
           )}
 
-          {step === 'processing' && (
+          {(step === 'uploading' || step === 'analyzing' || step === 'syncing') && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-10 animate-fade-in">
               <div className="relative">
                  <div className="w-40 h-40 border-4 border-teal-500/20 rounded-full flex items-center justify-center">
@@ -149,11 +151,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <FileText className="absolute inset-0 m-auto w-12 h-12 text-white animate-pulse" />
               </div>
               <div className="w-full max-w-xs space-y-4">
-                <h3 className="text-3xl font-black text-white">Procesando ticket...</h3>
+                <h3 className="text-3xl font-black text-white capitalize">
+                    {step === 'uploading' ? 'Subiendo imagen...' : step === 'analyzing' ? 'IA Analizando...' : 'Sincronizando...'}
+                </h3>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                     <div className="h-full bg-orange-500 transition-all duration-500" style={{ width: `${progress}%` }} />
                 </div>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Analizando productos</p>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Procesando productos</p>
               </div>
             </div>
           )}
@@ -161,28 +165,22 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
           {step === 'error' && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-8 animate-slide-up">
               <div className="w-24 h-24 rounded-[2.5rem] flex items-center justify-center bg-red-500/20">
-                 {errorType === 'connection' ? <WifiOff className="w-12 h-12 text-orange-400" /> : <AlertCircle className="w-12 h-12 text-red-500" />}
+                 <AlertCircle className="w-12 h-12 text-orange-400" />
               </div>
               <div className="max-w-xs px-6">
-                <h3 className="text-3xl font-black text-white leading-tight">
-                    {errorType === 'connection' ? 'Sin conexión' : 'Lectura fallida'}
-                </h3>
+                <h3 className="text-3xl font-black text-white leading-tight">Vaya, algo falló</h3>
                 <p className="text-teal-100/60 font-medium mt-3 text-sm">{errorMessage}</p>
               </div>
-
               <div className="w-full max-w-sm flex flex-col gap-3 px-6">
-                {errorType === 'connection' ? (
-                    <button 
-                        onClick={handleRetryConnection}
-                        className="w-full py-6 bg-orange-500 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
-                    >
-                        REINTENTAR CONEXIÓN
-                    </button>
-                ) : (
-                    <button onClick={() => setStep('idle')} className="w-full py-6 bg-white text-[#0F4E0E] rounded-[1.8rem] font-black text-sm uppercase tracking-widest active:scale-95 transition-all">
-                        VOLVER A INTENTAR
-                    </button>
-                )}
+                <button 
+                    onClick={handleRetryConnection}
+                    className="w-full py-6 bg-orange-500 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
+                >
+                    REINTENTAR CONEXIÓN
+                </button>
+                <button onClick={() => setStep('idle')} className="w-full py-4 text-teal-300 font-bold text-[10px] uppercase tracking-widest">
+                    CERRAR
+                </button>
               </div>
             </div>
           )}
@@ -192,9 +190,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               <div className="flex justify-between items-end px-2">
                 <div>
                   <p className="text-orange-400 text-[9px] font-black uppercase tracking-widest mb-1">{supermarket}</p>
-                  <h3 className="text-white font-black text-2xl tracking-tight">Revisar Productos</h3>
+                  <h3 className="text-white font-black text-2xl tracking-tight">Detectado con IA</h3>
                 </div>
-                <span className="bg-white/10 text-teal-300 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border border-white/5">{items.length} detectados</span>
+                <span className="bg-white/10 text-teal-300 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border border-white/5">{items.length} productos</span>
               </div>
               
               <div className="grid gap-3">
@@ -202,7 +200,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                   <div key={item.tempId} className="bg-white rounded-[2rem] p-5 shadow-2xl flex flex-col gap-4 border border-white/5 animate-fade-in" style={{ animationDelay: `${idx * 0.05}s` }}>
                     <div className="flex justify-between items-start gap-3">
                       <div className="flex-1">
-                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block">Producto</label>
+                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block">Producto Normalizado</label>
                         <input 
                           className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-black text-lg text-[#0F4E0E] outline-none capitalize"
                           value={item.name}
@@ -219,7 +217,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="relative">
-                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block">Categoría</label>
+                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block">Categoría IA</label>
                         <select 
                           className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-xs text-[#0F4E0E] outline-none appearance-none"
                           value={item.category}
@@ -232,9 +230,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                       <div>
                         <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block">Cantidad</label>
                         <div className="flex items-center bg-[#0F4E0E] rounded-xl px-2 py-2 h-[48px]">
-                           <button onClick={() => setItems(items.map(i => i.tempId === item.tempId ? {...i, quantity: Math.max(0, i.quantity - 0.5)} : i))} className="p-1 text-white/50 hover:text-white"><Minus className="w-4 h-4" /></button>
-                           <input type="number" className="flex-1 bg-transparent text-white font-black text-center outline-none text-xs" value={item.quantity} onChange={(e) => setItems(items.map(i => i.tempId === item.tempId ? {...i, quantity: parseFloat(e.target.value) || 0} : i))} />
-                           <button onClick={() => setItems(items.map(i => i.tempId === item.tempId ? {...i, quantity: i.quantity + 0.5} : i))} className="p-1 text-white/50 hover:text-white"><Plus className="w-4 h-4" /></button>
+                           <input type="number" step="0.001" className="flex-1 bg-transparent text-white font-black text-center outline-none text-xs" value={item.quantity} onChange={(e) => setItems(items.map(i => i.tempId === item.tempId ? {...i, quantity: parseFloat(e.target.value) || 0} : i))} />
+                           <span className="text-[9px] font-black text-teal-400 uppercase ml-1 mr-2">{item.unit}</span>
                         </div>
                       </div>
                     </div>
@@ -249,10 +246,10 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
           <div className="p-8 bg-gradient-to-t from-[#0F4E0E] via-[#0F4E0E] to-transparent sticky bottom-0 flex justify-center">
             <button 
               onClick={handleSave}
-              disabled={isSaving || items.length === 0}
+              disabled={items.length === 0}
               className="w-full max-w-md py-6 bg-orange-500 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
             >
-              {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CheckCircle2 className="w-6 h-6" /> AÑADIR A DESPENSA</>}
+              <CheckCircle2 className="w-6 h-6" /> AÑADIR A MI DESPENSA
             </button>
           </div>
         )}
