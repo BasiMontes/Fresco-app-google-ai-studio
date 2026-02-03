@@ -200,8 +200,8 @@ const App: React.FC = () => {
           </aside>
 
           <main className="flex-1 h-full overflow-hidden flex flex-col relative bg-[#F4F4F4]">
-            {/* El padding aquí es lo que define el "hueco". Lo reducimos drásticamente para que sea sutil (p-1.5 md:p-3). */}
-            <div className={`flex-1 w-full max-w-7xl mx-auto p-1.5 md:p-3 ${isKeyboardOpen ? 'pb-4' : 'pb-40'} md:pb-3 h-full overflow-y-auto no-scrollbar`}>
+            {/* Padding razonable: p-2 en móvil, p-4 en desktop */}
+            <div className={`flex-1 w-full max-w-7xl mx-auto p-2 md:p-4 ${isKeyboardOpen ? 'pb-4' : 'pb-40'} md:pb-4 h-full overflow-y-auto no-scrollbar`}>
                 <div className="h-full w-full rounded-[2.5rem] overflow-hidden bg-[#FDFDFD] shadow-inner border border-gray-100/50">
                     <Suspense fallback={<PageLoader message="Cargando vista..." />}>
                         {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} favoriteIds={favoriteIds} />}

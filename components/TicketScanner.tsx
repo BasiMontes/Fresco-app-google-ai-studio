@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Camera, FileText, Loader2, CheckCircle2, RefreshCw, Plus, Minus, Trash2, ChevronDown, AlertCircle, Key, ExternalLink, Info, CreditCard, ShieldAlert } from 'lucide-react';
+import { X, Camera, FileText, Loader2, CheckCircle2, RefreshCw, Plus, Minus, Trash2, ChevronDown, AlertCircle, Key, ExternalLink, Info, CreditCard, ShieldAlert, WifiOff } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { format, addDays } from 'date-fns';
@@ -32,22 +32,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const [supermarket, setSupermarket] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [errorType, setErrorType] = useState<'general' | 'auth' | 'billing' | 'leaked'>('general');
+  const [errorType, setErrorType] = useState<'general' | 'connection'>('general');
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Comprobación inicial de API Key al abrir el escáner
-  useEffect(() => {
-    const checkKey = async () => {
-        const hasKey = await (window as any).aistudio?.hasSelectedApiKey();
-        if (!hasKey && !process.env.API_KEY) {
-            setErrorType('auth');
-            setErrorMessage("Necesitas vincular una llave de Google AI Studio para activar el escaneo inteligente.");
-            setStep('error');
-        }
-    };
-    checkKey();
-  }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,14 +63,11 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setTimeout(() => setStep('review'), 500);
       } catch (err: any) {
         if (err.message === "MISSING_API_KEY") {
-            setErrorType('auth');
-            setErrorMessage("La llave de acceso ha caducado o no está configurada. Por favor, vincúlala de nuevo.");
-        } else if (err.message?.includes("403") || err.message?.includes("API_KEY_INVALID")) {
-            setErrorType('auth');
-            setErrorMessage("La llave actual no es válida. Prueba a seleccionar una diferente.");
+            setErrorType('connection');
+            setErrorMessage("El servicio de reconocimiento no está disponible en este momento. Por favor, reintenta la conexión.");
         } else {
             setErrorType('general');
-            setErrorMessage(err.message || "Error al leer el ticket. Asegúrate de que la imagen sea nítida.");
+            setErrorMessage("No hemos podido leer el ticket correctamente. Prueba con una foto más nítida.");
         }
         setStep('error');
       }
@@ -91,13 +75,11 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     reader.readAsDataURL(file);
   };
 
-  const handleOpenSelector = async () => {
+  const handleRetryConnection = async () => {
     if ((window as any).aistudio) {
         await (window as any).aistudio.openSelectKey();
-        // Asumimos éxito inmediato y permitimos reintentar
         setStep('idle');
         setErrorType('general');
-        setErrorMessage('');
     }
   };
 
@@ -131,7 +113,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
              </div>
              <div>
                 <h2 className="text-white font-black text-lg leading-none">Fresco Vision</h2>
-                <p className="text-teal-400 text-[9px] font-black uppercase tracking-widest mt-1">IA de Reconocimiento</p>
+                <p className="text-teal-400 text-[9px] font-black uppercase tracking-widest mt-1">Reconocimiento Inteligente</p>
              </div>
           </div>
           <button onClick={onClose} className="p-3 bg-white/5 text-white rounded-2xl hover:bg-white/10 transition-all"><X className="w-6 h-6" /></button>
@@ -146,7 +128,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="max-w-xs">
                 <h3 className="text-3xl font-black text-white leading-tight">Digitaliza tu compra</h3>
-                <p className="text-teal-100/60 font-medium mt-3 text-sm">Escanea tu ticket y deja que la IA organice tu despensa.</p>
+                <p className="text-teal-100/60 font-medium mt-3 text-sm">Escanea tu ticket y deja que Fresco organice tu despensa automáticamente.</p>
               </div>
               <button 
                 onClick={() => fileInputRef.current?.click()}
@@ -167,63 +149,52 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <FileText className="absolute inset-0 m-auto w-12 h-12 text-white animate-pulse" />
               </div>
               <div className="w-full max-w-xs space-y-4">
-                <h3 className="text-3xl font-black text-white">Extrayendo datos...</h3>
+                <h3 className="text-3xl font-black text-white">Procesando ticket...</h3>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                     <div className="h-full bg-orange-500 transition-all duration-500" style={{ width: `${progress}%` }} />
                 </div>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Normalizando productos</p>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Analizando productos</p>
               </div>
             </div>
           )}
 
           {step === 'error' && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-8 animate-slide-up">
-              <div className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center ${errorType === 'auth' ? 'bg-orange-500/20' : 'bg-red-500/20'}`}>
-                 {errorType === 'auth' ? <Key className="w-12 h-12 text-orange-400" /> : <AlertCircle className="w-12 h-12 text-red-500" />}
+              <div className="w-24 h-24 rounded-[2.5rem] flex items-center justify-center bg-red-500/20">
+                 {errorType === 'connection' ? <WifiOff className="w-12 h-12 text-orange-400" /> : <AlertCircle className="w-12 h-12 text-red-500" />}
               </div>
               <div className="max-w-xs px-6">
                 <h3 className="text-3xl font-black text-white leading-tight">
-                    {errorType === 'auth' ? 'Llave requerida' : 'Lectura fallida'}
+                    {errorType === 'connection' ? 'Sin conexión' : 'Lectura fallida'}
                 </h3>
                 <p className="text-teal-100/60 font-medium mt-3 text-sm">{errorMessage}</p>
               </div>
 
               <div className="w-full max-w-sm flex flex-col gap-3 px-6">
-                {errorType === 'auth' ? (
+                {errorType === 'connection' ? (
                     <button 
-                        onClick={handleOpenSelector}
-                        className="w-full py-6 bg-orange-500 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                        onClick={handleRetryConnection}
+                        className="w-full py-6 bg-orange-500 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
                     >
-                        VINCULAR LLAVE
+                        REINTENTAR CONEXIÓN
                     </button>
                 ) : (
                     <button onClick={() => setStep('idle')} className="w-full py-6 bg-white text-[#0F4E0E] rounded-[1.8rem] font-black text-sm uppercase tracking-widest active:scale-95 transition-all">
-                        REINTENTAR
+                        VOLVER A INTENTAR
                     </button>
-                )}
-                
-                {errorType === 'auth' && (
-                    <a 
-                      href="https://ai.google.dev/gemini-api/docs/billing" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 text-teal-300 text-[10px] font-bold uppercase tracking-widest hover:text-white"
-                    >
-                        <Info className="w-3 h-3" /> Ver documentación de facturación
-                    </a>
                 )}
               </div>
             </div>
           )}
 
           {step === 'review' && (
-            <div className="space-y-6 pb-40 animate-slide-up">
+            <div className="space-y-6 review-container pb-40 animate-slide-up">
               <div className="flex justify-between items-end px-2">
                 <div>
                   <p className="text-orange-400 text-[9px] font-black uppercase tracking-widest mb-1">{supermarket}</p>
-                  <h3 className="text-white font-black text-2xl tracking-tight">Revisar Stock</h3>
+                  <h3 className="text-white font-black text-2xl tracking-tight">Revisar Productos</h3>
                 </div>
-                <span className="bg-white/10 text-teal-300 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border border-white/5">{items.length} items</span>
+                <span className="bg-white/10 text-teal-300 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border border-white/5">{items.length} detectados</span>
               </div>
               
               <div className="grid gap-3">
@@ -231,7 +202,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                   <div key={item.tempId} className="bg-white rounded-[2rem] p-5 shadow-2xl flex flex-col gap-4 border border-white/5 animate-fade-in" style={{ animationDelay: `${idx * 0.05}s` }}>
                     <div className="flex justify-between items-start gap-3">
                       <div className="flex-1">
-                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block">Producto Detectado</label>
+                        <label className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 block">Producto</label>
                         <input 
                           className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-black text-lg text-[#0F4E0E] outline-none capitalize"
                           value={item.name}
@@ -281,7 +252,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               disabled={isSaving || items.length === 0}
               className="w-full max-w-md py-6 bg-orange-500 text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl hover:bg-orange-600 active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
             >
-              {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CheckCircle2 className="w-6 h-6" /> INYECTAR EN DESPENSA</>}
+              {isSaving ? <Loader2 className="w-6 h-6 animate-spin" /> : <><CheckCircle2 className="w-6 h-6" /> AÑADIR A DESPENSA</>}
             </button>
           </div>
         )}

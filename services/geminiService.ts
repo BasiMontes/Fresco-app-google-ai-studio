@@ -21,10 +21,10 @@ const cleanJson = (text: string | undefined): string => {
  */
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) return "Configura tu API Key para recibir consejos personalizados.";
+    if (!apiKey) return "Cocina con lo que tienes y ahorra hoy.";
 
     const ai = new GoogleGenAI({ apiKey });
-    if (pantry.length === 0) return "¡Tu despensa está lista! Añade productos para recibir consejos.";
+    if (pantry.length === 0) return "¡Tu despensa está lista! Añade productos para empezar.";
     
     const expiringItems = pantry
         .filter(i => i.expires_at)
@@ -75,7 +75,6 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     
     return JSON.parse(cleanJson(text));
   } catch (error: any) {
-    // Si la entidad no existe, es probable que la API Key sea inválida o haya expirado el proyecto
     if (error.message?.includes("Requested entity was not found")) {
         throw new Error("MISSING_API_KEY");
     }
