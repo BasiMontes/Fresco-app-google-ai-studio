@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, Suspense, useCallback, lazy } from 'react';
 import { UserProfile, Recipe, MealSlot, PantryItem, MealCategory, ShoppingItem } from './types';
 import { Onboarding } from './components/Onboarding';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -10,16 +10,17 @@ import { initSyncListener, addToSyncQueue } from './services/syncService';
 import { STATIC_RECIPES } from './constants';
 import { Dialog, DialogOptions } from './components/Dialog';
 import { Logo } from './components/Logo';
-import { Home, Calendar, ShoppingBag, BookOpen, Package, User, RotateCcw, Loader2 } from 'lucide-react';
+import { Home, Calendar, ShoppingBag, BookOpen, Package, User, RotateCcw, Loader2, AlertTriangle, ShieldAlert, Check } from 'lucide-react';
 
-const Dashboard = React.lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
-const Planner = React.lazy(() => import('./components/Planner').then(module => ({ default: module.Planner })));
-const Recipes = React.lazy(() => import('./components/Recipes').then(module => ({ default: module.Recipes })));
-const ShoppingList = React.lazy(() => import('./components/ShoppingList').then(module => ({ default: module.ShoppingList })));
-const Pantry = React.lazy(() => import('./components/Pantry').then(module => ({ default: module.Pantry })));
-const Profile = React.lazy(() => import('./components/Profile').then(module => ({ default: module.Profile })));
-const Settings = React.lazy(() => import('./components/Settings').then(module => ({ default: module.Settings })));
-const FAQ = React.lazy(() => import('./components/FAQ').then(module => ({ default: module.FAQ })));
+// Lazy load components to resolve errors while maintaining Suspense usage
+const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const Planner = lazy(() => import('./components/Planner').then(m => ({ default: m.Planner })));
+const Pantry = lazy(() => import('./components/Pantry').then(m => ({ default: m.Pantry })));
+const Recipes = lazy(() => import('./components/Recipes').then(m => ({ default: m.Recipes })));
+const ShoppingList = lazy(() => import('./components/ShoppingList').then(m => ({ default: m.ShoppingList })));
+const Profile = lazy(() => import('./components/Profile').then(m => ({ default: m.Profile })));
+const Settings = lazy(() => import('./components/Settings').then(m => ({ default: m.Settings })));
+const FAQ = lazy(() => import('./components/FAQ').then(m => ({ default: m.FAQ })));
 
 type ViewState = 'loading' | 'auth' | 'onboarding' | 'app' | 'error-config';
 
@@ -153,8 +154,35 @@ const App: React.FC = () => {
       window.location.reload();
   };
 
+  if (view === 'error-config') return (
+    <div className="h-screen bg-[#7B1D1D] text-white flex flex-col items-center justify-center p-8 text-center space-y-6">
+        <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center animate-pulse">
+            <ShieldAlert className="w-10 h-10 text-red-200" />
+        </div>
+        <div>
+            <h1 className="text-3xl font-black mb-2">Error de Configuración</h1>
+            <p className="text-red-100/60 max-w-sm mx-auto leading-relaxed">
+                No se detectan las credenciales de Supabase necesarias para arrancar la base de datos.
+            </p>
+        </div>
+        <div className="bg-black/20 p-6 rounded-[2rem] text-left border border-white/5 space-y-4 max-w-md w-full">
+            <p className="text-[10px] font-black uppercase tracking-widest text-red-300">Variables Requeridas en Vercel:</p>
+            <ul className="text-xs space-y-2 font-medium text-red-50/80">
+                <li className="flex justify-between"><span>VITE_SUPABASE_URL</span> <Check className="w-4 h-4 text-green-400 opacity-20" /></li>
+                <li className="flex justify-between"><span>VITE_SUPABASE_ANON_KEY</span> <Check className="w-4 h-4 text-green-400 opacity-20" /></li>
+                <li className="flex justify-between"><span>VITE_API_KEY</span> <Check className="w-4 h-4 text-green-400 opacity-20" /></li>
+            </ul>
+            <p className="text-[9px] italic text-red-200/40 pt-2">
+                Asegúrate de que los nombres coincidan exactamente y de haber realizado un "Redeploy" sin caché.
+            </p>
+        </div>
+        <button onClick={() => window.location.reload()} className="px-8 py-4 bg-white text-[#7B1D1D] rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl active:scale-95 transition-all">
+            REINTENTAR CONEXIÓN
+        </button>
+    </div>
+  );
+
   if (view === 'loading') return <PageLoader onReset={handleForceReset} />;
-  if (view === 'error-config') return <div className="h-screen bg-red-900 text-white flex items-center justify-center p-8 text-center">Falta configuración de Supabase.</div>;
 
   const isProfileActive = ['settings', 'faq'].includes(activeTab) || activeTab === 'profile';
 

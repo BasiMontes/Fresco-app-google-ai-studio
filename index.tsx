@@ -3,28 +3,26 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 /**
- * PUENTE DE SEGURIDAD PARA VARIABLES DE ENTORNO
- * Evitamos el error "Cannot read properties of undefined (reading 'VITE_API_KEY')"
- * mediante una comprobación defensiva profunda.
+ * PUENTE DE SEGURIDAD EXPLICITO
+ * Vite requiere referencias literales para inyectar variables en producción.
  */
 if (typeof window !== 'undefined') {
-  // Inicializamos process.env si no existe
   (window as any).process = (window as any).process || { env: {} };
-  (window as any).process.env = (window as any).process.env || {};
+  const env = (window as any).process.env;
 
-  try {
-    // Acceso ultra-seguro a import.meta.env
-    const meta = (import.meta as any);
-    const vKey = meta && meta.env ? meta.env.VITE_API_KEY : undefined;
-    
-    if (vKey) {
-      (window as any).process.env.API_KEY = vKey;
-      console.log("Fresco: API_KEY vinculada exitosamente.");
-    }
-  } catch (e) {
-    // Si import.meta no es accesible, no hacemos nada y dejamos que la app maneje el error de config más tarde
-    console.warn("Fresco: No se pudo acceder a import.meta de forma nativa.");
-  }
+  // Mapeo explícito (Vite reemplaza estas cadenas en tiempo de compilación)
+  const meta = (import.meta as any).env || {};
+  
+  env.VITE_SUPABASE_URL = meta.VITE_SUPABASE_URL;
+  env.VITE_SUPABASE_ANON_KEY = meta.VITE_SUPABASE_ANON_KEY;
+  env.VITE_API_KEY = meta.VITE_API_KEY;
+  
+  // Alias para mayor compatibilidad
+  env.SUPABASE_URL = env.VITE_SUPABASE_URL;
+  env.SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY;
+  env.API_KEY = env.VITE_API_KEY;
+
+  console.log("Fresco Core: Motor de entorno inicializado.");
 }
 
 import App from './App';
