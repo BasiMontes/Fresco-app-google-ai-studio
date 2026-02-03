@@ -9,18 +9,27 @@ const cleanJson = (text: string | undefined): string => {
     // Buscar bloques de código markdown o simplemente el primer {
     const match = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) || text.match(/\{[\s\S]*\}/);
     if (match) return match[1] || match[0];
-    return '{}';
+    return text.trim();
 };
 
-const AI_TICKET_PROMPT = `Analiza tickets de supermercados españoles (Mercadona, Carrefour, Lidl, Aldi, Eroski, Dia).
-IGNORA: logos, CIF, dirección, ticket#, fecha, pago, IVA, totales.
-NORMALIZA: "HAC. LECHE ENT." → "Leche Entera Hacendado", "PIMT. VERDE KG" → "Pimiento Verde", "FTE SALMON" → "Filete de Salmón".
-CANTIDADES: "2 x 1,50€" → cantidad: 2.0; "0,540 kg" → cantidad: 0.540, unit: "kg".
-UNIDADES: uds, kg, g, l, ml.
+const AI_TICKET_PROMPT = `Analiza tickets de supermercados españoles (Mercadona, Carrefour, Lidl, Aldi, Dia, Eroski).
+IGNORA: logos, CIF, dirección, ticket#, fecha, pago, IVA, totales, cupones de descuento.
+NORMALIZA NOMBRES: "HAC. LECHE ENT." → "Leche Entera Hacendado", "PIMT. VERDE KG" → "Pimiento Verde", "FTE SALMON" → "Filete de Salmón", "PECHUG. POLLO" → "Pechuga de Pollo".
+CANTIDADES Y UNIDADES: 
+- "2 x 1,50€" → quantity: 2.0, unit: "uds".
+- "0,540 kg x 2€/kg" → quantity: 0.540, unit: "kg".
+- "PACK 6 YOGUR" → quantity: 6.0, unit: "uds".
+UNIDADES PERMITIDAS: uds, kg, g, l, ml, pack.
 CATEGORÍAS: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, other.
-CADUCIDAD (estimated_expiry_days): pescado/carne=2-4 días, lácteos=7-14, verduras/frutas=5-7, pan=3-5, congelados=180-365, conservas/pasta=365-730.
+CADUCIDAD ESTIMADA (estimated_expiry_days): 
+- pescado/carne: 2-4 días.
+- lácteos: 7-14 días.
+- verduras/frutas: 5-7 días.
+- pan: 3-5 días.
+- congelados: 180-365 días.
+- conservas/pasta/pantry: 365-730 días.
 
-RESPONDE EXCLUSIVAMENTE CON ESTE FORMATO JSON:
+RESPONDE EXCLUSIVAMENTE UN OBJETO JSON CON ESTE FORMATO:
 {"supermarket":"Nombre del Supermercado","items":[{"name":"Producto Normalizado","quantity":1.0,"unit":"uds","category":"category_id","estimated_expiry_days":7}]}`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string, retries = 2): Promise<any> => {
@@ -35,7 +44,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } },
-          { text: "Analiza este ticket de compra. Responde SOLO con el JSON." }
+          { text: "Analiza este ticket de compra detalladamente. Responde SOLO con el JSON." }
         ] 
       },
       config: { 
@@ -48,8 +57,10 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     const text = response.text;
     if (!text) throw new Error("La IA no devolvió contenido.");
     
-    return JSON.parse(cleanJson(text));
+    const cleaned = cleanJson(text);
+    return JSON.parse(cleaned);
   } catch (error: any) {
+    console.error("Error en extractItemsFromTicket:", error);
     if (error.message?.includes("Requested entity was not found")) throw new Error("MISSING_API_KEY");
     if ((error.message?.includes("429") || error.message?.includes("limit")) && retries > 0) {
         await wait(2000);
@@ -99,7 +110,8 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
                 temperature: 0.2
             }
         });
-        const selections = JSON.parse(cleanJson(response.text));
+        const cleaned = cleanJson(response.text);
+        const selections = JSON.parse(cleaned);
         const plan: MealSlot[] = [];
         targetDates.forEach(date => {
             targetTypes.forEach(type => {
