@@ -82,10 +82,13 @@ const App: React.FC = () => {
   const handleUpdateMealSlot = useCallback((date: string, type: MealCategory, recipeId: string | undefined) => {
     if (!userId) return;
     const newSlot = { date, type, recipeId, servings: user?.household_size || 2, isCooked: false };
+    
+    // USAMOS UNA COPIA REAL PARA FORZAR RE-RENDER
     setMealPlan(prev => {
       const filtered = prev.filter(p => !(p.date === date && p.type === type));
-      return recipeId ? [...filtered, newSlot] : filtered;
+      return recipeId ? [...filtered, { ...newSlot }] : [...filtered];
     });
+
     if (recipeId) addToSyncQueue(userId, 'UPDATE_SLOT', newSlot);
     else addToSyncQueue(userId, 'DELETE_SLOT', { date, type });
   }, [userId, user]);

@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MealSlot, Recipe, MealCategory, PantryItem, UserProfile } from '../types';
-import { Plus, X, Loader2, ChevronLeft, ChevronRight, BrainCircuit, Trash2, Sunrise, Sun, Moon, Sparkles, ChefHat, Search, Check } from 'lucide-react';
+import { Plus, X, Loader2, ChevronLeft, ChevronRight, Sparkles, Trash2, Sunrise, Sun, Moon, ChefHat, Search, Check, Wand2 } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks, isBefore, isAfter } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { generateSmartMenu } from '../services/geminiService';
@@ -107,17 +107,17 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   return (
     <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden bg-[#FDFDFD]">
-      {/* HEADER: ALINEACIÓN EXTREMA */}
+      {/* HEADER: ALINEACIÓN EXTREMA Y BOTÓN ACTUALIZADO */}
       <header className="w-full py-4 bg-white border-b border-gray-50 flex-shrink-0 z-20 px-2 md:px-4">
         <div className="w-full grid grid-cols-1 md:grid-cols-3 items-center gap-4">
             
-            {/* Col 1: Título pegado a la izquierda */}
+            {/* Col 1: Título */}
             <div className="justify-self-start flex flex-col">
                 <h1 className="text-2xl md:text-[28px] font-black text-[#0F4E0E] tracking-tight leading-none">Calendario</h1>
                 <p className="text-[#0F4E0E]/20 font-black uppercase text-[8px] tracking-[0.4em] mt-1 hidden md:block">Planificación Semanal</p>
             </div>
 
-            {/* Col 2: Selector centrado matemáticamente */}
+            {/* Col 2: Selector centrado */}
             <div className="flex items-center gap-1 bg-gray-50/50 p-1 rounded-2xl border border-gray-100 md:justify-self-center md:min-w-[280px] w-full md:w-auto">
                 <button 
                     disabled={!canGoBack}
@@ -140,8 +140,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 </button>
             </div>
 
-            {/* Col 3: Acciones pegadas a la derecha absoluta */}
-            <div className="justify-self-end flex items-center gap-2 md:gap-3 h-10 w-full md:w-auto">
+            {/* Col 3: Acciones derecha - BOTÓN ACTUALIZADO */}
+            <div className="justify-self-end flex items-center gap-2 md:gap-2.5 h-10 w-full md:w-auto">
                 <button 
                     onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
                     className="w-10 h-10 md:w-11 md:h-11 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all border border-red-100 flex items-center justify-center shrink-0"
@@ -151,10 +151,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 </button>
                 <button 
                     onClick={() => setShowPlanWizard(true)} 
-                    className="flex-1 md:flex-none h-10 md:h-11 px-4 md:px-6 bg-[#0F4E0E] text-white rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#062606] transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+                    className="flex-1 md:flex-none h-10 md:h-11 px-4 md:px-5 bg-[#0F4E0E] text-white rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#062606] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                 >
-                    <BrainCircuit className="w-4 h-4 md:w-5 md:h-5 text-orange-400" />
-                    <span className="whitespace-nowrap">GENERAR PLAN IA</span>
+                    <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-orange-400 animate-pulse" />
+                    <span className="whitespace-nowrap">GENERAR PLAN</span>
                 </button>
             </div>
         </div>
@@ -173,8 +173,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 
                 <div className="flex-1 flex flex-col gap-3 min-h-0">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
+                      // REFUERZO DE LÓGICA DE BÚSQUEDA PARA EVITAR BOXES VACÍOS
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
-                      const recipe = recipes.find(r => r.id === slot?.recipeId);
+                      const recipe = slot?.recipeId ? recipes.find(r => r.id === slot.recipeId) : null;
+                      
                       return (
                           <div 
                             key={type} 
@@ -182,7 +184,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                             className={`relative flex-1 rounded-[2.5rem] transition-all duration-500 cursor-pointer flex flex-col overflow-hidden group shadow-sm border-2 ${recipe ? 'border-white hover:shadow-xl' : 'bg-white border-dashed border-gray-100 hover:border-teal-200'}`}
                           >
                               {recipe ? (
-                                  <div className="absolute inset-0 w-full h-full">
+                                  <div className="absolute inset-0 w-full h-full animate-fade-in">
                                       <SmartImage src={recipe.image_url} alt={recipe.title} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" />
                                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                                       <div className="absolute inset-0 flex flex-col justify-between p-5 z-10">
@@ -205,7 +207,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                       </div>
                                   </div>
                               ) : (
-                                  <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
+                                  <div className="flex-1 flex flex-col items-center justify-center p-4 text-center animate-fade-in">
                                       <div className="flex justify-between items-center w-full mb-auto">
                                           <span className="text-[7px] font-black uppercase tracking-[0.3em] px-2 py-1 rounded-lg bg-gray-50 text-gray-300 border border-gray-100 leading-none">{type}</span>
                                       </div>
@@ -317,7 +319,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                   </div>
                 </div>
                 <button onClick={executeSmartPlan} disabled={isGenerating} className="w-full h-16 bg-[#0F4E0E] text-white rounded-[1.8rem] font-black uppercase tracking-[0.25em] shadow-2xl flex items-center justify-center gap-4 hover:bg-[#062606] transition-all active:scale-[0.97] hover:-translate-y-1">
-                  {isGenerating ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Sparkles className="w-5 h-5 text-orange-400" /> Generar</>}
+                  {isGenerating ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Wand2 className="w-5 h-5 text-orange-400 animate-pulse" /> Generar</>}
                 </button>
               </div>
             </div>
