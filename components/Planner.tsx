@@ -107,74 +107,79 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   return (
     <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden bg-[#FDFDFD]">
-      {/* HEADER COMPACTADO */}
-      <header className="px-5 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border-b border-gray-100 flex-shrink-0 z-20">
-        <div className="flex justify-between items-center md:items-start md:w-1/4">
-            <div className="space-y-1">
-                <h1 className="text-2xl md:text-3xl font-black text-[#0F4E0E] tracking-tight leading-none mb-1">Calendario</h1>
-                <p className="text-[#0F4E0E]/30 font-black uppercase text-[8px] md:text-[9px] tracking-[0.4em] hidden md:block">Planificación Semanal</p>
-            </div>
+      {/* HEADER: ALINEACIÓN RE-DISEÑADA */}
+      <header className="px-4 md:px-8 py-4 bg-white border-b border-gray-50 flex-shrink-0 z-20">
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 items-center gap-4">
             
-            {/* Botones rápidos móvil */}
-            <div className="flex md:hidden items-center gap-2">
+            {/* Col 1: Título */}
+            <div className="flex justify-between items-center md:justify-start">
+                <div className="space-y-0.5">
+                    <h1 className="text-2xl md:text-[28px] font-black text-[#0F4E0E] tracking-tight leading-none">Calendario</h1>
+                    <p className="text-[#0F4E0E]/20 font-black uppercase text-[7px] md:text-[8px] tracking-[0.4em] hidden md:block">Planificación Semanal</p>
+                </div>
+                
+                {/* Botones rápidos móvil */}
+                <div className="flex md:hidden items-center gap-2">
+                    <button 
+                      onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
+                      className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                    <button 
+                        onClick={() => setShowPlanWizard(true)} 
+                        className="h-10 px-4 bg-[#0F4E0E] text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
+                    >
+                        <BrainCircuit className="w-4 h-4 text-orange-400" />
+                        <span>Generar</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Col 2: Navegador Centralizado */}
+            <div className="flex items-center gap-1 bg-gray-50/50 p-1 rounded-2xl border border-gray-100 justify-between md:justify-self-center md:min-w-[280px]">
                 <button 
-                  onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
-                  className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center"
+                    disabled={!canGoBack}
+                    onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} 
+                    className={`p-2 rounded-xl transition-all ${canGoBack ? 'bg-white text-[#0F4E0E] shadow-sm hover:scale-105 active:scale-95' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
                 >
-                    <Trash2 className="w-4 h-4" />
+                    <ChevronLeft className="w-4 h-4" />
+                </button>
+                
+                <span className="text-[10px] font-black text-[#0F4E0E] px-4 uppercase tracking-[0.25em] whitespace-nowrap text-center">
+                    {format(currentWeekStart, 'MMMM yyyy', { locale: es })}
+                </span>
+                
+                <button 
+                    disabled={!canGoForward}
+                    onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} 
+                    className={`p-2 rounded-xl transition-all ${canGoForward ? 'bg-white text-[#0F4E0E] shadow-sm hover:scale-105 active:scale-95' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
+                >
+                    <ChevronRight className="w-4 h-4" />
+                </button>
+            </div>
+
+            {/* Col 3: Acciones Derecha (Desktop) */}
+            <div className="hidden md:flex items-center gap-3 justify-end h-10">
+                <button 
+                    onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
+                    className="w-10 h-10 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all border border-red-100/50 flex items-center justify-center group"
+                    title="Vaciar calendario"
+                >
+                    <Trash2 className="w-4.5 h-4.5" />
                 </button>
                 <button 
                     onClick={() => setShowPlanWizard(true)} 
-                    className="h-10 px-4 bg-[#0F4E0E] text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
+                    className="h-10 px-5 bg-[#0F4E0E] text-white rounded-xl font-black text-[9px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#062606] transition-all active:scale-[0.98] flex items-center justify-center gap-2.5"
                 >
                     <BrainCircuit className="w-4 h-4 text-orange-400" />
-                    <span>Generar</span>
+                    <span>GENERAR PLAN IA</span>
                 </button>
             </div>
         </div>
-
-        {/* NAVEGADOR SEMANAL CENTRADO */}
-        <div className="flex items-center gap-1 bg-gray-50/80 p-1 rounded-2xl border border-gray-100 w-full md:w-auto justify-between md:justify-center">
-            <button 
-                disabled={!canGoBack}
-                onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} 
-                className={`p-2 md:p-2.5 rounded-xl transition-all ${canGoBack ? 'bg-white text-[#0F4E0E] shadow-sm hover:scale-105 active:scale-95' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
-            >
-                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
-            </button>
-            
-            <span className="text-[10px] md:text-xs font-black text-[#0F4E0E] px-6 uppercase tracking-[0.3em] whitespace-nowrap text-center min-w-[140px] md:min-w-[180px]">
-                {format(currentWeekStart, 'MMMM yyyy', { locale: es })}
-            </span>
-            
-            <button 
-                disabled={!canGoForward}
-                onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} 
-                className={`p-2 md:p-2.5 rounded-xl transition-all ${canGoForward ? 'bg-white text-[#0F4E0E] shadow-sm hover:scale-105 active:scale-95' : 'text-gray-200 cursor-not-allowed opacity-30'}`}
-            >
-                <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-            </button>
-        </div>
-
-        {/* ACCIONES DERECHA (DESKTOP) */}
-        <div className="hidden md:flex items-center gap-3 md:w-1/4 md:justify-end">
-            <button 
-                onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
-                className="w-12 h-12 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-2xl transition-all shadow-sm flex items-center justify-center group"
-            >
-                <Trash2 className="w-5 h-5" />
-            </button>
-            <button 
-                onClick={() => setShowPlanWizard(true)} 
-                className="h-12 px-6 bg-[#0F4E0E] text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] shadow-xl hover:bg-[#062606] transition-all active:scale-[0.98] flex items-center justify-center gap-3"
-            >
-                <BrainCircuit className="w-5 h-5 text-orange-400" />
-                <span>Generar</span>
-            </button>
-        </div>
       </header>
 
-      {/* Grid de días con padding reducido */}
+      {/* Resto del componente Planner se mantiene igual... */}
       <div ref={scrollContainerRef} className="flex-1 overflow-x-auto no-scrollbar flex gap-4 p-4 h-full min-h-0">
         {days.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd');
@@ -249,7 +254,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         })}
       </div>
 
-      {/* Modales existentes */}
+      {/* Modales y lógica de selectores se mantienen igual... */}
       {showRecipeSelector && (
           <ModalPortal>
               <div className="fixed inset-0 z-[5000] bg-[#0F4E0E]/90 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setShowRecipeSelector(null)}>

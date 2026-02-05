@@ -102,7 +102,7 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={() => setView('app')} /> :
          <>
-          {/* DESKTOP SIDEBAR: FIJO Y SÓLIDO */}
+          {/* DESKTOP SIDEBAR: LIMPIO SIN BADGES INNECESARIOS */}
           <aside className="hidden md:flex flex-col w-64 bg-[#0F4E0E] text-white h-screen flex-shrink-0 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.05)]">
             <div className="p-8"><Logo variant="inverted" /></div>
             
@@ -134,20 +134,15 @@ const App: React.FC = () => {
                 })}
             </nav>
 
-            <div className="p-6 mt-auto border-t border-white/5">
-              <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center text-[9px] font-black text-white shadow-lg">PRO</div>
-                  <p className="text-[10px] font-bold text-white/50 tracking-tight leading-none">Cloud Sync<br/><span className="text-white/80">Operativo</span></p>
-                </div>
-              </div>
+            {/* Footer de Sidebar simplificado */}
+            <div className="p-8 mt-auto border-t border-white/5 opacity-30">
+               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-center">Fresco App v1.0</p>
             </div>
           </aside>
 
-          {/* MAIN AREA: OPTIMIZACIÓN DE PADDING */}
+          {/* MAIN AREA */}
           <main className="flex-1 h-screen overflow-y-auto bg-[#F4F4F4] relative">
             <div className="w-full max-w-7xl mx-auto p-2 md:p-5 pb-28 md:pb-5 min-h-full">
-                {/* Reducido p-4 md:p-10 -> p-3 md:p-6 */}
                 <div className="bg-[#FDFDFD] rounded-[2rem] md:rounded-[2.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 p-3 md:p-6 h-full min-h-[calc(100vh-2.5rem)]">
                     <Suspense fallback={<PageLoader />}>
                         {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
@@ -162,7 +157,7 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* MOBILE NAVBAR: LIQUID GLASS */}
+            {/* MOBILE NAVBAR */}
             <nav className={`md:hidden fixed bottom-5 left-5 right-5 z-[800] mobile-liquid-dock p-1.5 rounded-[3rem] flex gap-1 transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
                 <div className="glass-shine-refraction animate-glass-shine" />
                 {[ 
