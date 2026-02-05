@@ -101,14 +101,10 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={() => setView('app')} /> :
          <>
-          {/* DESKTOP SIDEBAR: GLASSMORPHISM AVANZADO */}
-          <aside className="hidden md:flex flex-col w-72 bg-[#0F4E0E]/85 backdrop-blur-[50px] text-white h-screen sticky top-0 z-50 flex-shrink-0 border-r border-white/20 shadow-[10px_0_60px_rgba(0,0,0,0.15)] relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-            
-            <div className="p-10 relative z-10"><Logo variant="inverted" /></div>
-            
-            <nav className="flex-1 px-6 space-y-4 mt-8 relative z-10">
+          {/* DESKTOP SIDEBAR: ORIGINAL SÓLIDO (Sin Liquid Glass para mantener claridad) */}
+          <aside className="hidden md:flex flex-col w-72 bg-[#0F4E0E] text-white h-screen sticky top-0 z-50 flex-shrink-0 shadow-2xl">
+            <div className="p-10"><Logo variant="inverted" /></div>
+            <nav className="flex-1 px-6 space-y-4 mt-8">
                 {[
                   {id:'dashboard', icon:Home, label:'Inicio'},
                   {id:'planner', icon:Calendar, label:'Calendario'}, 
@@ -122,29 +118,24 @@ const App: React.FC = () => {
                     <button 
                       key={item.id} 
                       onClick={() => setActiveTab(item.id)} 
-                      className={`w-full flex items-center gap-4 px-6 py-4 rounded-[1.5rem] transition-all duration-500 group relative overflow-hidden ${
+                      className={`w-full flex items-center gap-4 px-6 py-4 rounded-[1.5rem] transition-all duration-300 group relative overflow-hidden ${
                         isActive 
-                        ? 'bg-white text-[#0F4E0E] font-black shadow-[0_15px_30px_rgba(0,0,0,0.2)] scale-[1.03]' 
+                        ? 'bg-white text-[#0F4E0E] font-black shadow-lg scale-[1.02]' 
                         : 'text-white/60 hover:bg-white/10 hover:text-white'
                       }`}
                     >
-                      {isActive && <div className="absolute inset-0 bg-gradient-to-tr from-white to-transparent opacity-20" />}
-                      <item.icon className={`w-5 h-5 transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                      <span className="text-[15px] tracking-tight relative z-10">{item.label}</span>
+                      <item.icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                      <span className="text-[15px] tracking-tight">{item.label}</span>
                       {isActive && <div className="absolute left-0 w-1.5 h-6 bg-orange-500 rounded-r-full" />}
                     </button>
                   );
                 })}
             </nav>
-
-            <div className="p-8 mt-auto relative z-10">
-              <div className="p-5 bg-white/10 rounded-[2rem] border border-white/20 backdrop-blur-xl shadow-inner">
+            <div className="p-8 mt-auto">
+              <div className="p-5 bg-white/10 rounded-[2rem] border border-white/10">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-orange-500 flex items-center justify-center text-[11px] font-black text-white shadow-lg">PRO</div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Sincronización</p>
-                    <p className="text-xs font-bold">Activa hoy</p>
-                  </div>
+                  <p className="text-xs font-bold text-white/80">Sincronización OK</p>
                 </div>
               </div>
             </div>
@@ -166,16 +157,16 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* MOBILE NAVBAR: TRUE LIQUID GLASS */}
-            <nav className={`md:hidden fixed bottom-6 left-6 right-6 z-[800] liquid-glass p-2 rounded-[3.5rem] flex gap-1 transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32' : 'opacity-100 translate-y-0'}`}>
-                {/* Shine Animation */}
-                <div className="glass-shine animate-glass-shine" />
+            {/* MOBILE NAVBAR: LIQUID GLASS MASTERPIECE */}
+            <nav className={`md:hidden fixed bottom-6 left-6 right-6 z-[800] mobile-liquid-dock p-2 rounded-[3.5rem] flex gap-1 transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
+                {/* Refraction Shine Animation */}
+                <div className="glass-shine-refraction animate-glass-shine" />
                 
                 {[ 
-                  {id:'dashboard', icon:Home, label: 'Inicio'}, 
+                  {id:'dashboard', icon:Home, label: 'Home'}, 
                   {id:'planner', icon:Calendar, label: 'Plan'}, 
                   {id:'pantry', icon:Package, label: 'Stock'}, 
-                  {id:'recipes', icon:BookOpen, label: 'Recetas'}, 
+                  {id:'recipes', icon:BookOpen, label: 'Libro'}, 
                   {id:'shopping', icon:ShoppingBag, label: 'Lista'}, 
                   {id:'profile', icon:User, label: 'Yo'} 
                 ].map(item => {
@@ -184,16 +175,13 @@ const App: React.FC = () => {
                       <button 
                         key={item.id} 
                         onClick={() => setActiveTab(item.id)} 
-                        className={`flex-1 flex flex-col items-center justify-center py-4 rounded-[2.5rem] relative group transition-all duration-300`}
+                        className={`flex-1 flex flex-col items-center justify-center py-4 rounded-[2.5rem] relative group transition-all duration-300 z-10`}
                         aria-label={item.label}
                       >
                           {isActive && (
-                            <div className="absolute inset-1 bg-[#0F4E0E] rounded-[2.2rem] shadow-[0_10px_20px_rgba(15,78,14,0.3)] animate-liquid-stretch liquid-indicator z-0" />
+                            <div className="absolute inset-1 bg-[#0F4E0E] rounded-[2.2rem] shadow-[0_10px_25px_rgba(15,78,14,0.35)] animate-liquid-stretch liquid-active-indicator" />
                           )}
-                          <item.icon className={`w-[22px] h-[22px] z-10 transition-all duration-500 ${isActive ? 'text-white scale-110' : 'text-[#0F4E0E]/30 group-hover:text-[#0F4E0E]'}`} />
-                          {isActive && (
-                            <div className="absolute -bottom-1 w-1.5 h-1.5 bg-orange-500 rounded-full blur-[1px] animate-pulse" />
-                          )}
+                          <item.icon className={`w-[22px] h-[22px] z-20 transition-all duration-500 ${isActive ? 'text-white scale-110' : 'text-[#0F4E0E]/30 group-hover:text-[#0F4E0E]'}`} />
                       </button>
                     );
                 })}
