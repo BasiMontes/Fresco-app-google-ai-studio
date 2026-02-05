@@ -23,11 +23,11 @@ const FAQ = React.lazy(() => import('./components/FAQ').then(module => ({ defaul
 
 type ViewState = 'loading' | 'auth' | 'onboarding' | 'app' | 'error-config';
 
-const PageLoader = ({ message = "Abriendo cocina..." }: { message?: string }) => (
+const PageLoader = () => (
   <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#FDFDFD] p-6 text-center">
     <div className="w-12 h-12 border-4 border-teal-100 border-t-[#0F4E0E] rounded-full animate-spin mb-4" />
     <Logo className="animate-pulse scale-90" />
-    <p className="text-[#0F4E0E] font-black uppercase tracking-widest text-[10px] mt-4">{message}</p>
+    <p className="text-[#0F4E0E] font-black uppercase tracking-widest text-[10px] mt-4">Abriendo cocina...</p>
   </div>
 );
 
@@ -43,9 +43,7 @@ const App: React.FC = () => {
   const [mealPlan, setMealPlan] = useState<MealSlot[]>([]);
   const [pantry, setPantry] = useState<PantryItem[]>([]);
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
-  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
-      try { return JSON.parse(localStorage.getItem('fresco_favorites') || '[]'); } catch { return []; }
-  });
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
   useEffect(() => {
     const handleVisualViewportResize = () => {
@@ -64,11 +62,6 @@ const App: React.FC = () => {
       if (session) handleSessionChange(session);
       else setView('auth');
     });
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) { setView('auth'); return; }
-      handleSessionChange(session);
-    });
-    return () => authListener.subscription.unsubscribe();
   }, []);
 
   const handleSessionChange = async (session: any) => {
@@ -108,10 +101,14 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={() => setView('app')} /> :
          <>
-          {/* DESKTOP SIDEBAR: GLASSMORPHISM */}
-          <aside className="hidden md:flex flex-col w-72 bg-[#0F4E0E]/90 backdrop-blur-2xl text-white h-screen sticky top-0 z-50 flex-shrink-0 border-r border-white/10 shadow-[20px_0_40px_rgba(0,0,0,0.1)]">
-            <div className="p-10"><Logo variant="inverted" /></div>
-            <nav className="flex-1 px-6 space-y-3 mt-4">
+          {/* DESKTOP SIDEBAR: GLASSMORPHISM AVANZADO */}
+          <aside className="hidden md:flex flex-col w-72 bg-[#0F4E0E]/85 backdrop-blur-[50px] text-white h-screen sticky top-0 z-50 flex-shrink-0 border-r border-white/20 shadow-[10px_0_60px_rgba(0,0,0,0.15)] relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+            
+            <div className="p-10 relative z-10"><Logo variant="inverted" /></div>
+            
+            <nav className="flex-1 px-6 space-y-4 mt-8 relative z-10">
                 {[
                   {id:'dashboard', icon:Home, label:'Inicio'},
                   {id:'planner', icon:Calendar, label:'Calendario'}, 
@@ -125,25 +122,29 @@ const App: React.FC = () => {
                     <button 
                       key={item.id} 
                       onClick={() => setActiveTab(item.id)} 
-                      className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 relative group overflow-hidden ${
+                      className={`w-full flex items-center gap-4 px-6 py-4 rounded-[1.5rem] transition-all duration-500 group relative overflow-hidden ${
                         isActive 
-                        ? 'bg-white text-[#0F4E0E] font-black shadow-[0_10px_20px_rgba(0,0,0,0.2)] scale-[1.02]' 
-                        : 'text-white/70 hover:bg-white/5 hover:text-white'
+                        ? 'bg-white text-[#0F4E0E] font-black shadow-[0_15px_30px_rgba(0,0,0,0.2)] scale-[1.03]' 
+                        : 'text-white/60 hover:bg-white/10 hover:text-white'
                       }`}
                     >
-                      <item.icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                      <span className="text-[15px] tracking-tight">{item.label}</span>
+                      {isActive && <div className="absolute inset-0 bg-gradient-to-tr from-white to-transparent opacity-20" />}
+                      <item.icon className={`w-5 h-5 transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                      <span className="text-[15px] tracking-tight relative z-10">{item.label}</span>
                       {isActive && <div className="absolute left-0 w-1.5 h-6 bg-orange-500 rounded-r-full" />}
                     </button>
                   );
                 })}
             </nav>
-            <div className="p-8 mt-auto">
-              <div className="p-5 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-md">
-                <p className="text-[10px] font-black uppercase tracking-widest text-teal-400 mb-2">Estado Premium</p>
+
+            <div className="p-8 mt-auto relative z-10">
+              <div className="p-5 bg-white/10 rounded-[2rem] border border-white/20 backdrop-blur-xl shadow-inner">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-[10px] font-black text-white">PRO</div>
-                  <span className="text-xs font-bold text-white/80">Sincronización OK</span>
+                  <div className="w-10 h-10 rounded-2xl bg-orange-500 flex items-center justify-center text-[11px] font-black text-white shadow-lg">PRO</div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/50">Sincronización</p>
+                    <p className="text-xs font-bold">Activa hoy</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -152,7 +153,7 @@ const App: React.FC = () => {
           <main className="flex-1 flex flex-col bg-[#F4F4F4] min-h-screen">
             <div className="w-full max-w-7xl mx-auto p-4 pb-36 md:pb-12 flex-1">
                 <div className="bg-[#FDFDFD] rounded-[3rem] shadow-[0_10px_50px_rgba(0,0,0,0.03)] border border-gray-100/50 p-4 md:p-10 min-h-[calc(100vh-8rem)] md:min-h-0">
-                    <Suspense fallback={<PageLoader message="Cargando..." />}>
+                    <Suspense fallback={<PageLoader />}>
                         {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
                         {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={(p, r) => { setRecipes(prev => [...prev, ...r]); setMealPlan(prev => [...prev, ...p]); }} onClear={() => setMealPlan([])} />}
                         {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={() => {}} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} />}
@@ -165,13 +166,16 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* MOBILE NAVBAR: LIQUID GLASS EFFECT */}
-            <nav className={`md:hidden fixed bottom-6 left-6 right-6 z-[800] bg-white/70 backdrop-blur-2xl p-2 rounded-[3.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.1)] flex gap-1 border border-white/50 transition-all duration-500 ring-1 ring-black/5 ${isKeyboardOpen ? 'opacity-0 translate-y-24 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
+            {/* MOBILE NAVBAR: TRUE LIQUID GLASS */}
+            <nav className={`md:hidden fixed bottom-6 left-6 right-6 z-[800] liquid-glass p-2 rounded-[3.5rem] flex gap-1 transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32' : 'opacity-100 translate-y-0'}`}>
+                {/* Shine Animation */}
+                <div className="glass-shine animate-glass-shine" />
+                
                 {[ 
-                  {id:'dashboard', icon:Home, label: 'Home'}, 
+                  {id:'dashboard', icon:Home, label: 'Inicio'}, 
                   {id:'planner', icon:Calendar, label: 'Plan'}, 
                   {id:'pantry', icon:Package, label: 'Stock'}, 
-                  {id:'recipes', icon:BookOpen, label: 'Libro'}, 
+                  {id:'recipes', icon:BookOpen, label: 'Recetas'}, 
                   {id:'shopping', icon:ShoppingBag, label: 'Lista'}, 
                   {id:'profile', icon:User, label: 'Yo'} 
                 ].map(item => {
@@ -180,13 +184,16 @@ const App: React.FC = () => {
                       <button 
                         key={item.id} 
                         onClick={() => setActiveTab(item.id)} 
-                        className={`flex-1 flex flex-col items-center justify-center py-4 rounded-[2.5rem] transition-all duration-500 relative group`}
+                        className={`flex-1 flex flex-col items-center justify-center py-4 rounded-[2.5rem] relative group transition-all duration-300`}
                         aria-label={item.label}
                       >
                           {isActive && (
-                            <div className="absolute inset-1 bg-[#0F4E0E] rounded-[2rem] shadow-[0_8px_15px_rgba(15,78,14,0.3)] animate-[liquid-pop_0.5s_ease-out] z-0" />
+                            <div className="absolute inset-1 bg-[#0F4E0E] rounded-[2.2rem] shadow-[0_10px_20px_rgba(15,78,14,0.3)] animate-liquid-stretch liquid-indicator z-0" />
                           )}
-                          <item.icon className={`w-[22px] h-[22px] z-10 transition-all duration-500 ${isActive ? 'text-white scale-110 stroke-[2.5px]' : 'text-[#0F4E0E]/40 group-hover:text-[#0F4E0E]'}`} />
+                          <item.icon className={`w-[22px] h-[22px] z-10 transition-all duration-500 ${isActive ? 'text-white scale-110' : 'text-[#0F4E0E]/30 group-hover:text-[#0F4E0E]'}`} />
+                          {isActive && (
+                            <div className="absolute -bottom-1 w-1.5 h-1.5 bg-orange-500 rounded-full blur-[1px] animate-pulse" />
+                          )}
                       </button>
                     );
                 })}
@@ -195,14 +202,6 @@ const App: React.FC = () => {
          </>
         }
       </div>
-
-      <style>{`
-        @keyframes liquid-pop {
-          0% { transform: scale(0.8) translateY(10px); opacity: 0; }
-          60% { transform: scale(1.05) translateY(-2px); opacity: 1; }
-          100% { transform: scale(1) translateY(0); }
-        }
-      `}</style>
     </ErrorBoundary>
   );
 };
