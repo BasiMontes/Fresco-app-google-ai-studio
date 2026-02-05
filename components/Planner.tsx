@@ -107,37 +107,18 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   return (
     <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden bg-[#FDFDFD]">
-      {/* HEADER: ALINEACIÓN RE-DISEÑADA */}
-      <header className="px-4 md:px-8 py-4 bg-white border-b border-gray-50 flex-shrink-0 z-20">
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 items-center gap-4">
+      {/* HEADER: ALINEACIÓN EXTREMA */}
+      <header className="w-full py-4 bg-white border-b border-gray-50 flex-shrink-0 z-20 px-2 md:px-4">
+        <div className="w-full grid grid-cols-1 md:grid-cols-3 items-center gap-4">
             
-            {/* Col 1: Título */}
-            <div className="flex justify-between items-center md:justify-start">
-                <div className="space-y-0.5">
-                    <h1 className="text-2xl md:text-[28px] font-black text-[#0F4E0E] tracking-tight leading-none">Calendario</h1>
-                    <p className="text-[#0F4E0E]/20 font-black uppercase text-[7px] md:text-[8px] tracking-[0.4em] hidden md:block">Planificación Semanal</p>
-                </div>
-                
-                {/* Botones rápidos móvil */}
-                <div className="flex md:hidden items-center gap-2">
-                    <button 
-                      onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
-                      className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
-                    <button 
-                        onClick={() => setShowPlanWizard(true)} 
-                        className="h-10 px-4 bg-[#0F4E0E] text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
-                    >
-                        <BrainCircuit className="w-4 h-4 text-orange-400" />
-                        <span>Generar</span>
-                    </button>
-                </div>
+            {/* Col 1: Título pegado a la izquierda */}
+            <div className="justify-self-start flex flex-col">
+                <h1 className="text-2xl md:text-[28px] font-black text-[#0F4E0E] tracking-tight leading-none">Calendario</h1>
+                <p className="text-[#0F4E0E]/20 font-black uppercase text-[8px] tracking-[0.4em] mt-1 hidden md:block">Planificación Semanal</p>
             </div>
 
-            {/* Col 2: Navegador Centralizado */}
-            <div className="flex items-center gap-1 bg-gray-50/50 p-1 rounded-2xl border border-gray-100 justify-between md:justify-self-center md:min-w-[280px]">
+            {/* Col 2: Selector centrado matemáticamente */}
+            <div className="flex items-center gap-1 bg-gray-50/50 p-1 rounded-2xl border border-gray-100 md:justify-self-center md:min-w-[280px] w-full md:w-auto">
                 <button 
                     disabled={!canGoBack}
                     onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} 
@@ -146,7 +127,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     <ChevronLeft className="w-4 h-4" />
                 </button>
                 
-                <span className="text-[10px] font-black text-[#0F4E0E] px-4 uppercase tracking-[0.25em] whitespace-nowrap text-center">
+                <span className="flex-1 text-[10px] font-black text-[#0F4E0E] px-4 uppercase tracking-[0.25em] whitespace-nowrap text-center">
                     {format(currentWeekStart, 'MMMM yyyy', { locale: es })}
                 </span>
                 
@@ -159,40 +140,37 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 </button>
             </div>
 
-            {/* Col 3: Acciones Derecha (Desktop) */}
-            <div className="hidden md:flex items-center gap-3 justify-end h-10">
+            {/* Col 3: Acciones pegadas a la derecha absoluta */}
+            <div className="justify-self-end flex items-center gap-2 md:gap-3 h-10 w-full md:w-auto">
                 <button 
                     onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
-                    className="w-10 h-10 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all border border-red-100/50 flex items-center justify-center group"
+                    className="w-10 h-10 md:w-11 md:h-11 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all border border-red-100 flex items-center justify-center shrink-0"
                     title="Vaciar calendario"
                 >
-                    <Trash2 className="w-4.5 h-4.5" />
+                    <Trash2 className="w-5 h-5" />
                 </button>
                 <button 
                     onClick={() => setShowPlanWizard(true)} 
-                    className="h-10 px-5 bg-[#0F4E0E] text-white rounded-xl font-black text-[9px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#062606] transition-all active:scale-[0.98] flex items-center justify-center gap-2.5"
+                    className="flex-1 md:flex-none h-10 md:h-11 px-4 md:px-6 bg-[#0F4E0E] text-white rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#062606] transition-all active:scale-[0.98] flex items-center justify-center gap-3"
                 >
-                    <BrainCircuit className="w-4 h-4 text-orange-400" />
-                    <span>GENERAR PLAN IA</span>
+                    <BrainCircuit className="w-4 h-4 md:w-5 md:h-5 text-orange-400" />
+                    <span className="whitespace-nowrap">GENERAR PLAN IA</span>
                 </button>
             </div>
         </div>
       </header>
 
-      {/* Resto del componente Planner se mantiene igual... */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-x-auto no-scrollbar flex gap-4 p-4 h-full min-h-0">
+      <div ref={scrollContainerRef} className="flex-1 overflow-x-auto no-scrollbar flex gap-4 p-4 h-full min-h-0 bg-[#FCFCFC]">
         {days.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd');
           const isToday = isSameDay(day, new Date());
           return (
             <div key={dateStr} className="min-w-[280px] max-w-[340px] flex-1 flex flex-col gap-3 h-full">
-                {/* Header de Día Compacto */}
-                <div className={`flex items-center justify-center gap-3 py-2 px-4 rounded-[2rem] border transition-all duration-700 flex-shrink-0 ${isToday ? 'bg-[#0F4E0E] text-white border-[#0F4E0E] shadow-2xl scale-[1.02]' : 'bg-white text-[#0F4E0E] border-gray-100 shadow-sm'}`}>
+                <div className={`flex items-center justify-center gap-3 py-2 px-4 rounded-[2rem] border transition-all duration-700 flex-shrink-0 ${isToday ? 'bg-[#0F4E0E] text-white border-[#0F4E0E] shadow-xl' : 'bg-white text-[#0F4E0E] border-gray-100 shadow-sm'}`}>
                     <span className={`text-[10px] font-black uppercase tracking-[0.3em] whitespace-nowrap ${isToday ? 'text-orange-400' : 'text-[#0F4E0E]/30'}`}>{format(day, 'EEEE', { locale: es })}</span>
                     <span className="text-xl font-black leading-none">{format(day, 'd')}</span>
                 </div>
                 
-                {/* Contenedor de Comidas con gap reducido */}
                 <div className="flex-1 flex flex-col gap-3 min-h-0">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
@@ -201,33 +179,27 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <div 
                             key={type} 
                             onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} 
-                            className={`relative flex-1 rounded-[2.5rem] transition-all duration-700 cursor-pointer flex flex-col overflow-hidden group shadow-sm border-2 ${recipe ? 'border-white hover:shadow-2xl hover:-translate-y-1' : 'bg-white border-dashed border-gray-100 hover:border-teal-200 hover:bg-teal-50/20'}`}
+                            className={`relative flex-1 rounded-[2.5rem] transition-all duration-500 cursor-pointer flex flex-col overflow-hidden group shadow-sm border-2 ${recipe ? 'border-white hover:shadow-xl' : 'bg-white border-dashed border-gray-100 hover:border-teal-200'}`}
                           >
                               {recipe ? (
                                   <div className="absolute inset-0 w-full h-full">
-                                      <SmartImage 
-                                        src={recipe.image_url} 
-                                        alt={recipe.title} 
-                                        className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 group-hover:saturate-[1.1]" 
-                                      />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent transition-opacity duration-700" />
+                                      <SmartImage src={recipe.image_url} alt={recipe.title} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                                       <div className="absolute inset-0 flex flex-col justify-between p-5 z-10">
                                           <div className="flex justify-between items-start">
-                                              <div className="px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 shadow-sm flex items-center">
-                                                  <span className="text-[7px] font-black uppercase tracking-[0.2em] text-white/90 leading-none">{type}</span>
+                                              <div className="px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 flex items-center">
+                                                  <span className="text-[7px] font-black uppercase tracking-[0.2em] text-white leading-none">{type}</span>
                                               </div>
                                               <button onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} className="p-2 bg-white/10 backdrop-blur-md rounded-xl text-white/60 hover:text-white hover:bg-red-500/80 transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100">
                                                   <X className="w-3.5 h-3.5" />
                                               </button>
                                           </div>
-                                          <div className="space-y-1 pb-1">
-                                              <h5 className="font-black text-[14px] text-white leading-tight uppercase line-clamp-2 transition-all drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
-                                                  {recipe.title}
-                                              </h5>
-                                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-2 group-hover:translate-y-0">
+                                          <div className="space-y-1">
+                                              <h5 className="font-black text-[14px] text-white leading-tight uppercase line-clamp-2">{recipe.title}</h5>
+                                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500">
                                                   <span className="text-[8px] font-black text-orange-400 uppercase tracking-widest">{recipe.prep_time} MIN</span>
                                                   <div className="w-1 h-1 rounded-full bg-white/20" />
-                                                  <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">{recipe.difficulty}</span>
+                                                  <span className="text-[8px] font-black text-white/40 uppercase tracking-widest capitalize">{recipe.difficulty}</span>
                                               </div>
                                           </div>
                                       </div>
@@ -235,13 +207,13 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                               ) : (
                                   <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
                                       <div className="flex justify-between items-center w-full mb-auto">
-                                          <span className="text-[7px] font-black uppercase tracking-[0.3em] px-2 py-1 rounded-lg bg-gray-50 text-gray-400 border border-gray-100 leading-none">{type}</span>
+                                          <span className="text-[7px] font-black uppercase tracking-[0.3em] px-2 py-1 rounded-lg bg-gray-50 text-gray-300 border border-gray-100 leading-none">{type}</span>
                                       </div>
-                                      <div className="flex-1 flex flex-col items-center justify-center transition-all duration-500 transform group-hover:scale-110">
-                                          <div className="w-10 h-10 rounded-[1.2rem] bg-teal-50 flex items-center justify-center mb-4 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all border border-teal-100/50 shadow-inner">
+                                      <div className="flex-1 flex flex-col items-center justify-center transition-all duration-500 group-hover:scale-110">
+                                          <div className="w-10 h-10 rounded-[1.2rem] bg-teal-50 flex items-center justify-center mb-2 border border-teal-100/50 shadow-inner group-hover:bg-[#0F4E0E] group-hover:text-white transition-all">
                                             <Plus className="w-5 h-5 text-[#0F4E0E] group-hover:text-white" />
                                           </div>
-                                          <span className="text-[9px] font-black uppercase tracking-[0.5em] text-gray-300 group-hover:text-[#0F4E0E] transition-colors mt-2">Añadir</span>
+                                          <span className="text-[9px] font-black uppercase tracking-[0.5em] text-gray-300 group-hover:text-[#0F4E0E] transition-colors">Añadir</span>
                                       </div>
                                   </div>
                               )}
@@ -254,7 +226,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         })}
       </div>
 
-      {/* Modales y lógica de selectores se mantienen igual... */}
       {showRecipeSelector && (
           <ModalPortal>
               <div className="fixed inset-0 z-[5000] bg-[#0F4E0E]/90 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setShowRecipeSelector(null)}>

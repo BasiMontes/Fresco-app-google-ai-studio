@@ -102,7 +102,7 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={() => setView('app')} /> :
          <>
-          {/* DESKTOP SIDEBAR: LIMPIO SIN BADGES INNECESARIOS */}
+          {/* DESKTOP SIDEBAR: LIMPIO */}
           <aside className="hidden md:flex flex-col w-64 bg-[#0F4E0E] text-white h-screen flex-shrink-0 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.05)]">
             <div className="p-8"><Logo variant="inverted" /></div>
             
@@ -134,16 +134,15 @@ const App: React.FC = () => {
                 })}
             </nav>
 
-            {/* Footer de Sidebar simplificado */}
-            <div className="p-8 mt-auto border-t border-white/5 opacity-30">
-               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-center">Fresco App v1.0</p>
+            <div className="p-8 mt-auto border-t border-white/5 opacity-20">
+               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-center">Fresco App v1.0</p>
             </div>
           </aside>
 
           {/* MAIN AREA */}
           <main className="flex-1 h-screen overflow-y-auto bg-[#F4F4F4] relative">
-            <div className="w-full max-w-7xl mx-auto p-2 md:p-5 pb-28 md:pb-5 min-h-full">
-                <div className="bg-[#FDFDFD] rounded-[2rem] md:rounded-[2.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 p-3 md:p-6 h-full min-h-[calc(100vh-2.5rem)]">
+            <div className="w-full max-w-7xl mx-auto p-2 md:p-4 pb-28 md:pb-4 min-h-full">
+                <div className="bg-[#FDFDFD] rounded-[2rem] md:rounded-[2.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 p-2 md:p-4 h-full min-h-[calc(100vh-2rem)]">
                     <Suspense fallback={<PageLoader />}>
                         {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
                         {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={(p, r) => { setRecipes(prev => [...prev, ...r]); setMealPlan(prev => [...prev, ...p]); }} onClear={() => setMealPlan([])} />}
