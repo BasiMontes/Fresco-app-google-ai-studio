@@ -2,65 +2,25 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
-    <!-- 1. IDENTIDAD VISUAL (FAVICON) - LOGO BLANCO CENTRADO EN CÍRCULO VERDE (#0F4E0E) -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Ccircle cx='128' cy='128' r='128' fill='%230F4E0E'/%3E%3Cpath d='M 64 128 C 64 163.346 92.654 192 128 192 L 128 256 C 57.308 256 0 198.692 0 128 Z M 192 128 C 192 163.346 220.654 192 256 192 L 256 256 C 185.308 256 128 198.692 128 128 Z M 64 0 C 64 35.346 92.654 64 128 64 L 128 128 C 57.308 128 0 70.692 0 0 Z M 192 0 C 192 35.346 220.654 64 256 64 L 256 128 C 185.308 128 128 70.692 128 0 Z' fill='white' transform='translate(44.8, 44.8) scale(0.65)'/%3E%3C/svg%3E" />
     <title>Fresco, tu cocina inteligente</title>
-
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0F4E0E" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Fresco">
-
-    <!-- Satoshi Font -->
+    
     <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap" rel="stylesheet">
-
-    <!-- Compatibilidad process.env para navegador -->
-    <script>
-      window.process = window.process || {};
-      window.process.env = window.process.env || {};
-    </script>
-
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: {
-              sans: ['Satoshi', 'system-ui', '-apple-system', 'sans-serif'],
-            },
+            fontFamily: { sans: ['Satoshi', 'sans-serif'] },
             colors: {
-              teal: { 
-                50: '#f0fdf4', 
-                100: '#dcfce7', 
-                600: '#16a34a', 
-                700: '#15803d', 
-                800: '#064e3b', 
-                900: '#0F4E0E'
-              },
-              brand: {
-                 dark: '#0F4E0E',
-                 orange: '#e87c3e',
-                 light: '#f8f9fa'
-              }
-            },
-            boxShadow: {
-              'fresco': '0 20px 50px rgba(0,0,0,0.03)',
-              'fresco-inner': 'inset 0 2px 4px rgba(0,0,0,0.02)',
-              'pill': '0 4px 12px rgba(0,0,0,0.05)'
-            },
-            animation: {
-              'slide-up': 'slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-            },
-            keyframes: {
-              'slide-up': {
-                'from': { transform: 'translateY(20px)', opacity: '0' },
-                'to': { transform: 'translateY(0)', opacity: '1' }
-              }
+              teal: { 900: '#0F4E0E' },
+              brand: { dark: '#0F4E0E', orange: '#e87c3e', light: '#f8f9fa' }
             }
           }
         }
@@ -68,52 +28,38 @@
     </script>
     <style>
       :root {
-        --safe-area-inset-top: env(safe-area-inset-top);
-        --safe-area-inset-bottom: env(safe-area-inset-bottom);
+        --safe-top: env(safe-area-inset-top);
+        --safe-bottom: env(safe-area-inset-bottom);
       }
-
-      body { 
-        background-color: #F4F4F4; /* Fondo base para el "gap" */
+      * {
         -webkit-tap-highlight-color: transparent;
-        font-family: 'Satoshi', sans-serif;
-        overflow: hidden;
-        height: 100vh;
-        width: 100vw;
-        position: fixed;
-        overscroll-behavior: none;
       }
-
-      #root {
-        height: 100%;
-        width: 100%;
-        overflow: hidden;
-        /* Reducimos la intrusión del notch para que el diseño sea más inmersivo */
-        padding-top: max(0px, var(--safe-area-inset-top));
-      }
-
-      /* Estilo específico para móviles: barra inferior con padding extra */
-      .safe-pb {
-          padding-bottom: calc(1rem + var(--safe-area-inset-bottom));
-      }
-
-      /* RESET DE INPUTS NUMÉRICOS - UX FIX */
-      input::-webkit-outer-spin-button,
-      input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
+      html, body {
+        min-height: 100%;
         margin: 0;
+        padding: 0;
+        background-color: #F4F4F4;
+        font-family: 'Satoshi', sans-serif;
+        overflow-x: hidden;
+        overflow-y: auto;
+        color: #0F4E0E;
       }
-      input[type=number] {
-        -moz-appearance: textfield;
+      #root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
       }
-
-      /* Sistema de tipografía global Fresco */
-      .fresco-title { font-size: 2.2rem; font-weight: 900; line-height: 1.05; letter-spacing: -0.04em; }
-      .fresco-label-wide { font-size: 0.6rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4em; color: #cbd5e1; }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
       
-      .no-scrollbar::-webkit-scrollbar { display: none; } 
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      /* Glassmorphism utility */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+      }
     </style>
-<script type="importmap">
+    <script type="importmap">
 {
   "imports": {
     "lucide-react": "https://esm.sh/lucide-react@0.471.1",
@@ -126,12 +72,12 @@
     "canvas-confetti": "https://esm.sh/canvas-confetti@1.9.4",
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.47.10",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "react-dom": "https://esm.sh/react-dom@^19.2.3"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3",
+    "react-dom": "https://esm.sh/react-dom@^19.2.4"
   }
 }
 </script>
-</head>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
