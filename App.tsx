@@ -100,10 +100,10 @@ const App: React.FC = () => {
 
   const handleClearPlan = useCallback(async () => {
     if (!userId) return;
-    setMealPlan([]); // Limpiar UI inmediatamente
-    setDialogOptions(null); // Cerrar diálogo inmediatamente
+    setMealPlan([]); 
+    setDialogOptions(null); // Asegura cierre de diálogo tras confirmar
     try {
-      await db.clearMealPlanDB(userId); // Limpiar base de datos
+      await db.clearMealPlanDB(userId);
     } catch (error) {
       console.error("Error al limpiar el plan:", error);
     }

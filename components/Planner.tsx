@@ -61,7 +61,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   return (
     <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden bg-[#F8F9FA]">
-      {/* HEADER - OPTIMIZADO */}
+      {/* HEADER */}
       <header className="w-full py-3 md:py-4 bg-white flex-shrink-0 z-20 px-4 md:px-10 shadow-sm border-b border-gray-100">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-2 md:gap-4">
             <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
@@ -137,7 +137,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     )}
                 </div>
                 
-                {/* LISTA DE COMIDAS - DISEÑO OBJETIVO */}
+                {/* LISTA DE COMIDAS - DISEÑO CINEMATIC CORREGIDO */}
                 <div className="flex-1 flex flex-col md:grid md:grid-rows-3 gap-4 md:gap-5 pb-40 md:pb-0 h-full min-h-0">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
@@ -151,22 +151,22 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           >
                               {recipe ? (
                                   <div className="absolute inset-0 w-full h-full flex flex-col animate-fade-in">
-                                      {/* IMAGEN A SANGRE TOTAL - ELIMINA CUALQUIER CORTE */}
+                                      {/* IMAGEN TOTAL A SANGRE - SOLUCIÓN AL CORTE */}
                                       <SmartImage src={recipe.image_url} alt={recipe.title} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" />
                                       
-                                      {/* GRADIENTE PROFUNDO DE REFERENCIA */}
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/25 to-transparent" />
+                                      {/* DEGRADADO DINÁMICO */}
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
                                       
                                       <div className="relative z-10 flex flex-col h-full justify-between p-6 md:p-7">
                                           <div className="flex justify-between items-start">
-                                              {/* PÍLDORA SUPERIOR IZQUIERDA GLASS */}
+                                              {/* PÍLDORA "MOMENTO" GLASS */}
                                               <div className="px-4 py-2 rounded-full bg-white/15 backdrop-blur-xl border border-white/10 flex items-center shadow-lg">
                                                   <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white leading-none">
                                                     {type === 'breakfast' ? 'MAÑANA' : type === 'lunch' ? 'COMIDA' : 'CENA'}
                                                   </span>
                                               </div>
                                               
-                                              {/* BOTÓN CERRAR CIRCULAR GLASS */}
+                                              {/* BOTÓN CERRAR GLASS CIRCULAR */}
                                               <button 
                                                 onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} 
                                                 className="w-10 h-10 bg-white/20 hover:bg-red-500/90 text-white rounded-full backdrop-blur-md shadow-2xl transition-all active:scale-90 flex items-center justify-center border border-white/10 group-hover:opacity-100 md:opacity-0"
@@ -176,10 +176,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                           </div>
                                           
                                           <div className="space-y-4">
-                                              {/* TÍTULO EN BLANCO, FUENTE GRUESA Y CAPITALIZE */}
-                                              <h5 className="font-black text-xl md:text-2xl text-white leading-[1.1] capitalize line-clamp-2 tracking-tight drop-shadow-md">{recipe.title}</h5>
+                                              {/* TÍTULO BLANCO CAPITALIZE */}
+                                              <h5 className="font-black text-xl md:text-2xl text-white leading-[1.1] capitalize line-clamp-2 tracking-tight drop-shadow-lg">{recipe.title}</h5>
                                               
-                                              {/* PÍLDORAS INFERIORES OSCURAS TRASLÚCIDAS */}
+                                              {/* PÍLDORAS INFERIORES OSCURAS GLASS */}
                                               <div className="flex items-center gap-2">
                                                   <div className="flex items-center gap-2 bg-black/40 px-3 py-2 rounded-xl backdrop-blur-2xl border border-white/5">
                                                     <Clock className="w-4 h-4 text-white" />
