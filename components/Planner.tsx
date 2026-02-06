@@ -40,7 +40,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         if (scrollContainerRef.current) {
             const todayIndex = days.findIndex(d => isSameDay(d, new Date()));
             if (todayIndex !== -1) {
-                const dayWidth = window.innerWidth < 768 ? window.innerWidth * 0.85 : 270; 
+                const dayWidth = window.innerWidth < 768 ? window.innerWidth * 0.88 : 260; 
                 scrollContainerRef.current.scrollTo({
                     left: todayIndex * dayWidth,
                     behavior: 'smooth'
@@ -61,60 +61,60 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   return (
     <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden bg-[#F8F9FA]">
-      {/* HEADER - DENSIDAD FIJA */}
-      <header className="w-full py-4 md:py-5 bg-white flex-shrink-0 z-20 px-4 md:px-10 shadow-sm border-b border-gray-100">
+      {/* HEADER - ALTURA FIJA Y COMPACTA */}
+      <header className="w-full py-4 md:py-6 bg-white flex-shrink-0 z-20 px-4 md:px-10 shadow-sm border-b border-gray-100">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-8 h-8 md:w-9 md:h-9 bg-teal-50 rounded-xl flex items-center justify-center text-[#0F4E0E]">
-                    <CalendarDays className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                <div className="w-9 h-9 md:w-10 md:h-10 bg-teal-50 rounded-xl flex items-center justify-center text-[#0F4E0E]">
+                    <CalendarDays className="w-5 h-5" />
                 </div>
-                <h1 className="text-xl md:text-2xl font-black text-[#0F4E0E] tracking-tighter">Mi Menú</h1>
+                <h1 className="text-2xl md:text-3xl font-black text-[#0F4E0E] tracking-tighter">Mi Menú</h1>
             </div>
 
             <div className="flex items-center gap-2">
-                <div className="flex items-center gap-0.5 bg-gray-50 p-1 rounded-xl border border-gray-100 shrink-0">
+                <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-100 shrink-0">
                     <button 
                         disabled={!canGoBack}
                         onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} 
-                        className={`p-1.5 rounded-lg transition-all ${canGoBack ? 'bg-white text-[#0F4E0E] shadow-sm active:scale-95' : 'text-gray-200'}`}
+                        className={`p-2 rounded-lg transition-all ${canGoBack ? 'bg-white text-[#0F4E0E] shadow-sm active:scale-95' : 'text-gray-200'}`}
                     >
-                        <ChevronLeft className="w-3.5 h-3.5" />
+                        <ChevronLeft className="w-4 h-4" />
                     </button>
-                    <span className="min-w-[80px] md:min-w-[110px] text-center text-[9px] md:text-[10px] font-black text-[#0F4E0E] px-1 uppercase tracking-widest">
+                    <span className="min-w-[90px] md:min-w-[120px] text-center text-[10px] md:text-[11px] font-black text-[#0F4E0E] px-1 uppercase tracking-[0.2em]">
                         {format(currentWeekStart, 'MMM yyyy', { locale: es })}
                     </span>
                     <button 
                         disabled={!canGoForward}
                         onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} 
-                        className={`p-1.5 rounded-lg transition-all ${canGoForward ? 'bg-white text-[#0F4E0E] shadow-sm active:scale-95' : 'text-gray-200'}`}
+                        className={`p-2 rounded-lg transition-all ${canGoForward ? 'bg-white text-[#0F4E0E] shadow-sm active:scale-95' : 'text-gray-200'}`}
                     >
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <ChevronRight className="w-4 h-4" />
                     </button>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                     <button 
                         onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
-                        className="w-9 h-9 md:w-10 md:h-10 bg-red-50 text-red-500 rounded-xl border border-red-100 flex items-center justify-center shadow-sm hover:bg-red-100 transition-colors"
+                        className="w-10 h-10 md:w-12 md:h-12 bg-red-50 text-red-500 rounded-2xl border border-red-100 flex items-center justify-center shadow-sm hover:bg-red-100 transition-colors"
                     >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                     </button>
                     <button 
                         onClick={() => {}} 
-                        className="h-9 md:h-10 px-4 md:px-6 bg-[#0F4E0E] text-white rounded-xl font-black text-[9px] md:text-[11px] uppercase tracking-[0.2em] shadow-lg flex items-center gap-2 active:scale-95 hover:bg-[#062606] transition-all"
+                        className="h-10 md:h-12 px-5 md:px-8 bg-[#0F4E0E] text-white rounded-2xl font-black text-[10px] md:text-[12px] uppercase tracking-[0.25em] shadow-lg flex items-center gap-3 active:scale-95 hover:bg-[#062606] transition-all"
                     >
-                        <Wand2 className="w-3.5 h-3.5 text-orange-400" />
-                        <span>GENERAR</span>
+                        <Wand2 className="w-4 h-4 text-orange-400" />
+                        <span className="hidden xs:inline">GENERAR</span>
                     </button>
                 </div>
             </div>
         </div>
       </header>
 
-      {/* VIEWPORT - CONTENEDOR DE ALTURA BLOQUEADA EN DESKTOP */}
+      {/* VIEWPORT - ELIMINADO EL SCROLL VERTICAL EN DESKTOP */}
       <div 
         ref={scrollContainerRef} 
-        className="flex-1 overflow-x-auto no-scrollbar flex gap-4 md:gap-5 p-4 md:p-6 bg-[#F8F9FA] scroll-smooth md:h-[calc(100vh-140px)]"
+        className="flex-1 overflow-x-auto no-scrollbar flex gap-5 md:gap-6 p-5 md:p-8 bg-[#F8F9FA] scroll-smooth md:h-[calc(100vh-140px)]"
       >
         {days.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd');
@@ -122,23 +122,23 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           return (
             <div 
               key={dateStr} 
-              className="min-w-[82vw] md:min-w-[250px] lg:min-w-[270px] flex-shrink-0 flex flex-col gap-3 md:h-full animate-fade-in transition-all duration-500"
+              className="min-w-[85vw] md:min-w-[260px] lg:min-w-[280px] flex-shrink-0 flex flex-col gap-4 md:h-full animate-fade-in transition-all duration-500"
             >
                 {/* CABECERA DEL DÍA */}
-                <div className="flex items-center px-5 py-3.5 md:py-4 rounded-xl md:rounded-2xl bg-white text-[#0F4E0E] shadow-sm border border-gray-100 flex-shrink-0">
-                    <span className="text-base md:text-lg font-black uppercase tracking-tighter">
+                <div className="flex items-center px-6 py-4 md:py-5 rounded-[1.5rem] md:rounded-[2rem] bg-white text-[#0F4E0E] shadow-sm border border-gray-100 flex-shrink-0">
+                    <span className="text-lg md:text-xl font-black uppercase tracking-tighter">
                         {format(day, 'EEEE d', { locale: es })}
                     </span>
                     {isToday && (
-                        <div className="ml-auto flex items-center gap-1.5">
-                            <span className="text-[7px] font-black text-orange-500 uppercase tracking-widest hidden md:inline">Hoy</span>
-                            <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(232,124,62,0.6)]" />
+                        <div className="ml-auto flex items-center gap-2">
+                            <span className="text-[8px] font-black text-orange-500 uppercase tracking-widest hidden md:inline">Hoy</span>
+                            <div className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(232,124,62,0.8)] animate-pulse" />
                         </div>
                     )}
                 </div>
                 
-                {/* LISTA DE COMIDAS - GRID PROPORCIONAL FIJO EN DESKTOP */}
-                <div className="flex-1 flex flex-col md:grid md:grid-rows-3 gap-3 md:gap-4 pb-32 md:pb-0 h-full min-h-0">
+                {/* LISTA DE COMIDAS - GRID DE ALTURA FIJA EN DESKTOP */}
+                <div className="flex-1 flex flex-col md:grid md:grid-rows-3 gap-4 md:gap-5 pb-40 md:pb-0 h-full min-h-0">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
                       const recipe = slot?.recipeId ? recipes.find(r => String(r.id) === String(slot.recipeId)) : null;
@@ -147,45 +147,45 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <div 
                             key={type} 
                             onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} 
-                            className={`relative min-h-[170px] md:min-h-0 md:h-full rounded-[1.8rem] md:rounded-[2.5rem] transition-all duration-500 cursor-pointer overflow-hidden group border ${recipe ? 'bg-gray-900 border-transparent shadow-md' : 'bg-white border-dashed border-gray-200 hover:border-[#0F4E0E] hover:bg-teal-50/5'}`}
+                            className={`relative min-h-[190px] md:min-h-0 md:h-full rounded-[2.2rem] md:rounded-[2.8rem] transition-all duration-700 cursor-pointer overflow-hidden group border-2 ${recipe ? 'bg-gray-900 border-transparent shadow-xl' : 'bg-white border-dashed border-gray-100 hover:border-[#0F4E0E]/20 hover:bg-teal-50/5'}`}
                           >
                               {recipe ? (
                                   <div className="absolute inset-0 w-full h-full flex flex-col animate-fade-in h-full">
-                                      <SmartImage src={recipe.image_url} alt={recipe.title} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 opacity-55" />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/25 to-transparent" />
+                                      <SmartImage src={recipe.image_url} alt={recipe.title} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 opacity-60" />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-black/30 to-transparent" />
                                       
-                                      <div className="relative z-10 flex flex-col h-full justify-between p-5 md:p-7">
+                                      <div className="relative z-10 flex flex-col h-full justify-between p-6 md:p-8">
                                           <div className="flex justify-between items-start">
-                                              <div className="px-3 py-1 rounded-lg bg-white/10 backdrop-blur-3xl border border-white/10 flex items-center">
-                                                  <span className="text-[7px] font-black uppercase tracking-[0.3em] text-white leading-none">
+                                              <div className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-2xl border border-white/10 flex items-center">
+                                                  <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white leading-none">
                                                     {type === 'breakfast' ? 'MAÑANA' : type === 'lunch' ? 'COMIDA' : 'CENA'}
                                                   </span>
                                               </div>
                                               <button 
                                                 onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} 
-                                                className="p-2.5 bg-red-500 text-white rounded-xl shadow-2xl opacity-100 md:opacity-0 group-hover:opacity-100 transition-all active:scale-90"
+                                                className="w-9 h-9 bg-red-500/90 text-white rounded-xl shadow-2xl opacity-100 md:opacity-0 group-hover:opacity-100 transition-all active:scale-90 flex items-center justify-center"
                                               >
-                                                  <X className="w-3.5 h-3.5" />
+                                                  <X className="w-4 h-4 stroke-[3px]" />
                                               </button>
                                           </div>
                                           
-                                          <div className="space-y-1.5">
-                                              <h5 className="font-black text-sm md:text-base text-white leading-tight uppercase line-clamp-2 tracking-tight group-hover:text-orange-400 transition-colors">{recipe.title}</h5>
+                                          <div className="space-y-2">
+                                              <h5 className="font-black text-base md:text-lg text-white leading-tight uppercase line-clamp-2 tracking-tight group-hover:text-orange-400 transition-colors duration-300">{recipe.title}</h5>
                                               <div className="flex items-center gap-2">
-                                                  <div className="flex items-center gap-1.5 bg-orange-500/30 px-2 py-0.5 rounded-md backdrop-blur-md border border-white/10">
-                                                    <Clock className="w-2.5 h-2.5 text-orange-400" />
-                                                    <span className="text-[8px] font-black text-orange-400 uppercase tracking-widest">{recipe.prep_time}'</span>
+                                                  <div className="flex items-center gap-1.5 bg-orange-500/30 px-2.5 py-1 rounded-lg backdrop-blur-xl border border-white/10">
+                                                    <Clock className="w-3 h-3 text-orange-400" />
+                                                    <span className="text-[9px] font-black text-orange-400 uppercase tracking-widest">{recipe.prep_time}'</span>
                                                   </div>
                                               </div>
                                           </div>
                                       </div>
                                   </div>
                               ) : (
-                                  <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center animate-fade-in h-full">
-                                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gray-50 flex items-center justify-center mb-2 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-500 group-hover:scale-110 group-hover:rotate-90">
-                                        <Plus className="w-4 h-4 text-[#0F4E0E] group-hover:text-white" />
+                                  <div className="w-full h-full flex flex-col items-center justify-center p-5 text-center animate-fade-in h-full">
+                                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gray-50 flex items-center justify-center mb-3 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-700 group-hover:scale-110 group-hover:rotate-90">
+                                        <Plus className="w-5 h-5 text-[#0F4E0E] group-hover:text-white" />
                                       </div>
-                                      <span className="text-[8px] font-black uppercase tracking-[0.4em] text-gray-300 group-hover:text-[#0F4E0E] transition-all">{type}</span>
+                                      <span className="text-[9px] font-black uppercase tracking-[0.5em] text-gray-300 group-hover:text-[#0F4E0E] transition-all duration-500">{type}</span>
                                   </div>
                               )}
                           </div>
@@ -199,51 +199,51 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
       {showRecipeSelector && (
           <ModalPortal>
-              <div className="fixed inset-0 z-[5000] bg-[#0F4E0E]/95 backdrop-blur-2xl flex items-center justify-center p-4" onClick={() => setShowRecipeSelector(null)}>
-                  <div className="bg-white w-full max-w-2xl rounded-[3rem] p-6 md:p-10 shadow-2xl relative animate-slide-up flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
-                    <div className="flex justify-between items-start mb-6">
+              <div className="fixed inset-0 z-[5000] bg-[#0F4E0E]/95 backdrop-blur-3xl flex items-center justify-center p-4" onClick={() => setShowRecipeSelector(null)}>
+                  <div className="bg-white w-full max-w-2xl rounded-[3.5rem] p-8 md:p-12 shadow-2xl relative animate-slide-up flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+                    <div className="flex justify-between items-start mb-8">
                         <div>
-                            <h3 className="text-3xl font-black text-[#0F4E0E] tracking-tighter uppercase">¿Qué comemos?</h3>
-                            <div className="flex items-center gap-3 mt-2">
-                                <span className="text-[9px] font-black text-orange-500 uppercase tracking-[0.3em] bg-orange-50 px-3 py-1.5 rounded-lg">
+                            <h3 className="text-4xl font-black text-[#0F4E0E] tracking-tighter uppercase leading-none">¿Qué cocinamos?</h3>
+                            <div className="flex items-center gap-3 mt-3">
+                                <span className="text-[10px] font-black text-orange-500 uppercase tracking-[0.4em] bg-orange-50 px-4 py-2 rounded-xl">
                                     {showRecipeSelector.type}
                                 </span>
                             </div>
                         </div>
-                        <button onClick={() => setShowRecipeSelector(null)} className="p-3 bg-gray-50 rounded-xl text-gray-400 hover:text-red-500 transition-colors"><X className="w-5 h-5" /></button>
+                        <button onClick={() => setShowRecipeSelector(null)} className="p-4 bg-gray-50 rounded-2xl text-gray-400 hover:text-red-500 transition-colors"><X className="w-6 h-6" /></button>
                     </div>
 
-                    <div className="relative mb-6">
-                        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                    <div className="relative mb-8">
+                        <Search className="absolute left-7 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-300" />
                         <input 
                             autoFocus
                             type="text" 
-                            placeholder="Busca ingrediente o receta..." 
+                            placeholder="Busca por nombre o ingrediente..." 
                             value={selectorSearch}
                             onChange={(e) => setSelectorSearch(e.target.value)}
-                            className="w-full h-14 pl-14 pr-6 bg-gray-50 border-2 border-transparent focus:border-[#0F4E0E]/10 rounded-2xl font-bold outline-none transition-all text-[#0F4E0E] placeholder:text-gray-200"
+                            className="w-full h-16 pl-16 pr-8 bg-gray-50 border-2 border-transparent focus:border-[#0F4E0E]/10 rounded-2xl font-bold outline-none transition-all text-[#0F4E0E] placeholder:text-gray-200 text-lg"
                         />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto no-scrollbar space-y-3">
+                    <div className="flex-1 overflow-y-auto no-scrollbar space-y-4">
                         {filteredSelectorRecipes.map(recipe => (
                             <div 
                                 key={recipe.id}
                                 onClick={() => { onUpdateSlot(showRecipeSelector.date, showRecipeSelector.type, recipe.id); setShowRecipeSelector(null); }}
-                                className="group flex items-center gap-4 p-3 bg-white border border-gray-100 rounded-2xl hover:bg-teal-50/20 transition-all cursor-pointer shadow-sm"
+                                className="group flex items-center gap-5 p-4 bg-white border border-gray-100 rounded-3xl hover:bg-teal-50/30 transition-all cursor-pointer shadow-sm hover:shadow-md"
                             >
-                                <div className="w-16 h-16 rounded-xl overflow-hidden shadow-md flex-shrink-0">
+                                <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
                                     <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h4 className="font-black text-sm text-[#0F4E0E] leading-tight mb-1 truncate uppercase">{recipe.title}</h4>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[8px] font-black uppercase text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">{recipe.cuisine_type}</span>
-                                        <span className="text-[8px] font-black uppercase text-orange-500">{recipe.prep_time} MIN</span>
+                                    <h4 className="font-black text-base text-[#0F4E0E] leading-tight mb-2 truncate uppercase tracking-tight">{recipe.title}</h4>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-[9px] font-black uppercase text-gray-400 bg-gray-50 px-2 py-1 rounded-lg border border-gray-50">{recipe.cuisine_type}</span>
+                                        <span className="text-[9px] font-black uppercase text-orange-500 tracking-widest">{recipe.prep_time} MIN</span>
                                     </div>
                                 </div>
-                                <div className="w-10 h-10 bg-[#0F4E0E] rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white flex-shrink-0">
-                                    <Check className="w-5 h-5" />
+                                <div className="w-12 h-12 bg-[#0F4E0E] rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white flex-shrink-0 shadow-lg">
+                                    <Check className="w-6 h-6 stroke-[3px]" />
                                 </div>
                             </div>
                         ))}
