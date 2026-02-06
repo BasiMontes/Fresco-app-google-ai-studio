@@ -158,9 +158,8 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* NAVBAR MÓVIL "LIQUID GLASS" */}
+            {/* NAVBAR MÓVIL "LIQUID GLASS" V2 */}
             <nav className={`md:hidden fixed bottom-6 left-6 right-6 z-[800] mobile-liquid-dock p-2 rounded-[3.5rem] flex items-center justify-between transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
-                {/* Refracción animada de cristal */}
                 <div className="glass-shine-refraction animate-glass-shine" />
                 
                 {[ 
@@ -179,9 +178,12 @@ const App: React.FC = () => {
                         className="flex-1 flex flex-col items-center justify-center py-4 relative group transition-all duration-300 z-10"
                       >
                           {isActive && (
-                            <div className="absolute inset-x-1.5 inset-y-1 liquid-active-pill animate-liquid-stretch rounded-[2.5rem]" />
+                            <div className="absolute inset-x-2 inset-y-1.5 liquid-active-pill animate-liquid-stretch rounded-[2.5rem]" />
                           )}
-                          <item.icon className={`w-[20px] h-[20px] z-20 transition-all duration-500 ${isActive ? 'text-white scale-110' : 'text-white/30 group-hover:text-white/60'}`} />
+                          <item.icon 
+                            strokeWidth={2.5}
+                            className={`w-[24px] h-[24px] z-20 transition-all duration-500 icon-drop-shadow ${isActive ? 'text-white scale-110 animate-icon-bounce' : 'text-white/40 group-hover:text-white/70'}`} 
+                          />
                       </button>
                     );
                 })}
