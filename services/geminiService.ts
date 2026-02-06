@@ -8,7 +8,8 @@ const getAIClient = () => {
 
 const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets de supermercado. 
 Extrae productos en el formato JSON especificado. Sé preciso con los nombres y cantidades. 
-Identifica correctamente categorías como dairy, meat, vegetables, etc.`;
+Identifica correctamente categorías como dairy, meat, vegetables, etc. 
+Si no estás seguro de la cantidad, asume 1 unidad.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
   try {
@@ -47,9 +48,11 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
         }
       }
     });
-    return JSON.parse(response.text || '{}');
+    // Uso correcto de la propiedad .text (no método .text())
+    const jsonStr = response.text || '{}';
+    return JSON.parse(jsonStr);
   } catch (error) {
-    console.error("Gemini Error:", error);
+    console.error("Gemini OCR Error:", error);
     throw error;
   }
 };
@@ -97,7 +100,8 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
                 }
             }
         });
-        const data = JSON.parse(response.text || '{"plan":[]}');
+        const jsonStr = response.text || '{"plan":[]}';
+        const data = JSON.parse(jsonStr);
         return { plan: data.plan, newRecipes: [] };
     } catch (e) {
         return { plan: [], newRecipes: [] };
