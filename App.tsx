@@ -83,7 +83,6 @@ const App: React.FC = () => {
     if (!userId) return;
     const newSlot = { date, type, recipeId, servings: user?.household_size || 2, isCooked: false };
     
-    // USAMOS UNA COPIA REAL PARA FORZAR RE-RENDER
     setMealPlan(prev => {
       const filtered = prev.filter(p => !(p.date === date && p.type === type));
       return recipeId ? [...filtered, { ...newSlot }] : [...filtered];
@@ -105,7 +104,7 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={() => setView('app')} /> :
          <>
-          {/* DESKTOP SIDEBAR: LIMPIO */}
+          {/* SIDEBAR DESKTOP */}
           <aside className="hidden md:flex flex-col w-64 bg-[#0F4E0E] text-white h-screen flex-shrink-0 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.05)]">
             <div className="p-8"><Logo variant="inverted" /></div>
             
@@ -142,7 +141,7 @@ const App: React.FC = () => {
             </div>
           </aside>
 
-          {/* MAIN AREA */}
+          {/* ÁREA PRINCIPAL */}
           <main className="flex-1 h-screen overflow-y-auto bg-[#F4F4F4] relative">
             <div className="w-full max-w-7xl mx-auto p-2 md:p-4 pb-28 md:pb-4 min-h-full">
                 <div className="bg-[#FDFDFD] rounded-[2rem] md:rounded-[2.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 p-2 md:p-4 h-full min-h-[calc(100vh-2rem)]">
@@ -159,9 +158,11 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* MOBILE NAVBAR */}
-            <nav className={`md:hidden fixed bottom-5 left-5 right-5 z-[800] mobile-liquid-dock p-1.5 rounded-[3rem] flex gap-1 transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
+            {/* NAVBAR MÓVIL "LIQUID GLASS" */}
+            <nav className={`md:hidden fixed bottom-6 left-6 right-6 z-[800] mobile-liquid-dock p-2 rounded-[3.5rem] flex items-center justify-between transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
+                {/* Refracción animada de cristal */}
                 <div className="glass-shine-refraction animate-glass-shine" />
+                
                 {[ 
                   {id:'dashboard', icon:Home}, 
                   {id:'planner', icon:Calendar}, 
@@ -175,12 +176,12 @@ const App: React.FC = () => {
                       <button 
                         key={item.id} 
                         onClick={() => setActiveTab(item.id)} 
-                        className="flex-1 flex flex-col items-center justify-center py-3.5 rounded-[2.5rem] relative group transition-all duration-300 z-10"
+                        className="flex-1 flex flex-col items-center justify-center py-4 relative group transition-all duration-300 z-10"
                       >
                           {isActive && (
-                            <div className="absolute inset-0.5 bg-[#0F4E0E] rounded-[2.2rem] shadow-lg animate-liquid-stretch liquid-active-indicator" />
+                            <div className="absolute inset-x-1.5 inset-y-1 liquid-active-pill animate-liquid-stretch rounded-[2.5rem]" />
                           )}
-                          <item.icon className={`w-[20px] h-[20px] z-20 transition-all duration-500 ${isActive ? 'text-white scale-110' : 'text-[#0F4E0E]/30 group-hover:text-[#0F4E0E]'}`} />
+                          <item.icon className={`w-[20px] h-[20px] z-20 transition-all duration-500 ${isActive ? 'text-white scale-110' : 'text-white/30 group-hover:text-white/60'}`} />
                       </button>
                     );
                 })}
