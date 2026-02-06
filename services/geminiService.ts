@@ -6,13 +6,13 @@ const getAIClient = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 };
 
-const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets de supermercado español (Mercadona, Lidl, Carrefour, etc.). 
-Analiza la imagen y extrae los productos en formato JSON.
-Consideraciones:
-- Traduce abreviaturas comunes (ej: "L. ENT." -> "Leche Entera").
-- Las cantidades deben ser números limpios.
-- Si no estás seguro de la unidad, asume "uds".
-- Mapea a estas categorías: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, frozen, other.`;
+const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets de supermercado español (Mercadona, Lidl, Carrefour, Aldi, Eroski, etc.). 
+Analiza la imagen del ticket y extrae exclusivamente los productos alimentarios.
+Reglas:
+1. Normaliza los nombres: "L. ENT. 1L" -> "Leche Entera".
+2. Categoriza cada item en: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, frozen, other.
+3. Estima días de caducidad realistas para España (ej: Carne Fresca: 3 días, Pasta Seca: 365 días).
+4. Devuelve un JSON estrictamente válido.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
   try {
@@ -22,7 +22,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Extrae el JSON de este ticket con máxima precisión." }
+          { text: "Analiza este ticket y extrae el JSON de productos." }
         ] 
       },
       config: { 
@@ -31,7 +31,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            supermarket: { type: Type.STRING, description: "Nombre del establecimiento" },
+            supermarket: { type: Type.STRING, description: "Nombre del supermercado" },
             items: {
               type: Type.ARRAY,
               items: {
@@ -52,8 +52,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       }
     });
 
-    const jsonStr = response.text || '{"supermarket": "Desconocido", "items": []}';
-    return JSON.parse(jsonStr);
+    return JSON.parse(response.text || '{"supermarket": "Desconocido", "items": []}');
   } catch (error) {
     console.error("Gemini OCR Error:", error);
     throw error;
@@ -66,7 +65,7 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
         const ai = getAIClient();
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
-            contents: `Dame un consejo muy corto (máx 10 palabras) para aprovechar estos productos que van a caducar: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
+            contents: `Dame un consejo de máximo 10 palabras para usar esto que caduca pronto: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
         });
         return response.text || "Organiza tu cocina hoy.";
     } catch {
@@ -79,7 +78,7 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
         const ai = getAIClient();
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
-            contents: `Genera un plan de comidas saludable para ${user.name} usando: ${pantry.map(i => i.name).join(', ')}.`,
+            contents: `Genera un menú semanal para ${user.name}. Stock: ${pantry.map(i => i.name).join(', ')}. Preferencias: ${user.dietary_preferences.join(', ')}.`,
             config: { 
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -103,8 +102,7 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
                 }
             }
         });
-        const jsonStr = response.text || '{"plan":[]}';
-        const data = JSON.parse(jsonStr);
+        const data = JSON.parse(response.text || '{"plan":[]}');
         return { plan: data.plan, newRecipes: [] };
     } catch (e) {
         console.error("AI Menu Error:", e);
