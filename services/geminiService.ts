@@ -2,14 +2,16 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../types";
 
+// Inicialización centralizada siguiendo las normas del SDK
 const getAIClient = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 };
 
 const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets de supermercado. 
-Extrae productos en el formato JSON especificado. Sé preciso con los nombres y cantidades. 
-Identifica correctamente categorías como dairy, meat, vegetables, etc. 
-Si no estás seguro de la cantidad, asume 1 unidad.`;
+Analiza la imagen y extrae los productos en formato JSON. 
+Sé extremadamente preciso con los nombres (ej: "Leche Entera 1L") y las cantidades.
+Mapea los productos a estas categorías: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, frozen, other.
+Estima los días de caducidad (estimated_expiry_days) de forma lógica (ej: carne 3 días, pasta 365 días).`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
   try {
@@ -19,7 +21,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Analiza este ticket de compra y extrae los productos en JSON." }
+          { text: "Extrae los productos de este ticket en JSON siguiendo el esquema definido." }
         ] 
       },
       config: { 
@@ -28,7 +30,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            supermarket: { type: Type.STRING },
+            supermarket: { type: Type.STRING, description: "Nombre del establecimiento" },
             items: {
               type: Type.ARRAY,
               items: {
@@ -36,7 +38,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
                 properties: {
                   name: { type: Type.STRING },
                   quantity: { type: Type.NUMBER },
-                  unit: { type: Type.STRING },
+                  unit: { type: Type.STRING, description: "uds, kg, l, g, ml" },
                   category: { type: Type.STRING },
                   estimated_expiry_days: { type: Type.NUMBER }
                 },
@@ -48,7 +50,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
         }
       }
     });
-    // Uso correcto de la propiedad .text (no método .text())
+
     const jsonStr = response.text || '{}';
     return JSON.parse(jsonStr);
   } catch (error) {
@@ -63,7 +65,7 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
         const ai = getAIClient();
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
-            contents: `Dame un consejo corto para aprovechar estos productos: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
+            contents: `Dame un consejo muy corto (máx 10 palabras) para aprovechar estos productos que van a caducar: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
         });
         return response.text || "Organiza tu cocina hoy.";
     } catch {
@@ -74,9 +76,10 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
     try {
         const ai = getAIClient();
+        // Usamos Gemini 3 Pro para tareas complejas de razonamiento nutricional
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
-            contents: `Genera un plan de comidas para ${user.name} considerando su stock: ${pantry.map(i => i.name).join(', ')}.`,
+            contents: `Como nutricionista experto, genera un plan de comidas para ${user.name} basándote en su stock actual: ${pantry.map(i => i.name).join(', ')}.`,
             config: { 
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -104,6 +107,7 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
         const data = JSON.parse(jsonStr);
         return { plan: data.plan, newRecipes: [] };
     } catch (e) {
+        console.error("AI Menu Error:", e);
         return { plan: [], newRecipes: [] };
     }
 };
