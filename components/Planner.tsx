@@ -61,50 +61,50 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   return (
     <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden bg-[#F8F9FA]">
-      {/* HEADER - ALTURA FIJA Y COMPACTA */}
-      <header className="w-full py-4 md:py-6 bg-white flex-shrink-0 z-20 px-4 md:px-10 shadow-sm border-b border-gray-100">
-        <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-9 h-9 md:w-10 md:h-10 bg-teal-50 rounded-xl flex items-center justify-center text-[#0F4E0E]">
-                    <CalendarDays className="w-5 h-5" />
+      {/* HEADER - OPTIMIZADO PARA UNA LÍNEA */}
+      <header className="w-full py-3 md:py-4 bg-white flex-shrink-0 z-20 px-4 md:px-10 shadow-sm border-b border-gray-100">
+        <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-2 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+                <div className="w-7 h-7 md:w-8 md:h-8 bg-teal-50 rounded-lg flex items-center justify-center text-[#0F4E0E]">
+                    <CalendarDays className="w-4 h-4 md:w-4.5 md:h-4.5" />
                 </div>
-                <h1 className="text-2xl md:text-3xl font-black text-[#0F4E0E] tracking-tighter">Mi Menú</h1>
+                <h1 className="text-lg md:text-xl font-black text-[#0F4E0E] tracking-tighter whitespace-nowrap leading-none">Mi Menú</h1>
             </div>
 
-            <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-100 shrink-0">
+            <div className="flex items-center gap-2 overflow-hidden">
+                <div className="flex items-center gap-0.5 bg-gray-50 p-1 rounded-xl border border-gray-100 shrink-0">
                     <button 
                         disabled={!canGoBack}
                         onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))} 
-                        className={`p-2 rounded-lg transition-all ${canGoBack ? 'bg-white text-[#0F4E0E] shadow-sm active:scale-95' : 'text-gray-200'}`}
+                        className={`p-1.5 rounded-lg transition-all ${canGoBack ? 'bg-white text-[#0F4E0E] shadow-sm active:scale-95' : 'text-gray-200'}`}
                     >
-                        <ChevronLeft className="w-4 h-4" />
+                        <ChevronLeft className="w-3.5 h-3.5" />
                     </button>
-                    <span className="min-w-[90px] md:min-w-[120px] text-center text-[10px] md:text-[11px] font-black text-[#0F4E0E] px-1 uppercase tracking-[0.2em]">
+                    <span className="min-w-[75px] md:min-w-[100px] text-center text-[8px] md:text-[10px] font-black text-[#0F4E0E] px-1 uppercase tracking-widest truncate">
                         {format(currentWeekStart, 'MMM yyyy', { locale: es })}
                     </span>
                     <button 
                         disabled={!canGoForward}
                         onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))} 
-                        className={`p-2 rounded-lg transition-all ${canGoForward ? 'bg-white text-[#0F4E0E] shadow-sm active:scale-95' : 'text-gray-200'}`}
+                        className={`p-1.5 rounded-lg transition-all ${canGoForward ? 'bg-white text-[#0F4E0E] shadow-sm active:scale-95' : 'text-gray-200'}`}
                     >
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                     <button 
                         onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
-                        className="w-10 h-10 md:w-12 md:h-12 bg-red-50 text-red-500 rounded-2xl border border-red-100 flex items-center justify-center shadow-sm hover:bg-red-100 transition-colors"
+                        className="w-9 h-9 md:w-10 md:h-10 bg-red-50 text-red-500 rounded-xl border border-red-100 flex items-center justify-center shadow-sm hover:bg-red-100 transition-colors"
                     >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 className="w-4 h-4" />
                     </button>
                     <button 
                         onClick={() => {}} 
-                        className="h-10 md:h-12 px-5 md:px-8 bg-[#0F4E0E] text-white rounded-2xl font-black text-[10px] md:text-[12px] uppercase tracking-[0.25em] shadow-lg flex items-center gap-3 active:scale-95 hover:bg-[#062606] transition-all"
+                        className="h-9 md:h-10 px-3 md:px-5 bg-[#0F4E0E] text-white rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] shadow-lg flex items-center gap-2 active:scale-95 hover:bg-[#062606] transition-all"
                     >
-                        <Wand2 className="w-4 h-4 text-orange-400" />
-                        <span className="hidden xs:inline">GENERAR</span>
+                        <Wand2 className="w-3.5 h-3.5 text-orange-400" />
+                        <span className="hidden sm:inline">GENERAR</span>
                     </button>
                 </div>
             </div>
