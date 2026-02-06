@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MealSlot, Recipe, MealCategory, PantryItem, UserProfile } from '../types';
-import { Plus, X, ChevronLeft, ChevronRight, Wand2, Trash2, CalendarDays, Clock, Search, Check } from 'lucide-react';
+import { Plus, X, ChevronLeft, ChevronRight, Wand2, Trash2, CalendarDays, Clock, Search, Check, BarChart2 } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, addWeeks, subWeeks, isBefore, isAfter } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { RecipeDetail } from './RecipeDetail';
@@ -61,7 +61,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   return (
     <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden bg-[#F8F9FA]">
-      {/* HEADER - OPTIMIZADO PARA UNA LÍNEA */}
+      {/* HEADER - COMPACTO Y EFICIENTE */}
       <header className="w-full py-3 md:py-4 bg-white flex-shrink-0 z-20 px-4 md:px-10 shadow-sm border-b border-gray-100">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-2 md:gap-4">
             <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
@@ -111,7 +111,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         </div>
       </header>
 
-      {/* VIEWPORT - ELIMINADO EL SCROLL VERTICAL EN DESKTOP */}
+      {/* VIEWPORT */}
       <div 
         ref={scrollContainerRef} 
         className="flex-1 overflow-x-auto no-scrollbar flex gap-5 md:gap-6 p-5 md:p-8 bg-[#F8F9FA] scroll-smooth md:h-[calc(100vh-140px)]"
@@ -137,7 +137,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     )}
                 </div>
                 
-                {/* LISTA DE COMIDAS - GRID DE ALTURA FIJA EN DESKTOP */}
+                {/* LISTA DE COMIDAS - DISEÑO 'STITCH' DE ALTURA BLOQUEADA */}
                 <div className="flex-1 flex flex-col md:grid md:grid-rows-3 gap-4 md:gap-5 pb-40 md:pb-0 h-full min-h-0">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
@@ -147,41 +147,52 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <div 
                             key={type} 
                             onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} 
-                            className={`relative min-h-[190px] md:min-h-0 md:h-full rounded-[2.2rem] md:rounded-[2.8rem] transition-all duration-700 cursor-pointer overflow-hidden group border-2 ${recipe ? 'bg-gray-950 border-transparent shadow-xl' : 'bg-white border-dashed border-gray-100 hover:border-[#0F4E0E]/20 hover:bg-teal-50/5'}`}
+                            className={`relative min-h-[190px] md:min-h-0 md:h-full rounded-[2.5rem] md:rounded-[2.8rem] transition-all duration-700 cursor-pointer overflow-hidden group border-2 ${recipe ? 'bg-gray-900 border-transparent shadow-2xl' : 'bg-white border-dashed border-gray-100 hover:border-[#0F4E0E]/20 hover:bg-teal-50/5'}`}
                           >
                               {recipe ? (
-                                  <div className="absolute inset-0 w-full h-full flex flex-col animate-fade-in h-full">
-                                      <SmartImage src={recipe.image_url} alt={recipe.title} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 opacity-60" />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
+                                  <div className="absolute inset-0 w-full h-full flex flex-col animate-fade-in">
+                                      <SmartImage src={recipe.image_url} alt={recipe.title} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 opacity-100" />
+                                      {/* Degradado profundo basado en la referencia */}
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                                       
-                                      <div className="relative z-10 flex flex-col h-full justify-between p-6 md:p-8">
+                                      <div className="relative z-10 flex flex-col h-full justify-between p-6 md:p-7">
                                           <div className="flex justify-between items-start">
-                                              <div className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-3xl border border-white/10 flex items-center">
-                                                  <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white leading-none">
+                                              {/* Píldora superior izquierda glass */}
+                                              <div className="px-4 py-2 rounded-full bg-white/15 backdrop-blur-xl border border-white/10 flex items-center shadow-lg">
+                                                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white leading-none">
                                                     {type === 'breakfast' ? 'MAÑANA' : type === 'lunch' ? 'COMIDA' : 'CENA'}
                                                   </span>
                                               </div>
+                                              
+                                              {/* Botón cerrar circular glass */}
                                               <button 
                                                 onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} 
-                                                className="w-10 h-10 bg-red-500/90 text-white rounded-full shadow-2xl opacity-100 md:opacity-0 group-hover:opacity-100 transition-all active:scale-90 flex items-center justify-center border border-white/10"
+                                                className="w-10 h-10 bg-white/20 hover:bg-red-500/90 text-white rounded-full backdrop-blur-md shadow-2xl transition-all active:scale-90 flex items-center justify-center border border-white/10 group-hover:opacity-100 md:opacity-0"
                                               >
-                                                  <X className="w-4.5 h-4.5 stroke-[4px]" />
+                                                  <X className="w-5 h-5 stroke-[3px]" />
                                               </button>
                                           </div>
                                           
-                                          <div className="space-y-2">
-                                              <h5 className="font-black text-[15px] md:text-[17px] text-white leading-tight capitalize line-clamp-2 tracking-tight group-hover:text-orange-400 transition-colors duration-300 drop-shadow-lg">{recipe.title}</h5>
+                                          <div className="space-y-4">
+                                              {/* Título en blanco, fuente gruesa y capitalize */}
+                                              <h5 className="font-black text-xl md:text-2xl text-white leading-[1.1] capitalize line-clamp-2 tracking-tight drop-shadow-md">{recipe.title}</h5>
+                                              
+                                              {/* Píldoras inferiores oscuras translúcidas */}
                                               <div className="flex items-center gap-2">
-                                                  <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-3xl border border-white/10">
-                                                    <Clock className="w-3 h-3 text-orange-400" />
-                                                    <span className="text-[9px] font-black text-orange-400 uppercase tracking-widest leading-none">{recipe.prep_time}'</span>
+                                                  <div className="flex items-center gap-2 bg-black/40 px-3 py-2 rounded-xl backdrop-blur-2xl border border-white/5">
+                                                    <Clock className="w-4 h-4 text-white" />
+                                                    <span className="text-[11px] font-black text-white uppercase tracking-widest">{recipe.prep_time} MIN</span>
+                                                  </div>
+                                                  <div className="flex items-center gap-2 bg-black/40 px-3 py-2 rounded-xl backdrop-blur-2xl border border-white/5">
+                                                    <BarChart2 className="w-4 h-4 text-white" />
+                                                    <span className="text-[11px] font-black text-white uppercase tracking-widest">EASY</span>
                                                   </div>
                                               </div>
                                           </div>
                                       </div>
                                   </div>
                               ) : (
-                                  <div className="w-full h-full flex flex-col items-center justify-center p-5 text-center animate-fade-in h-full">
+                                  <div className="w-full h-full flex flex-col items-center justify-center p-5 text-center animate-fade-in">
                                       <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gray-50 flex items-center justify-center mb-3 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-700 group-hover:scale-110 group-hover:rotate-90">
                                         <Plus className="w-5 h-5 text-[#0F4E0E] group-hover:text-white" />
                                       </div>

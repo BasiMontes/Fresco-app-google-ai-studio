@@ -99,10 +99,16 @@ const App: React.FC = () => {
     else addToSyncQueue(userId, 'DELETE_SLOT', { date, type });
   }, [userId, user]);
 
+  // FIXED: handleClearPlan ahora es más robusto y síncrono con el estado local
   const handleClearPlan = useCallback(async () => {
     if (!userId) return;
-    setMealPlan([]);
-    await db.clearMealPlanDB(userId);
+    setMealPlan([]); // Limpiar UI inmediatamente
+    try {
+      await db.clearMealPlanDB(userId); // Limpiar DB persistente
+      setDialogOptions(null); // Cerrar diálogo manualmente tras éxito
+    } catch (error) {
+      console.error("Error al limpiar el plan:", error);
+    }
   }, [userId]);
 
   if (view === 'loading') return <PageLoader />;
@@ -147,7 +153,7 @@ const App: React.FC = () => {
                         : 'text-white/60 hover:bg-white/5 hover:text-white'
                       }`}
                     >
-                      <item.icon className={`w-4.5 h-4.5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                      <item.icon className={`nav-icon w-4.5 h-4.5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                       <span className="text-[13px] font-bold tracking-tight">{item.id === 'dashboard' ? 'Inicio' : item.id === 'planner' ? 'Calendario' : item.id === 'pantry' ? 'Despensa' : item.id === 'recipes' ? 'Recetas' : item.id === 'shopping' ? 'Lista Compra' : 'Perfil'}</span>
                       {isActive && <div className="absolute left-0 w-1 h-5 bg-orange-500 rounded-r-full" />}
                     </button>
@@ -177,10 +183,9 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* NAVBAR MÓVIL PRO-DOCK V7 - INSPIRACIÓN INSTAGRAM */}
+            {/* NAVBAR MÓVIL PRO-DOCK */}
             <nav className={`md:hidden fixed bottom-6 left-4 right-4 z-[800] mobile-pro-dock rounded-[2.5rem] px-2 transition-all duration-500 ${isKeyboardOpen ? 'opacity-0 translate-y-32' : 'opacity-100 translate-y-0'}`}>
                 
-                {/* INDICADOR LINEAL PROFESIONAL */}
                 <div 
                   className="nav-indicator-pill" 
                   style={{ 
