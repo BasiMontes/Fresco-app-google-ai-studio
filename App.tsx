@@ -55,7 +55,6 @@ const App: React.FC = () => {
     return () => window.visualViewport?.removeEventListener('resize', handleVisualViewportResize);
   }, []);
 
-  // FIXED: Listener para diálogos globales
   useEffect(() => {
     const handleDialog = (e: any) => setDialogOptions(e.detail);
     window.addEventListener('fresco-dialog', handleDialog);
@@ -99,13 +98,12 @@ const App: React.FC = () => {
     else addToSyncQueue(userId, 'DELETE_SLOT', { date, type });
   }, [userId, user]);
 
-  // FIXED: handleClearPlan ahora es más robusto y síncrono con el estado local
   const handleClearPlan = useCallback(async () => {
     if (!userId) return;
-    setMealPlan([]); // Limpiar UI inmediatamente
+    setMealPlan([]); 
+    setDialogOptions(null); 
     try {
-      await db.clearMealPlanDB(userId); // Limpiar DB persistente
-      setDialogOptions(null); // Cerrar diálogo manualmente tras éxito
+      await db.clearMealPlanDB(userId);
     } catch (error) {
       console.error("Error al limpiar el plan:", error);
     }
@@ -136,7 +134,6 @@ const App: React.FC = () => {
         {view === 'auth' ? <AuthPage onLogin={() => {}} onSignup={() => {}} /> : 
          view === 'onboarding' ? <Onboarding onComplete={() => setView('app')} /> :
          <>
-          {/* SIDEBAR DESKTOP */}
           <aside className="hidden md:flex flex-col w-64 bg-[#0F4E0E] text-white h-screen flex-shrink-0 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.05)]">
             <div className="p-8"><Logo variant="inverted" /></div>
             
@@ -166,7 +163,6 @@ const App: React.FC = () => {
             </div>
           </aside>
 
-          {/* ÁREA PRINCIPAL */}
           <main className="flex-1 h-screen overflow-y-auto bg-[#F4F4F4] relative">
             <div className="w-full max-w-7xl mx-auto p-0 md:p-4 pb-40 md:pb-4 min-h-full">
                 <div className="bg-[#FDFDFD] md:rounded-[2.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] border-0 md:border md:border-gray-100 p-0 md:p-4 h-full min-h-screen md:min-h-[calc(100vh-2rem)]">
@@ -183,9 +179,7 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* NAVBAR MÓVIL PRO-DOCK */}
             <nav className={`md:hidden fixed bottom-6 left-4 right-4 z-[800] mobile-pro-dock rounded-[2.5rem] px-2 transition-all duration-500 ${isKeyboardOpen ? 'opacity-0 translate-y-32' : 'opacity-100 translate-y-0'}`}>
-                
                 <div 
                   className="nav-indicator-pill" 
                   style={{ 
@@ -193,7 +187,6 @@ const App: React.FC = () => {
                     left: `calc(8px + (${activeIndex} * (100% - 16px) / 6))` 
                   }} 
                 />
-
                 {navItems.map((item, idx) => {
                     const isActive = activeIndex === idx;
                     return (
