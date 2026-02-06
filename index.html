@@ -23,12 +23,12 @@
               brand: { dark: '#0F4E0E', orange: '#e87c3e', light: '#f8f9fa' }
             },
             animation: {
-              'glass-shine': 'glass-shine 6s infinite linear',
+              'glass-shine': 'glass-shine 8s infinite linear',
             },
             keyframes: {
               'glass-shine': {
-                '0%': { transform: 'translateX(-200%) skewX(-30deg)' },
-                '100%': { transform: 'translateX(300%) skewX(-30deg)' },
+                '0%': { transform: 'translateX(-300%) skewX(-30deg)' },
+                '100%': { transform: 'translateX(400%) skewX(-30deg)' },
               }
             }
           }
@@ -53,51 +53,56 @@
       }
       .no-scrollbar::-webkit-scrollbar { display: none; }
 
-      /* LIQUID GLASS DOCK V5 - ULTRA PURE */
+      /* LIQUID GLASS DOCK V6 - ARCHITECTURE */
       .mobile-liquid-dock {
-        background: rgba(15, 30, 15, 0.08); /* Más transparente aún */
-        backdrop-filter: blur(45px) saturate(180%) contrast(90%);
-        -webkit-backdrop-filter: blur(45px) saturate(180%) contrast(90%);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(15, 30, 15, 0.07);
+        backdrop-filter: blur(50px) saturate(190%) contrast(95%);
+        -webkit-backdrop-filter: blur(50px) saturate(190%) contrast(95%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        /* Glossy edge effect */
         box-shadow: 
-          0 25px 50px -12px rgba(0, 0, 0, 0.25),
-          inset 0 1px 0.5px rgba(255, 255, 255, 0.1);
+          0 30px 60px -12px rgba(0, 0, 0, 0.3),
+          inset 0 1px 1px rgba(255, 255, 255, 0.2),
+          inset 0 -1px 1px rgba(0, 0, 0, 0.05);
         position: relative;
       }
 
-      /* INDICADOR MAGNÉTICO "ELÁSTICO" */
+      /* INDICADOR ELÁSTICO MEJORADO */
       .magnetic-liquid-pill {
         position: absolute;
-        top: 5px;   /* Más pegado a los bordes para verse más grande */
-        bottom: 5px;
+        top: 6px;
+        bottom: 6px;
         background: #0F4E0E;
-        border-radius: 2.2rem;
+        border-radius: 2.5rem;
         z-index: 2;
-        /* Curva elástica para efecto rebote */
-        transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1); /* Curva de flujo ultra suave */
         box-shadow: 
-          0 10px 20px rgba(15, 78, 14, 0.3),
-          inset 0 1px 2px rgba(255, 255, 255, 0.15);
+          0 12px 24px rgba(15, 78, 14, 0.35),
+          inset 0 1px 2px rgba(255, 255, 255, 0.2);
       }
       
       .glass-shine-refraction {
         position: absolute;
         top: 0;
         left: 0;
-        width: 120px;
+        width: 150px;
         height: 100%;
         background: linear-gradient(90deg, 
           transparent 0%, 
-          rgba(255, 255, 255, 0.05) 50%, 
+          rgba(255, 255, 255, 0.08) 50%, 
           transparent 100%);
         transform: skewX(-25deg);
         pointer-events: none;
         z-index: 1;
-        opacity: 0.5;
+        opacity: 0.6;
       }
 
-      .icon-drop-shadow {
-        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+      .hd-icon-glow {
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+      }
+      
+      .active-icon-glow {
+        filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.5)) drop-shadow(0 2px 3px rgba(0,0,0,0.2));
       }
     </style>
     <script type="importmap">
