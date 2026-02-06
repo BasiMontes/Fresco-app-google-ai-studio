@@ -149,7 +149,7 @@ const App: React.FC = () => {
 
           {/* ÁREA PRINCIPAL */}
           <main className="flex-1 h-screen overflow-y-auto bg-[#F4F4F4] relative">
-            <div className="w-full max-w-7xl mx-auto p-0 md:p-4 pb-32 md:pb-4 min-h-full">
+            <div className="w-full max-w-7xl mx-auto p-0 md:p-4 pb-36 md:pb-4 min-h-full">
                 <div className="bg-[#FDFDFD] md:rounded-[2.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] border-0 md:border md:border-gray-100 p-0 md:p-4 h-full min-h-screen md:min-h-[calc(100vh-2rem)]">
                     <Suspense fallback={<PageLoader />}>
                         {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
@@ -164,16 +164,16 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* NAVBAR MÓVIL ULTRA-HD V6 */}
-            <nav className={`md:hidden fixed bottom-7 left-6 right-6 z-[800] mobile-liquid-dock p-1.5 rounded-[4rem] flex items-center transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
+            {/* NAVBAR MÓVIL HYPER-GLASS V6.1 - MÁXIMA ALTURA Y ELASTICIDAD */}
+            <nav className={`md:hidden fixed bottom-8 left-6 right-6 z-[800] mobile-liquid-dock p-1.5 rounded-[4.5rem] flex items-center transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
                 <div className="glass-shine-refraction animate-glass-shine" />
                 
-                {/* PÍLDORA MAGNÉTICA HD */}
+                {/* PÍLDORA MAGNÉTICA HYPER-UI */}
                 <div 
                   className="magnetic-liquid-pill" 
                   style={{ 
-                    width: `calc((100% - 14px) / 6)`, 
-                    left: `calc(7px + (${activeIndex} * (100% - 14px) / 6))` 
+                    width: `calc((100% - 16px) / 6)`, 
+                    left: `calc(8px + (${activeIndex} * (100% - 16px) / 6))` 
                   }} 
                 />
 
@@ -183,11 +183,11 @@ const App: React.FC = () => {
                       <button 
                         key={item.id} 
                         onClick={() => setActiveTab(item.id)} 
-                        className="flex-1 flex flex-col items-center justify-center py-8 relative group transition-all duration-300 z-10 active:scale-90"
+                        className="flex-1 flex flex-col items-center justify-center py-9 relative group transition-all duration-300 z-10 active:scale-75"
                       >
                           <item.icon 
-                            strokeWidth={2.8}
-                            className={`w-[28px] h-[28px] transition-all duration-500 ${isActive ? 'text-white scale-110 active-icon-glow' : 'text-[#0F4E0E]/70 hover:text-[#0F4E0E] hd-icon-glow'}`} 
+                            strokeWidth={3}
+                            className={`w-[28px] h-[28px] transition-all duration-500 ${isActive ? 'text-white scale-125 active-icon-glow' : 'inactive-icon-style hover:scale-110'}`} 
                           />
                       </button>
                     );
