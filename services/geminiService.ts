@@ -2,16 +2,17 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../types";
 
-// Inicialización centralizada siguiendo las normas del SDK
 const getAIClient = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 };
 
-const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets de supermercado. 
-Analiza la imagen y extrae los productos en formato JSON. 
-Sé extremadamente preciso con los nombres (ej: "Leche Entera 1L") y las cantidades.
-Mapea los productos a estas categorías: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, frozen, other.
-Estima los días de caducidad (estimated_expiry_days) de forma lógica (ej: carne 3 días, pasta 365 días).`;
+const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets de supermercado español (Mercadona, Lidl, Carrefour, etc.). 
+Analiza la imagen y extrae los productos en formato JSON.
+Consideraciones:
+- Traduce abreviaturas comunes (ej: "L. ENT." -> "Leche Entera").
+- Las cantidades deben ser números limpios.
+- Si no estás seguro de la unidad, asume "uds".
+- Mapea a estas categorías: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, frozen, other.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
   try {
@@ -21,7 +22,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Extrae los productos de este ticket en JSON siguiendo el esquema definido." }
+          { text: "Extrae el JSON de este ticket con máxima precisión." }
         ] 
       },
       config: { 
@@ -51,7 +52,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       }
     });
 
-    const jsonStr = response.text || '{}';
+    const jsonStr = response.text || '{"supermarket": "Desconocido", "items": []}';
     return JSON.parse(jsonStr);
   } catch (error) {
     console.error("Gemini OCR Error:", error);
@@ -76,10 +77,9 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
     try {
         const ai = getAIClient();
-        // Usamos Gemini 3 Pro para tareas complejas de razonamiento nutricional
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
-            contents: `Como nutricionista experto, genera un plan de comidas para ${user.name} basándote en su stock actual: ${pantry.map(i => i.name).join(', ')}.`,
+            contents: `Genera un plan de comidas saludable para ${user.name} usando: ${pantry.map(i => i.name).join(', ')}.`,
             config: { 
                 responseMimeType: "application/json",
                 responseSchema: {
