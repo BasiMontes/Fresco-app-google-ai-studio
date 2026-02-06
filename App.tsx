@@ -55,6 +55,13 @@ const App: React.FC = () => {
     return () => window.visualViewport?.removeEventListener('resize', handleVisualViewportResize);
   }, []);
 
+  // FIXED: Listener para diálogos globales
+  useEffect(() => {
+    const handleDialog = (e: any) => setDialogOptions(e.detail);
+    window.addEventListener('fresco-dialog', handleDialog);
+    return () => window.removeEventListener('fresco-dialog', handleDialog);
+  }, []);
+
   useEffect(() => {
     if (!isConfigured) { setView('error-config'); return; }
     initSyncListener();
@@ -91,6 +98,12 @@ const App: React.FC = () => {
     if (recipeId) addToSyncQueue(userId, 'UPDATE_SLOT', newSlot);
     else addToSyncQueue(userId, 'DELETE_SLOT', { date, type });
   }, [userId, user]);
+
+  const handleClearPlan = useCallback(async () => {
+    if (!userId) return;
+    setMealPlan([]);
+    await db.clearMealPlanDB(userId);
+  }, [userId]);
 
   if (view === 'loading') return <PageLoader />;
 
@@ -153,7 +166,7 @@ const App: React.FC = () => {
                 <div className="bg-[#FDFDFD] md:rounded-[2.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] border-0 md:border md:border-gray-100 p-0 md:p-4 h-full min-h-screen md:min-h-[calc(100vh-2rem)]">
                     <Suspense fallback={<PageLoader />}>
                         {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
-                        {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={(p, r) => { setRecipes(prev => [...prev, ...r]); setMealPlan(prev => [...prev, ...p]); }} onClear={() => setMealPlan([])} />}
+                        {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={(p, r) => { setRecipes(prev => [...prev, ...r]); setMealPlan(prev => [...prev, ...p]); }} onClear={handleClearPlan} />}
                         {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={() => {}} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} />}
                         {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(p => [...p, ...r])} onAddToPlan={() => {}} onCookFinish={() => {}} onAddToShoppingList={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
                         {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={i => setShoppingList(p => [...p, ...i])} onUpdateShoppingItem={i => setShoppingList(p => p.map(x => x.id === i.id ? i : x))} onRemoveShoppingItem={id => setShoppingList(p => p.filter(x => x.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}

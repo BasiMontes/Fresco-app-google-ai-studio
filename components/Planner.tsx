@@ -95,7 +95,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 <div className="flex items-center gap-1.5 shrink-0">
                     <button 
                         onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
-                        className="w-9 h-9 md:w-10 md:h-10 bg-red-50 text-red-500 rounded-xl border border-red-100 flex items-center justify-center shadow-sm hover:bg-red-100 transition-colors"
+                        className="w-9 h-9 md:w-10 md:h-10 bg-red-50 text-red-500 rounded-xl border border-red-100 flex items-center justify-center shadow-sm hover:bg-red-500 hover:text-white transition-all active:scale-90"
                     >
                         <Trash2 className="w-4 h-4" />
                     </button>
@@ -147,34 +147,34 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <div 
                             key={type} 
                             onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} 
-                            className={`relative min-h-[190px] md:min-h-0 md:h-full rounded-[2.2rem] md:rounded-[2.8rem] transition-all duration-700 cursor-pointer overflow-hidden group border-2 ${recipe ? 'bg-gray-900 border-transparent shadow-xl' : 'bg-white border-dashed border-gray-100 hover:border-[#0F4E0E]/20 hover:bg-teal-50/5'}`}
+                            className={`relative min-h-[190px] md:min-h-0 md:h-full rounded-[2.2rem] md:rounded-[2.8rem] transition-all duration-700 cursor-pointer overflow-hidden group border-2 ${recipe ? 'bg-gray-950 border-transparent shadow-xl' : 'bg-white border-dashed border-gray-100 hover:border-[#0F4E0E]/20 hover:bg-teal-50/5'}`}
                           >
                               {recipe ? (
                                   <div className="absolute inset-0 w-full h-full flex flex-col animate-fade-in h-full">
                                       <SmartImage src={recipe.image_url} alt={recipe.title} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 opacity-60" />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-black/30 to-transparent" />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
                                       
                                       <div className="relative z-10 flex flex-col h-full justify-between p-6 md:p-8">
                                           <div className="flex justify-between items-start">
-                                              <div className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-2xl border border-white/10 flex items-center">
+                                              <div className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-3xl border border-white/10 flex items-center">
                                                   <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white leading-none">
                                                     {type === 'breakfast' ? 'MAÑANA' : type === 'lunch' ? 'COMIDA' : 'CENA'}
                                                   </span>
                                               </div>
                                               <button 
                                                 onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} 
-                                                className="w-9 h-9 bg-red-500/90 text-white rounded-xl shadow-2xl opacity-100 md:opacity-0 group-hover:opacity-100 transition-all active:scale-90 flex items-center justify-center"
+                                                className="w-10 h-10 bg-red-500/90 text-white rounded-full shadow-2xl opacity-100 md:opacity-0 group-hover:opacity-100 transition-all active:scale-90 flex items-center justify-center border border-white/10"
                                               >
-                                                  <X className="w-4 h-4 stroke-[3px]" />
+                                                  <X className="w-4.5 h-4.5 stroke-[4px]" />
                                               </button>
                                           </div>
                                           
                                           <div className="space-y-2">
-                                              <h5 className="font-black text-base md:text-lg text-white leading-tight uppercase line-clamp-2 tracking-tight group-hover:text-orange-400 transition-colors duration-300">{recipe.title}</h5>
+                                              <h5 className="font-black text-[15px] md:text-[17px] text-white leading-tight capitalize line-clamp-2 tracking-tight group-hover:text-orange-400 transition-colors duration-300 drop-shadow-lg">{recipe.title}</h5>
                                               <div className="flex items-center gap-2">
-                                                  <div className="flex items-center gap-1.5 bg-orange-500/30 px-2.5 py-1 rounded-lg backdrop-blur-xl border border-white/10">
+                                                  <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg backdrop-blur-3xl border border-white/10">
                                                     <Clock className="w-3 h-3 text-orange-400" />
-                                                    <span className="text-[9px] font-black text-orange-400 uppercase tracking-widest">{recipe.prep_time}'</span>
+                                                    <span className="text-[9px] font-black text-orange-400 uppercase tracking-widest leading-none">{recipe.prep_time}'</span>
                                                   </div>
                                               </div>
                                           </div>
@@ -236,7 +236,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                     <SmartImage src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h4 className="font-black text-base text-[#0F4E0E] leading-tight mb-2 truncate uppercase tracking-tight">{recipe.title}</h4>
+                                    <h4 className="font-black text-base text-[#0F4E0E] leading-tight mb-2 truncate capitalize tracking-tight">{recipe.title}</h4>
                                     <div className="flex items-center gap-3">
                                         <span className="text-[9px] font-black uppercase text-gray-400 bg-gray-50 px-2 py-1 rounded-lg border border-gray-50">{recipe.cuisine_type}</span>
                                         <span className="text-[9px] font-black uppercase text-orange-500 tracking-widest">{recipe.prep_time} MIN</span>
