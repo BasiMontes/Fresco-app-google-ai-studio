@@ -53,62 +53,51 @@
       }
       .no-scrollbar::-webkit-scrollbar { display: none; }
 
-      /* LIQUID GLASS DOCK V3 - ULTRA CLEAR */
+      /* LIQUID GLASS DOCK V5 - ULTRA PURE */
       .mobile-liquid-dock {
-        background: rgba(10, 20, 10, 0.15); /* Transparencia extrema */
-        backdrop-filter: blur(50px) saturate(200%) contrast(100%);
-        -webkit-backdrop-filter: blur(50px) saturate(200%) contrast(100%);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-top-color: rgba(255, 255, 255, 0.2);
+        background: rgba(15, 30, 15, 0.08); /* Más transparente aún */
+        backdrop-filter: blur(45px) saturate(180%) contrast(90%);
+        -webkit-backdrop-filter: blur(45px) saturate(180%) contrast(90%);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         box-shadow: 
-          0 20px 40px -10px rgba(0, 0, 0, 0.3),
-          inset 0 1px 1px rgba(255, 255, 255, 0.05);
+          0 25px 50px -12px rgba(0, 0, 0, 0.25),
+          inset 0 1px 0.5px rgba(255, 255, 255, 0.1);
         position: relative;
       }
 
-      .mobile-liquid-dock::before {
-        content: "";
+      /* INDICADOR MAGNÉTICO "ELÁSTICO" */
+      .magnetic-liquid-pill {
         position: absolute;
-        inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-        opacity: 0.015;
-        pointer-events: none;
+        top: 5px;   /* Más pegado a los bordes para verse más grande */
+        bottom: 5px;
+        background: #0F4E0E;
+        border-radius: 2.2rem;
+        z-index: 2;
+        /* Curva elástica para efecto rebote */
+        transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        box-shadow: 
+          0 10px 20px rgba(15, 78, 14, 0.3),
+          inset 0 1px 2px rgba(255, 255, 255, 0.15);
       }
-
+      
       .glass-shine-refraction {
         position: absolute;
         top: 0;
         left: 0;
-        width: 150px;
+        width: 120px;
         height: 100%;
         background: linear-gradient(90deg, 
           transparent 0%, 
-          rgba(255, 255, 255, 0.01) 20%, 
-          rgba(255, 255, 255, 0.08) 50%, 
-          rgba(255, 255, 255, 0.01) 80%, 
+          rgba(255, 255, 255, 0.05) 50%, 
           transparent 100%);
-        transform: skewX(-30deg);
+        transform: skewX(-25deg);
         pointer-events: none;
         z-index: 1;
+        opacity: 0.5;
       }
 
-      /* LA PÍLDORA MAGNÉTICA */
-      .magnetic-liquid-pill {
-        position: absolute;
-        top: 6px;
-        bottom: 6px;
-        background: #0F4E0E;
-        border-radius: 2rem;
-        z-index: 2;
-        transition: all 0.5s cubic-bezier(0.5, 0, 0, 1); /* Movimiento fluido refinado */
-        box-shadow: 
-          0 8px 16px rgba(15, 78, 14, 0.4),
-          inset 0 1px 2px rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
-      
       .icon-drop-shadow {
-        filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
       }
     </style>
     <script type="importmap">

@@ -164,16 +164,16 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* NAVBAR MÓVIL "LIQUID GLASS" V4 */}
-            <nav className={`md:hidden fixed bottom-6 left-6 right-6 z-[800] mobile-liquid-dock p-1 rounded-[3.5rem] flex items-center transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
+            {/* NAVBAR MÓVIL "LIQUID GLASS" V5 - MÁS ALTA Y ELÁSTICA */}
+            <nav className={`md:hidden fixed bottom-6 left-6 right-6 z-[800] mobile-liquid-dock p-1.5 rounded-[3.5rem] flex items-center transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
                 <div className="glass-shine-refraction animate-glass-shine" />
                 
-                {/* PÍLDORA MAGNÉTICA AJUSTADA */}
+                {/* PÍLDORA MAGNÉTICA ELÁSTICA Y GRANDE */}
                 <div 
                   className="magnetic-liquid-pill" 
                   style={{ 
-                    width: `calc((100% - 10px) / 6)`, 
-                    left: `calc(5px + (${activeIndex} * (100% - 10px) / 6))` 
+                    width: `calc((100% - 12px) / 6)`, 
+                    left: `calc(6px + (${activeIndex} * (100% - 12px) / 6))` 
                   }} 
                 />
 
@@ -183,11 +183,11 @@ const App: React.FC = () => {
                       <button 
                         key={item.id} 
                         onClick={() => setActiveTab(item.id)} 
-                        className="flex-1 flex flex-col items-center justify-center py-4.5 relative group transition-all duration-300 z-10"
+                        className="flex-1 flex flex-col items-center justify-center py-6.5 relative group transition-all duration-300 z-10 active:scale-95"
                       >
                           <item.icon 
                             strokeWidth={2.5}
-                            className={`w-[24px] h-[24px] transition-all duration-500 ${isActive ? 'text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-[#0F4E0E]/60 hover:text-[#0F4E0E]'}`} 
+                            className={`w-[24px] h-[24px] transition-all duration-500 icon-drop-shadow ${isActive ? 'text-white scale-110 drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]' : 'text-[#0F4E0E]/60 hover:text-[#0F4E0E]'}`} 
                           />
                       </button>
                     );
