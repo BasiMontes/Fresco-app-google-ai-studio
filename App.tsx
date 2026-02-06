@@ -96,6 +96,20 @@ const App: React.FC = () => {
 
   const isProfileActive = ['settings', 'faq'].includes(activeTab) || activeTab === 'profile';
 
+  // ÍNDICE PARA LA PÍLDORA MAGNÉTICA
+  const navItems = [ 
+    {id:'dashboard', icon:Home}, 
+    {id:'planner', icon:Calendar}, 
+    {id:'pantry', icon:Package}, 
+    {id:'recipes', icon:BookOpen}, 
+    {id:'shopping', icon:ShoppingBag}, 
+    {id:'profile', icon:User} 
+  ];
+  
+  const activeIndex = navItems.findIndex(item => 
+    activeTab === item.id || (item.id === 'profile' && isProfileActive)
+  );
+
   return (
     <ErrorBoundary>
       <div className="h-screen bg-[#F4F4F4] flex flex-col md:flex-row overflow-hidden">
@@ -109,14 +123,7 @@ const App: React.FC = () => {
             <div className="p-8"><Logo variant="inverted" /></div>
             
             <nav className="flex-1 px-4 space-y-1.5 mt-2 overflow-y-auto no-scrollbar">
-                {[
-                  {id:'dashboard', icon:Home, label:'Inicio'},
-                  {id:'planner', icon:Calendar, label:'Calendario'}, 
-                  {id:'pantry', icon:Package, label:'Despensa'}, 
-                  {id:'recipes', icon:BookOpen, label:'Recetas'}, 
-                  {id:'shopping', icon:ShoppingBag, label:'Lista Compra'}, 
-                  {id:'profile', icon:User, label:'Perfil'}
-                ].map(item => {
+                {navItems.map(item => {
                   const isActive = activeTab === item.id || (item.id === 'profile' && isProfileActive);
                   return (
                     <button 
@@ -129,7 +136,7 @@ const App: React.FC = () => {
                       }`}
                     >
                       <item.icon className={`w-4.5 h-4.5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                      <span className="text-[13px] font-bold tracking-tight">{item.label}</span>
+                      <span className="text-[13px] font-bold tracking-tight">{item.id === 'dashboard' ? 'Inicio' : item.id === 'planner' ? 'Calendario' : item.id === 'pantry' ? 'Despensa' : item.id === 'recipes' ? 'Recetas' : item.id === 'shopping' ? 'Lista Compra' : 'Perfil'}</span>
                       {isActive && <div className="absolute left-0 w-1 h-5 bg-orange-500 rounded-r-full" />}
                     </button>
                   );
@@ -158,31 +165,30 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* NAVBAR MÓVIL "LIQUID GLASS" V2 */}
-            <nav className={`md:hidden fixed bottom-6 left-6 right-6 z-[800] mobile-liquid-dock p-2 rounded-[3.5rem] flex items-center justify-between transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
+            {/* NAVBAR MÓVIL "LIQUID GLASS" V3 */}
+            <nav className={`md:hidden fixed bottom-6 left-6 right-6 z-[800] mobile-liquid-dock p-1.5 rounded-[3.5rem] flex items-center transition-all duration-700 ${isKeyboardOpen ? 'opacity-0 translate-y-32 scale-90' : 'opacity-100 translate-y-0 scale-100'}`}>
                 <div className="glass-shine-refraction animate-glass-shine" />
                 
-                {[ 
-                  {id:'dashboard', icon:Home}, 
-                  {id:'planner', icon:Calendar}, 
-                  {id:'pantry', icon:Package}, 
-                  {id:'recipes', icon:BookOpen}, 
-                  {id:'shopping', icon:ShoppingBag}, 
-                  {id:'profile', icon:User} 
-                ].map(item => {
-                    const isActive = activeTab === item.id || (item.id === 'profile' && isProfileActive);
+                {/* ÚNICA PÍLDORA MAGNÉTICA QUE SE MUEVE */}
+                <div 
+                  className="magnetic-liquid-pill" 
+                  style={{ 
+                    width: `calc((100% - 12px) / 6)`, 
+                    left: `calc(6px + (${activeIndex} * (100% - 12px) / 6))` 
+                  }} 
+                />
+
+                {navItems.map((item, idx) => {
+                    const isActive = activeIndex === idx;
                     return (
                       <button 
                         key={item.id} 
                         onClick={() => setActiveTab(item.id)} 
                         className="flex-1 flex flex-col items-center justify-center py-4 relative group transition-all duration-300 z-10"
                       >
-                          {isActive && (
-                            <div className="absolute inset-x-2 inset-y-1.5 liquid-active-pill animate-liquid-stretch rounded-[2.5rem]" />
-                          )}
                           <item.icon 
                             strokeWidth={2.5}
-                            className={`w-[24px] h-[24px] z-20 transition-all duration-500 icon-drop-shadow ${isActive ? 'text-white scale-110 animate-icon-bounce' : 'text-white/40 group-hover:text-white/70'}`} 
+                            className={`w-[24px] h-[24px] transition-all duration-500 icon-drop-shadow ${isActive ? 'text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-white/40 group-hover:text-white/60'}`} 
                           />
                       </button>
                     );

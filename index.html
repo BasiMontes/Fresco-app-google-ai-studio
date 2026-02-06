@@ -23,23 +23,12 @@
               brand: { dark: '#0F4E0E', orange: '#e87c3e', light: '#f8f9fa' }
             },
             animation: {
-              'liquid-stretch': 'liquid-stretch 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              'glass-shine': 'glass-shine 5s infinite linear',
-              'icon-bounce': 'icon-bounce 0.4s ease-out',
+              'glass-shine': 'glass-shine 6s infinite linear',
             },
             keyframes: {
-              'liquid-stretch': {
-                '0%': { transform: 'scaleX(1) scaleY(1)' },
-                '40%': { transform: 'scaleX(1.4) scaleY(0.6)' },
-                '100%': { transform: 'scaleX(1) scaleY(1)' },
-              },
               'glass-shine': {
                 '0%': { transform: 'translateX(-200%) skewX(-30deg)' },
                 '100%': { transform: 'translateX(300%) skewX(-30deg)' },
-              },
-              'icon-bounce': {
-                '0%, 100%': { transform: 'scale(1)' },
-                '50%': { transform: 'scale(1.2)' },
               }
             }
           }
@@ -64,29 +53,26 @@
       }
       .no-scrollbar::-webkit-scrollbar { display: none; }
 
-      /* LIQUID GLASS DOCK V2 - MÁS TRANSPARENTE Y REFRACCIONARIO */
+      /* LIQUID GLASS DOCK V3 - ULTRA CLEAR */
       .mobile-liquid-dock {
-        background: rgba(15, 23, 15, 0.35); /* Mucho más transparente para diferenciar el verde */
-        backdrop-filter: blur(35px) saturate(210%) contrast(105%);
-        -webkit-backdrop-filter: blur(35px) saturate(210%) contrast(105%);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-top-color: rgba(255, 255, 255, 0.25);
+        background: rgba(10, 20, 10, 0.15); /* Transparencia extrema */
+        backdrop-filter: blur(50px) saturate(200%) contrast(100%);
+        -webkit-backdrop-filter: blur(50px) saturate(200%) contrast(100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-top-color: rgba(255, 255, 255, 0.2);
         box-shadow: 
-          0 25px 50px -12px rgba(0, 0, 0, 0.5),
-          inset 0 1px 2px rgba(255, 255, 255, 0.15);
+          0 20px 40px -10px rgba(0, 0, 0, 0.3),
+          inset 0 1px 1px rgba(255, 255, 255, 0.05);
         position: relative;
-        overflow: hidden;
       }
 
-      /* Ruido reducido para más claridad cristalina */
-      .mobile-liquid-dock::after {
+      .mobile-liquid-dock::before {
         content: "";
         position: absolute;
         inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-        opacity: 0.02;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        opacity: 0.015;
         pointer-events: none;
-        z-index: 1;
       }
 
       .glass-shine-refraction {
@@ -97,27 +83,32 @@
         height: 100%;
         background: linear-gradient(90deg, 
           transparent 0%, 
-          rgba(255, 255, 255, 0.02) 20%, 
-          rgba(255, 255, 255, 0.1) 50%, 
-          rgba(255, 255, 255, 0.02) 80%, 
+          rgba(255, 255, 255, 0.01) 20%, 
+          rgba(255, 255, 255, 0.08) 50%, 
+          rgba(255, 255, 255, 0.01) 80%, 
           transparent 100%);
         transform: skewX(-30deg);
         pointer-events: none;
-        z-index: 2;
+        z-index: 1;
       }
 
-      .liquid-active-pill {
+      /* LA PÍLDORA MAGNÉTICA */
+      .magnetic-liquid-pill {
+        position: absolute;
+        top: 6px;
+        bottom: 6px;
         background: #0F4E0E;
+        border-radius: 2rem;
+        z-index: 2;
+        transition: all 0.5s cubic-bezier(0.5, 0, 0, 1); /* Movimiento fluido refinado */
         box-shadow: 
-            0 10px 25px rgba(15, 78, 14, 0.5),
-            inset 0 1px 3px rgba(255, 255, 255, 0.3);
+          0 8px 16px rgba(15, 78, 14, 0.4),
+          inset 0 1px 2px rgba(255, 255, 255, 0.2);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
       
-      /* Efecto de sombra para que los iconos no se pierdan en fondos claros */
       .icon-drop-shadow {
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
       }
     </style>
     <script type="importmap">
