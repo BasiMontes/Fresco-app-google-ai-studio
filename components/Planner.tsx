@@ -122,7 +122,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           return (
             <div 
               key={dateStr} 
-              className="min-w-[85vw] md:min-w-[260px] lg:min-w-[280px] flex-shrink-0 flex flex-col gap-4 md:h-full animate-fade-in transition-all duration-500"
+              className="min-w-[85vw] md:min-w-[280px] lg:min-w-[300px] flex-shrink-0 flex flex-col gap-4 md:h-full animate-fade-in transition-all duration-500"
             >
                 {/* CABECERA DEL DÍA */}
                 <div className="flex items-center px-6 py-4 md:py-5 rounded-[1.5rem] md:rounded-[2rem] bg-white text-[#0F4E0E] shadow-sm border border-gray-100 flex-shrink-0">
@@ -137,8 +137,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     )}
                 </div>
                 
-                {/* LISTA DE COMIDAS - DISEÑO OBJETIVO "STITCH" */}
-                <div className="flex-1 flex flex-col md:grid md:grid-rows-3 gap-4 md:gap-5 pb-40 md:pb-0 h-full min-h-0">
+                {/* LISTA DE COMIDAS - DISEÑO OBJETIVO "CINEMATIC" CORREGIDO */}
+                <div className="flex-1 flex flex-col md:grid md:grid-rows-3 gap-4 md:gap-5 pb-40 md:pb-0 h-full min-h-0 overflow-y-auto no-scrollbar">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
                       const recipe = slot?.recipeId ? recipes.find(r => String(r.id) === String(slot.recipeId)) : null;
@@ -147,31 +147,31 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <div 
                             key={type} 
                             onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} 
-                            className={`relative min-h-[200px] md:min-h-0 md:h-full rounded-[2.8rem] md:rounded-[3rem] transition-all duration-700 cursor-pointer overflow-hidden group shadow-sm ${recipe ? 'bg-black' : 'bg-white border-2 border-dashed border-gray-100 hover:border-[#0F4E0E]/20'}`}
+                            className={`relative min-h-[220px] md:min-h-0 md:h-full rounded-[2.8rem] md:rounded-[3rem] transition-all duration-700 cursor-pointer overflow-hidden group shadow-sm ${recipe ? 'bg-black' : 'bg-white border-2 border-dashed border-gray-100 hover:border-[#0F4E0E]/20'}`}
                           >
                               {recipe ? (
                                   <>
-                                      {/* IMAGEN DE FONDO TOTAL - ESTO ELIMINA CUALQUIER CORTE */}
+                                      {/* CAPA 0: IMAGEN FONDO TOTAL - CORRECCIÓN DEL HUECO BLANCO */}
                                       <SmartImage 
                                         src={recipe.image_url} 
                                         alt={recipe.title} 
                                         className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" 
                                       />
                                       
-                                      {/* CAPA DE DEGRADADO PARA LEGIBILIDAD (IGUAL AL OBJETIVO) */}
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent z-[1]" />
+                                      {/* CAPA 1: DEGRADADO PARA LEGIBILIDAD (MISMO QUE OBJETIVO) */}
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/25 to-transparent z-[1]" />
                                       
-                                      {/* CONTENIDO FLOTANTE (IGUAL AL OBJETIVO) */}
-                                      <div className="relative z-[2] flex flex-col h-full justify-between p-6 md:p-7">
+                                      {/* CAPA 2: CONTENIDO FLOTANTE */}
+                                      <div className="relative z-[2] flex flex-col h-full justify-between p-6 md:p-8">
                                           <div className="flex justify-between items-start">
-                                              {/* PÍLDORA MOMENTO GLASS */}
-                                              <div className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/10 flex items-center shadow-lg">
+                                              {/* PÍLDORA MOMENTO (MAÑANA/...) */}
+                                              <div className="px-4 py-2 rounded-full bg-white/15 backdrop-blur-xl border border-white/10 flex items-center shadow-lg">
                                                   <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white leading-none">
                                                     {type === 'breakfast' ? 'MAÑANA' : type === 'lunch' ? 'COMIDA' : 'CENA'}
                                                   </span>
                                               </div>
                                               
-                                              {/* BOTÓN X GLASS CIRCULAR (IGUAL AL OBJETIVO) */}
+                                              {/* BOTÓN X GLASS (MISMO QUE OBJETIVO) */}
                                               <button 
                                                 onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} 
                                                 className="w-10 h-10 bg-white/20 hover:bg-red-500 text-white rounded-full backdrop-blur-md shadow-2xl transition-all active:scale-90 flex items-center justify-center border border-white/10 group-hover:opacity-100 md:opacity-0"
@@ -181,7 +181,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                           </div>
                                           
                                           <div className="space-y-4">
-                                              {/* TÍTULO BLANCO, EXTRA BOLD, CAPITALIZE */}
+                                              {/* TÍTULO BLANCO, BOLD, CAPITALIZE */}
                                               <h5 className="font-black text-xl md:text-2xl text-white leading-[1.1] capitalize line-clamp-2 tracking-tight drop-shadow-lg">
                                                 {recipe.title}
                                               </h5>
@@ -201,7 +201,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                       </div>
                                   </>
                               ) : (
-                                  <div className="w-full h-full flex flex-col items-center justify-center p-5 text-center animate-fade-in relative z-[2]">
+                                  <div className="w-full h-full flex flex-col items-center justify-center p-5 text-center animate-fade-in">
                                       <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gray-50 flex items-center justify-center mb-3 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-700 group-hover:scale-110 group-hover:rotate-90">
                                         <Plus className="w-5 h-5 text-[#0F4E0E] group-hover:text-white" />
                                       </div>
