@@ -40,8 +40,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         if (scrollContainerRef.current) {
             const todayIndex = days.findIndex(d => isSameDay(d, new Date()));
             if (todayIndex !== -1) {
-                // Scroll ajustado para el nuevo ancho de 720px
-                const dayWidth = window.innerWidth < 768 ? window.innerWidth * 0.88 : 720 + 24; 
+                // Scroll ajustado para el nuevo ancho equilibrado de 580px
+                const dayWidth = window.innerWidth < 768 ? window.innerWidth * 0.88 : 580 + 24; 
                 scrollContainerRef.current.scrollTo({
                     left: todayIndex * dayWidth,
                     behavior: 'smooth'
@@ -112,10 +112,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         </div>
       </header>
 
-      {/* VIEWPORT - DIMENSIONES AJUSTADAS A REFERENCIA (720PX) */}
+      {/* VIEWPORT - DIMENSIONES EQUILIBRADAS (580PX) */}
       <div 
         ref={scrollContainerRef} 
-        className="flex-1 overflow-x-auto no-scrollbar flex gap-6 p-6 md:p-10 bg-[#F8F9FA] scroll-smooth"
+        className="flex-1 overflow-x-auto no-scrollbar flex gap-6 p-6 md:p-8 bg-[#F8F9FA] scroll-smooth"
       >
         {days.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd');
@@ -123,22 +123,22 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           return (
             <div 
               key={dateStr} 
-              className="min-w-[85vw] md:min-w-[720px] lg:min-w-[720px] flex-shrink-0 flex flex-col gap-6 h-full animate-fade-in transition-all duration-500"
+              className="min-w-[85vw] md:min-w-[580px] lg:min-w-[580px] flex-shrink-0 flex flex-col gap-6 h-full animate-fade-in transition-all duration-500"
             >
                 {/* CABECERA DEL DÍA */}
-                <div className="flex items-center px-10 py-6 rounded-[2.5rem] bg-white text-[#0F4E0E] shadow-sm border border-gray-100 flex-shrink-0">
-                    <span className="text-2xl md:text-[1.8rem] font-[900] uppercase tracking-tighter">
+                <div className="flex items-center px-8 py-5 rounded-[2rem] bg-white text-[#0F4E0E] shadow-sm border border-gray-100 flex-shrink-0">
+                    <span className="text-xl md:text-2xl font-[900] uppercase tracking-tighter">
                         {format(day, 'EEEE d', { locale: es })}
                     </span>
                     {isToday && (
-                        <div className="ml-auto flex items-center gap-3">
-                            <span className="text-[10px] font-[900] text-orange-500 uppercase tracking-widest hidden md:inline">Hoy</span>
-                            <div className="w-3.5 h-3.5 rounded-full bg-orange-500 shadow-[0_0_15px_rgba(232,124,62,0.8)] animate-pulse" />
+                        <div className="ml-auto flex items-center gap-2">
+                            <span className="text-[9px] font-[900] text-orange-500 uppercase tracking-widest hidden md:inline">Hoy</span>
+                            <div className="w-3 h-3 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(232,124,62,0.8)] animate-pulse" />
                         </div>
                     )}
                 </div>
                 
-                {/* LISTA DE COMIDAS - ALTURA 280PX SEGÚN REFERENCIA */}
+                {/* LISTA DE COMIDAS - ALTURA 210PX (MENOS ENORME) */}
                 <div className="flex-1 flex flex-col gap-5 pb-40 md:pb-10 overflow-y-auto no-scrollbar pr-1">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
@@ -148,7 +148,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <div 
                             key={type} 
                             onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} 
-                            className={`relative w-full h-[280px] flex-shrink-0 rounded-[3.5rem] transition-all duration-700 cursor-pointer overflow-hidden group shadow-md ${recipe ? 'bg-black' : 'bg-white border-2 border-dashed border-gray-100 hover:border-[#0F4E0E]/10'}`}
+                            className={`relative w-full h-[210px] flex-shrink-0 rounded-[3rem] transition-all duration-700 cursor-pointer overflow-hidden group shadow-md ${recipe ? 'bg-black' : 'bg-white border-2 border-dashed border-gray-100 hover:border-[#0F4E0E]/10'}`}
                           >
                               {recipe ? (
                                   <>
@@ -156,15 +156,15 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                       <SmartImage 
                                         src={recipe.image_url} 
                                         alt={recipe.title} 
-                                        className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" 
+                                        className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 opacity-90" 
                                       />
                                       
-                                      {/* GRADIENTE REFORZADO PARA MÁXIMA LEGIBILIDAD */}
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent z-[1]" />
+                                      {/* GRADIENTE REFORZADO - SUBE MÁS PARA LEGIBILIDAD */}
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-[1]" />
                                       
-                                      {/* TAG SUPERIOR - CORRECCIÓN DE ALINEACIÓN ÓPTICA */}
-                                      <div className="absolute top-8 left-8 z-[2] h-6 px-3 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg border border-white/5 shadow-2xl">
-                                          <span className="text-[6.5px] font-[900] uppercase tracking-[0.4em] text-white leading-none pt-[1px]">
+                                      {/* TAG SUPERIOR - MÁS PEQUEÑO Y CENTRADO ÓPTICAMENTE */}
+                                      <div className="absolute top-6 left-6 z-[2] h-6 px-3 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/5 shadow-2xl">
+                                          <span className="text-[6px] font-[900] uppercase tracking-[0.4em] text-white leading-none pt-[1px]">
                                             {type === 'breakfast' ? 'MAÑANA' : type === 'lunch' ? 'COMIDA' : 'CENA'}
                                           </span>
                                       </div>
@@ -172,37 +172,37 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                       {/* BOTÓN X */}
                                       <button 
                                         onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} 
-                                        className="absolute top-8 right-8 z-[2] w-7 h-7 bg-white/10 hover:bg-red-500 text-white rounded-full backdrop-blur-lg transition-all active:scale-90 flex items-center justify-center border border-white/5 md:opacity-0 group-hover:opacity-100"
+                                        className="absolute top-6 right-6 z-[2] w-7 h-7 bg-white/10 hover:bg-red-500 text-white rounded-full backdrop-blur-md transition-all active:scale-90 flex items-center justify-center border border-white/5 md:opacity-0 group-hover:opacity-100"
                                       >
-                                          <X className="w-3.5 h-3.5 stroke-[4px]" />
+                                          <X className="w-3 h-3 stroke-[4px]" />
                                       </button>
 
-                                      {/* CONTENIDO INFERIOR - TEXTO MÁS PEQUEÑO Y REFINADO */}
-                                      <div className="absolute bottom-8 left-10 right-10 z-[2] flex flex-col gap-3">
-                                          <h5 className="font-[900] text-lg md:text-[1.25rem] text-white leading-[1.1] capitalize line-clamp-2 tracking-tight drop-shadow-2xl">
+                                      {/* CONTENIDO INFERIOR - TEXTO EQUILIBRADO */}
+                                      <div className="absolute bottom-7 left-8 right-8 z-[2] flex flex-col gap-2.5">
+                                          <h5 className="font-[900] text-lg md:text-[1.15rem] text-white leading-[1.1] capitalize line-clamp-2 tracking-tight drop-shadow-2xl">
                                             {recipe.title}
                                           </h5>
                                           
-                                          {/* PILLS INFO - ALINEACIÓN CORREGIDA */}
+                                          {/* PILLS INFO - MINIMALISTAS */}
                                           <div className="flex items-center gap-2">
                                               <div className="flex items-center gap-1.5 bg-black/40 h-5 px-2.5 rounded-lg backdrop-blur-3xl border border-white/5 shadow-2xl">
                                                 <Clock className="w-2 h-2 text-white" />
-                                                <span className="text-[6.5px] font-[900] text-white uppercase tracking-widest leading-none pt-[1px]">{recipe.prep_time} MIN</span>
+                                                <span className="text-[6px] font-[900] text-white uppercase tracking-widest leading-none pt-[1px]">{recipe.prep_time} MIN</span>
                                               </div>
                                               <div className="flex items-center gap-1.5 bg-black/40 h-5 px-2.5 rounded-lg backdrop-blur-3xl border border-white/5 shadow-2xl">
                                                 <BarChart2 className="w-2 h-2 text-white" />
-                                                <span className="text-[6.5px] font-[900] text-white uppercase tracking-widest leading-none pt-[1px]">{recipe.difficulty || 'EASY'}</span>
+                                                <span className="text-[6px] font-[900] text-white uppercase tracking-widest leading-none pt-[1px]">{recipe.difficulty || 'EASY'}</span>
                                               </div>
                                           </div>
                                       </div>
                                   </>
                               ) : (
                                   /* SLOT VACÍO */
-                                  <div className="w-full h-full flex flex-col items-center justify-center p-12 text-center animate-fade-in">
-                                      <div className="w-16 h-16 rounded-[1.8rem] bg-gray-50 flex items-center justify-center mb-5 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-700 group-hover:scale-110">
-                                        <Plus className="w-7 h-7 text-[#0F4E0E] group-hover:text-white" />
+                                  <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center animate-fade-in">
+                                      <div className="w-14 h-14 rounded-[1.6rem] bg-gray-50 flex items-center justify-center mb-4 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-700 group-hover:scale-110">
+                                        <Plus className="w-6 h-6 text-[#0F4E0E] group-hover:text-white" />
                                       </div>
-                                      <span className="text-[10px] font-[900] uppercase tracking-[0.5em] text-gray-300 group-hover:text-[#0F4E0E] transition-all duration-500">{type}</span>
+                                      <span className="text-[9px] font-[900] uppercase tracking-[0.5em] text-gray-300 group-hover:text-[#0F4E0E] transition-all duration-500">{type}</span>
                                   </div>
                               )}
                           </div>
