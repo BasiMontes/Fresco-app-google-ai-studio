@@ -40,7 +40,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         if (scrollContainerRef.current) {
             const todayIndex = days.findIndex(d => isSameDay(d, new Date()));
             if (todayIndex !== -1) {
-                // Ajustamos el scroll para el nuevo ancho de 720px + gap
+                // Scroll ajustado para el nuevo ancho de 720px
                 const dayWidth = window.innerWidth < 768 ? window.innerWidth * 0.88 : 720 + 24; 
                 scrollContainerRef.current.scrollTo({
                     left: todayIndex * dayWidth,
@@ -112,7 +112,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         </div>
       </header>
 
-      {/* VIEWPORT - TARJETA ULTRA-WIDE (720PX) */}
+      {/* VIEWPORT - DIMENSIONES AJUSTADAS A REFERENCIA (720PX) */}
       <div 
         ref={scrollContainerRef} 
         className="flex-1 overflow-x-auto no-scrollbar flex gap-6 p-6 md:p-10 bg-[#F8F9FA] scroll-smooth"
@@ -125,7 +125,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
               key={dateStr} 
               className="min-w-[85vw] md:min-w-[720px] lg:min-w-[720px] flex-shrink-0 flex flex-col gap-6 h-full animate-fade-in transition-all duration-500"
             >
-                {/* CABECERA DEL DÍA - MÁS ESPACIOSA PARA EL NUEVO ANCHO */}
+                {/* CABECERA DEL DÍA */}
                 <div className="flex items-center px-10 py-6 rounded-[2.5rem] bg-white text-[#0F4E0E] shadow-sm border border-gray-100 flex-shrink-0">
                     <span className="text-2xl md:text-[1.8rem] font-[900] uppercase tracking-tighter">
                         {format(day, 'EEEE d', { locale: es })}
@@ -159,45 +159,45 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                         className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" 
                                       />
                                       
-                                      {/* GRADIENTE POTENCIADO */}
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-[1]" />
+                                      {/* GRADIENTE REFORZADO PARA MÁXIMA LEGIBILIDAD */}
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent z-[1]" />
                                       
-                                      {/* TAG SUPERIOR IZQUIERDO - ALINEACIÓN CORREGIDA */}
-                                      <div className="absolute top-8 left-8 z-[2] h-7 px-4 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-lg">
-                                          <span className="text-[7px] font-[900] uppercase tracking-[0.35em] text-white leading-none">
+                                      {/* TAG SUPERIOR - CORRECCIÓN DE ALINEACIÓN ÓPTICA */}
+                                      <div className="absolute top-8 left-8 z-[2] h-6 px-3 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg border border-white/5 shadow-2xl">
+                                          <span className="text-[6.5px] font-[900] uppercase tracking-[0.4em] text-white leading-none pt-[1px]">
                                             {type === 'breakfast' ? 'MAÑANA' : type === 'lunch' ? 'COMIDA' : 'CENA'}
                                           </span>
                                       </div>
 
-                                      {/* BOTÓN X - ALINEACIÓN CORREGIDA */}
+                                      {/* BOTÓN X */}
                                       <button 
                                         onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} 
-                                        className="absolute top-8 right-8 z-[2] w-8 h-8 bg-white/20 hover:bg-red-500 text-white rounded-full backdrop-blur-md transition-all active:scale-90 flex items-center justify-center border border-white/10 md:opacity-0 group-hover:opacity-100"
+                                        className="absolute top-8 right-8 z-[2] w-7 h-7 bg-white/10 hover:bg-red-500 text-white rounded-full backdrop-blur-lg transition-all active:scale-90 flex items-center justify-center border border-white/5 md:opacity-0 group-hover:opacity-100"
                                       >
                                           <X className="w-3.5 h-3.5 stroke-[4px]" />
                                       </button>
 
-                                      {/* CONTENIDO INFERIOR */}
-                                      <div className="absolute bottom-10 left-10 right-10 z-[2] flex flex-col gap-4">
-                                          <h5 className="font-[900] text-xl md:text-[1.5rem] text-white leading-[1.05] capitalize line-clamp-2 tracking-tight drop-shadow-2xl">
+                                      {/* CONTENIDO INFERIOR - TEXTO MÁS PEQUEÑO Y REFINADO */}
+                                      <div className="absolute bottom-8 left-10 right-10 z-[2] flex flex-col gap-3">
+                                          <h5 className="font-[900] text-lg md:text-[1.25rem] text-white leading-[1.1] capitalize line-clamp-2 tracking-tight drop-shadow-2xl">
                                             {recipe.title}
                                           </h5>
                                           
                                           {/* PILLS INFO - ALINEACIÓN CORREGIDA */}
                                           <div className="flex items-center gap-2">
-                                              <div className="flex items-center gap-1.5 bg-black/40 h-6 px-3 rounded-lg backdrop-blur-3xl border border-white/5 shadow-2xl">
-                                                <Clock className="w-2.5 h-2.5 text-white" />
-                                                <span className="text-[7px] font-[900] text-white uppercase tracking-widest leading-none mt-[1px]">{recipe.prep_time} MIN</span>
+                                              <div className="flex items-center gap-1.5 bg-black/40 h-5 px-2.5 rounded-lg backdrop-blur-3xl border border-white/5 shadow-2xl">
+                                                <Clock className="w-2 h-2 text-white" />
+                                                <span className="text-[6.5px] font-[900] text-white uppercase tracking-widest leading-none pt-[1px]">{recipe.prep_time} MIN</span>
                                               </div>
-                                              <div className="flex items-center gap-1.5 bg-black/40 h-6 px-3 rounded-lg backdrop-blur-3xl border border-white/5 shadow-2xl">
-                                                <BarChart2 className="w-2.5 h-2.5 text-white" />
-                                                <span className="text-[7px] font-[900] text-white uppercase tracking-widest leading-none mt-[1px]">{recipe.difficulty || 'EASY'}</span>
+                                              <div className="flex items-center gap-1.5 bg-black/40 h-5 px-2.5 rounded-lg backdrop-blur-3xl border border-white/5 shadow-2xl">
+                                                <BarChart2 className="w-2 h-2 text-white" />
+                                                <span className="text-[6.5px] font-[900] text-white uppercase tracking-widest leading-none pt-[1px]">{recipe.difficulty || 'EASY'}</span>
                                               </div>
                                           </div>
                                       </div>
                                   </>
                               ) : (
-                                  /* SLOT VACÍO - MISMO ANCHO 720PX */
+                                  /* SLOT VACÍO */
                                   <div className="w-full h-full flex flex-col items-center justify-center p-12 text-center animate-fade-in">
                                       <div className="w-16 h-16 rounded-[1.8rem] bg-gray-50 flex items-center justify-center mb-5 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-700 group-hover:scale-110">
                                         <Plus className="w-7 h-7 text-[#0F4E0E] group-hover:text-white" />
