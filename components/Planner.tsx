@@ -62,9 +62,11 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
 
   return (
     <div className="h-full w-full flex flex-col animate-fade-in overflow-hidden bg-[#F8F9FA]">
-      {/* HEADER */}
-      <header className="w-full py-2.5 bg-white flex-shrink-0 z-20 px-4 md:px-8 shadow-sm border-b border-gray-100">
-        <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-4">
+      {/* HEADER REDISEÑADO PARA MOBILE (2 FILAS) */}
+      <header className="w-full py-4 md:py-2.5 bg-white flex-shrink-0 z-20 px-4 md:px-8 shadow-sm border-b border-gray-100">
+        <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-4">
+            
+            {/* FILA 1: TÍTULO */}
             <div className="flex items-center gap-3 flex-shrink-0">
                 <div className="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center text-[#0F4E0E]">
                     <CalendarDays className="w-4.5 h-4.5" />
@@ -72,7 +74,9 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 <h1 className="text-xl font-[900] text-[#0F4E0E] tracking-tighter whitespace-nowrap leading-none">Mi Menú</h1>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* FILA 2 (MOBILE) / FILA 1 (DESKTOP): CONTROLES */}
+            <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto">
+                {/* SELECTOR DE FECHA */}
                 <div className="flex items-center gap-0.5 bg-gray-50 p-1 rounded-xl border border-gray-100 shrink-0">
                     <button 
                         disabled={!canGoBack}
@@ -81,7 +85,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     >
                         <ChevronLeft className="w-3.5 h-3.5" />
                     </button>
-                    <span className="min-w-[90px] text-center text-[10px] font-black text-[#0F4E0E] px-1 uppercase tracking-widest truncate">
+                    <span className="min-w-[100px] text-center text-[10px] font-black text-[#0F4E0E] px-1 uppercase tracking-widest truncate">
                         {format(currentWeekStart, 'MMM yyyy', { locale: es })}
                     </span>
                     <button 
@@ -93,19 +97,20 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     </button>
                 </div>
 
+                {/* BOTONES DE ACCIÓN */}
                 <div className="flex items-center gap-1.5 shrink-0">
                     <button 
                         onClick={() => triggerDialog({ title: 'Limpiar Plan', message: '¿Borrar todo el calendario actual?', type: 'confirm', onConfirm: onClear })} 
-                        className="w-9 h-9 bg-red-50 text-red-500 rounded-xl border border-red-100 flex items-center justify-center shadow-sm hover:bg-red-500 hover:text-white transition-all active:scale-90"
+                        className="w-10 h-10 md:w-9 md:h-9 bg-red-50 text-red-500 rounded-xl border border-red-100 flex items-center justify-center shadow-sm hover:bg-red-500 hover:text-white transition-all active:scale-90"
                     >
                         <Trash2 className="w-4 h-4" />
                     </button>
                     <button 
                         onClick={() => {}} 
-                        className="h-9 px-4 bg-[#0F4E0E] text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg flex items-center gap-2 active:scale-95 hover:bg-[#062606] transition-all"
+                        className="h-10 md:h-9 px-4 bg-[#0F4E0E] text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg flex items-center gap-2 active:scale-95 hover:bg-[#062606] transition-all"
                     >
                         <Wand2 className="w-3.5 h-3.5 text-orange-400" />
-                        <span className="hidden sm:inline">GENERAR</span>
+                        <span className="inline">GENERAR</span>
                     </button>
                 </div>
             </div>
@@ -138,7 +143,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     )}
                 </div>
                 
-                {/* LISTA DE COMIDAS - AJUSTE pb-28 PARA EVITAR VACÍO EN MOBILE */}
+                {/* LISTA DE COMIDAS */}
                 <div className="flex-1 flex flex-col gap-4 pb-28 md:pb-10 overflow-y-auto no-scrollbar pr-1">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
