@@ -112,7 +112,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         </div>
       </header>
 
-      {/* VIEWPORT - ESPACIO SUPERIOR REDUCIDO PARA MÁXIMA VISIBILIDAD VERTICAL */}
+      {/* VIEWPORT */}
       <div 
         ref={scrollContainerRef} 
         className="flex-1 overflow-x-auto no-scrollbar flex gap-6 p-4 md:pt-3 md:pb-8 md:px-8 bg-[#F8F9FA] scroll-smooth"
@@ -125,7 +125,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
               key={dateStr} 
               className="min-w-[85vw] md:min-w-[480px] lg:min-w-[480px] flex-shrink-0 flex flex-col gap-4 h-full animate-fade-in transition-all duration-500"
             >
-                {/* CABECERA DEL DÍA - MÁS COMPACTA EN VERTICAL */}
+                {/* CABECERA DEL DÍA */}
                 <div className="flex items-center px-6 py-3 rounded-[1.8rem] bg-white text-[#0F4E0E] shadow-sm border border-gray-100 flex-shrink-0">
                     <span className="text-lg md:text-xl font-[900] uppercase tracking-tighter">
                         {format(day, 'EEEE d', { locale: es })}
@@ -138,8 +138,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     )}
                 </div>
                 
-                {/* LISTA DE COMIDAS - 165PX */}
-                <div className="flex-1 flex flex-col gap-4 pb-40 md:pb-10 overflow-y-auto no-scrollbar pr-1">
+                {/* LISTA DE COMIDAS - AJUSTE pb-28 PARA EVITAR VACÍO EN MOBILE */}
+                <div className="flex-1 flex flex-col gap-4 pb-28 md:pb-10 overflow-y-auto no-scrollbar pr-1">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
                       const recipe = slot?.recipeId ? recipes.find(r => String(r.id) === String(slot.recipeId)) : null;
