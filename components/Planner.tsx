@@ -40,7 +40,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         if (scrollContainerRef.current) {
             const todayIndex = days.findIndex(d => isSameDay(d, new Date()));
             if (todayIndex !== -1) {
-                // Ajustado para el nuevo ancho compacto de 480px + gap
+                // Ajustado para el ancho de 480px + gap
                 const dayWidth = window.innerWidth < 768 ? window.innerWidth * 0.88 : 480 + 24; 
                 scrollContainerRef.current.scrollTo({
                     left: todayIndex * dayWidth,
@@ -112,10 +112,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         </div>
       </header>
 
-      {/* VIEWPORT - DIMENSIONES COMPACTAS (480PX) */}
+      {/* VIEWPORT - ESPACIO SUPERIOR REDUCIDO PARA MÁXIMA VISIBILIDAD VERTICAL */}
       <div 
         ref={scrollContainerRef} 
-        className="flex-1 overflow-x-auto no-scrollbar flex gap-6 p-6 md:p-8 bg-[#F8F9FA] scroll-smooth"
+        className="flex-1 overflow-x-auto no-scrollbar flex gap-6 p-4 md:pt-3 md:pb-8 md:px-8 bg-[#F8F9FA] scroll-smooth"
       >
         {days.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd');
@@ -125,8 +125,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
               key={dateStr} 
               className="min-w-[85vw] md:min-w-[480px] lg:min-w-[480px] flex-shrink-0 flex flex-col gap-4 h-full animate-fade-in transition-all duration-500"
             >
-                {/* CABECERA DEL DÍA - MÁS COMPACTA */}
-                <div className="flex items-center px-6 py-4 rounded-[1.8rem] bg-white text-[#0F4E0E] shadow-sm border border-gray-100 flex-shrink-0">
+                {/* CABECERA DEL DÍA - MÁS COMPACTA EN VERTICAL */}
+                <div className="flex items-center px-6 py-3 rounded-[1.8rem] bg-white text-[#0F4E0E] shadow-sm border border-gray-100 flex-shrink-0">
                     <span className="text-lg md:text-xl font-[900] uppercase tracking-tighter">
                         {format(day, 'EEEE d', { locale: es })}
                     </span>
@@ -138,7 +138,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     )}
                 </div>
                 
-                {/* LISTA DE COMIDAS - ALTURA 165PX PARA VISIBILIDAD TOTAL */}
+                {/* LISTA DE COMIDAS - 165PX */}
                 <div className="flex-1 flex flex-col gap-4 pb-40 md:pb-10 overflow-y-auto no-scrollbar pr-1">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
@@ -159,10 +159,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                         className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 opacity-95" 
                                       />
                                       
-                                      {/* GRADIENTE COMPACTO PERO PROFUNDO */}
+                                      {/* GRADIENTE COMPACTO */}
                                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-[1]" />
                                       
-                                      {/* TAG SUPERIOR - ALINEACIÓN ÓPTICA PERFECTA */}
+                                      {/* TAG SUPERIOR */}
                                       <div className="absolute top-5 left-6 z-[2] h-5 px-2.5 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/5 shadow-xl">
                                           <span className="text-[5.5px] font-[900] uppercase tracking-[0.35em] text-white leading-none translate-y-[0.5px]">
                                             {type === 'breakfast' ? 'MAÑANA' : type === 'lunch' ? 'COMIDA' : 'CENA'}
@@ -183,7 +183,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                             {recipe.title}
                                           </h5>
                                           
-                                          {/* PILLS INFO - ULTRA-COMPACTAS */}
+                                          {/* PILLS INFO */}
                                           <div className="flex items-center gap-1.5">
                                               <div className="flex items-center gap-1 bg-black/40 h-4.5 px-2 rounded-md backdrop-blur-3xl border border-white/5 shadow-2xl">
                                                 <Clock className="w-1.5 h-1.5 text-white" />
@@ -197,7 +197,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                       </div>
                                   </>
                               ) : (
-                                  /* SLOT VACÍO - COMPACTO */
+                                  /* SLOT VACÍO */
                                   <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center animate-fade-in">
                                       <div className="w-12 h-12 rounded-[1.4rem] bg-gray-50 flex items-center justify-center mb-3 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-700 group-hover:scale-110">
                                         <Plus className="w-5 h-5 text-[#0F4E0E] group-hover:text-white" />
