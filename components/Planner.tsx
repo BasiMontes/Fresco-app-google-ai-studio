@@ -40,8 +40,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         if (scrollContainerRef.current) {
             const todayIndex = days.findIndex(d => isSameDay(d, new Date()));
             if (todayIndex !== -1) {
-                // Ajustamos el scroll para el nuevo ancho de 260px
-                const dayWidth = window.innerWidth < 768 ? window.innerWidth * 0.88 : 260 + 20; // 260 + gap
+                const dayWidth = window.innerWidth < 768 ? window.innerWidth * 0.88 : 260 + 20; 
                 scrollContainerRef.current.scrollTo({
                     left: todayIndex * dayWidth,
                     behavior: 'smooth'
@@ -69,7 +68,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                 <div className="w-7 h-7 md:w-8 md:h-8 bg-teal-50 rounded-lg flex items-center justify-center text-[#0F4E0E]">
                     <CalendarDays className="w-4 h-4 md:w-4.5 md:h-4.5" />
                 </div>
-                <h1 className="text-lg md:text-xl font-black text-[#0F4E0E] tracking-tighter whitespace-nowrap leading-none">Mi Menú</h1>
+                <h1 className="text-lg md:text-xl font-[900] text-[#0F4E0E] tracking-tighter whitespace-nowrap leading-none">Mi Menú</h1>
             </div>
 
             <div className="flex items-center gap-2">
@@ -112,10 +111,10 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         </div>
       </header>
 
-      {/* VIEWPORT - GAP Y PADDING REFINADOS PARA DENSIDAD */}
+      {/* VIEWPORT */}
       <div 
         ref={scrollContainerRef} 
-        className="flex-1 overflow-x-auto no-scrollbar flex gap-4 md:gap-5 p-5 md:p-8 bg-[#F8F9FA] scroll-smooth"
+        className="flex-1 overflow-x-auto no-scrollbar flex gap-5 p-6 md:p-10 bg-[#F8F9FA] scroll-smooth"
       >
         {days.map((day) => {
           const dateStr = format(day, 'yyyy-MM-dd');
@@ -123,11 +122,11 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
           return (
             <div 
               key={dateStr} 
-              className="min-w-[85vw] md:min-w-[260px] lg:min-w-[260px] flex-shrink-0 flex flex-col gap-4 h-full animate-fade-in transition-all duration-500"
+              className="min-w-[85vw] md:min-w-[260px] lg:min-w-[260px] flex-shrink-0 flex flex-col gap-5 h-full animate-fade-in transition-all"
             >
-                {/* CABECERA DEL DÍA - MÁS COMPACTA */}
+                {/* CABECERA DEL DÍA */}
                 <div className="flex items-center px-6 py-4 rounded-[1.8rem] bg-white text-[#0F4E0E] shadow-sm border border-gray-100 flex-shrink-0">
-                    <span className="text-lg md:text-xl font-black uppercase tracking-tighter">
+                    <span className="text-lg md:text-xl font-[900] uppercase tracking-tighter">
                         {format(day, 'EEEE d', { locale: es })}
                     </span>
                     {isToday && (
@@ -138,8 +137,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     )}
                 </div>
                 
-                {/* LISTA DE COMIDAS - ALTO FIJO 210px */}
-                <div className="flex-1 flex flex-col gap-4 pb-40 md:pb-10 overflow-y-auto no-scrollbar pr-1">
+                {/* LISTA DE COMIDAS - TAMAÑO ESTRICTO 210PX */}
+                <div className="flex-1 flex flex-col gap-5 pb-40 md:pb-10 overflow-y-auto no-scrollbar pr-1">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
                       const recipe = slot?.recipeId ? recipes.find(r => String(r.id) === String(slot.recipeId)) : null;
@@ -148,63 +147,59 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <div 
                             key={type} 
                             onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} 
-                            className={`relative w-full h-[210px] md:h-[210px] flex-shrink-0 rounded-[2.8rem] transition-all duration-500 cursor-pointer overflow-hidden group shadow-sm border-2 ${recipe ? 'bg-black border-transparent' : 'bg-white border-dashed border-gray-100 hover:border-[#0F4E0E]/20'}`}
+                            className={`relative w-full h-[210px] md:h-[210px] flex-shrink-0 rounded-[2.5rem] transition-all duration-500 cursor-pointer overflow-hidden group shadow-sm ${recipe ? 'bg-black' : 'bg-white border-2 border-dashed border-gray-100'}`}
                           >
                               {recipe ? (
                                   <>
-                                      {/* IMAGEN DE FONDO */}
+                                      {/* CAPA FONDO: IMAGEN */}
                                       <SmartImage 
                                         src={recipe.image_url} 
                                         alt={recipe.title} 
-                                        className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 opacity-90" 
+                                        className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" 
                                       />
                                       
-                                      {/* DEGRADADO IGUAL A REFERENCIA */}
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent z-[1]" />
+                                      {/* CAPA OVERLAY: DEGRADADO DE LECTURA */}
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent z-[1]" />
                                       
-                                      {/* CONTENIDO INTERNO - CALCO 1:1 */}
-                                      <div className="relative z-[2] flex flex-col h-full justify-between p-6">
-                                          <div className="flex justify-between items-start">
-                                              {/* TAG SUPERIOR IZQUIERDO (MAÑANA/...) */}
-                                              <div className="px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/10 flex items-center">
-                                                  <span className="text-[9px] font-black uppercase tracking-[0.25em] text-white leading-none">
-                                                    {type === 'breakfast' ? 'MAÑANA' : type === 'lunch' ? 'COMIDA' : 'CENA'}
-                                                  </span>
-                                              </div>
-                                              
-                                              {/* BOTÓN CERRAR SUPERIOR DERECHO (HOVER EN DESKTOP) */}
-                                              <button 
-                                                onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} 
-                                                className="w-10 h-10 bg-white/30 hover:bg-red-500 text-white rounded-full backdrop-blur-md transition-all active:scale-90 flex items-center justify-center border border-white/10 md:opacity-0 group-hover:opacity-100 shadow-2xl"
-                                              >
-                                                  <X className="w-5 h-5 stroke-[3px]" />
-                                              </button>
-                                          </div>
+                                      {/* TAG SUPERIOR IZQUIERDO (MAÑANA/...) */}
+                                      <div className="absolute top-5 left-5 z-[2] px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/10 shadow-lg">
+                                          <span className="text-[9px] font-[900] uppercase tracking-[0.25em] text-white leading-none">
+                                            {type === 'breakfast' ? 'MAÑANA' : type === 'lunch' ? 'COMIDA' : 'CENA'}
+                                          </span>
+                                      </div>
+
+                                      {/* BOTÓN CERRAR SUPERIOR DERECHO (X) */}
+                                      <button 
+                                        onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} 
+                                        className="absolute top-5 right-5 z-[2] w-10 h-10 bg-white/20 hover:bg-red-500 text-white rounded-full backdrop-blur-md transition-all active:scale-90 flex items-center justify-center border border-white/10 md:opacity-0 group-hover:opacity-100 shadow-2xl"
+                                      >
+                                          <X className="w-5 h-5 stroke-[3px]" />
+                                      </button>
+
+                                      {/* CONTENIDO INFERIOR: TÍTULO Y PILLS */}
+                                      <div className="absolute bottom-6 left-6 right-6 z-[2] flex flex-col gap-3">
+                                          {/* TÍTULO SATOSHI BLACK */}
+                                          <h5 className="font-[900] text-2xl text-white leading-[1.1] capitalize line-clamp-2 tracking-tight drop-shadow-lg">
+                                            {recipe.title}
+                                          </h5>
                                           
-                                          <div className="space-y-4">
-                                              {/* TÍTULO GRANDE SATOSHI BLACK */}
-                                              <h5 className="font-black text-2xl md:text-[1.6rem] text-white leading-[1.05] capitalize line-clamp-2 tracking-tight drop-shadow-2xl">
-                                                {recipe.title}
-                                              </h5>
-                                              
-                                              {/* PÍLDORAS INFERIORES DARK GLASS */}
-                                              <div className="flex items-center gap-2">
-                                                  <div className="flex items-center gap-2 bg-black/40 px-3.5 py-2 rounded-2xl backdrop-blur-3xl border border-white/5 shadow-2xl">
-                                                    <Clock className="w-3.5 h-3.5 text-white" />
-                                                    <span className="text-[10px] font-black text-white uppercase tracking-widest">{recipe.prep_time} MIN</span>
-                                                  </div>
-                                                  <div className="flex items-center gap-2 bg-black/40 px-3.5 py-2 rounded-2xl backdrop-blur-3xl border border-white/5 shadow-2xl">
-                                                    <BarChart2 className="w-3.5 h-3.5 text-white" />
-                                                    <span className="text-[10px] font-black text-white uppercase tracking-widest">{recipe.difficulty || 'EASY'}</span>
-                                                  </div>
+                                          {/* PÍLDORAS INFO DARK GLASS */}
+                                          <div className="flex items-center gap-2">
+                                              <div className="flex items-center gap-1.5 bg-black/40 px-3 py-2 rounded-2xl backdrop-blur-xl border border-white/5">
+                                                <Clock className="w-3.5 h-3.5 text-white" />
+                                                <span className="text-[10px] font-black text-white uppercase tracking-widest">{recipe.prep_time} MIN</span>
+                                              </div>
+                                              <div className="flex items-center gap-1.5 bg-black/40 px-3 py-2 rounded-2xl backdrop-blur-xl border border-white/5">
+                                                <BarChart2 className="w-3.5 h-3.5 text-white" />
+                                                <span className="text-[10px] font-black text-white uppercase tracking-widest">{recipe.difficulty || 'EASY'}</span>
                                               </div>
                                           </div>
                                       </div>
                                   </>
                               ) : (
-                                  /* SLOT VACÍO - MISMA ALTURA 210px */
-                                  <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center animate-fade-in relative z-[2]">
-                                      <div className="w-12 h-12 rounded-[1.4rem] bg-gray-50 flex items-center justify-center mb-3 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-700 group-hover:scale-110 group-hover:rotate-90 shadow-sm">
+                                  /* SLOT VACÍO - MISMO TAMAÑO 210PX */
+                                  <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+                                      <div className="w-12 h-12 rounded-[1.4rem] bg-gray-50 flex items-center justify-center mb-3 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-700 group-hover:scale-110">
                                         <Plus className="w-5 h-5 text-[#0F4E0E] group-hover:text-white" />
                                       </div>
                                       <span className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-300 group-hover:text-[#0F4E0E] transition-all duration-500">{type}</span>
