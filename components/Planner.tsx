@@ -40,7 +40,6 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         if (scrollContainerRef.current) {
             const todayIndex = days.findIndex(d => isSameDay(d, new Date()));
             if (todayIndex !== -1) {
-                // Ancho ajustado para el scroll automático en desktop
                 const dayWidth = window.innerWidth < 768 ? window.innerWidth * 0.88 : 260; 
                 scrollContainerRef.current.scrollTo({
                     left: todayIndex * dayWidth,
@@ -112,7 +111,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
         </div>
       </header>
 
-      {/* VIEWPORT - AJUSTADO PADDING DESKTOP */}
+      {/* VIEWPORT */}
       <div 
         ref={scrollContainerRef} 
         className="flex-1 overflow-x-auto no-scrollbar flex gap-4 md:gap-5 p-5 md:p-6 bg-[#F8F9FA] scroll-smooth"
@@ -125,7 +124,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
               key={dateStr} 
               className="min-w-[85vw] md:min-w-[260px] lg:min-w-[280px] flex-shrink-0 flex flex-col gap-4 h-full animate-fade-in transition-all duration-500"
             >
-                {/* CABECERA DEL DÍA - MÁS COMPACTA EN DESKTOP */}
+                {/* CABECERA DEL DÍA */}
                 <div className="flex items-center px-6 py-4 md:py-4 rounded-[1.5rem] md:rounded-[2rem] bg-white text-[#0F4E0E] shadow-sm border border-gray-100 flex-shrink-0">
                     <span className="text-lg md:text-xl font-black uppercase tracking-tighter">
                         {format(day, 'EEEE d', { locale: es })}
@@ -138,7 +137,7 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                     )}
                 </div>
                 
-                {/* LISTA DE COMIDAS - TAMAÑO REDUCIDO EN DESKTOP (185px) */}
+                {/* LISTA DE COMIDAS - DISEÑO CLONADO DE REFERENCIA */}
                 <div className="flex-1 flex flex-col gap-4 pb-40 md:pb-10 overflow-y-auto no-scrollbar pr-1">
                   {(['breakfast', 'lunch', 'dinner'] as MealCategory[]).map((type) => {
                       const slot = plan.find(p => p.date === dateStr && p.type === type);
@@ -148,53 +147,53 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                           <div 
                             key={type} 
                             onClick={() => recipe ? setSelectedRecipe(recipe) : setShowRecipeSelector({date: dateStr, type})} 
-                            className={`relative w-full h-[200px] md:h-[185px] flex-shrink-0 rounded-[2.5rem] md:rounded-[2.8rem] transition-all duration-700 cursor-pointer overflow-hidden group shadow-sm ${recipe ? 'bg-black' : 'bg-white border-2 border-dashed border-gray-100 hover:border-[#0F4E0E]/20'}`}
+                            className={`relative w-full h-[200px] md:h-[210px] flex-shrink-0 rounded-[2.8rem] transition-all duration-700 cursor-pointer overflow-hidden group shadow-sm ${recipe ? 'bg-black' : 'bg-white border-2 border-dashed border-gray-100 hover:border-[#0F4E0E]/20'}`}
                           >
                               {recipe ? (
                                   <>
-                                      {/* CAPA 0: IMAGEN A SANGRE TOTAL */}
+                                      {/* CAPA FONDO: IMAGEN FULL */}
                                       <SmartImage 
                                         src={recipe.image_url} 
                                         alt={recipe.title} 
                                         className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" 
                                       />
                                       
-                                      {/* CAPA 1: DEGRADADO */}
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent z-[1]" />
+                                      {/* CAPA OVERLAY: DEGRADADO CINEMATOGRÁFICO */}
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent z-[1]" />
                                       
-                                      {/* CAPA 2: CONTENIDO FLOTANTE - PADDING MÁS PEQUEÑO EN DESKTOP */}
-                                      <div className="relative z-[2] flex flex-col h-full justify-between p-6 md:p-5 lg:p-6">
+                                      {/* CAPA CONTENIDO: CLON DE REFERENCIA */}
+                                      <div className="relative z-[2] flex flex-col h-full justify-between p-6">
                                           <div className="flex justify-between items-start">
-                                              {/* PÍLDORA MOMENTO GLASS */}
-                                              <div className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/10 flex items-center shadow-lg">
-                                                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white leading-none">
+                                              {/* PÍLDORA CATEGORÍA GLASS (IGUAL A REFERENCIA) */}
+                                              <div className="px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/10 flex items-center shadow-lg">
+                                                  <span className="text-[9px] font-black uppercase tracking-[0.25em] text-white leading-none">
                                                     {type === 'breakfast' ? 'MAÑANA' : type === 'lunch' ? 'COMIDA' : 'CENA'}
                                                   </span>
                                               </div>
                                               
-                                              {/* BOTÓN X GLASS CIRCULAR */}
+                                              {/* BOTÓN X GLASS (OCULTO EN ESCRITORIO HASTA HOVER) */}
                                               <button 
                                                 onClick={(e) => { e.stopPropagation(); onUpdateSlot(dateStr, type, undefined); }} 
-                                                className="w-10 h-10 md:w-9 md:h-9 bg-white/20 hover:bg-red-500 text-white rounded-full backdrop-blur-md shadow-2xl transition-all active:scale-90 flex items-center justify-center border border-white/10 group-hover:opacity-100 md:opacity-0"
+                                                className="w-10 h-10 bg-white/25 hover:bg-red-500 text-white rounded-full backdrop-blur-md shadow-2xl transition-all active:scale-90 flex items-center justify-center border border-white/10 md:opacity-0 group-hover:opacity-100"
                                               >
-                                                  <X className="w-5 h-5 md:w-4 md:h-4 stroke-[3px]" />
+                                                  <X className="w-5 h-5 stroke-[3px]" />
                                               </button>
                                           </div>
                                           
-                                          <div className="space-y-3">
-                                              {/* TÍTULO AJUSTADO PARA DESKTOP (xl) */}
-                                              <h5 className="font-black text-xl md:text-lg lg:text-xl text-white leading-[1.1] capitalize line-clamp-2 tracking-tight drop-shadow-xl">
+                                          <div className="space-y-4">
+                                              {/* TÍTULO BLANCO EXTRA BOLD CAPITALIZE (IGUAL A REFERENCIA) */}
+                                              <h5 className="font-black text-2xl text-white leading-[1.05] capitalize line-clamp-2 tracking-tight drop-shadow-xl">
                                                 {recipe.title}
                                               </h5>
                                               
-                                              {/* PÍLDORAS INFERIORES MÁS COMPACTAS */}
+                                              {/* PÍLDORAS INFERIORES OSCURAS GLASS (IGUAL A REFERENCIA) */}
                                               <div className="flex items-center gap-2">
-                                                  <div className="flex items-center gap-2 bg-black/50 px-3 py-2 rounded-xl backdrop-blur-3xl border border-white/5 shadow-2xl">
-                                                    <Clock className="w-3 h-3 text-white" />
+                                                  <div className="flex items-center gap-2 bg-black/40 px-3.5 py-2.5 rounded-2xl backdrop-blur-2xl border border-white/5 shadow-2xl">
+                                                    <Clock className="w-3.5 h-3.5 text-white" />
                                                     <span className="text-[10px] font-black text-white uppercase tracking-widest">{recipe.prep_time} MIN</span>
                                                   </div>
-                                                  <div className="flex items-center gap-2 bg-black/50 px-3 py-2 rounded-xl backdrop-blur-3xl border border-white/5 shadow-2xl">
-                                                    <BarChart2 className="w-3 h-3 text-white" />
+                                                  <div className="flex items-center gap-2 bg-black/40 px-3.5 py-2.5 rounded-2xl backdrop-blur-2xl border border-white/5 shadow-2xl">
+                                                    <BarChart2 className="w-3.5 h-3.5 text-white" />
                                                     <span className="text-[10px] font-black text-white uppercase tracking-widest">{recipe.difficulty || 'EASY'}</span>
                                                   </div>
                                               </div>
@@ -203,8 +202,8 @@ export const Planner: React.FC<PlannerProps> = ({ user, plan, recipes, pantry, o
                                   </>
                               ) : (
                                   <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center animate-fade-in relative z-[2]">
-                                      <div className="w-12 h-12 md:w-10 md:h-10 rounded-[1.2rem] bg-gray-50 flex items-center justify-center mb-3 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-700 group-hover:scale-110 group-hover:rotate-90">
-                                        <Plus className="w-5 h-5 md:w-4 md:h-4 text-[#0F4E0E] group-hover:text-white" />
+                                      <div className="w-12 h-12 rounded-[1.4rem] bg-gray-50 flex items-center justify-center mb-3 border border-gray-50 group-hover:bg-[#0F4E0E] group-hover:text-white transition-all duration-700 group-hover:scale-110 group-hover:rotate-90">
+                                        <Plus className="w-5 h-5 text-[#0F4E0E] group-hover:text-white" />
                                       </div>
                                       <span className="text-[9px] font-black uppercase tracking-[0.5em] text-gray-300 group-hover:text-[#0F4E0E] transition-all duration-500">{type}</span>
                                   </div>
