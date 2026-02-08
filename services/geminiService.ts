@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai"
 import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../types";
 
 const AI_TICKET_PROMPT = `Eres un experto en analizar tickets de compra de supermercados españoles.
