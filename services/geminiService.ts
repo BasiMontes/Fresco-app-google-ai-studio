@@ -2,25 +2,25 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../types";
 
-const AI_TICKET_PROMPT = `Eres un experto en analizar tickets de compra de supermercados españoles (Mercadona, Lidl, Carrefour, Aldi, etc.).
+const AI_TICKET_PROMPT = `Eres un experto en analizar tickets de compra de supermercados españoles.
 Extrae exclusivamente los productos alimentarios. 
 Reglas críticas:
-1. Normaliza los nombres: Ej. "L. ENT. 1L" -> "Leche Entera", "TOMATE PERA 500G" -> "Tomate Pera".
+1. Normaliza los nombres: Ej. "L. ENT. 1L" -> "Leche Entera".
 2. Categoriza en: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, frozen, other.
-3. Estima días de caducidad realistas para España (ej: Carne Fresca: 3 días, Pasta Seca: 365 días).
-4. IGNORA precios, IVA, totales y productos no alimentarios.
+3. Estima días de caducidad realistas para España.
+4. IGNORA precios y productos no alimentarios.
 Devuelve un JSON estrictamente válido.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
   try {
-    // Inicialización directa según reglas SDK
+    // REGLA: Usar siempre esta inicialización directa
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview', 
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Analiza este ticket y extrae el JSON de productos alimentarios siguiendo las reglas de normalización." }
+          { text: "Analiza este ticket y extrae el JSON de productos siguiendo las reglas." }
         ] 
       },
       config: { 
@@ -29,7 +29,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            supermarket: { type: Type.STRING, description: "Nombre del supermercado" },
+            supermarket: { type: Type.STRING },
             items: {
               type: Type.ARRAY,
               items: {
@@ -37,7 +37,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
                 properties: {
                   name: { type: Type.STRING },
                   quantity: { type: Type.NUMBER },
-                  unit: { type: Type.STRING, description: "uds, kg, l, g, ml" },
+                  unit: { type: Type.STRING },
                   category: { type: Type.STRING },
                   estimated_expiry_days: { type: Type.NUMBER }
                 },
@@ -50,12 +50,11 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       }
     });
 
-    const text = response.text || '{"supermarket": "Desconocido", "items": []}';
-    return JSON.parse(text);
+    return JSON.parse(response.text || '{"supermarket": "Desconocido", "items": []}');
   } catch (error: any) {
-    console.error("Gemini OCR Error:", error);
+    console.error("Gemini Error:", error);
     const msg = error?.message || "";
-    // Solo lanzamos el error de re-selección si el error viene del backend de Google (entidad no encontrada)
+    // Captura específica para forzar re-selección si la clave no es válida en el constructor
     if (msg.includes("Requested entity was not found") || msg.includes("API Key must be set")) {
         throw new Error("RESELECT_KEY");
     }
@@ -106,8 +105,7 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
                 }
             }
         });
-        const text = response.text || '{"plan":[]}';
-        const data = JSON.parse(text);
+        const data = JSON.parse(response.text || '{"plan":[]}');
         return { plan: data.plan, newRecipes: [] };
     } catch (e) {
         console.error("AI Menu Error:", e);

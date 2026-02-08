@@ -14,10 +14,8 @@ interface TicketScannerProps {
 
 const LOADING_MESSAGES = [
     "Leyendo el ticket...",
-    "Normalizando nombres...",
-    "Ignorando precios...",
+    "Analizando productos...",
     "Estimando caducidades...",
-    "Categorizando compra...",
     "Casi listo..."
 ];
 
@@ -66,12 +64,15 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (aiStudio) {
       const hasKey = await aiStudio.hasSelectedApiKey();
       if (!hasKey) {
-        // Disparamos el diálogo pero no bloqueamos el flujo del archivo
-        aiStudio.openSelectKey();
+        // PASO 1: Si no hay clave, abrimos el diálogo y NO abrimos el selector de archivos aún.
+        // Esto garantiza que el usuario elija la clave antes de que el código intente usarla.
+        await aiStudio.openSelectKey();
+        setErrorMessage("Por favor, selecciona tu clave API en el diálogo y vuelve a pulsar el botón.");
+        return;
       }
     }
     
-    // Abrimos el selector de archivos inmediatamente
+    // PASO 2: Si ya hay clave (o tras elegirla), abrimos el selector de archivos.
     fileInputRef.current?.click();
   };
 
@@ -101,17 +102,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setItems(processed);
         setStep('review');
       } catch (err: any) {
-        console.error("Scanner caught error:", err);
+        console.error("Scanner Error:", err);
         if (err.message === "RESELECT_KEY") {
             const aiStudio = (window as any).aistudio;
-            if (aiStudio) {
-                await aiStudio.openSelectKey();
-                setErrorMessage("Tu sesión de IA ha expirado. Por favor, selecciona tu clave de nuevo en el diálogo que ha aparecido e inténtalo otra vez.");
-            } else {
-                setErrorMessage("No hemos detectado una clave de API válida. Configúrala en AI Studio.");
-            }
+            if (aiStudio) await aiStudio.openSelectKey();
+            setErrorMessage("Error de sesión de IA. Selecciona tu clave de nuevo e inténtalo otra vez.");
         } else {
-            setErrorMessage("No hemos podido procesar este ticket. Asegúrate de que la foto sea legible y tenga buena luz.");
+            setErrorMessage("No hemos podido procesar este ticket. Asegúrate de que la foto sea clara.");
         }
         setStep('error');
       }
@@ -163,14 +160,23 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-3xl font-black text-white">Escanear Ticket</h3>
-                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Subre una foto de tu ticket de compra para añadir los productos al stock automáticamente con IA.</p>
+                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Sube una foto de tu ticket. Analizaremos tu compra automáticamente con IA.</p>
               </div>
-              <button 
-                onClick={handleStartScan}
-                className="w-full py-5 bg-white text-[#0F4E0E] rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
-              >
-                HACER FOTO / SUBIR
-              </button>
+              
+              <div className="w-full space-y-4">
+                  {errorMessage && (
+                      <div className="p-4 bg-orange-500/20 border border-orange-500/20 rounded-2xl text-orange-200 text-xs font-bold leading-relaxed animate-fade-in">
+                          {errorMessage}
+                      </div>
+                  )}
+                  <button 
+                    onClick={handleStartScan}
+                    className="w-full py-5 bg-white text-[#0F4E0E] rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
+                  >
+                    HACER FOTO / SUBIR
+                  </button>
+              </div>
+              
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
           )}
@@ -210,7 +216,6 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                 <p className="text-orange-400 text-[10px] font-black uppercase tracking-widest mb-1">{supermarket}</p>
                 <h3 className="text-white font-black text-3xl">Revisar Productos</h3>
               </div>
-              
               <div className="grid gap-3">
                 {items.map((item) => (
                     <div key={item.tempId} className="bg-white rounded-[2rem] p-5 shadow-2xl flex flex-col gap-4 border border-white/5 relative group">
