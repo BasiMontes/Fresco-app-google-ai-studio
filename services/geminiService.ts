@@ -2,11 +2,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../types";
 
-// Generar cliente nuevo en cada llamada para asegurar el uso de la API Key más reciente
-const getAIClient = () => {
-  return new GoogleGenAI({ apiKey: process.env.API_KEY });
-};
-
 const AI_TICKET_PROMPT = `Eres un experto en analizar tickets de compra de supermercados españoles (Mercadona, Lidl, Carrefour, Aldi, etc.).
 Extrae exclusivamente los productos alimentarios. 
 Reglas críticas:
@@ -18,9 +13,10 @@ Devuelve un JSON estrictamente válido.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
   try {
-    const ai = getAIClient();
+    // Inicialización directa según reglas SDK para asegurar que toma la clave más reciente
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3-pro-preview', 
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
@@ -58,8 +54,9 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
     return JSON.parse(text);
   } catch (error: any) {
     console.error("Gemini OCR Error:", error);
-    // Si la entidad no existe, es probable que la API Key sea inválida o haya expirado
-    if (error?.message?.includes("Requested entity was not found")) {
+    const msg = error?.message || "";
+    // Regla: Si falla por entidad no encontrada o clave no seteada, forzar re-selección
+    if (msg.includes("Requested entity was not found") || msg.includes("API Key must be set")) {
         throw new Error("RESELECT_KEY");
     }
     throw error;
@@ -69,7 +66,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
     if (pantry.length === 0) return "Tu despensa está lista.";
     try {
-        const ai = getAIClient();
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: `Dame un consejo de máximo 10 palabras para usar esto que caduca pronto: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
@@ -82,7 +79,7 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
     try {
-        const ai = getAIClient();
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: `Genera un menú semanal para ${user.name}. Stock: ${pantry.map(i => i.name).join(', ')}. Preferencias: ${user.dietary_preferences.join(', ')}.`,

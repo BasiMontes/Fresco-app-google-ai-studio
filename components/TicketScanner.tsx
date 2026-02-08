@@ -67,7 +67,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       const hasKey = await aiStudio.hasSelectedApiKey();
       if (!hasKey) {
         await aiStudio.openSelectKey();
-        // Asumimos éxito según guías
+        // Según las reglas, asumimos éxito tras el trigger
       }
     }
     fileInputRef.current?.click();
@@ -103,9 +103,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             const aiStudio = (window as any).aistudio;
             if (aiStudio) {
                 await aiStudio.openSelectKey();
-                setErrorMessage("La sesión de API ha caducado. Por favor, selecciona tu clave de nuevo e inténtalo otra vez.");
+                setErrorMessage("La sesión de IA necesita una clave válida. Por favor, selecciona tu clave de nuevo e inténtalo otra vez.");
             } else {
-                setErrorMessage("Error de conexión con la IA. Revisa tu clave API.");
+                setErrorMessage("Error de configuración de la clave API.");
             }
         } else {
             setErrorMessage("No hemos podido procesar el ticket. Asegúrate de que la foto sea nítida.");
