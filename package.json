@@ -1,4 +1,3 @@
-
 {
   "name": "fresco-app",
   "private": true,
@@ -10,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@google/genai": "^1.34.0",
+    "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.39.0",
     "canvas-confetti": "^1.9.2",
     "date-fns": "^4.1.0",
