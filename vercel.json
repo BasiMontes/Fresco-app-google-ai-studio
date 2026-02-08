@@ -2,8 +2,8 @@
 {
   "version": 2,
   "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "echo 'Static site - no build needed' && exit 0",
+  "outputDirectory": ".",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
