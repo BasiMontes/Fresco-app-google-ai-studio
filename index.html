@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <script>
       tailwind.config = {
         theme: {
@@ -27,21 +27,21 @@
       }
     </script>
     <style>
-      :root {
-        --safe-top: env(safe-area-inset-top);
-        --safe-bottom: env(safe-area-inset-bottom);
-      }
-      * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-      html, body {
-        min-height: 100%;
-        margin: 0;
-        background-color: #F8F9FA;
-        font-family: 'Satoshi', sans-serif;
-        overflow-x: hidden;
-      }
-      #root {
-        min-height: 100vh;
-      }
+        :root {
+          --safe-area-inset-top: env(safe-area-inset-top);
+          --safe-area-inset-bottom: env(safe-area-inset-bottom);
+        }
+      
+        body {
+          background-color: #F4F4F4;
+          min-height: 100vh;
+          width: 100vw;
+        }
+      
+        #root {
+          height: 100%;
+          width: 100%;
+        }
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
