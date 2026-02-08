@@ -12,15 +12,11 @@ Reglas críticas:
 Devuelve un JSON estrictamente válido.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("RESELECT_KEY");
-  }
-
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    // Inicialización directa según reglas SDK
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview', 
+      model: 'gemini-3-flash-preview', 
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
@@ -59,6 +55,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
   } catch (error: any) {
     console.error("Gemini OCR Error:", error);
     const msg = error?.message || "";
+    // Solo lanzamos el error de re-selección si el error viene del backend de Google (entidad no encontrada)
     if (msg.includes("Requested entity was not found") || msg.includes("API Key must be set")) {
         throw new Error("RESELECT_KEY");
     }
@@ -67,11 +64,9 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 };
 
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) return "Configura tu API Key para recibir consejos.";
-    
+    if (pantry.length === 0) return "Tu despensa está lista.";
     try {
-        const ai = new GoogleGenAI({ apiKey });
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: `Dame un consejo de máximo 10 palabras para usar esto que caduca pronto: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
@@ -83,11 +78,8 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
 };
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) return { plan: [], newRecipes: [] };
-
     try {
-        const ai = new GoogleGenAI({ apiKey });
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: `Genera un menú semanal para ${user.name}. Stock: ${pantry.map(i => i.name).join(', ')}. Preferencias: ${user.dietary_preferences.join(', ')}.`,

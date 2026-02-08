@@ -66,15 +66,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (aiStudio) {
       const hasKey = await aiStudio.hasSelectedApiKey();
       if (!hasKey) {
-        await aiStudio.openSelectKey();
-        // Las reglas dictan proceder asumiendo éxito tras el trigger del diálogo
+        // Disparamos el diálogo pero no bloqueamos el flujo del archivo
+        aiStudio.openSelectKey();
       }
     }
     
-    // Pequeño delay para permitir que el diálogo de clave se procese antes de abrir el explorador de archivos
-    setTimeout(() => {
-        fileInputRef.current?.click();
-    }, 100);
+    // Abrimos el selector de archivos inmediatamente
+    fileInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,12 +106,12 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             const aiStudio = (window as any).aistudio;
             if (aiStudio) {
                 await aiStudio.openSelectKey();
-                setErrorMessage("La sesión de IA necesita una clave válida. Selecciona tu clave e inténtalo de nuevo.");
+                setErrorMessage("Tu sesión de IA ha expirado. Por favor, selecciona tu clave de nuevo en el diálogo que ha aparecido e inténtalo otra vez.");
             } else {
-                setErrorMessage("No se detectó una API Key configurada.");
+                setErrorMessage("No hemos detectado una clave de API válida. Configúrala en AI Studio.");
             }
         } else {
-            setErrorMessage("Error al procesar el ticket. Prueba con una foto más nítida.");
+            setErrorMessage("No hemos podido procesar este ticket. Asegúrate de que la foto sea legible y tenga buena luz.");
         }
         setStep('error');
       }
@@ -165,7 +163,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-3xl font-black text-white">Escanear Ticket</h3>
-                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Detectaremos tus productos automáticamente con IA Pro.</p>
+                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Subre una foto de tu ticket de compra para añadir los productos al stock automáticamente con IA.</p>
               </div>
               <button 
                 onClick={handleStartScan}
@@ -196,7 +194,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <AlertCircle className="w-10 h-10 text-red-400" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-2xl font-black text-white leading-none">Error de Configuración</h3>
+                <h3 className="text-2xl font-black text-white leading-none">Vaya... algo falló</h3>
                 <p className="text-teal-100/60 font-medium text-sm leading-relaxed">{errorMessage}</p>
               </div>
               <div className="w-full space-y-3">
