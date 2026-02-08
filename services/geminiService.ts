@@ -2,17 +2,19 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../types";
 
+// Generar cliente nuevo en cada llamada para asegurar el uso de la API Key más reciente
 const getAIClient = () => {
-  return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
-const AI_TICKET_PROMPT = `Actúa como un experto en OCR de tickets de supermercado español (Mercadona, Lidl, Carrefour, Aldi, Eroski, etc.). 
-Analiza la imagen del ticket y extrae exclusivamente los productos alimentarios.
-Reglas:
-1. Normaliza los nombres: "L. ENT. 1L" -> "Leche Entera".
-2. Categoriza cada item en: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, frozen, other.
+const AI_TICKET_PROMPT = `Eres un experto en analizar tickets de compra de supermercados españoles (Mercadona, Lidl, Carrefour, Aldi, etc.).
+Extrae exclusivamente los productos alimentarios. 
+Reglas críticas:
+1. Normaliza los nombres: Ej. "L. ENT. 1L" -> "Leche Entera", "TOMATE PERA 500G" -> "Tomate Pera".
+2. Categoriza en: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, frozen, other.
 3. Estima días de caducidad realistas para España (ej: Carne Fresca: 3 días, Pasta Seca: 365 días).
-4. Devuelve un JSON estrictamente válido.`;
+4. IGNORA precios, IVA, totales y productos no alimentarios.
+Devuelve un JSON estrictamente válido.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
   try {
@@ -22,7 +24,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Analiza este ticket y extrae el JSON de productos." }
+          { text: "Analiza este ticket y extrae el JSON de productos siguiendo las reglas de normalización." }
         ] 
       },
       config: { 
@@ -52,9 +54,14 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       }
     });
 
-    return JSON.parse(response.text || '{"supermarket": "Desconocido", "items": []}');
-  } catch (error) {
+    const text = response.text || '{"supermarket": "Desconocido", "items": []}';
+    return JSON.parse(text);
+  } catch (error: any) {
     console.error("Gemini OCR Error:", error);
+    // Si la entidad no existe, es probable que la API Key sea inválida o haya expirado
+    if (error?.message?.includes("Requested entity was not found")) {
+        throw new Error("RESELECT_KEY");
+    }
     throw error;
   }
 };
@@ -102,7 +109,8 @@ export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[],
                 }
             }
         });
-        const data = JSON.parse(response.text || '{"plan":[]}');
+        const text = response.text || '{"plan":[]}';
+        const data = JSON.parse(text);
         return { plan: data.plan, newRecipes: [] };
     } catch (e) {
         console.error("AI Menu Error:", e);

@@ -85,6 +85,12 @@ const App: React.FC = () => {
     } else { setView('onboarding'); }
   };
 
+  const handleAddManyPantry = useCallback((items: PantryItem[]) => {
+    if (!userId) return;
+    setPantry(prev => [...prev, ...items]);
+    db.addPantryItemsBulkDB(userId, items);
+  }, [userId]);
+
   const handleUpdateMealSlot = useCallback((date: string, type: MealCategory, recipeId: string | undefined) => {
     if (!userId) return;
     const newSlot = { date, type, recipeId, servings: user?.household_size || 2, isCooked: false };
@@ -101,7 +107,7 @@ const App: React.FC = () => {
   const handleClearPlan = useCallback(async () => {
     if (!userId) return;
     setMealPlan([]); 
-    setDialogOptions(null); // Asegura cierre de diálogo tras confirmar
+    setDialogOptions(null); 
     try {
       await db.clearMealPlanDB(userId);
     } catch (error) {
@@ -167,9 +173,22 @@ const App: React.FC = () => {
             <div className="w-full max-w-7xl mx-auto p-0 md:p-4 pb-40 md:pb-4 min-h-full">
                 <div className="bg-[#FDFDFD] md:rounded-[2.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.02)] border-0 md:border md:border-gray-100 p-0 md:p-4 h-full min-h-screen md:min-h-[calc(100vh-2rem)]">
                     <Suspense fallback={<PageLoader />}>
-                        {activeTab === 'dashboard' && user && <Dashboard user={user} pantry={pantry} mealPlan={mealPlan} recipes={recipes} onNavigate={setActiveTab} onQuickRecipe={() => {}} onResetApp={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
+                        {activeTab === 'dashboard' && user && (
+                          <Dashboard 
+                            user={user} 
+                            pantry={pantry} 
+                            mealPlan={mealPlan} 
+                            recipes={recipes} 
+                            onNavigate={setActiveTab} 
+                            onQuickRecipe={() => {}} 
+                            onResetApp={() => {}} 
+                            favoriteIds={favoriteIds} 
+                            onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])}
+                            onAddManyPantry={handleAddManyPantry}
+                          />
+                        )}
                         {activeTab === 'planner' && user && <Planner user={user} plan={mealPlan} recipes={recipes} pantry={pantry} onUpdateSlot={handleUpdateMealSlot} onAIPlanGenerated={(p, r) => { setRecipes(prev => [...prev, ...r]); setMealPlan(prev => [...prev, ...p]); }} onClear={handleClearPlan} />}
-                        {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={() => {}} onAddMany={items => setPantry(p => [...p, ...items])} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} />}
+                        {activeTab === 'pantry' && <Pantry items={pantry} onRemove={id => setPantry(p => p.filter(x => x.id !== id))} onAdd={i => setPantry(p => [...p, i])} onUpdateQuantity={() => {}} onAddMany={handleAddManyPantry} onEdit={i => setPantry(p => p.map(x => x.id === i.id ? i : x))} />}
                         {activeTab === 'recipes' && user && <Recipes recipes={recipes} user={user} pantry={pantry} onAddRecipes={r => setRecipes(p => [...p, ...r])} onAddToPlan={() => {}} onCookFinish={() => {}} onAddToShoppingList={() => {}} favoriteIds={favoriteIds} onToggleFavorite={id => setFavoriteIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])} />}
                         {activeTab === 'shopping' && user && <ShoppingList plan={mealPlan} recipes={recipes} pantry={pantry} user={user} dbItems={shoppingList} onAddShoppingItem={i => setShoppingList(p => [...p, ...i])} onUpdateShoppingItem={i => setShoppingList(p => p.map(x => x.id === i.id ? i : x))} onRemoveShoppingItem={id => setShoppingList(p => p.filter(x => x.id !== id))} onFinishShopping={items => setPantry(p => [...p, ...items])} onOpenRecipe={() => {}} onSyncServings={() => {}} />}
                         {activeTab === 'profile' && user && <Profile user={user} onUpdate={u => setUser(u)} onLogout={() => supabase.auth.signOut()} onReset={() => {}} onNavigate={setActiveTab} />}
