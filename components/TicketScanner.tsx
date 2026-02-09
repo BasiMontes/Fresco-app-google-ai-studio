@@ -58,15 +58,14 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (aiStudio) {
       const hasKey = await aiStudio.hasSelectedApiKey();
       if (!hasKey) {
-        // PASO 1: Si no hay clave, abrimos el diálogo y NO activamos el selector de archivos.
-        // Esto garantiza que el usuario elija la clave antes de que el código intente usarla.
+        // PASO 1: Forzar selección y detener flujo de archivo
         await aiStudio.openSelectKey();
-        setErrorMessage("Por favor, selecciona tu clave API en el diálogo superior y vuelve a pulsar el botón 'SUBIR'.");
+        setErrorMessage("IA activada. Ahora, pulsa de nuevo 'SUBIR' para elegir tu ticket.");
         return;
       }
     }
     
-    // PASO 2: Si ya hay clave (o tras la selección en el siguiente click), abrimos el archivo.
+    // PASO 2: Solo si hay clave, permitimos abrir archivos
     setErrorMessage("");
     fileInputRef.current?.click();
   };
@@ -83,7 +82,6 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       try {
         setStep('analyzing');
         const base64Data = (reader.result as string).split(',')[1];
-        // Llamada JIT al servicio
         const data = await extractItemsFromTicket(base64Data, file.type);
         
         setSupermarket(data.supermarket || 'Ticket Detectado');
@@ -100,13 +98,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setItems(processed);
         setStep('review');
       } catch (err: any) {
-        console.error("Scanner Error Catch:", err);
+        console.error("Scanner Error Handler:", err);
         if (err.message === "RESELECT_KEY") {
             const aiStudio = (window as any).aistudio;
             if (aiStudio) await aiStudio.openSelectKey();
-            setErrorMessage("Sesión de IA expirada. Selecciona tu clave de nuevo en el diálogo y reintenta.");
+            setErrorMessage("Sesión de IA expirada o clave no válida. Por favor, selecciona tu clave de nuevo y pulsa 'REINTENTAR'.");
         } else {
-            setErrorMessage("No hemos podido leer este ticket. Asegúrate de que la foto sea clara.");
+            setErrorMessage("No hemos podido leer este ticket. Asegúrate de que la foto sea clara y nítida.");
         }
         setStep('error');
       }
@@ -154,12 +152,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-4xl font-black text-white leading-none">Escanear Ticket</h3>
-                <p className="text-teal-100/50 font-medium text-base px-6">Actualiza tu stock automáticamente con IA analizando tu ticket de compra.</p>
+                <p className="text-teal-100/50 font-medium text-base px-6">Detectaremos tus productos automáticamente usando IA.</p>
               </div>
 
               {errorMessage && (
-                  <div className="p-4 bg-orange-500/20 border border-orange-500/20 rounded-2xl text-orange-100 text-xs font-bold leading-relaxed animate-fade-in">
-                      {errorMessage}
+                  <div className="p-5 bg-orange-500/20 border border-orange-500/20 rounded-2xl text-orange-100 text-xs font-black leading-relaxed animate-fade-in flex items-center gap-3">
+                      <AlertCircle className="w-5 h-5 shrink-0 text-orange-400" />
+                      <span>{errorMessage}</span>
                   </div>
               )}
 
@@ -185,7 +184,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-2xl font-black text-white">{LOADING_MESSAGES[loadingMessageIdx]}</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Cargando motores de IA...</p>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Iniciando motores de IA...</p>
               </div>
             </div>
           )}
