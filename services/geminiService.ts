@@ -3,23 +3,24 @@ import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../type
 
 const AI_TICKET_PROMPT = `Eres un experto en analizar tickets de supermercados españoles.
 Extrae exclusivamente productos alimentarios. 
-Reglas:
+Reglas Críticas:
 1. Normaliza nombres (ej: "L. ENT. 1L" -> "Leche Entera").
 2. Categoriza en: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, frozen, other.
-3. Estima días de caducidad realistas para España.
-4. IGNORA precios y productos no alimentarios.
-Devuelve un JSON estrictamente válido.`;
+3. Estima días de caducidad realistas para el mercado español.
+4. IGNORA precios, IVAs y productos no alimentarios.
+Devuelve un JSON estrictamente válido según el esquema.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
   try {
-    // REGLA DE ORO: Instanciar siempre dentro de la función para capturar el env dinámico
+    // REGLA OBLIGATORIA: Inicializar siempre justo antes de usar para capturar la clave del entorno
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview', 
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Analiza el ticket y extrae el JSON de productos alimentarios." }
+          { text: "Analiza este ticket de compra y devuelve el JSON de productos alimentarios." }
         ] 
       },
       config: { 
@@ -49,11 +50,12 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       }
     });
 
-    return JSON.parse(response.text || '{"supermarket": "Desconocido", "items": []}');
+    const text = response.text || '{"supermarket": "Desconocido", "items": []}';
+    return JSON.parse(text);
   } catch (error: any) {
-    console.error("Gemini Error:", error);
+    console.error("Gemini Critical Error:", error);
     const msg = error?.message || "";
-    // Solo pedimos re-selección si el error es explícito de clave no encontrada
+    // Manejo proactivo de errores de clave
     if (msg.includes("Requested entity was not found") || msg.includes("API Key must be set")) {
         throw new Error("RESELECT_KEY");
     }
@@ -67,7 +69,7 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
-            contents: `Dame un consejo de máximo 10 palabras para usar esto: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
+            contents: `Dame un consejo de máximo 10 palabras para aprovechar esto que tengo en stock: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
         });
         return response.text || "Organiza tu cocina hoy.";
     } catch {

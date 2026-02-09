@@ -58,10 +58,17 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (aiStudio) {
       const hasKey = await aiStudio.hasSelectedApiKey();
       if (!hasKey) {
+        // PASO 1: Si no hay clave, abrimos el diálogo y NO activamos el selector de archivos.
+        // Esto garantiza que el usuario elija la clave antes de que el código intente usarla.
         await aiStudio.openSelectKey();
+        setErrorMessage("Por favor, selecciona tu clave API en el diálogo superior y vuelve a pulsar el botón 'SUBIR'.");
+        return;
       }
     }
-    setTimeout(() => fileInputRef.current?.click(), 250);
+    
+    // PASO 2: Si ya hay clave (o tras la selección en el siguiente click), abrimos el archivo.
+    setErrorMessage("");
+    fileInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,9 +83,10 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       try {
         setStep('analyzing');
         const base64Data = (reader.result as string).split(',')[1];
+        // Llamada JIT al servicio
         const data = await extractItemsFromTicket(base64Data, file.type);
         
-        setSupermarket(data.supermarket || 'Ticket de Compra');
+        setSupermarket(data.supermarket || 'Ticket Detectado');
         const processed = (data.items || []).map((i: any, idx: number) => ({
             ...i,
             tempId: `item-${Date.now()}-${idx}`,
@@ -96,9 +104,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         if (err.message === "RESELECT_KEY") {
             const aiStudio = (window as any).aistudio;
             if (aiStudio) await aiStudio.openSelectKey();
-            setErrorMessage("Sesión expirada. Por favor, selecciona de nuevo tu clave en el diálogo y pulsa 'REINTENTAR'.");
+            setErrorMessage("Sesión de IA expirada. Selecciona tu clave de nuevo en el diálogo y reintenta.");
         } else {
-            setErrorMessage("No hemos podido leer este ticket. Asegúrate de que la foto sea clara y nítida.");
+            setErrorMessage("No hemos podido leer este ticket. Asegúrate de que la foto sea clara.");
         }
         setStep('error');
       }
@@ -140,14 +148,21 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             <div className="h-full flex flex-col items-center justify-center text-center space-y-10 animate-slide-up max-w-sm mx-auto">
               <div className="w-28 h-28 bg-white/10 rounded-[3rem] flex items-center justify-center shadow-2xl relative border border-white/10">
                  <Camera className="w-12 h-12 text-orange-400" />
-                 <div className="absolute -top-2 -right-2 w-10 h-10 bg-teal-500 rounded-2xl flex items-center justify-center animate-pulse shadow-lg">
+                 <div className="absolute -top-2 -right-2 w-10 h-10 bg-teal-50 rounded-2xl flex items-center justify-center animate-pulse shadow-lg">
                     <Sparkles className="w-5 h-5 text-white" />
                  </div>
               </div>
               <div className="space-y-4">
                 <h3 className="text-4xl font-black text-white leading-none">Escanear Ticket</h3>
-                <p className="text-teal-100/50 font-medium text-base px-6">Analizaremos tu compra automáticamente con IA para actualizar tu stock.</p>
+                <p className="text-teal-100/50 font-medium text-base px-6">Actualiza tu stock automáticamente con IA analizando tu ticket de compra.</p>
               </div>
+
+              {errorMessage && (
+                  <div className="p-4 bg-orange-500/20 border border-orange-500/20 rounded-2xl text-orange-100 text-xs font-bold leading-relaxed animate-fade-in">
+                      {errorMessage}
+                  </div>
+              )}
+
               <button 
                 onClick={handleStartScan}
                 className="w-full py-6 bg-white text-[#0F4E0E] rounded-[2.5rem] font-black text-xs uppercase tracking-[0.25em] shadow-2xl active:scale-95 transition-all"
@@ -170,7 +185,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-2xl font-black text-white">{LOADING_MESSAGES[loadingMessageIdx]}</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Esto puede tardar unos segundos</p>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Cargando motores de IA...</p>
               </div>
             </div>
           )}
