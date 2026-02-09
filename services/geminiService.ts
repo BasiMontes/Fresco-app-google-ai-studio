@@ -3,29 +3,31 @@ import { Recipe, UserProfile, PantryItem, MealSlot, MealCategory } from "../type
 
 const AI_TICKET_PROMPT = `Eres un experto en analizar tickets de supermercados españoles.
 Extrae exclusivamente productos alimentarios. 
-Reglas Críticas:
+Reglas:
 1. Normaliza nombres (ej: "L. ENT. 1L" -> "Leche Entera").
 2. Categoriza en: vegetables, fruits, dairy, meat, fish, pasta, legumes, bakery, drinks, pantry, frozen, other.
 3. Estima días de caducidad realistas para España.
-4. IGNORA precios y productos no alimentarios.
+IGNORA precios y productos no alimentarios.
 Devuelve un JSON estrictamente válido.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
-  try {
-    // REGLA CRÍTICA: No llamar al constructor si la clave no está en el env
-    if (!process.env.API_KEY || process.env.API_KEY === "") {
-        console.warn("API Key missing in environment, throwing RESELECT_KEY");
-        throw new Error("RESELECT_KEY");
-    }
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey || apiKey === "") {
+    console.error("API Key is missing in environment");
+    throw new Error("RESELECT_KEY");
+  }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  try {
+    // Instanciación JIT para asegurar que capturamos la clave más reciente
+    const ai = new GoogleGenAI({ apiKey });
     
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview', 
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Analiza este ticket y devuelve el JSON de productos." }
+          { text: "Extrae los productos alimentarios de este ticket en formato JSON." }
         ] 
       },
       config: { 
@@ -55,12 +57,13 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       }
     });
 
-    return JSON.parse(response.text || '{"supermarket": "Desconocido", "items": []}');
+    const result = response.text || '{"supermarket": "Ticket", "items": []}';
+    return JSON.parse(result);
   } catch (error: any) {
-    console.error("Gemini Critical Catch:", error);
+    console.error("Gemini critical failure:", error);
     const msg = error?.message || "";
-    // Manejo proactivo si el SDK falla o si nosotros lanzamos la falta de clave
-    if (msg.includes("RESELECT_KEY") || msg.includes("Requested entity was not found") || msg.includes("API Key must be set")) {
+    // Identificamos el error específico de Google para disparar el flujo de clave
+    if (msg.includes("Requested entity was not found") || msg.includes("API Key must be set")) {
         throw new Error("RESELECT_KEY");
     }
     throw error;

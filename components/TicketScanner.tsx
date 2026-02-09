@@ -58,15 +58,11 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (aiStudio) {
       const hasKey = await aiStudio.hasSelectedApiKey();
       if (!hasKey) {
-        // PASO 1: Forzar selección y detener flujo de archivo
+        // Regla: Asumir éxito tras disparar el diálogo para evitar bloqueos
         await aiStudio.openSelectKey();
-        setErrorMessage("IA activada. Ahora, pulsa de nuevo 'SUBIR' para elegir tu ticket.");
-        return;
       }
     }
-    
-    // PASO 2: Solo si hay clave, permitimos abrir archivos
-    setErrorMessage("");
+    // Procedemos a abrir el explorador de archivos directamente
     fileInputRef.current?.click();
   };
 
@@ -98,13 +94,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setItems(processed);
         setStep('review');
       } catch (err: any) {
-        console.error("Scanner Error Handler:", err);
+        console.error("Scanner catch-all:", err);
         if (err.message === "RESELECT_KEY") {
             const aiStudio = (window as any).aistudio;
             if (aiStudio) await aiStudio.openSelectKey();
-            setErrorMessage("Sesión de IA expirada o clave no válida. Por favor, selecciona tu clave de nuevo y pulsa 'REINTENTAR'.");
+            setErrorMessage("Sesión de IA expirada o clave no configurada. Selecciona tu clave en el diálogo superior y pulsa 'REINTENTAR'.");
         } else {
-            setErrorMessage("No hemos podido leer este ticket. Asegúrate de que la foto sea clara y nítida.");
+            setErrorMessage("No hemos podido leer el ticket. Prueba con una foto más nítida.");
         }
         setStep('error');
       }
@@ -146,19 +142,18 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             <div className="h-full flex flex-col items-center justify-center text-center space-y-10 animate-slide-up max-w-sm mx-auto">
               <div className="w-28 h-28 bg-white/10 rounded-[3rem] flex items-center justify-center shadow-2xl relative border border-white/10">
                  <Camera className="w-12 h-12 text-orange-400" />
-                 <div className="absolute -top-2 -right-2 w-10 h-10 bg-teal-50 rounded-2xl flex items-center justify-center animate-pulse shadow-lg">
+                 <div className="absolute -top-2 -right-2 w-10 h-10 bg-teal-500 rounded-2xl flex items-center justify-center animate-pulse shadow-lg">
                     <Sparkles className="w-5 h-5 text-white" />
                  </div>
               </div>
               <div className="space-y-4">
                 <h3 className="text-4xl font-black text-white leading-none">Escanear Ticket</h3>
-                <p className="text-teal-100/50 font-medium text-base px-6">Detectaremos tus productos automáticamente usando IA.</p>
+                <p className="text-teal-100/50 font-medium text-base px-6">Usa la cámara para detectar automáticamente tus productos.</p>
               </div>
 
               {errorMessage && (
-                  <div className="p-5 bg-orange-500/20 border border-orange-500/20 rounded-2xl text-orange-100 text-xs font-black leading-relaxed animate-fade-in flex items-center gap-3">
-                      <AlertCircle className="w-5 h-5 shrink-0 text-orange-400" />
-                      <span>{errorMessage}</span>
+                  <div className="p-5 bg-orange-500/20 border border-orange-500/20 rounded-2xl text-orange-100 text-xs font-black leading-relaxed animate-fade-in">
+                      {errorMessage}
                   </div>
               )}
 
@@ -184,7 +179,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-2xl font-black text-white">{LOADING_MESSAGES[loadingMessageIdx]}</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Iniciando motores de IA...</p>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Conectando con Google Gemini...</p>
               </div>
             </div>
           )}
