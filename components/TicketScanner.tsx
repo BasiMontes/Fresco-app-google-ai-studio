@@ -12,10 +12,10 @@ interface TicketScannerProps {
 }
 
 const LOADING_MESSAGES = [
-    "Sincronizando con Gemini...",
+    "Contactando con Gemini...",
     "Leyendo ticket...",
-    "Identificando ingredientes...",
-    "Estimando caducidad...",
+    "Procesando ingredientes...",
+    "Calculando caducidad...",
     "Casi listo..."
 ];
 
@@ -54,14 +54,19 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   }, [step]);
 
   const handleStartScan = async () => {
+    setErrorMessage("");
+    
+    // Comprobar clave antes de disparar nada
     const aiStudio = (window as any).aistudio;
     if (aiStudio) {
       const hasKey = await aiStudio.hasSelectedApiKey();
       if (!hasKey) {
-        // REGLA: Abrimos selector y procedemos de inmediato para evitar race condition
+        // Disparamos selector de clave de Google
         await aiStudio.openSelectKey();
+        // Según reglas de Google, procedemos de inmediato asumiendo éxito
       }
     }
+    
     fileInputRef.current?.click();
   };
 
@@ -78,7 +83,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setStep('analyzing');
         const base64Data = (reader.result as string).split(',')[1];
         
-        // La instanciación de Gemini ocurre DENTRO de esta llamada ahora
+        // Llamada al servicio que ahora es tolerante al arranque
         const data = await extractItemsFromTicket(base64Data, file.type);
         
         setSupermarket(data.supermarket || 'Ticket');
@@ -95,13 +100,14 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setItems(processed);
         setStep('review');
       } catch (err: any) {
-        console.error("Scanner Capture:", err);
+        console.error("Scanner Error Catch:", err);
+        
         if (err.message === "RESELECT_KEY") {
             const aiStudio = (window as any).aistudio;
             if (aiStudio) await aiStudio.openSelectKey();
-            setErrorMessage("Selecciona tu clave de API arriba y pulsa 'REINTENTAR'.");
+            setErrorMessage("Por favor, selecciona tu clave de API arriba y pulsa el botón naranja 'REINTENTAR'.");
         } else {
-            setErrorMessage("No hemos podido procesar la imagen. Inténtalo de nuevo con más luz.");
+            setErrorMessage("No hemos podido analizar la imagen. Prueba con otra foto.");
         }
         setStep('error');
       }
@@ -148,15 +154,15 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  </div>
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black text-white leading-none">Escanear Ticket</h3>
-                <p className="text-teal-100/50 font-medium text-base px-6">Detectaremos tus productos en segundos usando Google Gemini.</p>
+                <h3 className="text-4xl font-black text-white leading-none tracking-tight">Escaneo IA</h3>
+                <p className="text-teal-100/50 font-medium text-base px-6">Usa Google Gemini para identificar tus ingredientes automáticamente.</p>
               </div>
 
               <button 
                 onClick={handleStartScan}
                 className="w-full py-6 bg-white text-[#0F4E0E] rounded-[2.5rem] font-black text-xs uppercase tracking-[0.25em] shadow-2xl active:scale-95 transition-all"
               >
-                SUBIR TICKET
+                SUBIR FOTO TICKET
               </button>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
@@ -174,7 +180,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-2xl font-black text-white">{LOADING_MESSAGES[loadingMessageIdx]}</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Procesando IA...</p>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Procesando con Gemini...</p>
               </div>
             </div>
           )}
