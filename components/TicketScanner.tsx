@@ -1,6 +1,5 @@
-
-import React, { useState, useRef } from 'react';
-import { X, Camera, FileText, CheckCircle2, Plus, Minus, Trash2, ChevronDown, AlertCircle, ShoppingBag, ExternalLink, RefreshCw } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Camera, FileText, CheckCircle2, Plus, Minus, Trash2, ChevronDown, AlertCircle, ShoppingBag, ExternalLink, RefreshCw, Loader2, Sparkles } from 'lucide-react';
 import { extractItemsFromTicket } from '../services/geminiService';
 import { PantryItem } from '../types';
 import { format, addDays } from 'date-fns';
@@ -11,6 +10,14 @@ interface TicketScannerProps {
   onClose: () => void;
   onAddItems: (items: PantryItem[]) => void;
 }
+
+const LOADING_MESSAGES = [
+    "Iniciando Visión Pro...",
+    "Leyendo el ticket...",
+    "Analizando productos...",
+    "Estimando caducidades...",
+    "Casi listo..."
+];
 
 const CATEGORIES = [
     { id: 'vegetables', label: 'Verduras', emoji: '🥦' },
@@ -32,7 +39,18 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const [items, setItems] = useState<any[]>([]);
   const [supermarket, setSupermarket] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [loadingMessageIdx, setLoadingMessageIdx] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let interval: number;
+    if (step === 'analyzing') {
+        interval = window.setInterval(() => {
+            setLoadingMessageIdx(prev => (prev + 1) % LOADING_MESSAGES.length);
+        }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [step]);
 
   const resetScanner = () => {
     setStep('idle');
@@ -41,27 +59,20 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const checkAndOpenKeySelector = async (): Promise<boolean> => {
-    // Si la clave ya está en process.env (por nuestro puente de Vercel), no pedimos nada
-    if (process.env.API_KEY) return true;
-
+  const handleStartScan = async () => {
     const aiStudio = (window as any).aistudio;
     if (aiStudio) {
       const hasKey = await aiStudio.hasSelectedApiKey();
       if (!hasKey) {
+        // Regla: Trigger diálogo y asumir éxito
         await aiStudio.openSelectKey();
-        return true;
       }
-      return true;
     }
-    return true; 
-  };
-
-  const handleStartScan = async () => {
-    const ready = await checkAndOpenKeySelector();
-    if (ready) {
-      fileInputRef.current?.click();
-    }
+    
+    // Pequeño delay de 200ms para asegurar que el explorador de archivos no bloquee el diálogo de clave
+    setTimeout(() => {
+        fileInputRef.current?.click();
+    }, 200);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,7 +87,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         const base64Data = (reader.result as string).split(',')[1];
         const data = await extractItemsFromTicket(base64Data, file.type);
         
-        setSupermarket(data.supermarket || 'Ticket de Compra');
+        setSupermarket(data.supermarket || 'Ticket Detectado');
         const processed = (data.items || []).map((i: any, idx: number) => ({
             ...i,
             tempId: `item-${Date.now()}-${idx}`,
@@ -90,11 +101,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setItems(processed);
         setStep('review');
       } catch (err: any) {
-        console.error("Scanner Error Details:", err);
-        if (err.message === "MISSING_API_KEY") {
-            setErrorMessage("No detectamos tu VITE_API_KEY. Si estás en Vercel, asegúrate de que el nombre sea exacto y hayas redeplegado.");
+        console.error("Scanner Error:", err);
+        if (err.message === "RESELECT_KEY") {
+            const aiStudio = (window as any).aistudio;
+            if (aiStudio) await aiStudio.openSelectKey();
+            setErrorMessage("La sesión de IA ha expirado o la clave no es válida. Selecciona tu clave de nuevo e inténtalo otra vez.");
         } else {
-            setErrorMessage("No hemos podido procesar la imagen. Intenta con una foto más clara.");
+            setErrorMessage("No hemos podido procesar este ticket. Asegúrate de que la foto sea clara y nítida.");
         }
         setStep('error');
       }
@@ -124,15 +137,6 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     onClose();
   };
 
-  const handleRetryKey = async () => {
-    if ((window as any).aistudio) {
-        await (window as any).aistudio.openSelectKey();
-    } else {
-        window.location.reload(); // En Vercel, refrescar para intentar pillar la variable de nuevo
-    }
-    resetScanner();
-  };
-
   return (
     <ModalPortal>
       <div className="fixed inset-0 z-[5000] bg-[#0F4E0E] flex flex-col animate-fade-in overflow-hidden">
@@ -147,12 +151,15 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         <div className="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar">
           {step === 'idle' && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-8 animate-slide-up max-w-sm mx-auto">
-              <div className="w-24 h-24 bg-white/10 rounded-[2.5rem] flex items-center justify-center shadow-2xl">
+              <div className="w-24 h-24 bg-white/10 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative">
                  <Camera className="w-10 h-10 text-teal-400" />
+                 <div className="absolute -top-1 -right-1 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                    <Sparkles className="w-3.5 h-3.5 text-white" />
+                 </div>
               </div>
               <div className="space-y-4">
                 <h3 className="text-3xl font-black text-white">Escanear Ticket</h3>
-                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Detectaremos tus productos automáticamente con IA.</p>
+                <p className="text-teal-100/60 font-medium text-sm leading-relaxed px-4">Detectaremos tus productos automáticamente usando IA de última generación.</p>
               </div>
               <button 
                 onClick={handleStartScan}
@@ -171,8 +178,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <FileText className="absolute inset-0 m-auto w-12 h-12 text-white animate-pulse" />
               </div>
               <div className="w-full max-w-xs space-y-4">
-                <h3 className="text-2xl font-black text-white">Procesando...</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse italic">Analizando imagen y extrayendo datos</p>
+                <h3 className="text-2xl font-black text-white">{LOADING_MESSAGES[loadingMessageIdx]}</h3>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.4em] animate-pulse italic">Cargando motores de IA...</p>
               </div>
             </div>
           )}
@@ -183,22 +190,12 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <AlertCircle className="w-10 h-10 text-red-400" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-2xl font-black text-white leading-none">Error de Configuración</h3>
+                <h3 className="text-2xl font-black text-white leading-none">Error de Conexión</h3>
                 <p className="text-teal-100/60 font-medium text-sm leading-relaxed">{errorMessage}</p>
-                <div className="bg-black/20 p-4 rounded-xl text-left border border-white/5">
-                    <p className="text-[9px] text-teal-400 font-black uppercase tracking-widest mb-2 underline">Checklist para Vercel:</p>
-                    <ul className="text-[10px] text-teal-100/60 space-y-1 font-bold">
-                        <li>• Variable: <span className="text-orange-400">VITE_API_KEY</span></li>
-                        <li>• Valor: Tu clave de Google AI Studio</li>
-                        <li>• Entorno: Production / Preview</li>
-                    </ul>
-                </div>
               </div>
               <div className="w-full space-y-3">
-                <button onClick={handleRetryKey} className="w-full py-5 bg-orange-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">REINTENTAR / ACTUALIZAR</button>
-                <button onClick={resetScanner} className="w-full py-4 text-teal-300 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
-                    <RefreshCw className="w-3 h-3" /> CANCELAR
-                </button>
+                <button onClick={resetScanner} className="w-full py-5 bg-orange-500 text-white rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">REINTENTAR</button>
+                <button onClick={onClose} className="w-full py-4 text-teal-300 font-bold text-[10px] uppercase tracking-widest">CANCELAR</button>
               </div>
             </div>
           )}

@@ -16,6 +16,7 @@ interface DashboardProps {
   onQuickRecipe: (ingredientName: string) => void; 
   onResetApp: () => void;
   onQuickConsume?: (id: string) => void;
+  onAddManyPantry?: (items: PantryItem[]) => void;
   isOnline?: boolean;
   onAddToPlan?: (recipe: Recipe, servings: number, date?: string, type?: MealCategory) => void; 
   favoriteIds?: string[];
@@ -92,7 +93,7 @@ const UnifiedRecipeCard: React.FC<{
     </div>
 );
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true, favoriteIds = [], onToggleFavorite }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [], recipes = [], onNavigate, onAddToPlan, isOnline = true, favoriteIds = [], onToggleFavorite, onAddManyPantry }) => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'favorites' | 'notifications'>('dashboard');
   const [aiTip, setAiTip] = useState<string>("Cargando tu consejo de hoy...");
   const [isLoadingTip, setIsLoadingTip] = useState(true);
@@ -223,23 +224,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, pantry, mealPlan = [
   return (
     <div className="space-y-12 animate-fade-in pb-10 max-w-7xl mx-auto px-2 md:px-0 pt-6">
       {/* PÍLDORA IA */}
-      <div className="bg-[#0F4E0E] p-2.5 md:p-6 rounded-full md:rounded-[2.5rem] shadow-xl relative overflow-hidden group">
-          <div className="flex flex-row items-center justify-between gap-3 md:gap-8 relative z-10">
-              <div className="w-9 h-9 md:w-16 md:h-16 bg-white/10 rounded-xl md:rounded-2xl flex items-center justify-center text-orange-400 shrink-0">
-                  <Sparkles className={`w-5 h-5 md:w-8 md:h-8 ${isLoadingTip ? 'animate-pulse' : ''}`} />
+      <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 bg-[#0F4E0E] p-4 md:p-6 rounded-[2rem] md:rounded-[2.5rem] shadow-xl relative overflow-hidden group">
+              <div className="flex flex-row items-center justify-between gap-3 md:gap-8 relative z-10">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-white/10 rounded-2xl flex items-center justify-center text-orange-400 shrink-0">
+                      <Sparkles className={`w-6 h-6 md:w-8 md:h-8 ${isLoadingTip ? 'animate-pulse' : ''}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-black text-xs md:text-xl leading-none uppercase tracking-widest md:tracking-tight">Sugerencia IA</h3>
+                      <p className={`text-teal-100/60 font-medium text-[10px] md:text-base mt-1.5 italic truncate md:line-clamp-none ${isLoadingTip ? 'animate-pulse' : ''}`}>
+                          "{aiTip}"
+                      </p>
+                  </div>
+                  <button 
+                    onClick={() => onNavigate('planner')}
+                    className="h-10 md:h-14 px-6 md:px-8 bg-orange-500 text-white rounded-xl font-black text-[10px] md:text-xs uppercase tracking-[0.15em] shadow-lg hover:bg-orange-600 transition-all active:scale-95 shrink-0"
+                  >
+                      Ver Plan
+                  </button>
               </div>
-              <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-black text-[10px] md:text-xl leading-none uppercase tracking-widest md:tracking-tight">Sugerencia IA</h3>
-                  <p className={`text-teal-100/60 font-medium text-[9px] md:text-base mt-0.5 italic truncate md:line-clamp-none ${isLoadingTip ? 'animate-pulse' : ''}`}>
-                      "{aiTip}"
-                  </p>
-              </div>
-              <button 
-                onClick={() => onNavigate('planner')}
-                className="h-8 md:h-14 px-4 md:px-8 bg-orange-500 text-white rounded-full md:rounded-xl font-black text-[8px] md:text-xs uppercase tracking-[0.15em] shadow-lg hover:bg-orange-600 transition-all active:scale-95 shrink-0"
-              >
-                  Ver Plan
-              </button>
           </div>
       </div>
 
