@@ -11,16 +11,25 @@ IGNORA precios y productos no alimentarios.
 Devuelve un JSON estrictamente válido.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
-  // NO bloqueamos aquí. Dejamos que el SDK intente usar process.env.API_KEY
+  let ai;
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Intentamos instanciar el cliente con la clave actual
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) throw new Error("API Key is missing in environment");
     
+    ai = new GoogleGenAI({ apiKey });
+  } catch (initError: any) {
+    console.error("Gemini Client Init Failure:", initError);
+    throw new Error("RESELECT_KEY");
+  }
+
+  try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview', 
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Extrae productos del ticket en JSON." }
+          { text: "Genera el JSON del ticket." }
         ] 
       },
       config: { 
@@ -52,10 +61,9 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 
     return JSON.parse(response.text || '{"supermarket": "Ticket", "items": []}');
   } catch (error: any) {
-    console.error("Gemini Service Error:", error);
+    console.error("Gemini Execution Error:", error);
     const msg = error?.message || "";
-    // Si el error indica falta de clave o entidad no encontrada, lanzamos la señal de re-selección
-    if (msg.includes("API Key must be set") || msg.includes("Requested entity was not found") || !process.env.API_KEY) {
+    if (msg.includes("API Key must be set") || msg.includes("Requested entity was not found")) {
         throw new Error("RESELECT_KEY");
     }
     throw error;
@@ -63,9 +71,10 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 };
 
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
-    if (pantry.length === 0 || !process.env.API_KEY) return "Organiza tu cocina hoy.";
+    const apiKey = process.env.API_KEY;
+    if (pantry.length === 0 || !apiKey) return "Organiza tu cocina hoy.";
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: `Dame un consejo de 10 palabras sobre esto: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
@@ -77,9 +86,10 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
 };
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    if (!process.env.API_KEY) return { plan: [], newRecipes: [] };
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) return { plan: [], newRecipes: [] };
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: `Genera menú para ${user.name}. Stock: ${pantry.map(i => i.name).join(', ')}.`,

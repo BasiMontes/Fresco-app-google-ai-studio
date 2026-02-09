@@ -12,10 +12,10 @@ interface TicketScannerProps {
 }
 
 const LOADING_MESSAGES = [
-    "Contactando con Gemini...",
+    "Iniciando Visión Pro...",
     "Leyendo ticket...",
-    "Procesando ingredientes...",
-    "Calculando caducidad...",
+    "Identificando ingredientes...",
+    "Estimando caducidad...",
     "Casi listo..."
 ];
 
@@ -56,14 +56,17 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const handleStartScan = async () => {
     setErrorMessage("");
     
-    // Comprobar clave antes de disparar nada
+    // CONTROL PREVENTIVO "LOVABLE STYLE" PARA AI STUDIO
     const aiStudio = (window as any).aistudio;
     if (aiStudio) {
-      const hasKey = await aiStudio.hasSelectedApiKey();
-      if (!hasKey) {
-        // Disparamos selector de clave de Google
-        await aiStudio.openSelectKey();
-        // Según reglas de Google, procedemos de inmediato asumiendo éxito
+      try {
+        const hasKey = await aiStudio.hasSelectedApiKey();
+        if (!hasKey) {
+            // Regla de Google: Abrir selector y seguir adelante
+            await aiStudio.openSelectKey();
+        }
+      } catch (e) {
+          console.debug("aistudio helper not ready");
       }
     }
     
@@ -83,7 +86,6 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setStep('analyzing');
         const base64Data = (reader.result as string).split(',')[1];
         
-        // Llamada al servicio que ahora es tolerante al arranque
         const data = await extractItemsFromTicket(base64Data, file.type);
         
         setSupermarket(data.supermarket || 'Ticket');
@@ -100,14 +102,14 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setItems(processed);
         setStep('review');
       } catch (err: any) {
-        console.error("Scanner Error Catch:", err);
+        console.error("Scanner Catch-all:", err);
         
         if (err.message === "RESELECT_KEY") {
             const aiStudio = (window as any).aistudio;
             if (aiStudio) await aiStudio.openSelectKey();
-            setErrorMessage("Por favor, selecciona tu clave de API arriba y pulsa el botón naranja 'REINTENTAR'.");
+            setErrorMessage("Sesión de IA expirada o clave no configurada. Selecciona tu clave en el diálogo superior y pulsa 'REINTENTAR'.");
         } else {
-            setErrorMessage("No hemos podido analizar la imagen. Prueba con otra foto.");
+            setErrorMessage("Error al analizar la imagen. Inténtalo con una foto más nítida.");
         }
         setStep('error');
       }
@@ -144,7 +146,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
           <button onClick={onClose} className="p-3 bg-white/10 text-white rounded-full hover:bg-white/20 active:scale-90 transition-all"><X className="w-6 h-6" /></button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 md:p-10 no-scrollbar">
           {step === 'idle' && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-10 animate-slide-up max-w-sm mx-auto">
               <div className="w-28 h-28 bg-white/10 rounded-[3rem] flex items-center justify-center shadow-2xl relative border border-white/10">
@@ -154,15 +156,15 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  </div>
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black text-white leading-none tracking-tight">Escaneo IA</h3>
-                <p className="text-teal-100/50 font-medium text-base px-6">Usa Google Gemini para identificar tus ingredientes automáticamente.</p>
+                <h3 className="text-4xl font-black text-white leading-none">Visión Pro</h3>
+                <p className="text-teal-100/50 font-medium text-base px-6">Actualiza tu stock capturando tu ticket con IA.</p>
               </div>
 
               <button 
                 onClick={handleStartScan}
                 className="w-full py-6 bg-white text-[#0F4E0E] rounded-[2.5rem] font-black text-xs uppercase tracking-[0.25em] shadow-2xl active:scale-95 transition-all"
               >
-                SUBIR FOTO TICKET
+                SUBIR TICKET
               </button>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
