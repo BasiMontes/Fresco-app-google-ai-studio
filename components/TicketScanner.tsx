@@ -12,7 +12,7 @@ interface TicketScannerProps {
 }
 
 const LOADING_MESSAGES = [
-    "Iniciando Visión Pro...",
+    "Sincronizando con Google AI...",
     "Leyendo ticket...",
     "Identificando ingredientes...",
     "Estimando caducidad...",
@@ -56,17 +56,18 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   const handleStartScan = async () => {
     setErrorMessage("");
     
-    // CONTROL PREVENTIVO "LOVABLE STYLE" PARA AI STUDIO
+    // GUARDIA PREVENTIVA: Forzamos la apertura del selector si no hay clave
     const aiStudio = (window as any).aistudio;
     if (aiStudio) {
       try {
         const hasKey = await aiStudio.hasSelectedApiKey();
         if (!hasKey) {
-            // Regla de Google: Abrir selector y seguir adelante
+            // Abrimos diálogo oficial de Google
             await aiStudio.openSelectKey();
+            // Continuamos inmediatamente como pide la documentación de Google
         }
       } catch (e) {
-          console.debug("aistudio helper not ready");
+          console.debug("AI Studio Helper no disponible");
       }
     }
     
@@ -86,6 +87,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setStep('analyzing');
         const base64Data = (reader.result as string).split(',')[1];
         
+        // Llamamos al servicio. El constructor de Gemini se ejecuta AHORA.
         const data = await extractItemsFromTicket(base64Data, file.type);
         
         setSupermarket(data.supermarket || 'Ticket');
@@ -102,14 +104,14 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setItems(processed);
         setStep('review');
       } catch (err: any) {
-        console.error("Scanner Catch-all:", err);
+        console.error("Scanner Capture Catch:", err);
         
         if (err.message === "RESELECT_KEY") {
             const aiStudio = (window as any).aistudio;
             if (aiStudio) await aiStudio.openSelectKey();
-            setErrorMessage("Sesión de IA expirada o clave no configurada. Selecciona tu clave en el diálogo superior y pulsa 'REINTENTAR'.");
+            setErrorMessage("Por favor, selecciona tu clave de API arriba y pulsa el botón 'REINTENTAR'.");
         } else {
-            setErrorMessage("Error al analizar la imagen. Inténtalo con una foto más nítida.");
+            setErrorMessage("Error al procesar la imagen. Verifica que el ticket se lea bien.");
         }
         setStep('error');
       }
@@ -156,15 +158,15 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  </div>
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black text-white leading-none">Visión Pro</h3>
-                <p className="text-teal-100/50 font-medium text-base px-6">Actualiza tu stock capturando tu ticket con IA.</p>
+                <h3 className="text-4xl font-black text-white leading-none">Carga tu ticket</h3>
+                <p className="text-teal-100/50 font-medium text-base px-6">Usamos Google Gemini para digitalizar tu compra al instante.</p>
               </div>
 
               <button 
                 onClick={handleStartScan}
                 className="w-full py-6 bg-white text-[#0F4E0E] rounded-[2.5rem] font-black text-xs uppercase tracking-[0.25em] shadow-2xl active:scale-95 transition-all"
               >
-                SUBIR TICKET
+                SUBIR TICKET (IA)
               </button>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
@@ -193,7 +195,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <AlertCircle className="w-12 h-12 text-red-500" />
               </div>
               <div className="space-y-3">
-                <h3 className="text-3xl font-black text-white">Vaya... algo falló</h3>
+                <h3 className="text-3xl font-black text-white">¡Vaya! Necesitamos tu clave</h3>
                 <p className="text-teal-100/60 font-medium text-sm px-4 leading-relaxed">{errorMessage}</p>
               </div>
               <div className="w-full space-y-3">

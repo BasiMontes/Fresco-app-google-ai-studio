@@ -12,14 +12,17 @@ Devuelve un JSON estrictamente válido.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
   let ai;
+  
+  // SOLUCIÓN DEFINITIVA: El constructor DEBE estar dentro del try-catch de ejecución
   try {
-    // Intentamos instanciar el cliente con la clave actual
     const apiKey = process.env.API_KEY;
-    if (!apiKey) throw new Error("API Key is missing in environment");
-    
+    if (!apiKey) {
+      throw new Error("API Key is missing in environment");
+    }
     ai = new GoogleGenAI({ apiKey });
   } catch (initError: any) {
-    console.error("Gemini Client Init Failure:", initError);
+    console.error("Critical SDK Init Failure:", initError);
+    // Este es el "señalizador" para que el componente dispare el selector de Google
     throw new Error("RESELECT_KEY");
   }
 
@@ -29,7 +32,7 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
       contents: { 
         parts: [
           { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Genera el JSON del ticket." }
+          { text: "Lee este ticket y extrae los productos en el esquema JSON solicitado." }
         ] 
       },
       config: { 
@@ -61,9 +64,10 @@ export const extractItemsFromTicket = async (base64Data: string, mimeType: strin
 
     return JSON.parse(response.text || '{"supermarket": "Ticket", "items": []}');
   } catch (error: any) {
-    console.error("Gemini Execution Error:", error);
+    console.error("Gemini Scan Error:", error);
     const msg = error?.message || "";
-    if (msg.includes("API Key must be set") || msg.includes("Requested entity was not found")) {
+    // Errores específicos de Google que requieren re-selección de clave
+    if (msg.includes("API Key must be set") || msg.includes("Requested entity was not found") || msg.includes("invalid api key")) {
         throw new Error("RESELECT_KEY");
     }
     throw error;
