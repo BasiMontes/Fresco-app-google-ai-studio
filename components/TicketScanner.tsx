@@ -12,10 +12,10 @@ interface TicketScannerProps {
 }
 
 const LOADING_MESSAGES = [
-    "Activando Visión Fresco...",
+    "Iniciando Visión IA...",
     "Leyendo ticket...",
-    "Procesando ingredientes...",
-    "Sincronizando con Gemini...",
+    "Identificando ingredientes...",
+    "Sincronizando con Google...",
     "Casi listo..."
 ];
 
@@ -53,6 +53,26 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     return () => clearInterval(interval);
   }, [step]);
 
+  const handleStartScan = async () => {
+    setErrorMessage("");
+    
+    // GUARDIA PREVENTIVA: Forzamos la apertura del selector si no hay clave detectada
+    const aiStudio = (window as any).aistudio;
+    if (aiStudio) {
+      try {
+        const hasKey = await aiStudio.hasSelectedApiKey();
+        if (!hasKey) {
+            await aiStudio.openSelectKey();
+            // Según la regla de Google: Proceed to the app immediately
+        }
+      } catch (e) {
+          console.debug("AI Studio Helper not ready");
+      }
+    }
+    
+    fileInputRef.current?.click();
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -66,7 +86,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setStep('analyzing');
         const base64Data = (reader.result as string).split(',')[1];
         
-        // El servicio manejará la clave global por defecto
+        // Llamada al servicio que ahora es stateless
         const data = await extractItemsFromTicket(base64Data, file.type);
         
         setSupermarket(data.supermarket || 'Ticket');
@@ -83,8 +103,15 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setItems(processed);
         setStep('review');
       } catch (err: any) {
-        console.error("Scanner Execution Error:", err);
-        setErrorMessage("Asegúrate de tener configurada tu API Key en el entorno de Google y que la foto sea clara.");
+        console.error("Scanner Error Catch:", err);
+        
+        if (err.message === "RESELECT_KEY") {
+            const aiStudio = (window as any).aistudio;
+            if (aiStudio) await aiStudio.openSelectKey();
+            setErrorMessage("Por favor, selecciona tu clave de API arriba y pulsa 'REINTENTAR'.");
+        } else {
+            setErrorMessage("Error al procesar la imagen. Verifica tu conexión y que la foto sea clara.");
+        }
         setStep('error');
       }
     };
@@ -130,15 +157,15 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  </div>
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black text-white leading-none">Escaneo Directo</h3>
-                <p className="text-teal-100/50 font-medium text-base px-6">Digitaliza tu compra con Gemini 3 Flash automáticamente.</p>
+                <h3 className="text-4xl font-black text-white leading-none tracking-tighter">Visión IA</h3>
+                <p className="text-teal-100/50 font-medium text-base px-6 leading-relaxed">Carga tu ticket de compra y Gemini lo digitalizará por ti.</p>
               </div>
 
               <button 
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handleStartScan}
                 className="w-full py-6 bg-white text-[#0F4E0E] rounded-[2.5rem] font-black text-xs uppercase tracking-[0.25em] shadow-2xl active:scale-95 transition-all"
               >
-                SELECCIONAR TICKET
+                SUBIR TICKET
               </button>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
@@ -156,7 +183,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-2xl font-black text-white">{LOADING_MESSAGES[loadingMessageIdx]}</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Procesando con IA...</p>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Motor Gemini 3 Flash</p>
               </div>
             </div>
           )}
@@ -167,7 +194,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  <AlertCircle className="w-12 h-12 text-red-500" />
               </div>
               <div className="space-y-3">
-                <h3 className="text-3xl font-black text-white">Error de Conexión</h3>
+                <h3 className="text-3xl font-black text-white leading-none">Vaya... algo falló</h3>
                 <p className="text-teal-100/60 font-medium text-sm px-4 leading-relaxed">{errorMessage}</p>
               </div>
               <div className="w-full space-y-3">
@@ -181,13 +208,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
             <div className="max-w-3xl mx-auto space-y-8 pb-40 animate-slide-up">
               <div className="px-2">
                 <p className="text-orange-400 text-[10px] font-black uppercase tracking-widest mb-2">{supermarket}</p>
-                <h3 className="text-white font-black text-4xl leading-tight">Confirmar Productos</h3>
+                <h3 className="text-white font-black text-4xl leading-tight tracking-tight">Revisar Productos</h3>
               </div>
               
               <div className="grid gap-3">
                 {items.map((item) => (
                     <div key={item.tempId} className="bg-white/10 backdrop-blur-md rounded-[2.2rem] p-6 shadow-xl flex flex-col gap-4 border border-white/5 relative group">
-                      <button onClick={() => setItems(prev => prev.filter(i => i.tempId !== item.tempId))} className="absolute -top-2 -right-2 w-10 h-10 bg-red-50 text-white rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-all"><X className="w-5 h-5" /></button>
+                      <button onClick={() => setItems(prev => prev.filter(i => i.tempId !== item.tempId))} className="absolute -top-2 -right-2 w-10 h-10 bg-red-50 text-white rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-all"><Trash2 className="w-5 h-5" /></button>
                       <div className="flex-1">
                         <label className="text-[9px] font-black text-teal-300 uppercase tracking-widest mb-2 block ml-1">Producto</label>
                         <input className="w-full h-14 bg-white/5 rounded-2xl px-5 font-black text-xl text-white outline-none border-2 border-transparent focus:border-orange-500/20 transition-all capitalize" value={item.name} onChange={(e) => handleUpdateItem(item.tempId, { name: e.target.value })} />
