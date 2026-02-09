@@ -12,10 +12,10 @@ interface TicketScannerProps {
 }
 
 const LOADING_MESSAGES = [
-    "Iniciando Visión Pro...",
-    "Leyendo el ticket...",
-    "Analizando productos...",
-    "Estimando caducidades...",
+    "Sincronizando con Gemini...",
+    "Leyendo ticket...",
+    "Identificando ingredientes...",
+    "Estimando caducidad...",
     "Casi listo..."
 ];
 
@@ -48,13 +48,20 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
     if (step === 'analyzing') {
         interval = window.setInterval(() => {
             setLoadingMessageIdx(prev => (prev + 1) % LOADING_MESSAGES.length);
-        }, 2000);
+        }, 1800);
     }
     return () => clearInterval(interval);
   }, [step]);
 
   const handleStartScan = async () => {
-    setErrorMessage("");
+    const aiStudio = (window as any).aistudio;
+    if (aiStudio) {
+      const hasKey = await aiStudio.hasSelectedApiKey();
+      if (!hasKey) {
+        // REGLA: Abrimos selector y procedemos de inmediato para evitar race condition
+        await aiStudio.openSelectKey();
+      }
+    }
     fileInputRef.current?.click();
   };
 
@@ -70,9 +77,11 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
       try {
         setStep('analyzing');
         const base64Data = (reader.result as string).split(',')[1];
+        
+        // La instanciación de Gemini ocurre DENTRO de esta llamada ahora
         const data = await extractItemsFromTicket(base64Data, file.type);
         
-        setSupermarket(data.supermarket || 'Ticket Detectado');
+        setSupermarket(data.supermarket || 'Ticket');
         const processed = (data.items || []).map((i: any, idx: number) => ({
             ...i,
             tempId: `item-${Date.now()}-${idx}`,
@@ -86,16 +95,13 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setItems(processed);
         setStep('review');
       } catch (err: any) {
-        console.error("Scanner Error:", err);
-        const msg = err?.message || "";
-        
-        // Manejo dinámico del error de clave según reglas de AI Studio
-        if (msg.includes("API Key must be set") || msg.includes("Requested entity was not found")) {
+        console.error("Scanner Capture:", err);
+        if (err.message === "RESELECT_KEY") {
             const aiStudio = (window as any).aistudio;
             if (aiStudio) await aiStudio.openSelectKey();
-            setErrorMessage("Por favor, selecciona tu clave de API en el diálogo superior y pulsa 'REINTENTAR'.");
+            setErrorMessage("Selecciona tu clave de API arriba y pulsa 'REINTENTAR'.");
         } else {
-            setErrorMessage("Error al leer el ticket. Prueba con una foto más clara.");
+            setErrorMessage("No hemos podido procesar la imagen. Inténtalo de nuevo con más luz.");
         }
         setStep('error');
       }
@@ -132,7 +138,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
           <button onClick={onClose} className="p-3 bg-white/10 text-white rounded-full hover:bg-white/20 active:scale-90 transition-all"><X className="w-6 h-6" /></button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-10 no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 no-scrollbar">
           {step === 'idle' && (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-10 animate-slide-up max-w-sm mx-auto">
               <div className="w-28 h-28 bg-white/10 rounded-[3rem] flex items-center justify-center shadow-2xl relative border border-white/10">
@@ -142,8 +148,8 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  </div>
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black text-white leading-none">Visión Pro</h3>
-                <p className="text-teal-100/50 font-medium text-base px-6">Sube una foto de tu ticket para actualizar tu stock en segundos.</p>
+                <h3 className="text-4xl font-black text-white leading-none">Escanear Ticket</h3>
+                <p className="text-teal-100/50 font-medium text-base px-6">Detectaremos tus productos en segundos usando Google Gemini.</p>
               </div>
 
               <button 
@@ -168,7 +174,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-2xl font-black text-white">{LOADING_MESSAGES[loadingMessageIdx]}</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Procesando con Gemini...</p>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Procesando IA...</p>
               </div>
             </div>
           )}
@@ -199,9 +205,9 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               <div className="grid gap-3">
                 {items.map((item) => (
                     <div key={item.tempId} className="bg-white/10 backdrop-blur-md rounded-[2.2rem] p-6 shadow-xl flex flex-col gap-4 border border-white/5 relative group">
-                      <button onClick={() => setItems(prev => prev.filter(i => i.tempId !== item.tempId))} className="absolute -top-2 -right-2 w-10 h-10 bg-red-500 text-white rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-all"><Trash2 className="w-5 h-5" /></button>
+                      <button onClick={() => setItems(prev => prev.filter(i => i.tempId !== item.tempId))} className="absolute -top-2 -right-2 w-10 h-10 bg-red-50 text-white rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-all"><Trash2 className="w-5 h-5" /></button>
                       <div className="flex-1">
-                        <label className="text-[9px] font-black text-teal-300 uppercase tracking-widest mb-2 block ml-1">Producto Detectado</label>
+                        <label className="text-[9px] font-black text-teal-300 uppercase tracking-widest mb-2 block ml-1">Producto</label>
                         <input className="w-full h-14 bg-white/5 rounded-2xl px-5 font-black text-xl text-white outline-none border-2 border-transparent focus:border-orange-500/20 transition-all capitalize" value={item.name} onChange={(e) => handleUpdateItem(item.tempId, { name: e.target.value })} />
                       </div>
                       <div className="grid grid-cols-2 gap-4">

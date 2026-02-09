@@ -11,64 +11,84 @@ IGNORA precios y productos no alimentarios.
 Devuelve un JSON estrictamente válido.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
-  // Inicialización JIT obligatoria para capturar process.env.API_KEY en el momento de la ejecución
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // REGLA DE ORO: Instanciar siempre dentro de la función asíncrona
+  const apiKey = process.env.API_KEY;
   
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview', 
-    contents: { 
-      parts: [
-        { inlineData: { mimeType, data: base64Data } }, 
-        { text: "Analiza el ticket y extrae productos en JSON." }
-      ] 
-    },
-    config: { 
-      systemInstruction: AI_TICKET_PROMPT,
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          supermarket: { type: Type.STRING },
-          items: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                name: { type: Type.STRING },
-                quantity: { type: Type.NUMBER },
-                unit: { type: Type.STRING },
-                category: { type: Type.STRING },
-                estimated_expiry_days: { type: Type.NUMBER }
-              },
-              required: ["name", "quantity", "unit", "category", "estimated_expiry_days"]
-            }
-          }
-        },
-        required: ["supermarket", "items"]
-      }
-    }
-  });
+  if (!apiKey) {
+    console.error("Critical: process.env.API_KEY is undefined at call time");
+    throw new Error("RESELECT_KEY");
+  }
 
-  return JSON.parse(response.text || '{"supermarket": "Ticket", "items": []}');
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+    
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview', 
+      contents: { 
+        parts: [
+          { inlineData: { mimeType, data: base64Data } }, 
+          { text: "Extrae los productos del ticket en JSON según el esquema." }
+        ] 
+      },
+      config: { 
+        systemInstruction: AI_TICKET_PROMPT,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            supermarket: { type: Type.STRING },
+            items: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  quantity: { type: Type.NUMBER },
+                  unit: { type: Type.STRING },
+                  category: { type: Type.STRING },
+                  estimated_expiry_days: { type: Type.NUMBER }
+                },
+                required: ["name", "quantity", "unit", "category", "estimated_expiry_days"]
+              }
+            }
+          },
+          required: ["supermarket", "items"]
+        }
+      }
+    });
+
+    return JSON.parse(response.text || '{"supermarket": "Ticket", "items": []}');
+  } catch (error: any) {
+    console.error("Gemini Failure:", error);
+    const msg = error?.message || "";
+    // Capturamos el error interno de Google para disparar el selector de clave
+    if (msg.includes("API Key must be set") || msg.includes("Requested entity was not found")) {
+        throw new Error("RESELECT_KEY");
+    }
+    throw error;
+  }
 };
 
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
-    if (pantry.length === 0) return "Tu despensa está lista.";
+    const apiKey = process.env.API_KEY;
+    if (pantry.length === 0 || !apiKey) return "Organiza tu cocina hoy.";
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: `Dame un consejo de 10 palabras sobre esto: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
         });
-        return response.text || "Organiza tu cocina hoy.";
+        return response.text || "Tu despensa está lista.";
     } catch {
         return "Organiza tu cocina hoy.";
     }
 };
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) return { plan: [], newRecipes: [] };
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: `Genera menú para ${user.name}. Stock: ${pantry.map(i => i.name).join(', ')}.`,
