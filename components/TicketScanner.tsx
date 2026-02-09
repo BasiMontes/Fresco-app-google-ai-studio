@@ -54,15 +54,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
   }, [step]);
 
   const handleStartScan = async () => {
-    const aiStudio = (window as any).aistudio;
-    if (aiStudio) {
-      const hasKey = await aiStudio.hasSelectedApiKey();
-      if (!hasKey) {
-        // Regla: Asumir éxito tras disparar el diálogo para evitar bloqueos
-        await aiStudio.openSelectKey();
-      }
-    }
-    // Procedemos a abrir el explorador de archivos directamente
+    setErrorMessage("");
     fileInputRef.current?.click();
   };
 
@@ -94,13 +86,16 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
         setItems(processed);
         setStep('review');
       } catch (err: any) {
-        console.error("Scanner catch-all:", err);
-        if (err.message === "RESELECT_KEY") {
+        console.error("Scanner Error:", err);
+        const msg = err?.message || "";
+        
+        // Manejo dinámico del error de clave según reglas de AI Studio
+        if (msg.includes("API Key must be set") || msg.includes("Requested entity was not found")) {
             const aiStudio = (window as any).aistudio;
             if (aiStudio) await aiStudio.openSelectKey();
-            setErrorMessage("Sesión de IA expirada o clave no configurada. Selecciona tu clave en el diálogo superior y pulsa 'REINTENTAR'.");
+            setErrorMessage("Por favor, selecciona tu clave de API en el diálogo superior y pulsa 'REINTENTAR'.");
         } else {
-            setErrorMessage("No hemos podido leer el ticket. Prueba con una foto más nítida.");
+            setErrorMessage("Error al leer el ticket. Prueba con una foto más clara.");
         }
         setStep('error');
       }
@@ -147,21 +142,15 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
                  </div>
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl font-black text-white leading-none">Escanear Ticket</h3>
-                <p className="text-teal-100/50 font-medium text-base px-6">Usa la cámara para detectar automáticamente tus productos.</p>
+                <h3 className="text-4xl font-black text-white leading-none">Visión Pro</h3>
+                <p className="text-teal-100/50 font-medium text-base px-6">Sube una foto de tu ticket para actualizar tu stock en segundos.</p>
               </div>
-
-              {errorMessage && (
-                  <div className="p-5 bg-orange-500/20 border border-orange-500/20 rounded-2xl text-orange-100 text-xs font-black leading-relaxed animate-fade-in">
-                      {errorMessage}
-                  </div>
-              )}
 
               <button 
                 onClick={handleStartScan}
                 className="w-full py-6 bg-white text-[#0F4E0E] rounded-[2.5rem] font-black text-xs uppercase tracking-[0.25em] shadow-2xl active:scale-95 transition-all"
               >
-                HACER FOTO / SUBIR
+                SUBIR TICKET
               </button>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
@@ -179,7 +168,7 @@ export const TicketScanner: React.FC<TicketScannerProps> = ({ onClose, onAddItem
               </div>
               <div className="space-y-4">
                 <h3 className="text-2xl font-black text-white">{LOADING_MESSAGES[loadingMessageIdx]}</h3>
-                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Conectando con Google Gemini...</p>
+                <p className="text-teal-400 text-[10px] font-black uppercase tracking-[0.5em] animate-pulse italic">Procesando con Gemini...</p>
               </div>
             </div>
           )}

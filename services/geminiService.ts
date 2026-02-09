@@ -11,72 +11,54 @@ IGNORA precios y productos no alimentarios.
 Devuelve un JSON estrictamente válido.`;
 
 export const extractItemsFromTicket = async (base64Data: string, mimeType: string): Promise<any> => {
-  const apiKey = process.env.API_KEY;
+  // Inicialización JIT obligatoria para capturar process.env.API_KEY en el momento de la ejecución
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  if (!apiKey || apiKey === "") {
-    console.error("API Key is missing in environment");
-    throw new Error("RESELECT_KEY");
-  }
-
-  try {
-    // Instanciación JIT para asegurar que capturamos la clave más reciente
-    const ai = new GoogleGenAI({ apiKey });
-    
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview', 
-      contents: { 
-        parts: [
-          { inlineData: { mimeType, data: base64Data } }, 
-          { text: "Extrae los productos alimentarios de este ticket en formato JSON." }
-        ] 
-      },
-      config: { 
-        systemInstruction: AI_TICKET_PROMPT,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            supermarket: { type: Type.STRING },
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview', 
+    contents: { 
+      parts: [
+        { inlineData: { mimeType, data: base64Data } }, 
+        { text: "Analiza el ticket y extrae productos en JSON." }
+      ] 
+    },
+    config: { 
+      systemInstruction: AI_TICKET_PROMPT,
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          supermarket: { type: Type.STRING },
+          items: {
+            type: Type.ARRAY,
             items: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  quantity: { type: Type.NUMBER },
-                  unit: { type: Type.STRING },
-                  category: { type: Type.STRING },
-                  estimated_expiry_days: { type: Type.NUMBER }
-                },
-                required: ["name", "quantity", "unit", "category", "estimated_expiry_days"]
-              }
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                quantity: { type: Type.NUMBER },
+                unit: { type: Type.STRING },
+                category: { type: Type.STRING },
+                estimated_expiry_days: { type: Type.NUMBER }
+              },
+              required: ["name", "quantity", "unit", "category", "estimated_expiry_days"]
             }
-          },
-          required: ["supermarket", "items"]
-        }
+          }
+        },
+        required: ["supermarket", "items"]
       }
-    });
-
-    const result = response.text || '{"supermarket": "Ticket", "items": []}';
-    return JSON.parse(result);
-  } catch (error: any) {
-    console.error("Gemini critical failure:", error);
-    const msg = error?.message || "";
-    // Identificamos el error específico de Google para disparar el flujo de clave
-    if (msg.includes("Requested entity was not found") || msg.includes("API Key must be set")) {
-        throw new Error("RESELECT_KEY");
     }
-    throw error;
-  }
+  });
+
+  return JSON.parse(response.text || '{"supermarket": "Ticket", "items": []}');
 };
 
 export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<string> => {
-    if (pantry.length === 0 || !process.env.API_KEY) return "Tu despensa está lista.";
+    if (pantry.length === 0) return "Tu despensa está lista.";
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
-            contents: `Dame un consejo de máximo 10 palabras para usar esto: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
+            contents: `Dame un consejo de 10 palabras sobre esto: ${pantry.slice(0,2).map(i => i.name).join(", ")}.`,
         });
         return response.text || "Organiza tu cocina hoy.";
     } catch {
@@ -85,12 +67,11 @@ export const getWastePreventionTip = async (pantry: PantryItem[]): Promise<strin
 };
 
 export const generateSmartMenu = async (user: UserProfile, pantry: PantryItem[], targetDates: string[], targetTypes: MealCategory[], availableRecipes: Recipe[]): Promise<{ plan: MealSlot[], newRecipes: Recipe[] }> => {
-    if (!process.env.API_KEY) return { plan: [], newRecipes: [] };
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
-            contents: `Genera un menú semanal para ${user.name}. Stock: ${pantry.map(i => i.name).join(', ')}.`,
+            contents: `Genera menú para ${user.name}. Stock: ${pantry.map(i => i.name).join(', ')}.`,
             config: { 
                 responseMimeType: "application/json",
                 responseSchema: {
